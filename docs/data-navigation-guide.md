@@ -18,7 +18,7 @@
 Your observability stack is actively collecting **internal infrastructure metrics**:
 
 ```
-Obstackd Stack Metrics:
+uFawkesObs Stack Metrics:
 ├─ Prometheus (self-monitoring)
 │  ├─ prometheus_tsdb_symbol_table_size_bytes
 │  ├─ prometheus_tsdb_data_compaction_duration_seconds
@@ -98,7 +98,7 @@ scrapes all Docker container stdout/stderr logs via the Docker socket.
    ```
    {job="docker"}                      # All container logs
    {compose_service="grafana"}         # Specific service
-   {compose_project="observability-lab"} # All Obstackd containers
+   {compose_project="observability-lab"} # All uFawkesObs containers
    ```
 
 ---
@@ -210,7 +210,7 @@ Pre-configured alert rules are in place.
 
 ### 1. **Observability Stack Health Dashboard** (START HERE)
 
-This shows the health of Obstackd itself:
+This shows the health of uFawkesObs itself:
 
 ```
 ✓ Click: Dashboards → Observability Stack Health

@@ -77,8 +77,8 @@ all running Docker containers and ships their logs to Loki.
 
 ### What Logs You Have
 
-All container logs from the Obstackd core stack:
-- **Obstackd services:** prometheus, loki, tempo, grafana, otel-collector, alertmanager, alloy
+All container logs from the uFawkesObs core stack:
+- **uFawkesObs services:** prometheus, loki, tempo, grafana, otel-collector, alertmanager, alloy
 
 ### How to View Logs in Grafana
 

@@ -1,4 +1,4 @@
-# Change Impact Map — Obstackd
+# Change Impact Map — uFawkesObs
 
 > Check this before touching any service. Observability stacks have tight coupling:
 > a Prometheus config change can silence all alerts; an OTEL route change can drop traces.

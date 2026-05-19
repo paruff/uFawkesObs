@@ -1,4 +1,4 @@
-# Copilot Instructions — Obstackd (Observability Plane)
+# Copilot Instructions — uFawkesObs (Observability Plane)
 
 > Loaded automatically every Copilot session.
 > Full rules in `AGENTS.md` — read it for any non-trivial task.
