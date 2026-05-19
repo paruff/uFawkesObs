@@ -1,4 +1,4 @@
-# Prompt Library — Obstackd Compliance Reviews
+# Prompt Library — uFawkesObs Compliance Reviews
 
 > Tested prompt templates for recurring compliance tasks.
 > Run these five reviews in order for each audit cycle.
@@ -8,7 +8,7 @@
 
 ## Review 1 — Docker Compose Compliance
 
-**Purpose:** Verify `compose.yaml` meets all Obstackd architecture rules.
+**Purpose:** Verify `compose.yaml` meets all uFawkesObs architecture rules.
 
 **Checklist:**
 
@@ -38,7 +38,7 @@ grep -R "image: .*:latest" compose.yaml && exit 1 || echo "PASS: no latest tags"
 
 ## Review 2 — OTEL Collector Config Compliance
 
-**Purpose:** Verify `config/otel/collector.yaml` follows Obstackd conventions.
+**Purpose:** Verify `config/otel/collector.yaml` follows uFawkesObs conventions.
 
 **Checklist:**
 
@@ -68,7 +68,7 @@ docker run --rm \
 
 ## Review 3 — Prometheus Config Compliance
 
-**Purpose:** Verify `config/prometheus/prometheus.yaml` and `config/prometheus/alerts.yml` follow Obstackd conventions.
+**Purpose:** Verify `config/prometheus/prometheus.yaml` and `config/prometheus/alerts.yml` follow uFawkesObs conventions.
 
 **Checklist:**
 
@@ -139,7 +139,7 @@ yamllint config/grafana/provisioning/dashboards/dashboards.yaml
 
 ## Review 5 — Shell Script Compliance
 
-**Purpose:** Verify all shell scripts in `scripts/` and `tests/acceptance/` meet Obstackd standards.
+**Purpose:** Verify all shell scripts in `scripts/` and `tests/acceptance/` meet uFawkesObs standards.
 
 **Checklist:**
 

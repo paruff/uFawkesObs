@@ -33,7 +33,7 @@ A **Docker Compose-based observability platform** that provides a complete monit
 
 1. **Clone and enter:**
    ```bash
-   git clone https://github.com/<your-username>/uFawkesObs.git
+   git clone https://github.com/paruff/uFawkesObs.git
    cd uFawkesObs
    ```
 

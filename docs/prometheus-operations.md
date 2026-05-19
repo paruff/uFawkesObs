@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides operational guidance for the Prometheus service in the Obstackd observability stack. Prometheus is configured for production-grade reliability with health checks, resource limits, and structured logging.
+This document provides operational guidance for the Prometheus service in the uFawkesObs observability stack. Prometheus is configured for production-grade reliability with health checks, resource limits, and structured logging.
 
 ## Service Access
 
@@ -391,7 +391,7 @@ Current Prometheus command-line flags:
 
 ## Support
 
-For issues with the Obstackd observability stack:
+For issues with the uFawkesObs observability stack:
 1. Check this operations guide
 2. Review logs and health checks
 3. Validate configuration with provided scripts

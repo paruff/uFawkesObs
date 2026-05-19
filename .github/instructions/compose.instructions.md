@@ -4,7 +4,7 @@ description: Applied automatically when working on compose.yaml
 applyTo: "compose.yaml,docker-compose*.yml,docker-compose*.yaml"
 ---
 
-# Docker Compose Instructions — Obstackd
+# Docker Compose Instructions — uFawkesObs
 
 ## Read First
 - `AGENTS.md` → compose.yaml rules

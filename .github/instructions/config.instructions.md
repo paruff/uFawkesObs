@@ -4,7 +4,7 @@ description: Applied automatically when working in config/
 applyTo: "config/**/*.yaml,config/**/*.yml"
 ---
 
-# Observability Config Instructions — Obstackd
+# Observability Config Instructions — uFawkesObs
 
 ## OpenTelemetry Collector (config/otel-collector/)
 
@@ -97,7 +97,7 @@ datasources:
 apiVersion: 1
 providers:
   - name: default
-    folder: Obstackd
+    folder: uFawkesObs
     type: file
     options:
       path: /var/lib/grafana/dashboards

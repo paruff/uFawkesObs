@@ -2,13 +2,13 @@
 
 ## Overview
 
-Obstackd is designed as a **centralized observability platform** for multiple Docker Compose applications. Each application stack remains independent but can send telemetry to Obstackd.
+uFawkesObs is designed as a **centralized observability platform** for multiple Docker Compose applications. Each application stack remains independent but can send telemetry to uFawkesObs.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Obstackd Stack                       │
+│                    uFawkesObs Stack                       │
 │  ┌──────────────┐  ┌──────────┐  ┌──────────────┐     │
 │  │ OTel         │  │Prometheus│  │   Grafana    │     │
 │  │ Collector    │  │          │  │              │     │
@@ -30,10 +30,10 @@ Obstackd is designed as a **centralized observability platform** for multiple Do
 
 ## Integration Pattern
 
-### Step 1: Start Obstackd
+### Step 1: Start uFawkesObs
 
 ```bash
-cd /path/to/Obstackd
+cd /path/to/uFawkesObs
 docker compose --profile core up -d
 ```
 
@@ -49,9 +49,9 @@ services:
     # ... your app configuration ...
     networks:
       - default              # Your app's internal network
-      - observability-lab    # Obstackd's network
+      - observability-lab    # uFawkesObs's network
     environment:
-      # OpenTelemetry (send to Obstackd)
+      # OpenTelemetry (send to uFawkesObs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_SERVICE_NAME=your-app-name
@@ -69,7 +69,7 @@ networks:
 
 ### Step 3: Add Prometheus Scrape Job (Optional)
 
-If your app exposes Prometheus metrics, add to Obstackd's [`config/prometheus/prometheus.yaml`](../config/prometheus/prometheus.yaml):
+If your app exposes Prometheus metrics, add to uFawkesObs's [`config/prometheus/prometheus.yaml`](../config/prometheus/prometheus.yaml):
 
 ```yaml
 scrape_configs:
@@ -131,7 +131,7 @@ services:
         max-file: "3"
         tag: "{{.Name}}"
     networks:
-      - observability-lab  # Join the Obstackd network for log collection
+      - observability-lab  # Join the uFawkesObs network for log collection
 ```
 
 Once joined to the `observability-lab` network, Alloy will automatically discover and
@@ -194,7 +194,7 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 
 ## Troubleshooting
 
-### Application can't reach Obstackd services
+### Application can't reach uFawkesObs services
 
 **Problem:** DNS resolution fails or connection refused
 
@@ -229,8 +229,8 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 2. **Keep stacks separate** - Don't merge compose files unless necessary
 3. **Use DNS names** - Never use IP addresses or `host.docker.internal`
 4. **Label everything** - Use consistent labels for service, environment, etc.
-5. **Test in isolation** - Start Obstackd first, then your app
-6. **Monitor the monitor** - Check Obstackd's own telemetry regularly
+5. **Test in isolation** - Start uFawkesObs first, then your app
+6. **Monitor the monitor** - Check uFawkesObs's own telemetry regularly
 
 ## Security Considerations
 
@@ -250,7 +250,7 @@ To disconnect an application:
 
 The application will continue running but stop sending telemetry.
 
-## Adding More Obstackd Components
+## Adding More uFawkesObs Components
 
 To add new observability services (e.g., Jaeger, Zipkin):
 

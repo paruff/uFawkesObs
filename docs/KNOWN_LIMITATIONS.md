@@ -1,6 +1,6 @@
-# Known Limitations — Obstackd
+# Known Limitations — uFawkesObs
 
-> Check this before reporting a bug. These are known issues that are not bugs in Obstackd itself.
+> Check this before reporting a bug. These are known issues that are not bugs in uFawkesObs itself.
 > Update this file when a new limitation is confirmed or a workaround is found.
 
 ---

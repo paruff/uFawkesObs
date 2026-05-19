@@ -1,15 +1,15 @@
-# Agent Instructions — Obstackd
+# Agent Instructions — uFawkesObs
 
 > Universal instructions for all agents: GitHub Copilot, VS Code agent mode, Claude.
-> Obstackd is the **Observability Plane** of the Fawkes IDP family.
+> uFawkesObs is the **Observability Plane** of the Fawkes IDP family.
 > It provides OpenTelemetry, Prometheus, Tempo, and Grafana via Docker Compose.
 > **Do not modify this file without maintainer approval.**
 
 ---
 
-## 1. What Obstackd Is
+## 1. What uFawkesObs Is
 
-Obstackd is a self-hosted, GitOps-first observability platform delivered as Docker Compose.
+uFawkesObs is a self-hosted, GitOps-first observability platform delivered as Docker Compose.
 It is a sub-plane of [Fawkes IDP](https://github.com/paruff/fawkes) and can be deployed
 standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (developer plane).
 
@@ -25,7 +25,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 | Grafana | v10.4.5 | Visualisation and dashboards |
 | Docker Compose | latest stable | Service orchestration |
 
-**Repository:** github.com/paruff/Obstackd
+**Repository:** github.com/paruff/uFawkesObs
 
 ---
 
@@ -148,17 +148,17 @@ Every PR must include the AI-Assisted Review Block:
 
 ## 9. Integration with Other Planes
 
-Obstackd is designed to be consumed by:
-- **deliveryd** — Jenkins metrics and pipeline traces flow into Obstackd
-- **developerd** — Developer environment telemetry flows into Obstackd
-- **fawkes** — Full IDP deployment uses Obstackd as its observability layer
+uFawkesObs is designed to be consumed by:
+- **deliveryd** — Jenkins metrics and pipeline traces flow into uFawkesObs
+- **developerd** — Developer environment telemetry flows into uFawkesObs
+- **fawkes** — Full IDP deployment uses uFawkesObs as its observability layer
 
 When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
 
 ---
 ## 10.  Model Selection Policy
 
-Obstackd is a Docker Compose observability stack: Prometheus, Grafana, Loki, Tempo,
+uFawkesObs is a Docker Compose observability stack: Prometheus, Grafana, Loki, Tempo,
 and OpenTelemetry Collector (Alloy). All configuration is YAML, River (Alloy DSL),
 and JSON (Grafana dashboards).
 
@@ -175,7 +175,7 @@ and JSON (Grafana dashboards).
 | L1 — Trial (Grafana only) | Gemini 3 Flash | 0.33 | Trial ONLY for Grafana dashboard JSON — see note below before using |
 | L2 — Justified premium | GPT-5.1-Codex | 1 | PromQL rules and Grafana JSON if Gemini 3 Flash trial fails; requires label `model:gpt-5.1-codex` |
 | PROHIBITED | Claude Opus 4.6 fast | 30 | Never — 30× multiplier. Blocked without explicit written budget approval |
-| AVOID | Claude Opus / Sonnet | 1–3 | No Obstackd task type justifies these models |
+| AVOID | Claude Opus / Sonnet | 1–3 | No uFawkesObs task type justifies these models |
 
 ### Task → Model Routing Table
 
@@ -239,12 +239,12 @@ If rework rate for a task type exceeds 20% after 5 completed PRs with the recomm
 ### Budget guardrails
 
 - Never use `@copilot +modelname` in PR comments unless GPT-4.1 has already failed on the same task
-- The expected premium spend for Obstackd is ~8 requests/month at 20 issues/week:
+- The expected premium spend for uFawkesObs is ~8 requests/month at 20 issues/week:
   - PromQL rules: ~4 sessions at 1x = 4 requests
   - Grafana AI dashboard JSON: ~2 sessions at 1x = 2 requests
   - Grafana DORA JSON (Gemini trial): ~3 sessions at 0.33x = ~1 request
   - IDE chat: ~220 messages/month at 0.33x = ~73 requests (shared with other repos)
-- If Gemini 3 Flash trial succeeds, Obstackd premium agent spend drops to ~3 requests/month
+- If Gemini 3 Flash trial succeeds, uFawkesObs premium agent spend drops to ~3 requests/month
 
 ---
 ## 11. See Also

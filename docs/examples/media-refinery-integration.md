@@ -2,7 +2,7 @@
 
 ## Required Changes to Media-Refinery
 
-To connect Media-Refinery to Obstackd, make these changes to `Media-Refinery/docker-compose.yml`:
+To connect Media-Refinery to uFawkesObs, make these changes to `Media-Refinery/docker-compose.yml`:
 
 ### 1. Update Networks Section
 
@@ -53,7 +53,7 @@ services:
 
 ### 3. Update Other Services (Optional)
 
-For beets, tdarr, radarr, sonarr, plex - if you want their logs in Obstackd:
+For beets, tdarr, radarr, sonarr, plex - if you want their logs in uFawkesObs:
 
 ```yaml
 services:
@@ -116,10 +116,10 @@ Apply these changes to `/path/to/Media-Refinery/docker-compose.yml`:
 
 ## Deployment Steps
 
-### 1. Ensure Obstackd is Running
+### 1. Ensure uFawkesObs is Running
 
 ```bash
-cd /path/to/Obstackd
+cd /path/to/uFawkesObs
 docker compose --profile core up -d
 docker network ls | grep observability-lab  # Verify network exists
 ```
@@ -144,7 +144,7 @@ docker exec media-refinery curl -v http://prometheus:9090/-/healthy
 
 ### 4. Add Prometheus Scrape Job (Optional)
 
-If Media-Refinery exposes Prometheus metrics, edit `Obstackd/config/prometheus/prometheus.yaml`:
+If Media-Refinery exposes Prometheus metrics, edit `uFawkesObs/config/prometheus/prometheus.yaml`:
 
 ```yaml
 scrape_configs:
@@ -165,7 +165,7 @@ scrape_configs:
 Then restart Prometheus:
 
 ```bash
-cd /path/to/Obstackd
+cd /path/to/uFawkesObs
 docker compose restart prometheus
 ```
 
@@ -228,7 +228,7 @@ services:
   media-refinery:
     networks:
       - your-app-network
-      - observability-lab  # ← Join Obstackd network for auto log collection
+      - observability-lab  # ← Join uFawkesObs network for auto log collection
 
 networks:
   observability-lab:

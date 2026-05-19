@@ -9,7 +9,7 @@
 
 ### Logs (Loki)
 - **Status:** ✅ ACTIVE (via Grafana Alloy v1.12.2)
-- **Data:** All container logs from Obstackd core stack
+- **Data:** All container logs from uFawkesObs core stack
 - **View:** http://localhost:3000 → Explore → Loki
 
 ### Traces (Tempo)
@@ -63,7 +63,7 @@ Grafana → Alerting → Alert rules
 - `alertmanager` (alert metrics)
 
 ### Loki Labels (All containers logged)
-- Obstackd: prometheus, loki, tempo, grafana, otel-collector, alertmanager, alloy
+- uFawkesObs: prometheus, loki, tempo, grafana, otel-collector, alertmanager, alloy
 
 Available filters:
 - `compose_service` - Service name

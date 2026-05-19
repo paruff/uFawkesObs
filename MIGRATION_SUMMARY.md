@@ -290,7 +290,7 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 
 ### Fresh Deployment
 ```bash
-cd /path/to/Obstackd
+cd /path/to/uFawkesObs
 
 # Start stack (Alloy will auto-discover containers)
 docker compose --profile core up -d

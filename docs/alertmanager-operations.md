@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides operational guidance for the Alertmanager service in the Obstackd observability stack. Alertmanager handles alerts sent by Prometheus and routes them to the appropriate notification channels.
+This document provides operational guidance for the Alertmanager service in the uFawkesObs observability stack. Alertmanager handles alerts sent by Prometheus and routes them to the appropriate notification channels.
 
 ## Service Access
 

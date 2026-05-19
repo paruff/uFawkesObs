@@ -464,4 +464,4 @@ docker compose --profile core up -d
 
 **Last Updated:** January 27, 2026  
 **Migration Owner:** GitHub Copilot  
-**Project:** Obstackd (Observability Stack)
+**Project:** uFawkesObs (Observability Stack)

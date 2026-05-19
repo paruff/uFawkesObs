@@ -1,4 +1,4 @@
-# Architecture — Obstackd
+# Architecture — uFawkesObs
 
 > Read this before changing service dependencies, ports, or network topology.
 > Update this file whenever a new service is added, removed, or re-wired.

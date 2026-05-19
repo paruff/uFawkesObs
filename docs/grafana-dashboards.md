@@ -1,10 +1,10 @@
 # Grafana Dashboards Documentation
 
-This document describes the pre-built Grafana dashboards included in the Obstackd observability platform.
+This document describes the pre-built Grafana dashboards included in the uFawkesObs observability platform.
 
 ## Overview
 
-Obstackd includes 4 pre-built dashboards that provide comprehensive monitoring across the entire observability stack:
+uFawkesObs includes 4 pre-built dashboards that provide comprehensive monitoring across the entire observability stack:
 
 1. **Observability Stack Health** - Monitor the health of core observability components
 2. **IoT Devices & MQTT** - Monitor IoT device connectivity and MQTT broker

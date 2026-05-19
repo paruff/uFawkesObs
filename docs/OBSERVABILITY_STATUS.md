@@ -51,7 +51,7 @@ Method 2: Query Directly
 
 **Containers Being Logged:**
 ```
-Obstackd Stack:
+uFawkesObs Stack:
   - prometheus
   - loki
   - tempo
@@ -69,7 +69,7 @@ Quick Filters:
   {compose_service="media-refinery"}     → App logs
   {compose_service="prometheus"}         → Prometheus logs
   {stream="stderr"}                      → Error logs only
-  {compose_project="observability-lab"} → Obstackd stack
+  {compose_project="ufawkesobs"} → uFawkesObs stack
 ```
 
 ### 3. TRACES ⚠️
@@ -118,7 +118,7 @@ Config is at `config/alloy/config.river` instead of `config/promtail/promtail.ya
 │  observability-lab (Docker network)         │
 ├─────────────────────────────────────────────┤
 │                                             │
-│  Obstackd Stack:                            │
+│  uFawkesObs Stack:                            │
 │  ├─ Prometheus (metrics)                    │
 │  ├─ Loki (logs)                             │
 │  ├─ Tempo (traces)                          │
