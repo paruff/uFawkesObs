@@ -4,9 +4,9 @@
 
 uFawkesObs is for small-to-medium engineering teams (3–15 people) running Docker Compose workloads who want production-grade metrics, logs, and traces without a SaaS observability bill.
 
-It is a Docker Compose-based observability platform that provides the OpenTelemetry, Prometheus, Loki, Tempo, Alertmanager, and Grafana infrastructure needed to collect, store, and query telemetry in one place.
+It is a Docker Compose-based observability platform that provides the OpenTelemetry, Prometheus, Loki, Tempo, Alertmanager, Alloy, and Grafana infrastructure needed to collect, store, and query telemetry in one place.
 
-uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap (see M4).
+uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap.
 
 **Tech Stack:**
 - **OpenTelemetry Collector** (v0.103.1) - Telemetry data collection and routing
@@ -470,16 +470,16 @@ jobs:
 
 ## Next Steps
 
-- **DORA data integration (M4):** wire deployment and commit event sources from uFawkesPipe so DORA metrics can be computed from reliable data.
+- **DORA data integration:** wire deployment and commit event sources from uFawkesPipe so DORA metrics can be computed from reliable data.
 - **Production hardening:** add stronger authentication/TLS posture, storage backends, and operational safeguards for longer-lived deployments.
-- **Kubernetes deployment option (M5):** provide a Helm + ArgoCD track for pull-based reconciliation and multi-node operations.
+- **Kubernetes deployment option:** provide a Helm + ArgoCD track for pull-based reconciliation and multi-node operations.
 
 ---
 
 ## Development Philosophy
 
 This project follows these principles:
-- ✅ **GitOps at the configuration layer:** all desired state is in version control and applied declaratively. In this release, deployment reconciliation is push-triggered (via `make up` or CI). Pull-based reconciliation (continuous sync from git to runtime state) requires the Helm + ArgoCD track (see M5).
+- ✅ **GitOps at the configuration layer:** all desired state is in version control and applied declaratively. In this release, deployment reconciliation is push-triggered (via `make up` or CI). Pull-based reconciliation (continuous sync from git to runtime state) requires the Helm + ArgoCD track.
 - ✅ **Reproducible:** Can be rebuilt from zero with `git clone` + `make up`
 - ✅ **No manual steps:** Zero UI clicks or CLI wizardry required
 - ✅ **Declarative:** All configuration is explicit and file-based
