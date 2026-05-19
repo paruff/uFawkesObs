@@ -47,7 +47,7 @@ A **Docker Compose-based observability platform** that provides a complete monit
 
 3. **Start the observability stack:**
    ```bash
-   docker compose --profile core up -d
+   make up
    ```
 
 4. **Wait for services to initialize:**
@@ -89,8 +89,7 @@ A **Docker Compose-based observability platform** that provides a complete monit
 
 ### Grafana Dashboard
 - **URL:** http://localhost:3000
-- **Username:** `admin`
-- **Password:** `admin`
+- **Credentials:** Set in your `.env` file — run `make check-env` to verify.
 
 The Prometheus, Tempo, Loki, and Alertmanager datasources are pre-configured and ready to use.
 
