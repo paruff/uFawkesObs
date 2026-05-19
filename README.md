@@ -1,4 +1,4 @@
-# Obstackd
+# uFawkesObs
 
 ## What This Is
 
@@ -33,8 +33,8 @@ A **Docker Compose-based observability platform** that provides a complete monit
 
 1. **Clone and enter:**
    ```bash
-   git clone https://github.com/<your-username>/Obstackd.git
-   cd Obstackd
+   git clone https://github.com/<your-username>/uFawkesObs.git
+   cd uFawkesObs
    ```
 
 2. **Create data directories:**
