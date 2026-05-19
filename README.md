@@ -38,8 +38,8 @@ uFawkesObs provides the observability substrate required for DORA measurement â€
 uFawkesObs is the observability plane in the [Fawkes IDP](https://github.com/paruff/fawkes) family.
 
 - **uFawkesObs**: observability plane (metrics, logs, traces, dashboards)
-- **uFawkesPipe**: CI/CD plane for pipeline orchestration and deployment event flow
-- **uFawkesDevX**: developer plane for local development workflows and tooling
+- **uFawkesPipe** (`deliveryd`): CI/CD plane for pipeline orchestration and deployment event flow
+- **uFawkesDevX** (`developerd`): developer plane for local development workflows and tooling
 
 In this architecture, uFawkesObs provides the telemetry substrate; higher-level delivery and developer planes provide the event context needed for end-to-end DORA measurement.
 
