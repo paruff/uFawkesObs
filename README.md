@@ -2,7 +2,11 @@
 
 ## What This Is
 
-A **Docker Compose-based observability platform** that provides a complete monitoring stack with OpenTelemetry, Prometheus, and Grafana. This is a self-hosted, GitOps-first solution designed for long-term operability and reproducibility.
+uFawkesObs is for small-to-medium engineering teams (3–15 people) running Docker Compose workloads who want production-grade metrics, logs, and traces without a SaaS observability bill.
+
+It is a Docker Compose-based observability platform that provides the OpenTelemetry, Prometheus, Loki, Tempo, Alertmanager, Alloy, and Grafana infrastructure needed to collect, store, and query telemetry in one place.
+
+uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap.
 
 **Tech Stack:**
 - **OpenTelemetry Collector** (v0.103.1) - Telemetry data collection and routing
@@ -14,9 +18,30 @@ A **Docker Compose-based observability platform** that provides a complete monit
 - **Grafana** (v10.4.5) - Visualization and dashboards
 - **Docker Compose** - Service orchestration
 
-**Primary Use Case:** Provides a production-ready observability platform deployable with `make up`. Configure secure Grafana credentials in `.env` first. Startup validation blocks insecure deployments.
+**Primary Use Case:** Provides a self-hosted observability foundation deployable with `make up`. Configure secure Grafana credentials in `.env` first. Startup validation blocks insecure deployments.
 
 **Multi-Stack Support:** Designed to serve as a centralized observability platform for multiple Docker Compose applications. See [Multi-Stack Integration Guide](docs/multi-stack-integration.md) for connecting other applications.
+
+---
+
+## What This Is Not
+
+- Not a DORA metrics generator — it is the instrumentation substrate that makes DORA measurement possible.
+- Not a replacement for Grafana Cloud or Datadog for teams with >50 engineers or multi-region deployments.
+- Not horizontally scalable in this release — single-instance only.
+- Not multi-tenant — all telemetry shares one Prometheus, Loki, and Tempo instance.
+
+---
+
+## Part of the Fawkes IDP
+
+uFawkesObs is the observability plane in the [Fawkes IDP](https://github.com/paruff/fawkes) family.
+
+- **uFawkesObs**: observability plane (metrics, logs, traces, dashboards)
+- **deliveryd** (also referred to as **uFawkesPipe**): CI/CD plane for pipeline orchestration and deployment event flow
+- **developerd** (also referred to as **uFawkesDevX**): developer plane for local development workflows and tooling
+
+In this architecture, uFawkesObs provides the telemetry substrate; higher-level delivery and developer planes provide the event context needed for end-to-end DORA measurement.
 
 ---
 
@@ -445,19 +470,16 @@ jobs:
 
 ## Next Steps
 
-- **Add instrumented applications** to send telemetry (metrics, traces, and logs) to the OTLP endpoints
-- **Create custom Grafana dashboards** in `config/grafana/dashboards/`
-- **Configure additional Prometheus scrape targets** in `config/prometheus/prometheus.yaml`
-- **Query traces in Grafana** using the Tempo datasource to visualize distributed traces
-- **Query logs in Grafana** using the Loki datasource with LogQL to search and analyze logs
-- **Explore log-trace correlation** to debug issues across the full observability stack
+- **DORA data integration:** wire deployment and commit event sources from uFawkesPipe so DORA metrics can be computed from reliable data.
+- **Production hardening:** add stronger authentication/TLS posture, storage backends, and operational safeguards for longer-lived deployments.
+- **Kubernetes deployment option:** provide a Helm + ArgoCD track for pull-based reconciliation and multi-node operations.
 
 ---
 
 ## Development Philosophy
 
 This project follows these principles:
-- ✅ **GitOps-first:** Everything is defined in version-controlled files
+- ✅ **GitOps at the configuration layer:** all desired state is in version control and applied declaratively. In this release, deployment reconciliation is push-triggered (via `make up` or CI). Pull-based reconciliation (continuous sync from git to runtime state) requires the Helm + ArgoCD track.
 - ✅ **Reproducible:** Can be rebuilt from zero with `git clone` + `make up`
 - ✅ **No manual steps:** Zero UI clicks or CLI wizardry required
 - ✅ **Declarative:** All configuration is explicit and file-based
