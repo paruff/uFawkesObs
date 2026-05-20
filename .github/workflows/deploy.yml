@@ -13,16 +13,21 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: gitops-reconciliation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
       compose_changed: ${{ steps.filter.outputs.compose }}
-      reconcile_changed: ${{ steps.filter.outputs.reconcile }}
+      reload_changed: ${{ steps.filter.outputs.reload }}
+      non_reloadable_config_changed: ${{ steps.filter.outputs.non_reloadable_config }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Detect changed paths
         id: filter
@@ -31,15 +36,20 @@ jobs:
           filters: |
             compose:
               - 'compose.yaml'
-            reconcile:
-              - 'config/**'
+            reload:
+              - 'config/prometheus/**'
+              - 'config/alloy/**'
               - '.env.example'
               - 'dashboards/**'
+            non_reloadable_config:
+              - 'config/**'
+              - '!config/prometheus/**'
+              - '!config/alloy/**'
 
   deploy-config-reload:
     name: Deploy (config reload)
     needs: detect-changes
-    if: needs.detect-changes.outputs.reconcile_changed == 'true' && needs.detect-changes.outputs.compose_changed != 'true'
+    if: needs.detect-changes.outputs.reload_changed == 'true' && needs.detect-changes.outputs.compose_changed != 'true' && needs.detect-changes.outputs.non_reloadable_config_changed != 'true'
     runs-on: ubuntu-latest
     outputs:
       deployment_mode: ${{ steps.summary.outputs.deployment_mode }}
@@ -86,7 +96,7 @@ jobs:
             printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
           else
             echo "::warning::DEPLOY_HOST_KEY not set; using ssh-keyscan TOFU fallback for ${DEPLOY_HOST}"
-            ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+            ssh-keyscan -T 10 -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
           fi
 
       - name: Reload services on target host
@@ -169,7 +179,7 @@ jobs:
   deploy-compose-restart:
     name: Deploy (compose restart)
     needs: detect-changes
-    if: needs.detect-changes.outputs.compose_changed == 'true'
+    if: needs.detect-changes.outputs.compose_changed == 'true' || needs.detect-changes.outputs.non_reloadable_config_changed == 'true'
     runs-on: ubuntu-latest
     environment: compose-restart
     outputs:
@@ -217,7 +227,7 @@ jobs:
             printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
           else
             echo "::warning::DEPLOY_HOST_KEY not set; using ssh-keyscan TOFU fallback for ${DEPLOY_HOST}"
-            ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+            ssh-keyscan -T 10 -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
           fi
 
       - name: Run make up on target host

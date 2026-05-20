@@ -19,7 +19,9 @@ Docs-only changes do not trigger reconciliation.
 
 ### 1) Config reload path (automatic)
 
-If `compose.yaml` did **not** change, the workflow SSHes into the deploy host and runs:
+If `compose.yaml` did **not** change and the change set is limited to reloadable paths
+(`config/prometheus/**`, `config/alloy/**`, `.env.example`, `dashboards/**`), the workflow
+SSHes into the deploy host and runs:
 
 1. `git pull --ff-only origin main`
 2. `curl -X POST http://localhost:9090/-/reload` (Prometheus config reload)
@@ -28,8 +30,10 @@ If `compose.yaml` did **not** change, the workflow SSHes into the deploy host an
 
 ### 2) Compose restart path (manual approval required)
 
-If `compose.yaml` changed, the workflow uses job `deploy-compose-restart` with environment
-`compose-restart` and requires reviewer approval via GitHub Environment protection rules.
+If `compose.yaml` changed, or if a non-reloadable config path changed
+(`config/**` except `config/prometheus/**` and `config/alloy/**`), the workflow uses job
+`deploy-compose-restart` with environment `compose-restart` and requires reviewer approval
+via GitHub Environment protection rules.
 
 After approval, it SSHes into the deploy host and runs:
 

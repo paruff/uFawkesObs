@@ -23,9 +23,9 @@ wait_for_endpoint() {
   echo "Healthy: ${name}"
 }
 
-wait_for_endpoint "Prometheus" "http://localhost:9090/-/ready"
+wait_for_endpoint "Prometheus" "http://localhost:9090/-/healthy"
 wait_for_endpoint "Grafana" "http://localhost:3000/api/health"
 wait_for_endpoint "Tempo" "http://localhost:3200/ready"
 wait_for_endpoint "Loki" "http://localhost:3100/ready"
 wait_for_endpoint "OTel Collector" "http://localhost:8888/metrics"
-wait_for_endpoint "Alloy" "http://localhost:12345/metrics"
+wait_for_endpoint "Alloy" "http://localhost:12345/-/ready"
