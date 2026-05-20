@@ -12,6 +12,8 @@ import pytest
 import yaml
 from pathlib import Path
 
+EXPECTED_ALERT_DOMAIN = 'ufawkesobs-health'
+
 
 class TestPrometheusConfigStructure:
     """Test the basic structure of the Prometheus configuration."""
@@ -141,6 +143,85 @@ class TestPrometheusRuleFiles:
             for rule_file in rule_files:
                 assert isinstance(rule_file, str), \
                     "Each rule file should be a string path"
+
+    def test_self_monitoring_rule_file_referenced(self, prometheus_config_path):
+        """Test that self-monitoring rule file is referenced."""
+        with open(prometheus_config_path, 'r') as f:
+            config = yaml.safe_load(f)
+
+        rule_files = config.get('rule_files', [])
+        assert "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml" in rule_files, \
+            "self-monitoring rule file should be referenced in rule_files"
+
+    def test_self_monitoring_rule_file_mounted_in_compose(self, project_root):
+        """Test that self-monitoring rules directory is mounted into Prometheus container."""
+        compose_file = project_root / "compose.yaml"
+        with open(compose_file, 'r') as f:
+            compose_config = yaml.safe_load(f)
+
+        prometheus_service = compose_config["services"]["prometheus"]
+        volumes = prometheus_service.get("volumes", [])
+        assert "./config/prometheus/rules:/etc/prometheus/rules:ro" in volumes, \
+            "Prometheus should mount config/prometheus/rules to /etc/prometheus/rules"
+
+
+class TestPrometheusSelfMonitoringRules:
+    """Test the uFawkesObs self-monitoring rule file."""
+
+    def test_self_monitoring_rule_file_exists(self, project_root):
+        """Test that self-monitoring rule file exists."""
+        rule_file = project_root / "config" / "prometheus" / "rules" / "ufawkesobs-self-monitoring.yml"
+        assert rule_file.exists(), f"Self-monitoring rule file not found: {rule_file}"
+
+    def test_self_monitoring_rules_include_required_alerts(self, project_root):
+        """Test that required self-monitoring alerts are present."""
+        rule_file = project_root / "config" / "prometheus" / "rules" / "ufawkesobs-self-monitoring.yml"
+
+        with open(rule_file, 'r') as f:
+            config = yaml.safe_load(f)
+
+        groups = config.get('groups', [])
+        rules = [
+            rule
+            for group in groups
+            for rule in group.get('rules', [])
+            if 'alert' in rule
+        ]
+        alerts = [rule['alert'] for rule in rules]
+
+        expected_alerts = [
+            "UFawkesObsServiceDown",
+            "UFawkesObsPrometheusStorageHigh",
+            "UFawkesObsLokiIngestionDropped",
+            "UFawkesObsTempoStorageHigh",
+            "UFawkesObsOtelCollectorDropped",
+            "UFawkesObsContainerRestarting",
+        ]
+        for alert in expected_alerts:
+            assert alert in alerts, f"Missing required alert: {alert}"
+
+    def test_self_monitoring_rules_have_required_labels(self, project_root):
+        """Test that self-monitoring rules include routing labels and for duration."""
+        rule_file = project_root / "config" / "prometheus" / "rules" / "ufawkesobs-self-monitoring.yml"
+
+        with open(rule_file, 'r') as f:
+            config = yaml.safe_load(f)
+
+        rules = [
+            rule
+            for group in config.get('groups', [])
+            for rule in group.get('rules', [])
+            if 'alert' in rule
+        ]
+
+        assert len(rules) > 0, "Expected at least one alert rule in self-monitoring file"
+        for rule in rules:
+            labels = rule.get('labels', {})
+            assert labels.get('alert_domain') == EXPECTED_ALERT_DOMAIN, \
+                f"Alert {rule['alert']} should include alert_domain={EXPECTED_ALERT_DOMAIN}"
+            assert 'severity' in labels, f"Alert {rule['alert']} should include severity label"
+            assert 'category' in labels, f"Alert {rule['alert']} should include category label"
+            assert 'for' in rule, f"Alert {rule['alert']} should define a for duration"
 
 
 class TestPrometheusScrapeConfigs:
