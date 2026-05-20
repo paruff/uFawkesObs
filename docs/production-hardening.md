@@ -203,12 +203,45 @@ ufw deny 9093    # Alertmanager — internal only
 
 ## Secret Manager Integration
 
-### Docker Secrets (Swarm mode)
+### Docker Secrets — plain Compose (file-based, no Swarm required)
 
-Docker Compose supports Swarm secrets natively. Migrate `.env` values to Docker
-Secrets by declaring them in `compose.yaml`:
+For standard `docker compose` deployments (no Swarm), use a local file as the
+secret source. This avoids storing passwords in `.env` and works on any Docker
+host:
 
 ```yaml
+# compose.yaml — file-based secret, no Swarm required
+secrets:
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt   # gitignored plain-text file
+
+services:
+  grafana:
+    secrets:
+      - grafana_admin_password
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
+```
+
+Create the secret file (add `secrets/` to `.gitignore`):
+
+```bash
+mkdir -p secrets && chmod 700 secrets
+echo "my-secure-password" > secrets/grafana_admin_password.txt
+chmod 600 secrets/grafana_admin_password.txt
+```
+
+### Docker Secrets (Swarm mode — requires `docker swarm init`)
+
+> **Note:** `external: true` secrets are a Swarm feature. They are **not**
+> available to plain `docker compose` projects; use the file-based approach
+> above unless you have already initialised a Swarm (`docker swarm init`).
+
+If you are running in Swarm mode (`docker stack deploy`), migrate `.env` values
+to Swarm-managed secrets:
+
+```yaml
+# compose.yaml — Swarm external secret
 secrets:
   grafana_admin_password:
     external: true
@@ -221,14 +254,20 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD_FILE=/run/secrets/grafana_admin_password
 ```
 
-Create the secret with:
+Initialise Swarm and create the secret:
 
 ```bash
+# Only needed once per host
+docker swarm init
+
 # Read from a file — avoids the password appearing in shell history
 echo "my-secure-password" > /tmp/grafana-pw && chmod 600 /tmp/grafana-pw
 docker secret create grafana_admin_password /tmp/grafana-pw
 rm /tmp/grafana-pw
 ```
+
+Deploy with `docker stack deploy -c compose.yaml uFawkesObs` instead of
+`docker compose up`.
 
 ### HashiCorp Vault
 

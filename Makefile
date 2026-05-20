@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps down logs status test
+.PHONY: help init check-env up up-apps down logs status test-unit test-acceptance test
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -11,9 +11,9 @@ LGTM_UID := 10001
 help:
 	@grep -E '^## [a-z]' Makefile | sed 's/^## //' | awk -F': ' '{printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-## init: create data directories with correct ownership (no chmod 777)
+## init: create data directories with mode 755 and print required chown commands
 init:
-	@echo "Creating data directories with correct ownership..."
+	@echo "Creating data directories (mode 755) — run the chown commands printed below to set ownership..."
 	install -d -m 755 data/grafana
 	install -d -m 755 data/prometheus
 	install -d -m 755 data/alertmanager
@@ -54,16 +54,23 @@ status:
 	docker compose ps
 	@echo ""
 	@echo "Health endpoints:"
-	@curl -sf http://localhost:9090/-/ready  && echo "  ✅ Prometheus  :9090" || echo "  ❌ Prometheus  :9090"
-	@curl -sf http://localhost:3200/ready    && echo "  ✅ Tempo       :3200" || echo "  ❌ Tempo       :3200"
-	@curl -sf http://localhost:3100/ready    && echo "  ✅ Loki        :3100" || echo "  ❌ Loki        :3100"
+	@curl -sf http://localhost:9090/-/ready  > /dev/null && echo "  ✅ Prometheus  :9090" || echo "  ❌ Prometheus  :9090"
+	@curl -sf http://localhost:3200/ready    > /dev/null && echo "  ✅ Tempo       :3200" || echo "  ❌ Tempo       :3200"
+	@curl -sf http://localhost:3100/ready    > /dev/null && echo "  ✅ Loki        :3100" || echo "  ❌ Loki        :3100"
 	@curl -sf http://localhost:3000/api/health > /dev/null && echo "  ✅ Grafana     :3000" || echo "  ❌ Grafana     :3000"
-	@curl -sf http://localhost:9093/-/healthy && echo "  ✅ Alertmanager:9093" || echo "  ❌ Alertmanager:9093"
+	@curl -sf http://localhost:9093/-/healthy > /dev/null && echo "  ✅ Alertmanager:9093" || echo "  ❌ Alertmanager:9093"
 	@curl -sf http://localhost:8888/metrics > /dev/null && echo "  ✅ OTel Coll.  :8888" || echo "  ❌ OTel Coll.  :8888"
-	@curl -sf http://localhost:12345/-/ready && echo "  ✅ Alloy       :12345" || echo "  ❌ Alloy       :12345"
+	@curl -sf http://localhost:12345/-/ready > /dev/null && echo "  ✅ Alloy       :12345" || echo "  ❌ Alloy       :12345"
 
-## test: run unit tests then acceptance test
-test:
+## test-unit: run unit tests only
+test-unit:
 	pip install -q -r tests/unit/requirements.txt
 	pytest tests/unit/
+
+## test-acceptance: run acceptance tests (requires stack to be running: make up)
+test-acceptance:
+	@echo "Running acceptance tests — stack must already be up (run 'make up' first)"
 	./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
+
+## test: run unit tests then acceptance tests (requires stack to be running: make up)
+test: test-unit test-acceptance
