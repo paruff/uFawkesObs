@@ -1,0 +1,229 @@
+name: GitOps Reconciliation Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/**'
+      - 'compose.yaml'
+      - '.env.example'
+      - 'dashboards/**'
+
+permissions:
+  contents: write
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      compose_changed: ${{ steps.filter.outputs.compose }}
+      reconcile_changed: ${{ steps.filter.outputs.reconcile }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            compose:
+              - 'compose.yaml'
+            reconcile:
+              - 'config/**'
+              - '.env.example'
+              - 'dashboards/**'
+
+  deploy-config-reload:
+    name: Deploy (config reload)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.reconcile_changed == 'true' && needs.detect-changes.outputs.compose_changed != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_mode: ${{ steps.summary.outputs.deployment_mode }}
+      services_action: ${{ steps.summary.outputs.services_action }}
+      health_result: ${{ steps.summary.outputs.health_result }}
+    steps:
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${DEPLOY_HOST}" ]; then
+            echo "::error::Missing required secret: DEPLOY_HOST"
+            missing=1
+          fi
+          if [ -z "${DEPLOY_USER}" ]; then
+            echo "::error::Missing required secret: DEPLOY_USER"
+            missing=1
+          fi
+          if [ -z "${DEPLOY_KEY}" ]; then
+            echo "::error::Missing required secret: DEPLOY_KEY"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Reload services on target host
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          ssh -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
+
+          if [ ! -d "${REPO_DIR}/.git" ]; then
+            echo "Repository not found at ${REPO_DIR}. Set repository variable DEPLOY_PATH to the clone path on the target host."
+            exit 1
+          fi
+
+          cd "${REPO_DIR}"
+          git pull --ff-only origin main
+
+          curl --fail --show-error --silent -X POST http://localhost:9090/-/reload
+          docker compose exec -T alloy sh -c 'kill -HUP 1'
+
+          if [ ! -x ./scripts/wait-healthy.sh ]; then
+            echo "Missing executable script: ./scripts/wait-healthy.sh"
+            exit 1
+          fi
+
+          ./scripts/wait-healthy.sh
+          REMOTE
+
+      - name: Set deployment summary outputs
+        id: summary
+        run: |
+          echo "deployment_mode=config-reload" >> "$GITHUB_OUTPUT"
+          echo "services_action=Prometheus reloaded via /-/reload; Alloy reloaded with SIGHUP" >> "$GITHUB_OUTPUT"
+          echo "health_result=passed" >> "$GITHUB_OUTPUT"
+
+  deploy-compose-restart:
+    name: Deploy (compose restart)
+    needs: detect-changes
+    if: needs.detect-changes.outputs.compose_changed == 'true'
+    runs-on: ubuntu-latest
+    environment: compose-restart
+    outputs:
+      deployment_mode: ${{ steps.summary.outputs.deployment_mode }}
+      services_action: ${{ steps.summary.outputs.services_action }}
+      health_result: ${{ steps.summary.outputs.health_result }}
+    steps:
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${DEPLOY_HOST}" ]; then
+            echo "::error::Missing required secret: DEPLOY_HOST"
+            missing=1
+          fi
+          if [ -z "${DEPLOY_USER}" ]; then
+            echo "::error::Missing required secret: DEPLOY_USER"
+            missing=1
+          fi
+          if [ -z "${DEPLOY_KEY}" ]; then
+            echo "::error::Missing required secret: DEPLOY_KEY"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Run make up on target host
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          ssh -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
+
+          if [ ! -d "${REPO_DIR}/.git" ]; then
+            echo "Repository not found at ${REPO_DIR}. Set repository variable DEPLOY_PATH to the clone path on the target host."
+            exit 1
+          fi
+
+          cd "${REPO_DIR}"
+          git pull --ff-only origin main
+
+          make up
+
+          if [ ! -x ./scripts/wait-healthy.sh ]; then
+            echo "Missing executable script: ./scripts/wait-healthy.sh"
+            exit 1
+          fi
+
+          ./scripts/wait-healthy.sh
+          REMOTE
+
+      - name: Set deployment summary outputs
+        id: summary
+        run: |
+          echo "deployment_mode=compose-restart" >> "$GITHUB_OUTPUT"
+          echo "services_action=Ran make up (check-env + docker compose up -d)" >> "$GITHUB_OUTPUT"
+          echo "health_result=passed" >> "$GITHUB_OUTPUT"
+
+  comment-summary:
+    name: Post deployment summary
+    needs:
+      - detect-changes
+      - deploy-config-reload
+      - deploy-compose-restart
+    if: always() && (needs.deploy-config-reload.result != 'skipped' || needs.deploy-compose-restart.result != 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on triggering commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const mode = `${{ needs.deploy-compose-restart.outputs.deployment_mode || needs.deploy-config-reload.outputs.deployment_mode || 'unknown' }}`;
+            const services = `${{ needs.deploy-compose-restart.outputs.services_action || needs.deploy-config-reload.outputs.services_action || 'n/a' }}`;
+            const health = `${{ needs.deploy-compose-restart.outputs.health_result || needs.deploy-config-reload.outputs.health_result || 'failed' }}`;
+            const composeResult = `${{ needs.deploy-compose-restart.result }}`;
+            const configResult = `${{ needs.deploy-config-reload.result }}`;
+
+            const body = [
+              '## GitOps Reconciliation Summary',
+              `- Mode: ${mode}`,
+              `- Services: ${services}`,
+              `- Health check: ${health}`,
+              `- compose-restart job: ${composeResult}`,
+              `- config-reload job: ${configResult}`,
+              `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            ].join('\n');
+
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body
+            });

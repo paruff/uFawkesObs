@@ -13,6 +13,15 @@ uFawkesObs is a self-hosted, GitOps-first observability platform delivered as Do
 It is a sub-plane of [Fawkes IDP](https://github.com/paruff/fawkes) and can be deployed
 standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (developer plane).
 
+### GitOps Reconciliation Model
+
+- Runtime reconciliation is CI-triggered from Git via `.github/workflows/deploy.yml`.
+- Pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**`
+  reconcile the target host over SSH.
+- Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
+- `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before
+  running `make up`.
+
 **Stack:**
 | Service | Version | Role |
 |---|---|---|
