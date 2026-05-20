@@ -97,6 +97,12 @@ jobs:
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          case "${REPO_NAME}" in
+            ""|*[!A-Za-z0-9._-]*)
+              echo "::error::Unsafe repository name for remote path: ${REPO_NAME}"
+              exit 1
+              ;;
+          esac
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 
@@ -110,7 +116,7 @@ jobs:
           cd "${REPO_DIR}"
           git pull --ff-only origin main
 
-          curl --fail --show-error --silent -X POST http://localhost:9090/-/reload || {
+          curl --fail --show-error --silent --connect-timeout 5 --max-time 10 -X POST http://localhost:9090/-/reload || {
             echo "Prometheus reload failed"
             exit 1
           }
@@ -197,6 +203,12 @@ jobs:
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          case "${REPO_NAME}" in
+            ""|*[!A-Za-z0-9._-]*)
+              echo "::error::Unsafe repository name for remote path: ${REPO_NAME}"
+              exit 1
+              ;;
+          esac
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 

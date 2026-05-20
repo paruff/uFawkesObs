@@ -10,7 +10,7 @@ wait_for_endpoint() {
   local deadline
   deadline=$((SECONDS + TIMEOUT_SECONDS))
 
-  until curl -fsS "$url" > /dev/null; do
+  until curl -fsS --connect-timeout 5 --max-time 10 "$url" > /dev/null; do
     if (( SECONDS >= deadline )); then
       echo "Timed out waiting for ${name} at ${url}"
       return 1
