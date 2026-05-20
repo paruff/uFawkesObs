@@ -104,6 +104,8 @@ continuous delivery of configuration changes without requiring a controller loop
 - No additional tooling required beyond Docker Compose.
 - Simple, understandable deployment model for the target audience.
 - Full audit trail of all configuration changes via Git history.
+- Pushes to `main` now trigger CI-driven reconciliation (`.github/workflows/deploy.yml`),
+  making deployment application deterministic and auditable per commit.
 - Grafana provisioning ensures dashboards and datasources cannot be changed through the
   UI without a corresponding commit.
 
@@ -114,8 +116,8 @@ continuous delivery of configuration changes without requiring a controller loop
   is manual (compare running container config with repository config).
 - **No automatic remediation** — If a service is reconfigured out-of-band (e.g., direct
   container exec), the repository does not detect or correct this.
-- **Deployment requires human or CI trigger** — Config changes do not propagate
-  automatically. `make up` or an equivalent CI step must be triggered after each merge.
+- **No pull-based drift controller** — Reconciliation is push-triggered in CI, not a
+  continuous pull-based controller loop with automatic drift remediation.
 
 ### Planned Evolution
 
