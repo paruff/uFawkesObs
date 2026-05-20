@@ -78,10 +78,16 @@ jobs:
       - name: Add deploy host to known_hosts
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          if [ -n "${DEPLOY_HOST_KEY}" ]; then
+            printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
+          else
+            echo "::warning::DEPLOY_HOST_KEY not set; using ssh-keyscan TOFU fallback for ${DEPLOY_HOST}"
+            ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          fi
 
       - name: Reload services on target host
         env:
@@ -104,8 +110,15 @@ jobs:
           cd "${REPO_DIR}"
           git pull --ff-only origin main
 
-          curl --fail --show-error --silent -X POST http://localhost:9090/-/reload
-          docker compose kill --signal HUP alloy
+          curl --fail --show-error --silent -X POST http://localhost:9090/-/reload || {
+            echo "Prometheus reload failed"
+            exit 1
+          }
+
+          docker compose kill --signal HUP alloy || {
+            echo "Failed to send SIGHUP to Alloy"
+            exit 1
+          }
 
           if [ ! -x ./scripts/wait-healthy.sh ]; then
             echo "Missing executable script: ./scripts/wait-healthy.sh"
@@ -165,10 +178,16 @@ jobs:
       - name: Add deploy host to known_hosts
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          if [ -n "${DEPLOY_HOST_KEY}" ]; then
+            printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
+          else
+            echo "::warning::DEPLOY_HOST_KEY not set; using ssh-keyscan TOFU fallback for ${DEPLOY_HOST}"
+            ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          fi
 
       - name: Run make up on target host
         env:

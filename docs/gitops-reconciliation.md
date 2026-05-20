@@ -23,7 +23,7 @@ If `compose.yaml` did **not** change, the workflow SSHes into the deploy host an
 
 1. `git pull --ff-only origin main`
 2. `curl -X POST http://localhost:9090/-/reload` (Prometheus config reload)
-3. `SIGHUP` to Alloy
+3. `SIGHUP` to Alloy (triggers Alloy config reload)
 4. `./scripts/wait-healthy.sh`
 
 ### 2) Compose restart path (manual approval required)
@@ -53,6 +53,12 @@ If any required secret is missing, the workflow exits with an explicit error.
 
 - `DEPLOY_PATH`: absolute path of the uFawkesObs clone on the target host  
   Default if unset: `$HOME/<repo-name>`
+
+### Optional secret (recommended)
+
+- `DEPLOY_HOST_KEY`: full host key line for `known_hosts` (for example:
+  `deploy.example.com ssh-ed25519 AAAAC3...`)  
+  If unset, the workflow falls back to `ssh-keyscan` (TOFU behavior).
 
 ## Commit Audit Summary
 
