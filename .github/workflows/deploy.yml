@@ -75,6 +75,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
+      - name: Add deploy host to known_hosts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
       - name: Reload services on target host
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -83,7 +91,7 @@ jobs:
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
-          ssh -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -97,7 +105,7 @@ jobs:
           git pull --ff-only origin main
 
           curl --fail --show-error --silent -X POST http://localhost:9090/-/reload
-          docker compose exec -T alloy sh -c 'kill -HUP 1'
+          docker compose kill --signal HUP alloy
 
           if [ ! -x ./scripts/wait-healthy.sh ]; then
             echo "Missing executable script: ./scripts/wait-healthy.sh"
@@ -154,6 +162,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
+      - name: Add deploy host to known_hosts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
       - name: Run make up on target host
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -162,7 +178,7 @@ jobs:
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
-          ssh -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
