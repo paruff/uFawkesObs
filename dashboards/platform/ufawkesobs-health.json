@@ -27,7 +27,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Calculated against 2 GiB planned TSDB capacity (must stay aligned with UFawkesObsPrometheusStorageHigh alert).",
+      "description": "Current number of core observability services with up=1.",
       "fieldConfig": {
         "defaults": {
           "color": {

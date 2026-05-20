@@ -190,6 +190,7 @@ services:
     volumes:
       - ./config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
       - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./config/prometheus/rules:/etc/prometheus/rules:ro
       - ./data/prometheus:/prometheus
     ports:
       - "9090:9090"

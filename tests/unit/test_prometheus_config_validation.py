@@ -153,6 +153,17 @@ class TestPrometheusRuleFiles:
         assert "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml" in rule_files, \
             "self-monitoring rule file should be referenced in rule_files"
 
+    def test_self_monitoring_rule_file_mounted_in_compose(self, project_root):
+        """Test that self-monitoring rules directory is mounted into Prometheus container."""
+        compose_file = project_root / "compose.yaml"
+        with open(compose_file, 'r') as f:
+            compose_config = yaml.safe_load(f)
+
+        prometheus_service = compose_config["services"]["prometheus"]
+        volumes = prometheus_service.get("volumes", [])
+        assert "./config/prometheus/rules:/etc/prometheus/rules:ro" in volumes, \
+            "Prometheus should mount config/prometheus/rules to /etc/prometheus/rules"
+
 
 class TestPrometheusSelfMonitoringRules:
     """Test the uFawkesObs self-monitoring rule file."""
