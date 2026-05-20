@@ -48,6 +48,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 |---|---|---|
 | 1 | `AGENTS.md` (this file) | Stack, boundaries, PM contract |
 | 2 | `compose.yaml` | Current service versions, ports, volumes, networks |
+| 2.5 | `docs/adr/README.md` | Deliberate technology decisions — Loki version, Compose scope, GitOps scope |
 | 3 | `docs/ARCHITECTURE.md` | How services connect and depend on each other |
 | 4 | `docs/KNOWN_LIMITATIONS.md` | Known issues — do not make these worse |
 | 5 | `docs/CHANGE_IMPACT_MAP.md` | What breaks when a service config changes |
