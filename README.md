@@ -82,14 +82,9 @@ In this architecture, uFawkesObs provides the telemetry substrate; higher-level 
    make up
    ```
 
-5. **Wait for services to initialize:**
+5. **Wait for services to become healthy:**
    ```bash
-   sleep 30
-   ```
-
-6. **Verify services are running:**
-   ```bash
-   docker compose ps
+   ./scripts/wait-healthy.sh
    ```
 
 ---
