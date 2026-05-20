@@ -9,6 +9,16 @@ WAIT_CONTEXT="${WAIT_CONTEXT:-host}"
 
 readonly WAIT_TIMEOUT WAIT_INTERVAL CURL_CONNECT_TIMEOUT CURL_MAX_TIME WAIT_CONTEXT
 
+validate_positive_integer() {
+  local value="$1"
+  local variable_name="$2"
+
+  if ! [[ "${value}" =~ ^[0-9]+$ ]] || (( value <= 0 )); then
+    echo "❌ ${variable_name} must be a positive integer (seconds), got: ${value}"
+    exit 1
+  fi
+}
+
 if [[ "${WAIT_CONTEXT}" == "compose" ]]; then
   SERVICES=(
     "Prometheus|http://prometheus:9090/-/healthy"
@@ -33,6 +43,12 @@ fi
 readonly SERVICES
 
 # Mutable readiness state tracked across polling iterations.
+if (( BASH_VERSINFO[0] < 4 )); then
+  echo "❌ scripts/wait-healthy.sh requires Bash 4+."
+  echo "On macOS, install a newer Bash (e.g., 'brew install bash') and run this script with it."
+  exit 1
+fi
+
 declare -A SERVICE_READY=()
 
 is_service_ready() {
@@ -41,19 +57,28 @@ is_service_ready() {
 }
 
 main() {
-  local start_time now elapsed
+  local start_time deadline now elapsed
   local all_ready
   local service name url
 
+  validate_positive_integer "${WAIT_TIMEOUT}" "WAIT_TIMEOUT"
+  validate_positive_integer "${WAIT_INTERVAL}" "WAIT_INTERVAL"
+
   start_time=$(date +%s)
+  deadline=$((start_time + WAIT_TIMEOUT))
   echo "Waiting for core observability services (timeout: ${WAIT_TIMEOUT}s)"
 
   while true; do
-    now=$(date +%s)
-    elapsed=$((now - start_time))
+    elapsed=0
     all_ready=true
 
     for service in "${SERVICES[@]}"; do
+      now=$(date +%s)
+      if (( now >= deadline )); then
+        all_ready=false
+        break
+      fi
+
       name="${service%%|*}"
       url="${service#*|}"
 
@@ -63,11 +88,22 @@ main() {
 
       if is_service_ready "${url}"; then
         SERVICE_READY["$name"]=true
+        now=$(date +%s)
+        elapsed=$((now - start_time))
         echo "✅ ${name} healthy (${elapsed}s)"
       else
         all_ready=false
       fi
+
+      now=$(date +%s)
+      if (( now >= deadline )); then
+        all_ready=false
+        break
+      fi
     done
+
+    now=$(date +%s)
+    elapsed=$((now - start_time))
 
     if [[ "${all_ready}" == "true" ]]; then
       echo "========================================"
@@ -76,7 +112,7 @@ main() {
       exit 0
     fi
 
-    if (( elapsed >= WAIT_TIMEOUT )); then
+    if (( now >= deadline )); then
       echo "========================================"
       for service in "${SERVICES[@]}"; do
         name="${service%%|*}"
