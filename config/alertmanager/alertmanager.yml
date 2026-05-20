@@ -134,6 +134,7 @@ receivers:
   # uFawkesObs platform health receiver
   - name: 'ufawkesobs-health'
     webhook_configs:
+      # Dedicated host webhook sink for platform self-monitoring alerts.
       - url: 'http://host.docker.internal:5001/webhook/ufawkesobs-health'
         send_resolved: true
         max_alerts: 0

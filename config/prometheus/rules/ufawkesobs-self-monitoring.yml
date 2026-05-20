@@ -23,6 +23,7 @@ groups:
       - alert: UFawkesObsPrometheusStorageHigh
         expr: |
           (
+            # 2147483648 bytes == 2 GiB planned Prometheus TSDB capacity for 30-day retention.
             prometheus_tsdb_storage_blocks_bytes{job="prometheus"} / 2147483648 > 0.8
           ) or on() (
             absent(prometheus_tsdb_storage_blocks_bytes{job="prometheus"}) * 0

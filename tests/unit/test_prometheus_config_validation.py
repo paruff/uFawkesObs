@@ -12,6 +12,8 @@ import pytest
 import yaml
 from pathlib import Path
 
+EXPECTED_ALERT_DOMAIN = 'ufawkesobs-health'
+
 
 class TestPrometheusConfigStructure:
     """Test the basic structure of the Prometheus configuration."""
@@ -168,12 +170,13 @@ class TestPrometheusSelfMonitoringRules:
             config = yaml.safe_load(f)
 
         groups = config.get('groups', [])
-        alerts = [
-            rule['alert']
+        rules = [
+            rule
             for group in groups
             for rule in group.get('rules', [])
             if 'alert' in rule
         ]
+        alerts = [rule['alert'] for rule in rules]
 
         expected_alerts = [
             "UFawkesObsServiceDown",
@@ -185,6 +188,29 @@ class TestPrometheusSelfMonitoringRules:
         ]
         for alert in expected_alerts:
             assert alert in alerts, f"Missing required alert: {alert}"
+
+    def test_self_monitoring_rules_have_required_labels(self, project_root):
+        """Test that self-monitoring rules include routing labels and for duration."""
+        rule_file = project_root / "config" / "prometheus" / "rules" / "ufawkesobs-self-monitoring.yml"
+
+        with open(rule_file, 'r') as f:
+            config = yaml.safe_load(f)
+
+        rules = [
+            rule
+            for group in config.get('groups', [])
+            for rule in group.get('rules', [])
+            if 'alert' in rule
+        ]
+
+        assert len(rules) > 0, "Expected at least one alert rule in self-monitoring file"
+        for rule in rules:
+            labels = rule.get('labels', {})
+            assert labels.get('alert_domain') == EXPECTED_ALERT_DOMAIN, \
+                f"Alert {rule['alert']} should include alert_domain={EXPECTED_ALERT_DOMAIN}"
+            assert 'severity' in labels, f"Alert {rule['alert']} should include severity label"
+            assert 'category' in labels, f"Alert {rule['alert']} should include category label"
+            assert 'for' in rule, f"Alert {rule['alert']} should define a for duration"
 
 
 class TestPrometheusScrapeConfigs:
