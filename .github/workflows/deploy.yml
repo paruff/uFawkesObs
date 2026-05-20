@@ -103,6 +103,21 @@ jobs:
               exit 1
               ;;
           esac
+          if [ -n "${DEPLOY_PATH}" ]; then
+            case "${DEPLOY_PATH}" in
+              /*) ;;
+              *)
+                echo "::error::DEPLOY_PATH must be an absolute path: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+            case "${DEPLOY_PATH}" in
+              *"'"*|*..*|*[!A-Za-z0-9_./-]*)
+                echo "::error::Unsafe DEPLOY_PATH value: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+          fi
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 
@@ -219,6 +234,21 @@ jobs:
               exit 1
               ;;
           esac
+          if [ -n "${DEPLOY_PATH}" ]; then
+            case "${DEPLOY_PATH}" in
+              /*) ;;
+              *)
+                echo "::error::DEPLOY_PATH must be an absolute path: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+            case "${DEPLOY_PATH}" in
+              *"'"*|*..*|*[!A-Za-z0-9_./-]*)
+                echo "::error::Unsafe DEPLOY_PATH value: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+          fi
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
           set -euo pipefail
 
