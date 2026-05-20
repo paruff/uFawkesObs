@@ -32,6 +32,7 @@ else
 fi
 readonly SERVICES
 
+# Mutable readiness state tracked across polling iterations.
 declare -A SERVICE_READY=()
 
 is_service_ready() {
@@ -39,52 +40,57 @@ is_service_ready() {
   curl -fsS --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "${url}" >/dev/null 2>&1
 }
 
-start_time=$(date +%s)
-readonly start_time
+main() {
+  local start_time now elapsed
+  local all_ready
+  local service name url
 
-echo "Waiting for core observability services (timeout: ${WAIT_TIMEOUT}s)"
+  start_time=$(date +%s)
+  echo "Waiting for core observability services (timeout: ${WAIT_TIMEOUT}s)"
 
-while true; do
-  now=$(date +%s)
-  elapsed=$((now - start_time))
+  while true; do
+    now=$(date +%s)
+    elapsed=$((now - start_time))
+    all_ready=true
 
-  all_ready=true
-
-  for service in "${SERVICES[@]}"; do
-    name="${service%%|*}"
-    url="${service#*|}"
-
-    if [[ "${SERVICE_READY[$name]:-false}" == "true" ]]; then
-      continue
-    fi
-
-    if is_service_ready "${url}"; then
-      SERVICE_READY["$name"]=true
-      echo "✅ ${name} healthy (${elapsed}s)"
-    else
-      all_ready=false
-    fi
-  done
-
-  if [[ "${all_ready}" == "true" ]]; then
-    echo "========================================"
-    echo "✅ All core services are healthy (${elapsed}s)"
-    echo "========================================"
-    exit 0
-  fi
-
-  if (( elapsed >= WAIT_TIMEOUT )); then
-    echo "========================================"
     for service in "${SERVICES[@]}"; do
       name="${service%%|*}"
-      if [[ "${SERVICE_READY[$name]:-false}" != "true" ]]; then
-        echo "❌ ${name} not healthy (${elapsed}s)"
+      url="${service#*|}"
+
+      if [[ "${SERVICE_READY[$name]:-false}" == "true" ]]; then
+        continue
+      fi
+
+      if is_service_ready "${url}"; then
+        SERVICE_READY["$name"]=true
+        echo "✅ ${name} healthy (${elapsed}s)"
+      else
+        all_ready=false
       fi
     done
-    echo "❌ Timeout waiting for services after ${WAIT_TIMEOUT}s"
-    echo "========================================"
-    exit 1
-  fi
 
-  sleep "${WAIT_INTERVAL}"
-done
+    if [[ "${all_ready}" == "true" ]]; then
+      echo "========================================"
+      echo "✅ All core services are healthy (${elapsed}s)"
+      echo "========================================"
+      exit 0
+    fi
+
+    if (( elapsed >= WAIT_TIMEOUT )); then
+      echo "========================================"
+      for service in "${SERVICES[@]}"; do
+        name="${service%%|*}"
+        if [[ "${SERVICE_READY[$name]:-false}" != "true" ]]; then
+          echo "❌ ${name} not healthy (${elapsed}s)"
+        fi
+      done
+      echo "❌ Timeout waiting for services after ${WAIT_TIMEOUT}s"
+      echo "========================================"
+      exit 1
+    fi
+
+    sleep "${WAIT_INTERVAL}"
+  done
+}
+
+main "$@"
