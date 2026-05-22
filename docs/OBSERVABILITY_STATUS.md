@@ -13,7 +13,7 @@
 
 ## What's Running (All 7 Core Services)
 
-✅ **Prometheus** (v2.52.0) - Metrics database
+✅ **Prometheus** (v2.55.1) - Metrics database
 ✅ **Loki** (v2.9.10) - Log storage
 ✅ **Tempo** (v2.5.0) - Trace storage
 ✅ **Grafana** (v10.4.5) - Visualization

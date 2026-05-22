@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Prometheus version (should match compose.yaml)
-PROMETHEUS_VERSION="v2.52.0"
+PROMETHEUS_VERSION="v2.55.1"
 
 echo "🔍 Validating Prometheus Docker Compose Configuration..."
 echo ""

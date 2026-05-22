@@ -91,14 +91,14 @@ grep -n "localhost" config/prometheus/prometheus.yaml
 docker run --rm \
   -v "$PWD/config/prometheus:/etc/prometheus" \
   --entrypoint promtool \
-  prom/prometheus:v2.52.0 \
+  prom/prometheus:v2.55.1 \
   check config /etc/prometheus/prometheus.yaml
 
 # Validate alert rules
 docker run --rm \
   -v "$PWD/config/prometheus:/etc/prometheus" \
   --entrypoint promtool \
-  prom/prometheus:v2.52.0 \
+  prom/prometheus:v2.55.1 \
   check rules /etc/prometheus/alerts.yml
 ```
 
@@ -186,7 +186,7 @@ echo "=== Review 3: Prometheus Config Compliance ==="
 docker run --rm \
   -v "$PWD/config/prometheus:/etc/prometheus" \
   --entrypoint promtool \
-  prom/prometheus:v2.52.0 \
+  prom/prometheus:v2.55.1 \
   check config /etc/prometheus/prometheus.yaml
 
 echo "=== Review 4: Grafana Datasource Compliance ==="
