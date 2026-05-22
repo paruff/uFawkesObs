@@ -15,7 +15,7 @@
 
 ✅ **Prometheus** (v2.55.1) - Metrics database
 ✅ **Loki** (v2.9.10) - Log storage
-✅ **Tempo** (v2.5.0) - Trace storage
+✅ **Tempo** (v2.10.5) - Trace storage
 ✅ **Grafana** (v10.4.5) - Visualization
 ✅ **OTel Collector** (v0.120.0) - Telemetry ingestion
 ✅ **Alertmanager** (v0.27.0) - Alert routing

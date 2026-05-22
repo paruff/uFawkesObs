@@ -28,7 +28,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 | OpenTelemetry Collector | v0.120.0 | Telemetry ingestion and routing |
 | Prometheus | v2.55.1 | Metrics storage and querying |
 | Alertmanager | v0.27.0 | Alert routing and deduplication |
-| Tempo | v2.5.0 | Distributed tracing backend |
+| Tempo | v2.10.5 | Distributed tracing backend |
 | Loki | v2.9.10 | Log aggregation and storage |
 | Alloy | v1.12.2 | Log collection (replaced Promtail) |
 | Grafana | v10.4.5 | Visualisation and dashboards |
