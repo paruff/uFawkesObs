@@ -60,7 +60,7 @@ grep -n "localhost" config/otel/collector.yaml && echo "FAIL: localhost found in
 # Validate config via Docker
 docker run --rm \
   -v "$PWD/config/otel/collector.yaml:/etc/otel/config.yaml" \
-  otel/opentelemetry-collector-contrib:0.103.1 \
+  otel/opentelemetry-collector-contrib:0.120.0 \
   validate --config=/etc/otel/config.yaml
 ```
 
