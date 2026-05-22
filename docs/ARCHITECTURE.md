@@ -13,7 +13,7 @@ All services run in the `observability-lab` Docker Compose project on the `obser
 | Service | Image | Version | Port(s) | Role |
 |---|---|---|---|---|
 | `otel-collector` | `otel/opentelemetry-collector-contrib` | 0.120.0 | 4317 (gRPC), 4318 (HTTP), 8888 (self-metrics), 8889 (Prometheus exporter) | Receives OTLP telemetry, routes metrics → Prometheus, traces → Tempo, logs → Loki |
-| `prometheus` | `prom/prometheus` | v2.52.0 | 9090 | Stores and queries metrics; scrapes otel-collector and alloy |
+| `prometheus` | `prom/prometheus` | v2.55.1 | 9090 | Stores and queries metrics; scrapes otel-collector and alloy |
 | `alertmanager` | `prom/alertmanager` | v0.27.0 | 9093 | Receives alerts from Prometheus, routes notifications |
 | `tempo` | `grafana/tempo` | 2.5.0 | 3200 (HTTP), 9095 (gRPC), 9411 (Zipkin), 14250 (Jaeger gRPC), 14268 (Jaeger HTTP) | Stores and queries distributed traces |
 | `loki` | `grafana/loki` | 2.9.10 | 3100 (HTTP), 9096 (gRPC) | Stores and queries logs |
