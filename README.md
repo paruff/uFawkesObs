@@ -9,7 +9,7 @@ It is a Docker Compose-based observability platform that provides the OpenTeleme
 uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap.
 
 **Tech Stack:**
-- **OpenTelemetry Collector** (v0.103.1) - Telemetry data collection and routing
+- **OpenTelemetry Collector** (v0.120.0) - Telemetry data collection and routing
 - **Prometheus** (v2.52.0) - Metrics storage and querying
 - **Alertmanager** (v0.27.0) - Alert management and routing
 - **Tempo** (v2.5.0) - Distributed tracing backend

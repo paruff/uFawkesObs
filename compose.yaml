@@ -4,7 +4,7 @@ name: ufawkesobs
 services:
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.103.1
+    image: otel/opentelemetry-collector-contrib:0.120.0
     container_name: otel-collector
     command: ["--config=/etc/otel/collector.yaml"]
     volumes:
