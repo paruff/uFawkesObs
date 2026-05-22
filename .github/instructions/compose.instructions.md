@@ -16,7 +16,7 @@ applyTo: "compose.yaml,docker-compose*.yml,docker-compose*.yaml"
 # ✅ Pinned
 services:
   prometheus:
-    image: prom/prometheus:v2.50.1
+    image: prom/prometheus:v2.55.1
 
 # ❌ Never
 services:
@@ -31,7 +31,7 @@ services:
 # ✅ Required pattern
 services:
   prometheus:
-    image: prom/prometheus:v2.50.1
+    image: prom/prometheus:v2.55.1
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s

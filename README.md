@@ -10,7 +10,7 @@ uFawkesObs provides the observability substrate required for DORA measurement â€
 
 **Tech Stack:**
 - **OpenTelemetry Collector** (v0.120.0) - Telemetry data collection and routing
-- **Prometheus** (v2.52.0) - Metrics storage and querying
+- **Prometheus** (v2.55.1) - Metrics storage and querying
 - **Alertmanager** (v0.27.0) - Alert management and routing
 - **Tempo** (v2.5.0) - Distributed tracing backend
 - **Loki** (v2.9.10) - Log aggregation and querying
