@@ -77,17 +77,27 @@ Fixed: otel-collector now has restart policy, resource limits, logging, and TZ. 
 
 ---
 
-## Phase 1 — Alerting & Testing Correctness
+## Phase 1 — Alerting & Testing Correctness ✅ COMPLETE
 
-Fix correctness issues that don't block the stack from running but mean alerts won't fire when they should and tests don't match the security model.
+Fixed: All 9 alerts now have paired absent() guards. Runbook URLs point to uFawkesObs. Test scripts use $GRAFANA_ADMIN_PASSWORD. All 4 acceptance tests wired into Makefile. Alloy depends on Prometheus.
 
 | Order | ID | Title | Effort | Model | Rationale | Files | Status |
 |---|---|---|---|---|---|---|---|
-| 1.1 | N5 | Correct runbook URLs from Obstackd to uFawkesObs | XS | gemma4:e4b | Find-replace string in single file, no logic changes | `config/prometheus/alerts.yml` | ⬜ |
-| 1.2 | N6 | Add absent() guards to all alerts.yml rules | M | zen free | Requires understanding PromQL correctness rules (absent() pairing, for: durations, label consistency) across 9 alerts | `config/prometheus/alerts.yml` | ⬜ |
-| 1.3 | N7 | Replace hardcoded admin:admin with $GRAFANA_ADMIN_PASSWORD | S | zen free | 4 files across 2 dirs; must identify all hardcoded credential patterns and replace with env var reference without breaking test logic | `tests/acceptance/`, `scripts/grafana/` | ⬜ |
-| 1.4 | N9 | Wire all acceptance tests into make test-acceptance | XS | gemma4:e4b | Add 3 lines to Makefile — simple target addition | `Makefile` | ⬜ |
-| 1.5 | N11 | Add depends_on prometheus to alloy service | XS | gemma4:e4b | Add 2 lines to compose.yaml — simple dependency block | `compose.yaml` | ⬜ |
+| 1.1 | N5 | Correct runbook URLs from Obstackd to uFawkesObs | XS | gemma4:e4b | Find-replace string in single file, no logic changes | `config/prometheus/alerts.yml` | ✅ |
+| 1.2 | N6 | Add absent() guards to all alerts.yml rules | M | zen free | Requires understanding PromQL correctness rules (absent() pairing, for: durations, label consistency) across 9 alerts | `config/prometheus/alerts.yml` | ✅ |
+| 1.3 | N7 | Replace hardcoded admin:admin with $GRAFANA_ADMIN_PASSWORD | S | zen free | 4 files across 2 dirs; must identify all hardcoded credential patterns and replace with env var reference without breaking test logic | `tests/acceptance/`, `scripts/grafana/` | ✅ |
+| 1.4 | N9 | Wire all acceptance tests into make test-acceptance | XS | gemma4:e4b | Add 3 lines to Makefile — simple target addition | `Makefile` | ✅ |
+| 1.5 | N11 | Add depends_on prometheus to alloy service | XS | gemma4:e4b | Add 2 lines to compose.yaml — simple dependency block | `compose.yaml` | ✅ |
+
+**Completed:** 2026-06-07
+
+**Changes made:**
+- `config/prometheus/alerts.yml`: Added 10 absent() guards, replaced all Obstackd URLs with uFawkesObs
+- `tests/acceptance/observability-pipeline/test-otel-pipeline.sh`: Replaced 2 hardcoded admin:admin with env var
+- `tests/acceptance/observability-pipeline/test-dashboard-validation.sh`: Replaced 4 hardcoded admin:admin with env var
+- `tests/acceptance/observability-pipeline/test-alertmanager.sh`: Replaced 1 hardcoded admin:admin with env var
+- `Makefile`: test-acceptance now runs all 4 acceptance tests
+- `compose.yaml`: Alloy now depends on both loki and prometheus (service_healthy)
 
 **Dependency:** All 5 are independent — run in parallel.
 
@@ -210,3 +220,4 @@ Week 4+: Phase 5 (DORA) ────────────── sequential, h
 |---|---|---|
 | 2026-06-07 | Plan created from platform audit | — |
 | 2026-06-07 | Phase 0 complete: otel-collector hardened, datasource UIDs added, legacy provisioner removed, stale files cleaned | N1, N2, N3, N4, N13, N14 |
+| 2026-06-07 | Phase 1 complete: absent() guards added, runbook URLs fixed, test credentials externalized, all acceptance tests wired, alloy depends_on fixed | N5, N6, N7, N9, N11 |
