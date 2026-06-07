@@ -76,7 +76,7 @@ All services run in the `observability-lab` Docker Compose project on the `obser
 grafana       → depends_on: prometheus (healthy)
 prometheus    → depends_on: alertmanager
 otel-collector→ depends_on: prometheus (healthy), tempo (healthy), loki (healthy)
-alloy         → depends_on: loki (healthy)
+alloy         → depends_on: loki (healthy), prometheus (healthy)
 ```
 
 ---

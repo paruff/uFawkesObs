@@ -27,6 +27,10 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
+# Grafana credentials (from environment, falling back to defaults)
+GRAFANA_USER="${GRAFANA_ADMIN_USER:-admin}"
+GRAFANA_PASS="${GRAFANA_ADMIN_PASSWORD:-admin}"
+
 # Initialize test environment
 initialize_test() {
     echo -e "${BLUE}🚀 Initializing Observability Acceptance Test${NC}"
@@ -196,11 +200,9 @@ check_grafana_datasource() {
         return 1
     fi
     
-    # Get datasources (using GRAFANA_ADMIN_PASSWORD env var, falling back to admin)
-    local grafana_user="${GRAFANA_ADMIN_USER:-admin}"
-    local grafana_pass="${GRAFANA_ADMIN_PASSWORD:-admin}"
+    # Get datasources
     local datasources_json
-    if ! datasources_json=$(curl -sf -m 10 -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/datasources" 2>/dev/null); then
+    if ! datasources_json=$(curl -sf -m 10 -u "${GRAFANA_USER}:${GRAFANA_PASS}" "http://localhost:3000/api/datasources" 2>/dev/null); then
         record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Cannot fetch Grafana datasources"
         return 1
     fi
@@ -267,7 +269,7 @@ EOF
         echo "Query attempt ${attempt}/${RETRY_ATTEMPTS}..."
         
         if query_response=$(curl -sf -m 30 \
-            -u "${grafana_user}:${grafana_pass}" \
+            -u "${GRAFANA_USER}:${GRAFANA_PASS}" \
             -H "Content-Type: application/json" \
             -d "${query_payload}" \
             "http://localhost:3000/api/ds/query" 2>"${REPORT_DIR}/grafana-query-error.txt"); then

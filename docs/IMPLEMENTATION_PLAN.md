@@ -110,30 +110,34 @@ Fixed: All 9 alerts now have paired absent() guards. Runbook URLs point to uFawk
 
 ---
 
-## Phase 2 — M0 Completion
+## Phase 2 — M0 Completion ✅ COMPLETE
 
-| Order | ID | Title | Effort | Model | Rationale | Files | Status |
-|---|---|---|---|---|---|---|---|
-| 2.1 | #64 | Add LICENSE file (Apache 2.0) | XS | gemma4:e4b | Copy standard Apache 2.0 text, add license badge to README — no logic | `LICENSE`, `README.md` | ⬜ |
+Fixed: LICENSE exists, README license link updated, SPDX identifier added to compose.yaml.
 
-**Dependency:** None. Independent of Phase 0 and 1.
+| Order | ID | Title | Effort | Model | Files | Status |
+|---|---|---|---|---|---|---|
+| 2.1 | #64 | Add LICENSE file (Apache 2.0) | XS | gemma4:e4b | `LICENSE`, `README.md` | ✅ |
+
+**Completed:** 2026-06-07
 
 ---
 
-## Phase 3 — M2 Completion (Release Quality)
+## Phase 3 — M2 Completion (Release Quality) ✅ COMPLETE
 
-| Order | ID | Title | Effort | Model | Rationale | Files | Blocked By | Status |
-|---|---|---|---|---|---|---|---|---|
-| 3.1 | #71 | Add CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue templates | M | zen free | 5 new files with cross-references to AGENTS.md §6/§7; requires understanding repo conventions | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`, `README.md` | — | ⬜ |
-| 3.2 | #74 | Publish and verify docs/ | M | zen free | Multiple doc files with cross-references to compose.yaml, AGENTS.md, and each other; requires reading existing content | `docs/ARCHITECTURE.md`, `docs/KNOWN_LIMITATIONS.md`, `docs/CHANGE_IMPACT_MAP.md`, `docs/history/`, `README.md` | — | ⬜ |
-| 3.3 | #75 | Add GitHub repository metadata and CI badge | XS | gemma4:e4b | Add badge markdown to README — single line insertion | `README.md` | — | ⬜ |
-| 3.4 | N8 | Upgrade legacy dashboards to schemaVersion 39 | M | zen free | 8 JSON files; must update schemaVersion field in each without breaking panel structure | `config/grafana/dashboards/*.json` | Phase 0.3 | ⬜ |
-| 3.5 | N10 | Remove deprecated table_manager from Loki config | XS | gemma4:e4b | Delete one YAML block from single file | `config/loki/loki.yaml` | — | ⬜ |
-| 3.6 | N12 | Add ufawkesobs- prefix to service dashboard UIDs | S | zen free | 7 JSON files; must update uid field in each and verify no cross-dashboard links break | `dashboards/services/*.json` | Phase 0.3 | ⬜ |
-| 3.7 | N15 | Replace chmod 777 in e2e-runner.sh | XS | gemma4:e4b | Single line replacement in one script | `tests/acceptance/e2e-runner.sh` | — | ⬜ |
-| 3.8 | N16 | Reduce OTel debug exporter verbosity | XS | gemma4:e4b | Change `detailed` to `normal` in one line | `config/otel/collector.yaml` | — | ⬜ |
+Created: Community docs (CONTRIBUTING, CODE_OF_CONDUCT, templates), CI badge, dashboard upgrades, Loki cleanup, service UID prefixing, chmod fix, OTel verbosity reduction.
 
-**Dependency:** 3.4 and 3.6 depend on Phase 0.3 (dashboard provisioning fix). Rest are independent.
+| Order | ID | Title | Effort | Model | Files | Status |
+|---|---|---|---|---|---|---|
+| 3.1 | #71 | Add CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue templates | M | zen free | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md` | ✅ |
+| 3.2 | #74 | Publish and verify docs/ | M | zen free | `docs/` | ✅ |
+| 3.3 | #75 | Add GitHub repository metadata and CI badge | XS | gemma4:e4b | `README.md` | ✅ |
+| 3.4 | N8 | Upgrade legacy dashboards to schemaVersion 39 | M | zen free | `config/grafana/dashboards/*.json` | ✅ |
+| 3.5 | N10 | Remove deprecated table_manager from Loki config | XS | gemma4:e4b | `config/loki/loki.yaml` | ✅ |
+| 3.6 | N12 | Add ufawkesobs- prefix to service dashboard UIDs | S | zen free | `dashboards/services/*.json` | ✅ |
+| 3.7 | N15 | Replace chmod 777 in e2e-runner.sh | XS | gemma4:e4b | `tests/acceptance/e2e-runner.sh` | ✅ |
+| 3.8 | N16 | Reduce OTel debug exporter verbosity | XS | gemma4:e4b | `config/otel/collector.yaml` | ✅ |
+
+**Completed:** 2026-06-07
 
 ---
 
