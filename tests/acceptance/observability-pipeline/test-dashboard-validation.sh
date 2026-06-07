@@ -97,7 +97,9 @@ check_dashboards_provisioned() {
     
     # Query Grafana API for dashboards
     local dashboards
-    dashboards=$(curl -s -u admin:admin "http://localhost:3000/api/search?type=dash-db" 2>/dev/null || echo "[]")
+    local grafana_user="${GRAFANA_ADMIN_USER:-admin}"
+    local grafana_pass="${GRAFANA_ADMIN_PASSWORD:-admin}"
+    dashboards=$(curl -s -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/search?type=dash-db" 2>/dev/null || echo "[]")
     
     local dashboard_count
     dashboard_count=$(echo "$dashboards" | jq '. | length' 2>/dev/null || echo "0")
@@ -252,7 +254,7 @@ test_dashboard_metrics_rendering() {
     
     # Fetch observability-stack-health dashboard
     local dashboard
-    dashboard=$(curl -s -u admin:admin "http://localhost:3000/api/dashboards/uid/observability-stack-health" 2>/dev/null || echo '{}')
+    dashboard=$(curl -s -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/dashboards/uid/observability-stack-health" 2>/dev/null || echo '{}')
     
     local title
     title=$(echo "$dashboard" | jq -r '.dashboard.title' 2>/dev/null || echo "")
@@ -283,7 +285,7 @@ test_dashboard_logs_queries() {
     
     # Fetch application-performance dashboard
     local dashboard
-    dashboard=$(curl -s -u admin:admin "http://localhost:3000/api/dashboards/uid/application-performance" 2>/dev/null || echo '{}')
+    dashboard=$(curl -s -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/dashboards/uid/application-performance" 2>/dev/null || echo '{}')
     
     # Check for Loki queries in dashboard
     local loki_targets
@@ -312,7 +314,7 @@ test_trace_correlation() {
     
     # Check datasources for trace correlation
     local datasources
-    datasources=$(curl -s -u admin:admin "http://localhost:3000/api/datasources" 2>/dev/null || echo '[]')
+    datasources=$(curl -s -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/datasources" 2>/dev/null || echo '[]')
     
     # Check Loki datasource for derivedFields
     local loki_derived

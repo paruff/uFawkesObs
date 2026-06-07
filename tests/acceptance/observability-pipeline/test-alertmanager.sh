@@ -181,7 +181,9 @@ test_grafana_alertmanager_datasource() {
 
     # Check if Grafana has Alertmanager datasource
     local response
-    response=$(curl -s -u admin:admin http://localhost:3000/api/datasources 2>/dev/null || echo "")
+    local grafana_user="${GRAFANA_ADMIN_USER:-admin}"
+    local grafana_pass="${GRAFANA_ADMIN_PASSWORD:-admin}"
+    response=$(curl -s -u "${grafana_user}:${grafana_pass}" http://localhost:3000/api/datasources 2>/dev/null || echo "")
 
     if echo "${response}" | grep -q '"type":"alertmanager"'; then
         echo -e "${GREEN}✅ Grafana has Alertmanager datasource configured${NC}"

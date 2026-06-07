@@ -71,6 +71,9 @@ test-unit:
 test-acceptance:
 	@echo "Running acceptance tests — stack must already be up (run 'make up' first)"
 	./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
+	./tests/acceptance/observability-pipeline/test-alertmanager.sh
+	./tests/acceptance/observability-pipeline/test-dashboard-validation.sh
+	./tests/acceptance/observability-pipeline/test-loki-logs.sh
 
 ## test: run unit tests then acceptance tests (requires stack to be running: make up)
 test: test-unit test-acceptance

@@ -196,9 +196,11 @@ check_grafana_datasource() {
         return 1
     fi
     
-    # Get datasources (using default admin/admin for test)
+    # Get datasources (using GRAFANA_ADMIN_PASSWORD env var, falling back to admin)
+    local grafana_user="${GRAFANA_ADMIN_USER:-admin}"
+    local grafana_pass="${GRAFANA_ADMIN_PASSWORD:-admin}"
     local datasources_json
-    if ! datasources_json=$(curl -sf -m 10 -u "admin:admin" "http://localhost:3000/api/datasources" 2>/dev/null); then
+    if ! datasources_json=$(curl -sf -m 10 -u "${grafana_user}:${grafana_pass}" "http://localhost:3000/api/datasources" 2>/dev/null); then
         record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Cannot fetch Grafana datasources"
         return 1
     fi
@@ -265,7 +267,7 @@ EOF
         echo "Query attempt ${attempt}/${RETRY_ATTEMPTS}..."
         
         if query_response=$(curl -sf -m 30 \
-            -u "admin:admin" \
+            -u "${grafana_user}:${grafana_pass}" \
             -H "Content-Type: application/json" \
             -d "${query_payload}" \
             "http://localhost:3000/api/ds/query" 2>"${REPORT_DIR}/grafana-query-error.txt"); then

@@ -14,7 +14,18 @@ groups:
         annotations:
           summary: "Service {{ $labels.job }} is down"
           description: "The service {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 2 minutes."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#servicedown"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#servicedown"
+
+      # Required absent() guard — fires when up metric disappears entirely
+      - alert: ServiceAbsent
+        expr: absent(up)
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Prometheus target 'up' metric is missing"
+          description: "The 'up' metric has disappeared entirely. No targets are being scraped."
 
       # Alert when OpenTelemetry Collector is down (critical for observability)
       - alert: OTelCollectorDown
@@ -27,7 +38,18 @@ groups:
         annotations:
           summary: "OpenTelemetry Collector is down"
           description: "The OpenTelemetry Collector has been down for more than 1 minute. This affects all telemetry data collection."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#otelcollectordown"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#otelcollectordown"
+
+      - alert: OTelCollectorAbsent
+        expr: absent(up{job="otel-collector"})
+        for: 2m
+        labels:
+          severity: critical
+          category: observability
+          component: otel-collector
+        annotations:
+          summary: "OpenTelemetry Collector target is missing"
+          description: "The OTel Collector 'up' metric has disappeared. The target may have been deregistered or the scrape config is broken."
 
   # Resource utilization alerts
   - name: resource_utilization
@@ -45,7 +67,18 @@ groups:
         annotations:
           summary: "OpenTelemetry Collector high memory usage"
           description: "OTel Collector is using more than 3GB of memory for over 5 minutes."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#otelcollectorhighmemory"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#otelcollectorhighmemory"
+
+      - alert: OTelCollectorHighMemoryAbsent
+        expr: absent(process_resident_memory_bytes{job="otel-collector"})
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+          component: otel-collector
+        annotations:
+          summary: "OTel Collector memory metrics missing"
+          description: "Cannot find OTel Collector memory metrics. The target may have disappeared."
 
       # High CPU for OTel Collector (rate-based)
       - alert: OTelCollectorHighCPU
@@ -59,7 +92,18 @@ groups:
         annotations:
           summary: "OpenTelemetry Collector high CPU usage"
           description: "OTel Collector is using more than 80% of a CPU core for over 10 minutes."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#otelcollectorhighcpu"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#otelcollectorhighcpu"
+
+      - alert: OTelCollectorHighCPUAbsent
+        expr: absent(rate(process_cpu_seconds_total{job="otel-collector"}[5m]))
+        for: 5m
+        labels:
+          severity: warning
+          category: resource
+          component: otel-collector
+        annotations:
+          summary: "OTel Collector CPU metrics missing"
+          description: "Cannot find OTel Collector CPU metrics. The target may have disappeared."
 
   # Prometheus specific alerts
   - name: prometheus_health
@@ -75,7 +119,17 @@ groups:
         annotations:
           summary: "Prometheus TSDB reloads are failing"
           description: "Prometheus has had {{ $value }} TSDB reload failures in the last hour."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#prometheustsdbreloadsfailing"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#prometheustsdbreloadsfailing"
+
+      - alert: PrometheusTSDBReloadsFailingAbsent
+        expr: absent(increase(prometheus_tsdb_reloads_failures_total[1h]))
+        for: 5m
+        labels:
+          severity: warning
+          category: storage
+        annotations:
+          summary: "Prometheus TSDB reload failure metric missing"
+          description: "Cannot find prometheus_tsdb_reloads_failures_total. Prometheus may have disappeared."
 
       # Alert for high query latency
       - alert: PrometheusSlowQueries
@@ -88,7 +142,17 @@ groups:
         annotations:
           summary: "Prometheus queries are slow"
           description: "99th percentile of Prometheus query duration is above 5 seconds for more than 10 minutes."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#prometheusslowqueries"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#prometheusslowqueries"
+
+      - alert: PrometheusSlowQueriesAbsent
+        expr: absent(histogram_quantile(0.99, rate(prometheus_engine_query_duration_seconds_bucket[5m])))
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Prometheus query duration metrics missing"
+          description: "Cannot find prometheus_engine_query_duration_seconds. Prometheus may have disappeared."
 
       # Alert when Prometheus is approaching storage capacity
       - alert: PrometheusStorageAlmostFull
@@ -101,7 +165,17 @@ groups:
         annotations:
           summary: "Prometheus storage is almost full"
           description: "Prometheus storage is over 80% full. Consider increasing retention or storage size."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#prometheusstoragealmostfull"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#prometheusstoragealmostfull"
+
+      - alert: PrometheusStorageAlmostFullAbsent
+        expr: absent(prometheus_tsdb_storage_blocks_bytes / prometheus_tsdb_retention_limit_bytes)
+        for: 10m
+        labels:
+          severity: warning
+          category: storage
+        annotations:
+          summary: "Prometheus storage metrics missing"
+          description: "Cannot find prometheus_tsdb_storage_blocks_bytes or prometheus_tsdb_retention_limit_bytes."
 
   # Alertmanager specific alerts
   - name: alertmanager_health
@@ -117,7 +191,17 @@ groups:
         annotations:
           summary: "Alertmanager configuration reload failed"
           description: "Alertmanager configuration reload has failed. Check the configuration file for errors."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#alertmanagerconfigreloadfailed"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#alertmanagerconfigreloadfailed"
+
+      - alert: AlertmanagerConfigReloadFailedAbsent
+        expr: absent(alertmanager_config_last_reload_successful)
+        for: 5m
+        labels:
+          severity: warning
+          category: alerting
+        annotations:
+          summary: "Alertmanager config reload metric missing"
+          description: "Cannot find alertmanager_config_last_reload_successful. Alertmanager may have disappeared."
 
       # Alert when Alertmanager cluster is not healthy
       - alert: AlertmanagerClusterDown
@@ -130,4 +214,14 @@ groups:
         annotations:
           summary: "Alertmanager cluster is down"
           description: "No Alertmanager instances are reachable. Alert notifications are not being sent."
-          runbook_url: "https://github.com/paruff/Obstackd/blob/main/docs/alertmanager-operations.md#alertmanagerclusterdown"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md#alertmanagerclusterdown"
+
+      - alert: AlertmanagerClusterDownAbsent
+        expr: absent(up{job="alertmanager"})
+        for: 2m
+        labels:
+          severity: critical
+          category: alerting
+        annotations:
+          summary: "Alertmanager target is missing"
+          description: "The Alertmanager 'up' metric has disappeared. No instances are being scraped."
