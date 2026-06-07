@@ -514,7 +514,7 @@ This project follows these principles:
 
 ## License
 
-[Add your license here]
+[Apache License 2.0](LICENSE)
 
 ## Contributing
 
