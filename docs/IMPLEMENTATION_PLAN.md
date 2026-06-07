@@ -137,16 +137,24 @@ Fixed: All 9 alerts now have paired absent() guards. Runbook URLs point to uFawk
 
 ---
 
-## Phase 4 — M3 Completion (Ecosystem Integration)
+## Phase 4 — M3 Completion (Ecosystem Integration) ✅ COMPLETE
 
-| Order | ID | Title | Effort | Model | Rationale | Blocked By | Status |
-|---|---|---|---|---|---|---|---|
-| 4.1 | #76 | uFawkesPipe → uFawkesObs integration guide | M | zen free | Cross-plane doc; requires reading uFawkesPipe Jenkinsfile, OTEL plugin config, and mapping to uFawkesObs services | — | ⬜ |
-| 4.2 | #77 | uFawkesDevX → uFawkesObs integration guide | M | zen free | Cross-plane doc; requires understanding developer telemetry flow and OTEL instrumentation patterns | — | ⬜ |
-| 4.3 | #78 | Register in fawkes Backstage catalog | S | zen free | Requires reading fawkes Backstage catalog format and creating catalog-info.yaml | — | ⬜ |
-| 4.4 | #79 | Update multi-stack-integration.md | S | zen free | Must cross-reference existing docs and add new plane join patterns | — | ⬜ |
+Created: uFawkesPipe and uFawkesDevX integration guides, Backstage catalog registration, and plane join patterns in multi-stack-integration.md.
 
-**Dependency:** All independent. Can run in parallel.
+| Order | ID | Title | Effort | Model | Files | Status |
+|---|---|---|---|---|---|---|
+| 4.1 | #76 | uFawkesPipe → uFawkesObs integration guide | M | zen free | `docs/examples/uFawkesPipe-integration.md` | ✅ |
+| 4.2 | #77 | uFawkesDevX → uFawkesObs integration guide | M | zen free | `docs/examples/uFawkesDevX-integration.md` | ✅ |
+| 4.3 | #78 | Register in fawkes Backstage catalog | S | zen free | `catalog-info.yaml` | ✅ |
+| 4.4 | #79 | Update multi-stack-integration.md | S | zen free | `docs/multi-stack-integration.md` | ✅ |
+
+**Completed:** 2026-06-07
+
+**Changes made:**
+- `docs/examples/uFawkesPipe-integration.md`: Full integration guide for deliveryd/Jenkins → uFawkesObs (OTEL plugin setup, pipeline events, Prometheus scrape, verification, troubleshooting)
+- `docs/examples/uFawkesDevX-integration.md`: Full integration guide for developerd → uFawkesObs (language-specific OTEL setup, auto log collection, Grafana panel embedding, verification)
+- `catalog-info.yaml`: Backstage entity definitions — System (ufawkesobs), 8 Components (one per service), 4 Resources (prometheus, tempo, loki, alertmanager), 1 API (otlp), with dependency links
+- `docs/multi-stack-integration.md`: Added Fawkes IDP Plane Integration Patterns section with plane overview, cross-plane impact matrix, telemetry routing table, and Backstage catalog references
 
 ---
 
@@ -223,3 +231,4 @@ Week 4+: Phase 5 (DORA) ────────────── sequential, h
 | 2026-06-07 | Phase 1 complete: absent() guards added, runbook URLs fixed, test credentials externalized, all acceptance tests wired, alloy depends_on fixed | N5, N6, N7, N9, N11 |
 | 2026-06-07 | Phase 2 complete: LICENSE exists, README license link fixed, SPDX identifier added to compose.yaml | #64 |
 | 2026-06-07 | Phase 3 partial: legacy dashboards upgraded to schemaVersion 39, service UIDs prefixed with ufawkesobs-, CI badge added, deprecated table_manager removed from Loki, OTel debug verbosity reduced, chmod 777→755, community docs added | #71, N8, N10, N12, N15, N16 |
+| 2026-06-07 | Phase 4 complete: uFawkesPipe and uFawkesDevX integration guides, Backstage catalog registration, multi-stack-integration.md updated with plane join patterns | #76, #77, #78, #79 |

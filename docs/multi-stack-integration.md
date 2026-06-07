@@ -260,3 +260,93 @@ To add new observability services (e.g., Jaeger, Zipkin):
 4. Restart: `docker compose up -d`
 
 All connected applications automatically gain access to the new service.
+
+---
+
+## Fawkes IDP Plane Integration Patterns
+
+uFawkesObs is part of the [Fawkes IDP](https://github.com/paruff/fawkes) ecosystem.
+Other planes join the `observability-lab` network using the same pattern as any Docker
+Compose application, but with plane-specific considerations.
+
+### Plane Overview
+
+| Plane | Repository | Role | Telemetry Type |
+|---|---|---|---|
+| **uFawkesObs** | `paruff/uFawkesObs` | Observability | Metrics, logs, traces, dashboards |
+| **uFawkesPipe** (deliveryd) | `paruff/deliveryd` | CI/CD | Jenkins pipeline traces, deployment events, build metrics |
+| **uFawkesDevX** (developerd) | `paruff/developerd` | Developer tools | Local service metrics, development logs, dev environment traces |
+
+### Integration Pattern for Any Fawkes Plane
+
+All Fawkes planes follow the same Docker Compose integration pattern:
+
+1. **Start uFawkesObs first** (creates the `observability-lab` network)
+2. **Join the network** by adding `observability-lab: external: true` to the plane's compose file
+3. **Set OTEL environment variables** on services that emit telemetry
+4. **Add Prometheus scrape jobs** if the plane exposes a `/metrics` endpoint
+
+```yaml
+# In the plane's docker-compose.yml
+services:
+  plane-service:
+    networks:
+      - plane-network
+      - observability-lab
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_SERVICE_NAME=plane-service-name
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=<plane-name>,service.version=1.0.0
+
+networks:
+  plane-network:
+    driver: bridge
+  observability-lab:
+    external: true
+    name: observability-lab
+```
+
+### Plane-Specific Guides
+
+| Plane | Integration Guide | Key Considerations |
+|---|---|---|
+| uFawkesPipe | [uFawkesPipe Integration](examples/uFawkesPipe-integration.md) | Jenkins OTEL plugin, pipeline span instrumentation, deployment events for DORA |
+| uFawkesDevX | [uFawkesDevX Integration](examples/uFawkesDevX-integration.md) | Grafana panel embedding, developer portal access, local service metrics |
+
+### Cross-Plane Change Impact
+
+When modifying uFawkesObs, check the impact on connected planes:
+
+| Change in uFawkesObs | Impact |
+|---|---|
+| OTEL Collector receiver port (4317/4318) | uFawkesPipe Jenkins traces; uFawkesDevX local service traces |
+| Network name in `compose.yaml` | All planes must update their external network reference |
+| Prometheus scrape config | Any plane with a custom scrape job must be updated |
+| Grafana admin credentials | uFawkesDevX developer portal panels may break |
+| Grafana datasource UIDs | Embedded panels referencing old numeric IDs will break |
+
+See `docs/CHANGE_IMPACT_MAP.md` for the full cross-plane impact matrix.
+
+### Telemetry Routing by Plane
+
+| Signal | Source | Route | Destination |
+|---|---|---|---|
+| Jenkins pipeline traces | uFawkesPipe | OTel Collector → Tempo | Tempo (traces) |
+| Jenkins build metrics | uFawkesPipe | OTel Collector → Prometheus | Prometheus (metrics) |
+| Jenkins logs | uFawkesPipe | Alloy auto-discovery | Loki (logs) |
+| Dev service metrics | uFawkesDevX | OTel Collector → Prometheus | Prometheus (metrics) |
+| Dev service logs | uFawkesDevX | Alloy auto-discovery | Loki (logs) |
+| Dev service traces | uFawkesDevX | OTel Collector → Tempo | Tempo (traces) |
+
+### Backstage Catalog Registration
+
+All Fawkes planes should be registered in the parent
+[fawkes Backstage catalog](https://github.com/paruff/fawkes). See `catalog-info.yaml`
+in each plane's repository root for the entity definition.
+
+uFawkesObs registers as:
+- **System:** `ufawkesobs` (observability plane)
+- **Components:** One per service (otel-collector, prometheus, tempo, loki, alloy, grafana, alertmanager, node-exporter)
+- **API:** `ufawkesobs-otlp` (OTLP endpoint for external consumers)
+- **Resources:** Prometheus, Tempo, Loki, Alertmanager instances

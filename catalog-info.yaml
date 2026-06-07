@@ -1,0 +1,318 @@
+---
+# https://backstage.io/docs/features/software-catalog/descriptor-format
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: ufawkesobs
+  title: uFawkesObs
+  description: >
+    Observability plane of the Fawkes IDP family. Provides OpenTelemetry Collector,
+    Prometheus, Alertmanager, Tempo, Loki, Alloy, and Grafana as a Docker Compose
+    stack for self-hosted metrics, logs, and traces.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - observability
+    - monitoring
+    - metrics
+    - logs
+    - traces
+    - opentelemetry
+    - prometheus
+    - grafana
+    - fawkes
+  links:
+    - url: https://github.com/paruff/uFawkesObs
+      title: GitHub Repository
+      icon: github
+    - url: https://github.com/paruff/fawkes
+      title: Fawkes IDP (Parent)
+      icon: github
+spec:
+  type: observability
+  owner: paruff
+  lifecycle: production
+  dependsOn:
+    - system:ufawkespipe
+    - system:ufawkesdevx
+---
+# https://backstage.io/docs/features/software-catalog/descriptor-format
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: otel-collector
+  title: OpenTelemetry Collector
+  description: >
+    Receives OTLP telemetry (traces, metrics, logs) from instrumented applications
+    and routes metrics to Prometheus, traces to Tempo, and logs to Loki.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - observability
+    - opentelemetry
+    - collector
+    - otel
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/ARCHITECTURE.md
+      title: Architecture Documentation
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+  dependsOn:
+    - resource:ufawkesobs-prometheus
+    - resource:ufawkesobs-tempo
+    - resource:ufawkesobs-loki
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: prometheus
+  title: Prometheus
+  description: >
+    Metrics storage and querying. Scrapes otel-collector and alloy for metrics,
+    evaluates recording and alerting rules, and sends alerts to Alertmanager.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - metrics
+    - prometheus
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/prometheus-operations.md
+      title: Prometheus Operations
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+  dependsOn:
+    - resource:ufawkesobs-alertmanager
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: alertmanager
+  title: Alertmanager
+  description: >
+    Receives alerts from Prometheus, deduplicates and routes them to configured
+    notification receivers (webhook, email, Slack, PagerDuty).
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - alerting
+    - prometheus
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/alertmanager-operations.md
+      title: Alertmanager Operations
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: tempo
+  title: Grafana Tempo
+  description: >
+    Distributed tracing backend. Stores and queries traces received from the
+    OTel Collector via gRPC.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - tracing
+    - tempo
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/tempo-operations.md
+      title: Tempo Operations
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: loki
+  title: Grafana Loki
+  description: >
+    Log aggregation and storage. Stores logs shipped from the OTel Collector
+    and Alloy, queryable via LogQL in Grafana.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - logging
+    - loki
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/loki-operations.md
+      title: Loki Operations
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: alloy
+  title: Grafana Alloy
+  description: >
+    Log collection agent. Scrapes Docker container logs from the observability-lab
+    network and forwards them to Loki.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - logging
+    - alloy
+    - collection
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/alloy-operations.md
+      title: Alloy Operations
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+  dependsOn:
+    - resource:ufawkesobs-loki
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: grafana
+  title: Grafana
+  description: >
+    Visualization and dashboard UI. Provides pre-configured datasources for
+    Prometheus, Tempo, Loki, and Alertmanager. Hosts platform health and
+    service-specific dashboards.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - visualization
+    - dashboards
+    - grafana
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/grafana-dashboards.md
+      title: Grafana Dashboards
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/grafana-navigation.md
+      title: Grafana Navigation Guide
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+  dependsOn:
+    - resource:ufawkesobs-prometheus
+    - resource:ufawkesobs-tempo
+    - resource:ufawkesobs-loki
+    - resource:ufawkesobs-alertmanager
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: node-exporter
+  title: Node Exporter
+  description: >
+    Exposes host-level hardware and OS metrics (CPU, memory, disk, network)
+    for Prometheus scraping.
+  annotations:
+    github.com/project-slug: paruff/uFawkesObs
+  tags:
+    - observability
+    - metrics
+    - infrastructure
+  links: []
+spec:
+  type: service
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  providesApis: []
+---
+# Resource definitions for backing services
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ufawkesobs-prometheus
+  title: Prometheus Instance
+  description: Prometheus metrics storage instance serving uFawkesObs
+spec:
+  type: prometheus
+  owner: paruff
+  system: ufawkesobs
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ufawkesobs-tempo
+  title: Tempo Instance
+  description: Tempo trace storage instance serving uFawkesObs
+spec:
+  type: tempo
+  owner: paruff
+  system: ufawkesobs
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ufawkesobs-loki
+  title: Loki Instance
+  description: Loki log storage instance serving uFawkesObs
+spec:
+  type: loki
+  owner: paruff
+  system: ufawkesobs
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ufawkesobs-alertmanager
+  title: Alertmanager Instance
+  description: Alertmanager instance serving uFawkesObs
+spec:
+  type: alertmanager
+  owner: paruff
+  system: ufawkesobs
+---
+# API definition for external consumers
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: ufawkesobs-otlp
+  title: uFawkesObs OTLP API
+  description: >
+    OTLP endpoint for sending traces, metrics, and logs to uFawkesObs.
+    Use this API to instrument applications across the Fawkes IDP ecosystem.
+  tags:
+    - observability
+    - opentelemetry
+    - otlp
+  links:
+    - url: https://github.com/paruff/uFawkesObs/blob/main/docs/multi-stack-integration.md
+      title: Multi-Stack Integration Guide
+spec:
+  type: openapi
+  lifecycle: production
+  owner: paruff
+  system: ufawkesobs
+  definition:
+    $text: https://opentelemetry.io/docs/specs/otlp/
