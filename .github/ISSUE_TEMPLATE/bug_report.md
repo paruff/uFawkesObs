@@ -1,38 +1,38 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+name: Bug Report
+about: Report a bug in the uFawkesObs observability stack
+title: "fix: "
+labels: bug, needs-triage
+assignees: ""
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Describe the bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+A clear description of what the bug is.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## To Reproduce
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+1. Run `make up`
+2. Go to '...'
+3. See error
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Expected behavior
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+What you expected to happen.
 
-**Additional context**
-Add any other context about the problem here.
+## Logs / Screenshots
+
+```
+docker compose logs <service>
+```
+
+## Environment
+
+- OS: [e.g., macOS 14, Ubuntu 22.04]
+- Docker version: [e.g., 24.0.7]
+- Docker Compose version: [e.g., 2.23.0]
+- uFawkesObs version/commit: [e.g., main @ abc1234]
+
+## Additional context
+
+Any other information that might help diagnose the issue.

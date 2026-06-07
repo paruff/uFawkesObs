@@ -1,69 +1,63 @@
 # Contributing to uFawkesObs
 
-Thank you for helping improve uFawkesObs.
+Thank you for your interest in contributing to uFawkesObs!
 
-## Who this template is for
+## Getting Started
 
-This template is for PMs, tech leads, and contributors who want AI agents (Copilot, Claude Code, Cursor, Codex, and others) to produce reliable, reviewable output aligned with DORA AI Capabilities.
+1. **Fork** the repository
+2. **Clone** your fork: `git clone https://github.com/<your-username>/uFawkesObs.git`
+3. **Create** a branch: `git checkout -b feat/my-feature`
+4. **Make** your changes
+5. **Test** your changes: `make test-acceptance`
+6. **Commit** with a conventional commit message
+7. **Push** and open a Pull Request
 
-## How to contribute
+## Development Setup
 
-1. Fork this repository.
-2. Customize placeholders in your fork, starting with `AGENTS.md`.
-3. Test your change with at least one real agent in a realistic workflow.
-4. Run `npm run preflight` (currently a placeholder gate in this template until real lint/typecheck/test tooling is configured).
-5. Open a PR with a clear description of what changed and what agent testing you performed.
+```bash
+# Start the full observability stack
+make up
 
-## What makes a good contribution
+# Run acceptance tests
+make test-acceptance
 
-A good contribution:
-
-- References at least one DORA AI Capability and explains why it matters.
-- Is tested with at least one real agent, and states:
-  - which agent you used, and
-  - what you tested.
-- Does not increase `AGENTS.md` line count unless equivalent content is moved to `docs/`.
-- Keeps changes small, reviewable, and aligned with existing structure.
-
-## How to add a prompt to the Prompt Library
-
-Update `docs/PROMPT_LIBRARY.md` using the existing category structure and style.
-
-For each prompt, include:
-
-- Task type (for example: code review, debugging, security review).
-- Target agent(s).
-- Required context files to open.
-- Prompt template with placeholders.
-- Expected output.
-- Red flags / failure signals.
-- DORA AI Capability addressed.
-
-Testing and versioning requirements:
-
-1. Test the prompt with at least one real agent and a real task.
-2. Record what you tested and whether output matched expectations.
-3. Update the Prompt Library changelog table with date, change, and reason.
-
-## How to add an Agent Skill
-
-Place new skills in:
-
-`.github/skills/<skill-name>/SKILL.md`
-
-Use the `SKILL.md` format already present in `.github/skills/`:
-
-```md
-# <skill-name>
-
-Use this skill for <purpose>.
-
-Status: <state>.
+# Stop the stack
+make down
 ```
 
-Keep skill instructions concise, specific, and reusable.
+## Commit Convention
 
-## Code of conduct
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
-This project follows the Contributor Covenant Code of Conduct:
-https://www.contributor-covenant.org/version/2/1/code_of_conduct/
+```
+feat(compose): add new exporter
+fix(config): correct scrape interval
+docs: update README
+chore: bump prometheus version
+```
+
+Prefixes: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`, `perf`, `ci`
+
+## Pull Request Requirements
+
+- All acceptance tests must pass
+- Docker Compose config must validate: `docker compose config --quiet`
+- PR description must follow the AI-Assisted Review Block format (see AGENTS.md)
+- One component per PR — no bundled changes
+- All image versions must be pinned (no `latest`)
+
+## Reporting Issues
+
+- Use GitHub Issues for bugs and feature requests
+- Include stack traces, logs, and reproduction steps for bugs
+- Tag issues with appropriate labels
+
+## Code of Conduct
+
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+By participating, you agree to uphold its standards.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the
+[Apache License 2.0](LICENSE).

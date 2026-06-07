@@ -52,7 +52,7 @@ start_monitoring_stack() {
     
     # Create data directories if they don't exist
     mkdir -p "${PROJECT_ROOT}/data/prometheus" "${PROJECT_ROOT}/data/grafana"
-    chmod -R 777 "${PROJECT_ROOT}/data/" 2>/dev/null || true
+    chmod -R 755 "${PROJECT_ROOT}/data/" 2>/dev/null || true
     
     # Start services
     docker compose --profile core up -d

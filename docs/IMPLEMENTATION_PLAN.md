@@ -221,3 +221,5 @@ Week 4+: Phase 5 (DORA) ────────────── sequential, h
 | 2026-06-07 | Plan created from platform audit | — |
 | 2026-06-07 | Phase 0 complete: otel-collector hardened, datasource UIDs added, legacy provisioner removed, stale files cleaned | N1, N2, N3, N4, N13, N14 |
 | 2026-06-07 | Phase 1 complete: absent() guards added, runbook URLs fixed, test credentials externalized, all acceptance tests wired, alloy depends_on fixed | N5, N6, N7, N9, N11 |
+| 2026-06-07 | Phase 2 complete: LICENSE exists, README license link fixed, SPDX identifier added to compose.yaml | #64 |
+| 2026-06-07 | Phase 3 partial: legacy dashboards upgraded to schemaVersion 39, service UIDs prefixed with ufawkesobs-, CI badge added, deprecated table_manager removed from Loki, OTel debug verbosity reduced, chmod 777→755, community docs added | #71, N8, N10, N12, N15, N16 |

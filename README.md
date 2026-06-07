@@ -1,5 +1,9 @@
 # uFawkesObs
 
+[![CI](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml/badge.svg)](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Part of Fawkes IDP](https://img.shields.io/badge/Part%20of-Fawkes%20IDP-purple.svg)](https://github.com/paruff/fawkes)
+
 ## What This Is
 
 uFawkesObs is for small-to-medium engineering teams (3–15 people) running Docker Compose workloads who want production-grade metrics, logs, and traces without a SaaS observability bill.

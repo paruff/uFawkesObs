@@ -655,9 +655,12 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 38,
+  "schemaVersion": 39,
   "style": "dark",
-  "tags": ["prometheus", "monitoring"],
+  "tags": [
+    "prometheus",
+    "monitoring"
+  ],
   "templating": {
     "list": []
   },
