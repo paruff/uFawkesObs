@@ -477,7 +477,7 @@ class TestNewServiceDashboards:
                     assert "title" in dashboard, f"Dashboard '{filename}' should have a title"
                     assert "panels" in dashboard, f"Dashboard '{filename}' should have panels"
                     assert "uid" in dashboard, f"Dashboard '{filename}' should have a uid"
-                    assert dashboard["uid"].startswith("service-"), f"Dashboard '{filename}' uid should start with 'service-'"
+                    assert dashboard["uid"].startswith("ufawkesobs-service-"), f"Dashboard '{filename}' uid should start with 'ufawkesobs-service-'"
                     
                     # Check template variables - service dashboards should have service and instance
                     templating = dashboard.get("templating", {})
