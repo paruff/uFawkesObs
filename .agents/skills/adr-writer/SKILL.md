@@ -9,13 +9,14 @@ metadata:
 ---
 
 # Skill: ADR Writer
-> **Load trigger:** `"load adr-writer skill"`
-> **DORA:** Cap 3 (AI-Accessible Internal Data)
+
+> **Load trigger:** `"load adr-writer skill"` > **DORA:** Cap 3 (AI-Accessible Internal Data)
 > **Token cost:** Low
 
 ## Purpose
 
 Produce Architecture Decision Records (ADRs) in a format that:
+
 - Humans can understand and approve
 - Future agents can read as authoritative context
 - Links decisions to DORA capabilities so the Dojo can reference them
@@ -23,6 +24,7 @@ Produce Architecture Decision Records (ADRs) in a format that:
 ## When to Write an ADR
 
 Write an ADR when a decision:
+
 - Affects the architecture layer structure or dependency direction
 - Adds or removes a mandatory tool or CI gate
 - Changes the agent routing strategy
@@ -30,6 +32,7 @@ Write an ADR when a decision:
 - Supersedes an existing ADR
 
 Do NOT write an ADR for:
+
 - Implementation choices within a single file
 - Temporary workarounds (use a code comment + TODO issue instead)
 - Decisions the team hasn't made yet (ADRs record decisions, not options)
@@ -43,11 +46,9 @@ Query existing ADRs: `ls docs/adr/` before assigning a number.
 
 ```markdown
 # ADR-[NNN]: [Short Imperative Title]
-> **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-[NNN]
-> **Date:** [YYYY-MM-DD]
-> **Author:** [Human name or "AI-assisted, approved by [name]"]
-> **DORA Capability:** Cap [N] — [Name]
-> **Dojo Module:** [Belt] — [Module name] (if applicable)
+
+> **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-[NNN] > **Date:** [YYYY-MM-DD] > **Author:** [Human name or "AI-assisted, approved by [name]"]
+> **DORA Capability:** Cap [N] — [Name] > **Dojo Module:** [Belt] — [Module name] (if applicable)
 
 ## Context
 
@@ -73,21 +74,24 @@ Be specific — "it's simpler" is not a rationale.]
 ## Consequences
 
 **Positive:**
+
 - [What improves]
 
 **Negative:**
+
 - [What gets harder, costs more, or requires maintenance]
 
 **For agents:**
+
 - [Specific instruction: what agents MUST or MUST NOT do as a result of this decision]
   Example: "Agents must not add new npm dependencies without checking against this ADR."
 
 ## Alternatives Considered
 
-| Option | Why Rejected |
-|---|---|
+| Option     | Why Rejected                                |
+| ---------- | ------------------------------------------- |
 | [Option A] | [Specific reason — not just "it was worse"] |
-| [Option B] | [Specific reason] |
+| [Option B] | [Specific reason]                           |
 
 ## Implementation
 

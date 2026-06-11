@@ -34,7 +34,8 @@ dashboards/
 ```
 
 **Note:** The provisioning configuration is located at `config/grafana/provisioning/dashboards/new-dashboards.yaml` and is automatically included with the existing Grafana provisioning mount.
-```
+
+````
 
 ## Quick Start
 
@@ -50,7 +51,7 @@ grafana:
     - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
     - ./dashboards/platform:/etc/grafana/dashboards/platform:ro
     - ./dashboards/services:/etc/grafana/dashboards/services:ro
-```
+````
 
 2. **Restart Grafana**:
 
@@ -75,43 +76,43 @@ docker compose restart grafana
 
 Monitor the health and performance of your observability infrastructure:
 
-| Dashboard | Purpose | Key Metrics |
-|-----------|---------|-------------|
-| **Global Health** | Overall platform status | Active alerts, ingestion rates, component health |
-| **Prometheus** | Metrics storage | Scrape duration, TSDB size, WAL latency, series count |
-| **Loki** | Log aggregation | Ingest rate, query latency, chunk flush, compactor |
-| **Tempo** | Distributed tracing | Spans/sec, query latency, distributor health |
-| **Alloy** | OTel Collector | Pipeline throughput, drops, queue depth, resources |
-| **Alertmanager** | Alert routing | Alert handling, notification success/failure |
-| **Storage Capacity** | Capacity planning | Growth trends, retention, projections |
-| **Ingestion Health** | Cross-component | Ingestion metrics, bottlenecks, drop rates |
+| Dashboard            | Purpose                 | Key Metrics                                           |
+| -------------------- | ----------------------- | ----------------------------------------------------- |
+| **Global Health**    | Overall platform status | Active alerts, ingestion rates, component health      |
+| **Prometheus**       | Metrics storage         | Scrape duration, TSDB size, WAL latency, series count |
+| **Loki**             | Log aggregation         | Ingest rate, query latency, chunk flush, compactor    |
+| **Tempo**            | Distributed tracing     | Spans/sec, query latency, distributor health          |
+| **Alloy**            | OTel Collector          | Pipeline throughput, drops, queue depth, resources    |
+| **Alertmanager**     | Alert routing           | Alert handling, notification success/failure          |
+| **Storage Capacity** | Capacity planning       | Growth trends, retention, projections                 |
+| **Ingestion Health** | Cross-component         | Ingestion metrics, bottlenecks, drop rates            |
 
 ### Service Dashboards (7)
 
 Monitor application performance using the Golden Signals methodology:
 
-| Dashboard | Purpose | Answers |
-|-----------|---------|---------|
-| **Service Overview** | Golden Signals at a glance | Is my service healthy? |
-| **Service Latency** | Latency deep-dive | Which endpoints are slow? |
-| **Service Errors** | Error analysis | What's failing and why? |
-| **Service Saturation** | Resource utilization | Am I running out of resources? |
-| **Service Debug** | Troubleshooting | Logs, traces, exemplars |
-| **Service SLO** | SLO tracking | Am I meeting my SLOs? |
-| **Service Capacity** | Growth planning | When do I need to scale? |
+| Dashboard              | Purpose                    | Answers                        |
+| ---------------------- | -------------------------- | ------------------------------ |
+| **Service Overview**   | Golden Signals at a glance | Is my service healthy?         |
+| **Service Latency**    | Latency deep-dive          | Which endpoints are slow?      |
+| **Service Errors**     | Error analysis             | What's failing and why?        |
+| **Service Saturation** | Resource utilization       | Am I running out of resources? |
+| **Service Debug**      | Troubleshooting            | Logs, traces, exemplars        |
+| **Service SLO**        | SLO tracking               | Am I meeting my SLOs?          |
+| **Service Capacity**   | Growth planning            | When do I need to scale?       |
 
 ## Template Variables
 
 All dashboards use consistent template variables:
 
-| Variable | Source | Purpose |
-|----------|--------|---------|
-| `datasource` | Datasource query | Select Prometheus instance |
-| `cluster` | `label_values(up, cluster)` | Filter by cluster |
-| `namespace` | `label_values(up, namespace)` | Filter by namespace |
-| `environment` | Custom | Filter by environment (prod/staging/dev) |
-| `service` | `label_values(up, job)` | Filter by service (service dashboards only) |
-| `instance` | `label_values(up, instance)` | Filter by instance (service dashboards only) |
+| Variable      | Source                        | Purpose                                      |
+| ------------- | ----------------------------- | -------------------------------------------- |
+| `datasource`  | Datasource query              | Select Prometheus instance                   |
+| `cluster`     | `label_values(up, cluster)`   | Filter by cluster                            |
+| `namespace`   | `label_values(up, namespace)` | Filter by namespace                          |
+| `environment` | Custom                        | Filter by environment (prod/staging/dev)     |
+| `service`     | `label_values(up, job)`       | Filter by service (service dashboards only)  |
+| `instance`    | `label_values(up, instance)`  | Filter by instance (service dashboards only) |
 
 ## Required Metrics and Labels
 
@@ -137,18 +138,21 @@ instance="pod-123"            # Instance identifier
 #### Required Metrics
 
 **HTTP Traffic:**
+
 ```promql
 http_requests_total{job, method, status, endpoint}
 http_request_duration_seconds{job, method, endpoint}  # Histogram
 ```
 
 **Errors:**
+
 ```promql
 http_requests_total{status=~"5.."}  # 5xx errors
 http_requests_total{status=~"4.."}  # 4xx errors
 ```
 
 **Saturation:**
+
 ```promql
 process_cpu_seconds_total{job}
 process_resident_memory_bytes{job}
@@ -156,11 +160,13 @@ go_goroutines{job}  # For Go applications
 ```
 
 **Logs (Loki):**
+
 ```logql
 {job="your-service", level="error"}  # Structured logs with level
 ```
 
 **Traces (Tempo):**
+
 ```promql
 traces_spanmetrics_calls_total{service_name="your-service"}
 traces_spanmetrics_latency_bucket{service_name="your-service"}
@@ -190,6 +196,7 @@ The OTel Collector will automatically generate the required metrics for service 
 3. Export to `http://otel-collector:4317` (gRPC) or `:4318` (HTTP)
 
 Example (Go):
+
 ```go
 import (
     "go.opentelemetry.io/otel"
@@ -218,13 +225,13 @@ Add to `config/prometheus/prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'my-service'
+  - job_name: "my-service"
     static_configs:
-      - targets: ['my-service:8080']
+      - targets: ["my-service:8080"]
         labels:
-          cluster: 'us-west-1'
-          namespace: 'production'
-          environment: 'production'
+          cluster: "us-west-1"
+          namespace: "production"
+          environment: "production"
 ```
 
 ### Step 3: Configure Logging
@@ -258,14 +265,15 @@ scrape_configs:
 
 Each dashboard answers **one main question**:
 
-- Global Health: *Is my platform healthy?*
-- Service Overview: *Is my service healthy?*
-- Service Latency: *Where is latency coming from?*
-- Service Errors: *What's failing?*
+- Global Health: _Is my platform healthy?_
+- Service Overview: _Is my service healthy?_
+- Service Latency: _Where is latency coming from?_
+- Service Errors: _What's failing?_
 
 ### User Impact → Root Cause → Internals
 
 Dashboards are laid out from:
+
 1. **Top** - User-facing impact (errors, latency)
 2. **Middle** - Application metrics (endpoints, methods)
 3. **Bottom** - Internal details (resources, queues)
@@ -291,6 +299,7 @@ All queries are PromQL-based. To customize:
 4. Save and re-provision or re-import
 
 Example:
+
 ```json
 {
   "targets": [
@@ -318,9 +327,9 @@ Find the `thresholds` section in field config:
   "thresholds": {
     "mode": "absolute",
     "steps": [
-      {"color": "green", "value": null},
-      {"color": "yellow", "value": 80},
-      {"color": "red", "value": 95}
+      { "color": "green", "value": null },
+      { "color": "yellow", "value": 80 },
+      { "color": "red", "value": 95 }
     ]
   }
 }
@@ -427,6 +436,7 @@ groups:
 ```
 
 Then reference in dashboards:
+
 ```promql
 service:request_latency:p99{job="$service"}
 ```
@@ -460,12 +470,12 @@ These dashboards are part of the Obstackd observability platform and follow the 
 
 ### Metric Naming Conventions
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Counter | `*_total` | `http_requests_total` |
-| Gauge | `*` | `process_resident_memory_bytes` |
-| Histogram | `*_bucket`, `*_sum`, `*_count` | `http_request_duration_seconds_bucket` |
-| Summary | `*{quantile="..."}` | `http_request_duration_seconds{quantile="0.99"}` |
+| Type      | Pattern                        | Example                                          |
+| --------- | ------------------------------ | ------------------------------------------------ |
+| Counter   | `*_total`                      | `http_requests_total`                            |
+| Gauge     | `*`                            | `process_resident_memory_bytes`                  |
+| Histogram | `*_bucket`, `*_sum`, `*_count` | `http_request_duration_seconds_bucket`           |
+| Summary   | `*{quantile="..."}`            | `http_request_duration_seconds{quantile="0.99"}` |
 
 ### Common PromQL Patterns
 

@@ -7,9 +7,11 @@ This directory contains comprehensive integration tests for the Obstackd observa
 ### Observability Stack Core Tests
 
 #### Prometheus Scraping (`test_prometheus_scraping.py`)
+
 Tests Prometheus metric scraping functionality across all configured targets.
 
 **Test Scenarios:**
+
 - ✅ OTel Collector target is up and scraped successfully
 - ✅ Scrape duration is within SLA (<1s)
 - ✅ All configured targets are healthy
@@ -19,9 +21,11 @@ Tests Prometheus metric scraping functionality across all configured targets.
 - ✅ Target details and health monitoring
 
 #### OpenTelemetry Collector (`test_otel_collector.py`)
+
 Tests OTel Collector operations and telemetry pipeline.
 
 **Test Scenarios:**
+
 - ✅ Collector is running and serving metrics
 - ✅ OTLP receivers (gRPC and HTTP) are operational
 - ✅ Exporters are sending data successfully
@@ -30,9 +34,11 @@ Tests OTel Collector operations and telemetry pipeline.
 - ✅ No data is being refused or dropped
 
 #### Grafana Integration (`test_grafana_integration.py`)
+
 Tests Grafana functionality and datasource connectivity.
 
 **Test Scenarios:**
+
 - ✅ Grafana is healthy and accessible
 - ✅ All datasources (Prometheus, Tempo, Loki) are provisioned
 - ✅ Datasource connectivity is working
@@ -41,9 +47,11 @@ Tests Grafana functionality and datasource connectivity.
 - ✅ Authentication is configured
 
 #### Tempo Tracing (`test_tempo_integration.py`)
+
 Tests Tempo distributed tracing backend.
 
 **Test Scenarios:**
+
 - ✅ Tempo is ready and healthy
 - ✅ All receiver ports are accessible (OTLP, Jaeger, Zipkin)
 - ✅ Tempo API endpoints are working
@@ -51,9 +59,11 @@ Tests Tempo distributed tracing backend.
 - ✅ Metrics are exposed
 
 #### Loki Logs (`test_loki_integration.py`)
+
 Tests Loki log aggregation system.
 
 **Test Scenarios:**
+
 - ✅ Loki is ready and healthy
 - ✅ Log ingestion ports are accessible
 - ✅ Loki API endpoints are working
@@ -72,6 +82,7 @@ Tests Loki log aggregation system.
 ## Installation
 
 1. Create a virtual environment:
+
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -93,6 +104,7 @@ Tests Loki log aggregation system.
 ### Installation
 
 1. Create a virtual environment (optional):
+
    ```bash
    python3 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -184,6 +196,7 @@ pytest tests/integration/ -m "not slow"
 Tests can be configured with the following environment variables:
 
 **Core Services:**
+
 - `PROMETHEUS_URL` - Prometheus base URL (default: `http://localhost:9090`)
 - `OTEL_METRICS_URL` - OTel Collector metrics URL (default: `http://localhost:8888`)
 - `GRAFANA_URL` - Grafana base URL (default: `http://localhost:3000`)
@@ -194,31 +207,34 @@ Tests can be configured with the following environment variables:
 
 **Applications:**
 Example:
+
 ```bash
 GRAFANA_URL=http://grafana:3000 pytest tests/integration/test_grafana_integration.py
 ```
 
 ## Test Coverage Summary
 
-| Component | Tests | Coverage |
-|-----------|-------|----------|
-| Prometheus | 13 | Scraping, targets, labels, cardinality |
-| OTel Collector | 14 | Health, receivers, exporters, processors |
-| Grafana | 14 | Health, datasources, dashboards, plugins |
-| Tempo | 15 | Health, ports, API, metrics |
-| Loki | 15 | Health, ports, API, Promtail |
-| **Core Total** | **71** | **All core functionality** |
-| Dashboards | 14 | Provisioning, structure, datasources |
-| **Grand Total** | **85+** | **Complete observability stack** |
+| Component       | Tests   | Coverage                                 |
+| --------------- | ------- | ---------------------------------------- |
+| Prometheus      | 13      | Scraping, targets, labels, cardinality   |
+| OTel Collector  | 14      | Health, receivers, exporters, processors |
+| Grafana         | 14      | Health, datasources, dashboards, plugins |
+| Tempo           | 15      | Health, ports, API, metrics              |
+| Loki            | 15      | Health, ports, API, Promtail             |
+| **Core Total**  | **71**  | **All core functionality**               |
+| Dashboards      | 14      | Provisioning, structure, datasources     |
+| **Grand Total** | **85+** | **Complete observability stack**         |
 
 ### Expected Test Results
 
 When running with `--profile core`:
+
 - **71 core tests** pass
 - **0 failures**
 - **Duration**: ~20 seconds
 
 When running with `--profile core`:
+
 - **Duration**: ~40-60 seconds
 
 ## Troubleshooting
@@ -259,6 +275,7 @@ Integration tests run automatically in GitHub Actions:
 **Trigger:** Pull requests and pushes to main
 
 **Steps:**
+
 1. Start observability stack with `docker compose --profile core up -d`
 2. Wait for services to be ready (~60 seconds)
 3. Run all integration tests
@@ -266,11 +283,13 @@ Integration tests run automatically in GitHub Actions:
 5. Clean up services
 
 **Expected Results:**
+
 - **71 tests** should pass for core stack
 - **Additional tests** for applications when `--profile apps` is used
 - **Test duration**: ~5-10 minutes in CI
 
 Manual CI-style run:
+
 ```bash
 # Exactly as CI does it
 docker compose --profile core up -d

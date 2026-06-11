@@ -2,12 +2,12 @@
 
 ## Quick Summary: Where Your Data Is
 
-| Data Type | Storage | Status | View In Grafana |
-|-----------|---------|--------|-----------------|
-| **Metrics** | Prometheus | ✅ **Active** | Explore → Prometheus |
-| **Logs** | Loki | ⚠️ **Limited** | Explore → Loki |
-| **Traces** | Tempo | ⚠️ **Not Yet** | Explore → Tempo |
-| **Alerts** | Alertmanager | ✅ **Active** | Alerting → Alert Rules |
+| Data Type   | Storage      | Status         | View In Grafana        |
+| ----------- | ------------ | -------------- | ---------------------- |
+| **Metrics** | Prometheus   | ✅ **Active**  | Explore → Prometheus   |
+| **Logs**    | Loki         | ⚠️ **Limited** | Explore → Loki         |
+| **Traces**  | Tempo        | ⚠️ **Not Yet** | Explore → Tempo        |
+| **Alerts**  | Alertmanager | ✅ **Active**  | Alerting → Alert Rules |
 
 ---
 
@@ -119,14 +119,15 @@ To send traces, Media-Refinery would need:
 
 1. **OpenTelemetry SDK for Go** installed
 2. **Instrumentation code** like:
+
    ```go
    import "go.opentelemetry.io/otel"
    import "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-   
+
    // Initialize exporter
    exporter, _ := otlptracehttp.New(ctx)
    tracer := otel.Tracer("media-refinery")
-   
+
    // In your code:
    ctx, span := tracer.Start(ctx, "process_file")
    defer span.End()
@@ -262,15 +263,17 @@ count(up) by (job)
 ## Troubleshooting: "Why don't I see X?"
 
 ### "No Logs in Loki"
+
 - **Root cause**: Alloy not running or not connected to Docker socket
 - **Fix**: Check `docker compose logs alloy` and `curl http://localhost:12345/metrics`
-- **Verification**: 
+- **Verification**:
   ```bash
   curl http://localhost:3100/loki/api/v1/label/job/values
   # Should return ["docker"]
   ```
 
 ### "No Traces in Tempo"
+
 - **Root cause**: Media-Refinery code doesn't have OTel SDK
 - **Fix**: Add OpenTelemetry instrumentation to Media-Refinery Go code
 - **Verification**:
@@ -280,6 +283,7 @@ count(up) by (job)
   ```
 
 ### "Metrics Missing from Prometheus"
+
 - **Root cause**: Target not in scrape config
 - **Fix**: Add to `config/prometheus/prometheus.yaml`
 - **Verification**:
@@ -288,8 +292,9 @@ count(up) by (job)
   ```
 
 ### "Grafana Shows Empty Dashboards"
+
 - **Root cause**: Dashboard queries don't match available metrics
-- **Fix**: 
+- **Fix**:
   1. Go to Explore
   2. Try a simple query like `up`
   3. Edit dashboard panels to use correct metric names
@@ -326,6 +331,7 @@ count(up) by (job)
 ## Quick API Tests
 
 ### Test Prometheus
+
 ```bash
 curl 'http://localhost:9090/api/v1/targets'
 curl 'http://localhost:9090/api/v1/labels'
@@ -333,18 +339,21 @@ curl 'http://localhost:9090/api/v1/query?query=up'
 ```
 
 ### Test Loki
+
 ```bash
 curl 'http://localhost:3100/loki/api/v1/labels'
 curl 'http://localhost:3100/loki/api/v1/label/job/values'
 ```
 
 ### Test Tempo
+
 ```bash
 curl 'http://localhost:3200/api/traces'
 curl 'http://localhost:3200/api/search'
 ```
 
 ### Test OTel Collector Metrics
+
 ```bash
 curl 'http://localhost:8888/metrics' | grep -i otelcol
 curl 'http://localhost:8889/metrics' | head -20
@@ -354,12 +363,11 @@ curl 'http://localhost:8889/metrics' | head -20
 
 ## Summary Table
 
-| Component | URL | Data | Action |
-|-----------|-----|------|--------|
-| Prometheus | `http://localhost:9090` | Infrastructure metrics | ✅ Viewing now |
-| Grafana | `http://localhost:3000` | Dashboards | ✅ Use this |
-| Loki | `http://localhost:3100` | Logs | ✅ Alloy collecting Docker logs |
-| Tempo | `http://localhost:3200` | Traces | ⚠️ Instrument code |
-| OTel Collector | `http://localhost:4317/4318` | OTLP receiver | ✅ Ready for data |
-| Alertmanager | `http://localhost:9093` | Alerts | ✅ Configured |
-
+| Component      | URL                          | Data                   | Action                          |
+| -------------- | ---------------------------- | ---------------------- | ------------------------------- |
+| Prometheus     | `http://localhost:9090`      | Infrastructure metrics | ✅ Viewing now                  |
+| Grafana        | `http://localhost:3000`      | Dashboards             | ✅ Use this                     |
+| Loki           | `http://localhost:3100`      | Logs                   | ✅ Alloy collecting Docker logs |
+| Tempo          | `http://localhost:3200`      | Traces                 | ⚠️ Instrument code              |
+| OTel Collector | `http://localhost:4317/4318` | OTLP receiver          | ✅ Ready for data               |
+| Alertmanager   | `http://localhost:9093`      | Alerts                 | ✅ Configured                   |

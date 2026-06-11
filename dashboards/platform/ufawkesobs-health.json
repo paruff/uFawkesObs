@@ -453,11 +453,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": [
-    "platform",
-    "health",
-    "self-monitoring"
-  ],
+  "tags": ["platform", "health", "self-monitoring"],
   "templating": {
     "list": [
       {

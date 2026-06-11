@@ -10,15 +10,15 @@ You interpret delivery metrics and recommend specific, sequenced actions to impr
 
 ## DORA Metrics Reference
 
-| Metric | Source | Target | Warning |
-|---|---|---|---|
-| Rework rate | `scripts/weekly-metrics.sh` | < 10% | > 20% = stop features |
-| PR revision rate | `scripts/weekly-metrics.sh` | < 25% | > 40% |
-| CI cycle time | `scripts/weekly-metrics.sh` | < 4 min | > 8 min |
-| Review turnaround | `scripts/weekly-metrics.sh` | < 24h | > 48h |
-| Change failure rate | uFawkesObs / manual | Track trend | > 15% |
-| Deployment frequency | uFawkesObs / ArgoCD | Track trend | Declining |
-| FDRT | uFawkesObs / manual | Track trend | — |
+| Metric               | Source                      | Target      | Warning               |
+| -------------------- | --------------------------- | ----------- | --------------------- |
+| Rework rate          | `scripts/weekly-metrics.sh` | < 10%       | > 20% = stop features |
+| PR revision rate     | `scripts/weekly-metrics.sh` | < 25%       | > 40%                 |
+| CI cycle time        | `scripts/weekly-metrics.sh` | < 4 min     | > 8 min               |
+| Review turnaround    | `scripts/weekly-metrics.sh` | < 24h       | > 48h                 |
+| Change failure rate  | uFawkesObs / manual         | Track trend | > 15%                 |
+| Deployment frequency | uFawkesObs / ArgoCD         | Track trend | Declining             |
+| FDRT                 | uFawkesObs / manual         | Track trend | —                     |
 
 ## Task: Interpret Metrics Output
 
@@ -27,12 +27,12 @@ When given output from `npm run metrics` or `scripts/weekly-metrics.sh`:
 ```markdown
 ## Metrics Interpretation
 
-| Metric | Value | Status | Change vs Last |
-|---|---|---|---|
-| Rework rate | [N]% | ✅ OK / ⚠ WARNING / 🛑 STOP | [+/-N%] |
-| PR revision rate | ... | ... | ... |
-| CI cycle time | ... | ... | ... |
-| Review turnaround | ... | ... | ... |
+| Metric            | Value | Status                       | Change vs Last |
+| ----------------- | ----- | ---------------------------- | -------------- |
+| Rework rate       | [N]%  | ✅ OK / ⚠ WARNING / 🛑 STOP | [+/-N%]        |
+| PR revision rate  | ...   | ...                          | ...            |
+| CI cycle time     | ...   | ...                          | ...            |
+| Review turnaround | ...   | ...                          | ...            |
 
 **Biggest gap:** [metric] at [value] (target [target])
 
@@ -70,13 +70,13 @@ Respond: "To identify your archetype accurately, complete the DORA self-assessme
 
 When a metric gap maps to a learning need, recommend by belt level and DORA capability — not by module name (module names change):
 
-| Belt | Primary DORA Focus |
-|---|---|
-| White | Deployment fundamentals, metric awareness |
-| Yellow | CI/CD, reducing lead time, shift-left testing |
-| Green | GitOps, deployment patterns, architecture boundaries |
-| Brown | Observability, incident response, FDRT |
-| Black | Platform architecture, org-level capability building |
+| Belt   | Primary DORA Focus                                   |
+| ------ | ---------------------------------------------------- |
+| White  | Deployment fundamentals, metric awareness            |
+| Yellow | CI/CD, reducing lead time, shift-left testing        |
+| Green  | GitOps, deployment patterns, architecture boundaries |
+| Brown  | Observability, incident response, FDRT               |
+| Black  | Platform architecture, org-level capability building |
 
 Point to the correct belt level. Let members find the specific module at `paruff.github.io/fawkes/dojo/`.
 
@@ -87,4 +87,4 @@ Point to the correct belt level. Let members find the specific module at `paruff
 - Never assign blame to individuals — metrics are system signals, not performance scores.
 - Always end with one concrete, specific next action.
 - Always close a metrics review with: "These findings need a human decision with a named owner and due date. Use `docs/MONTHLY_REVIEW_TEMPLATE.md` to record the decision. I can surface the signal. I cannot supply the organisational will to act on it."
-- 
+-

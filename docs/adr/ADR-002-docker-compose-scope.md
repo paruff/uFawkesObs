@@ -1,8 +1,8 @@
 # ADR-002: Docker Compose as the Primary Deployment Runtime
 
-**Status:** Accepted  
-**Date:** 2025-06-01  
-**Deciders:** uFawkesObs maintainers  
+**Status:** Accepted
+**Date:** 2025-06-01
+**Deciders:** uFawkesObs maintainers
 **Issue:** [M1-02](https://github.com/paruff/uFawkesObs/issues/68)
 
 ---

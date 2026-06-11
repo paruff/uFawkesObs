@@ -15,6 +15,7 @@ metadata:
 Services emit OTLP span events → OTel Collector → spanmetrics processor converts spans to Prometheus counters → Prometheus scrapes → Grafana queries.
 
 **Required spans from services:**
+
 ```
 deployment.completed  { service, version, environment, duration_ms, status }
 deployment.failed     { service, version, environment, error }
@@ -27,11 +28,13 @@ incident.resolved     { service, severity, duration_ms }
 ## PromQL Queries
 
 ### Deployment Frequency (deployments per day)
+
 ```promql
 increase(deployment_completed_total{environment="prod"}[1d])
 ```
 
 ### Change Failure Rate
+
 ```promql
 sum(rate(deployment_failed_total{environment="prod"}[7d]))
 /
@@ -39,12 +42,14 @@ sum(rate(deployment_completed_total{environment="prod"}[7d])) * 100
 ```
 
 ### Failed Deployment Recovery Time (FDRT / MTTR)
+
 ```promql
 # Average recovery duration in seconds
 avg(incident_duration_seconds{severity=~"critical|high"})
 ```
 
 ### Lead Time (proxy — PR merge to deployment)
+
 ```promql
 # Requires deployment spans to carry commit_timestamp attribute
 # If available:
@@ -55,10 +60,10 @@ avg(deployment_lead_time_seconds{environment="prod"})
 
 ## DORA Thresholds for Alert Rules
 
-| Metric | Warning | Critical |
-|---|---|---|
-| Change failure rate | > 15% | > 30% |
-| FDRT | > 1 day | > 7 days |
+| Metric               | Warning         | Critical          |
+| -------------------- | --------------- | ----------------- |
+| Change failure rate  | > 15%           | > 30%             |
+| FDRT                 | > 1 day         | > 7 days          |
 | Deployment frequency | Declining trend | Zero for > 7 days |
 
 ## Grafana DORA Dashboard Variables
@@ -119,6 +124,7 @@ service:
 ```
 
 **Verify spanmetrics is working:**
+
 ```bash
 curl -s http://localhost:9090/api/v1/query?query=calls_total | python3 -m json.tool
 # Should return span-derived metrics if spans are being received

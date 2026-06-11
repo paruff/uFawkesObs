@@ -36,7 +36,7 @@ class TestPrometheusConfigStructure:
         """Test that required sections are present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # global is required
         assert 'global' in config, "Missing required section: global"
 
@@ -48,7 +48,7 @@ class TestPrometheusGlobalConfig:
         """Test that scrape_interval is defined in global config."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'scrape_interval' in config['global'], \
             "global.scrape_interval should be defined"
 
@@ -56,7 +56,7 @@ class TestPrometheusGlobalConfig:
         """Test that scrape_interval has valid format."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         scrape_interval = config['global']['scrape_interval']
         # Should be a string with time unit (e.g., "15s", "1m")
         assert isinstance(scrape_interval, str), \
@@ -68,7 +68,7 @@ class TestPrometheusGlobalConfig:
         """Test that evaluation_interval is defined in global config."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'evaluation_interval' in config['global']:
             eval_interval = config['global']['evaluation_interval']
             assert isinstance(eval_interval, str), \
@@ -80,7 +80,7 @@ class TestPrometheusGlobalConfig:
         """Test that external_labels has valid format if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'external_labels' in config['global']:
             labels = config['global']['external_labels']
             assert isinstance(labels, dict), \
@@ -98,15 +98,15 @@ class TestPrometheusAlertingConfig:
         """Test that alertmanagers configuration is valid if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'alerting' in config and 'alertmanagers' in config['alerting']:
             alertmanagers = config['alerting']['alertmanagers']
             assert isinstance(alertmanagers, list), \
                 "alertmanagers should be a list"
-            
+
             for am in alertmanagers:
                 # Should have either static_configs or other service discovery
-                assert any(k in am for k in ['static_configs', 'consul_sd_configs', 
+                assert any(k in am for k in ['static_configs', 'consul_sd_configs',
                                               'dns_sd_configs', 'file_sd_configs']), \
                     "alertmanager config should have service discovery config"
 
@@ -114,7 +114,7 @@ class TestPrometheusAlertingConfig:
         """Test that alertmanager static_configs are valid."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'alerting' in config and 'alertmanagers' in config['alerting']:
             for am in config['alerting']['alertmanagers']:
                 if 'static_configs' in am:
@@ -134,12 +134,12 @@ class TestPrometheusRuleFiles:
         """Test that rule_files has valid format if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'rule_files' in config:
             rule_files = config['rule_files']
             assert isinstance(rule_files, list), \
                 "rule_files should be a list"
-            
+
             for rule_file in rule_files:
                 assert isinstance(rule_file, str), \
                     "Each rule file should be a string path"
@@ -231,7 +231,7 @@ class TestPrometheusScrapeConfigs:
         """Test that scrape_configs section exists."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'scrape_configs' in config, \
             "scrape_configs section should be present"
         assert isinstance(config['scrape_configs'], list), \
@@ -243,7 +243,7 @@ class TestPrometheusScrapeConfigs:
         """Test that each scrape config has a job_name."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for idx, scrape_config in enumerate(config['scrape_configs']):
             assert 'job_name' in scrape_config, \
                 f"scrape_config at index {idx} missing job_name"
@@ -256,7 +256,7 @@ class TestPrometheusScrapeConfigs:
         """Test that each scrape config has a way to discover targets."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for scrape_config in config['scrape_configs']:
             job_name = scrape_config['job_name']
             # Should have at least one service discovery mechanism
@@ -271,7 +271,7 @@ class TestPrometheusScrapeConfigs:
         """Test that static_configs have targets defined."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for scrape_config in config['scrape_configs']:
             job_name = scrape_config['job_name']
             if 'static_configs' in scrape_config:
@@ -285,7 +285,7 @@ class TestPrometheusScrapeConfigs:
         """Test that scrape_interval in scrape_configs is valid if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for scrape_config in config['scrape_configs']:
             job_name = scrape_config['job_name']
             if 'scrape_interval' in scrape_config:
@@ -299,7 +299,7 @@ class TestPrometheusScrapeConfigs:
         """Test that metrics_path is valid if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for scrape_config in config['scrape_configs']:
             job_name = scrape_config['job_name']
             if 'metrics_path' in scrape_config:
@@ -313,7 +313,7 @@ class TestPrometheusScrapeConfigs:
         """Test that scheme is valid if present."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for scrape_config in config['scrape_configs']:
             job_name = scrape_config['job_name']
             if 'scheme' in scrape_config:
@@ -329,7 +329,7 @@ class TestPrometheusJobsForObservabilityStack:
         """Test that Prometheus has a self-monitoring job."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         job_names = [sc['job_name'] for sc in config['scrape_configs']]
         assert 'prometheus' in job_names, \
             "Prometheus self-monitoring job should be configured"
@@ -338,7 +338,7 @@ class TestPrometheusJobsForObservabilityStack:
         """Test that OTel Collector scrape job exists."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         job_names = [sc['job_name'] for sc in config['scrape_configs']]
         # Look for otel-collector or similar
         otel_jobs = [j for j in job_names if 'otel' in j.lower()]
@@ -353,17 +353,17 @@ class TestPrometheusConfigValidation:
         """Test that the complete configuration is valid."""
         with open(prometheus_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # Should have all essential sections
         assert 'global' in config
         assert 'scrape_configs' in config
-        
+
         # Global should have scrape_interval
         assert 'scrape_interval' in config['global']
-        
+
         # Should have at least one scrape config
         assert len(config['scrape_configs']) > 0
-        
+
         # All scrape configs should be valid
         for sc in config['scrape_configs']:
             assert 'job_name' in sc

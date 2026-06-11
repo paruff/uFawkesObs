@@ -48,8 +48,8 @@ services:
   your-app:
     # ... your app configuration ...
     networks:
-      - default              # Your app's internal network
-      - observability-lab    # uFawkesObs's network
+      - default # Your app's internal network
+      - observability-lab # uFawkesObs's network
     environment:
       # OpenTelemetry (send to uFawkesObs)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
@@ -73,12 +73,12 @@ If your app exposes Prometheus metrics, add to uFawkesObs's [`config/prometheus/
 
 ```yaml
 scrape_configs:
-  - job_name: 'your-app'
+  - job_name: "your-app"
     static_configs:
-      - targets: ['your-app-container-name:9090']
+      - targets: ["your-app-container-name:9090"]
         labels:
-          component: 'your-app'
-          service: 'your-service-category'
+          component: "your-app"
+          service: "your-service-category"
     scrape_interval: 15s
 ```
 
@@ -92,14 +92,14 @@ docker compose restart prometheus
 
 From your application containers, use these DNS names:
 
-| Service | Endpoint | Protocol | Purpose |
-|---------|----------|----------|---------|
-| OTel Collector | `otel-collector:4317` | gRPC | OTLP traces/metrics/logs |
-| OTel Collector | `otel-collector:4318` | HTTP | OTLP traces/metrics/logs |
-| Loki | `loki:3100` | HTTP | Direct log pushing |
-| Tempo | `tempo:4317` | gRPC | Direct trace pushing |
-| Prometheus | `prometheus:9090` | HTTP | Query metrics |
-| Grafana | `grafana:3000` | HTTP | Visualization (if needed) |
+| Service        | Endpoint              | Protocol | Purpose                   |
+| -------------- | --------------------- | -------- | ------------------------- |
+| OTel Collector | `otel-collector:4317` | gRPC     | OTLP traces/metrics/logs  |
+| OTel Collector | `otel-collector:4318` | HTTP     | OTLP traces/metrics/logs  |
+| Loki           | `loki:3100`           | HTTP     | Direct log pushing        |
+| Tempo          | `tempo:4317`          | gRPC     | Direct trace pushing      |
+| Prometheus     | `prometheus:9090`     | HTTP     | Query metrics             |
+| Grafana        | `grafana:3000`        | HTTP     | Visualization (if needed) |
 
 ## Instrumentation Requirements
 
@@ -108,6 +108,7 @@ From your application containers, use these DNS names:
 Set environment variables as shown in Step 2. Your app must use an OpenTelemetry SDK (available for most languages: Go, Python, Java, Node.js, .NET, etc.).
 
 Example for Go:
+
 ```go
 import (
     "go.opentelemetry.io/otel"
@@ -131,7 +132,7 @@ services:
         max-file: "3"
         tag: "{{.Name}}"
     networks:
-      - observability-lab  # Join the uFawkesObs network for log collection
+      - observability-lab # Join the uFawkesObs network for log collection
 ```
 
 Once joined to the `observability-lab` network, Alloy will automatically discover and
@@ -179,11 +180,13 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 ### Verify Telemetry Flow
 
 1. **Check OTel Collector is receiving data:**
+
    ```bash
    curl http://localhost:8888/metrics | grep receiver
    ```
 
 2. **Check Prometheus targets:**
+
    ```bash
    curl http://localhost:9090/api/v1/targets
    ```
@@ -199,6 +202,7 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 **Problem:** DNS resolution fails or connection refused
 
 **Solution:**
+
 1. Verify network exists: `docker network ls | grep observability-lab`
 2. Verify your container joined the network: `docker inspect your-container | grep observability-lab`
 3. Restart your application: `docker compose restart`
@@ -208,8 +212,9 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 **Problem:** OTel Collector not receiving data
 
 **Checklist:**
+
 - [ ] Application has OpenTelemetry SDK installed and initialized
-- [ ] OTEL_* environment variables are set correctly
+- [ ] OTEL\_\* environment variables are set correctly
 - [ ] Application is on `observability-lab` network
 - [ ] OTel Collector is running: `docker ps | grep otel-collector`
 - [ ] Check OTel Collector logs: `docker logs otel-collector`
@@ -219,6 +224,7 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 **Problem:** Logs aren't showing in Grafana
 
 **Solutions:**
+
 - Ensure your container is on the `observability-lab` network (Alloy auto-discovers it)
 - Or configure your app to push logs directly via OTLP to `otel-collector:4317`
 - Or push logs directly to `loki:3100/loki/api/v1/push`
@@ -244,7 +250,7 @@ docker exec your-app-container curl http://prometheus:9090/-/healthy
 To disconnect an application:
 
 1. Remove `observability-lab` from its networks section
-2. Remove OTEL_* environment variables
+2. Remove OTEL\_\* environment variables
 3. Remove Prometheus scrape job (if added)
 4. Restart: `docker compose up -d`
 
@@ -271,10 +277,10 @@ Compose application, but with plane-specific considerations.
 
 ### Plane Overview
 
-| Plane | Repository | Role | Telemetry Type |
-|---|---|---|---|
-| **uFawkesObs** | `paruff/uFawkesObs` | Observability | Metrics, logs, traces, dashboards |
-| **uFawkesPipe** (deliveryd) | `paruff/deliveryd` | CI/CD | Jenkins pipeline traces, deployment events, build metrics |
+| Plane                        | Repository          | Role            | Telemetry Type                                                  |
+| ---------------------------- | ------------------- | --------------- | --------------------------------------------------------------- |
+| **uFawkesObs**               | `paruff/uFawkesObs` | Observability   | Metrics, logs, traces, dashboards                               |
+| **uFawkesPipe** (deliveryd)  | `paruff/deliveryd`  | CI/CD           | Jenkins pipeline traces, deployment events, build metrics       |
 | **uFawkesDevX** (developerd) | `paruff/developerd` | Developer tools | Local service metrics, development logs, dev environment traces |
 
 ### Integration Pattern for Any Fawkes Plane
@@ -309,35 +315,35 @@ networks:
 
 ### Plane-Specific Guides
 
-| Plane | Integration Guide | Key Considerations |
-|---|---|---|
+| Plane       | Integration Guide                                              | Key Considerations                                                             |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | uFawkesPipe | [uFawkesPipe Integration](examples/uFawkesPipe-integration.md) | Jenkins OTEL plugin, pipeline span instrumentation, deployment events for DORA |
-| uFawkesDevX | [uFawkesDevX Integration](examples/uFawkesDevX-integration.md) | Grafana panel embedding, developer portal access, local service metrics |
+| uFawkesDevX | [uFawkesDevX Integration](examples/uFawkesDevX-integration.md) | Grafana panel embedding, developer portal access, local service metrics        |
 
 ### Cross-Plane Change Impact
 
 When modifying uFawkesObs, check the impact on connected planes:
 
-| Change in uFawkesObs | Impact |
-|---|---|
+| Change in uFawkesObs                     | Impact                                                       |
+| ---------------------------------------- | ------------------------------------------------------------ |
 | OTEL Collector receiver port (4317/4318) | uFawkesPipe Jenkins traces; uFawkesDevX local service traces |
-| Network name in `compose.yaml` | All planes must update their external network reference |
-| Prometheus scrape config | Any plane with a custom scrape job must be updated |
-| Grafana admin credentials | uFawkesDevX developer portal panels may break |
-| Grafana datasource UIDs | Embedded panels referencing old numeric IDs will break |
+| Network name in `compose.yaml`           | All planes must update their external network reference      |
+| Prometheus scrape config                 | Any plane with a custom scrape job must be updated           |
+| Grafana admin credentials                | uFawkesDevX developer portal panels may break                |
+| Grafana datasource UIDs                  | Embedded panels referencing old numeric IDs will break       |
 
 See `docs/CHANGE_IMPACT_MAP.md` for the full cross-plane impact matrix.
 
 ### Telemetry Routing by Plane
 
-| Signal | Source | Route | Destination |
-|---|---|---|---|
-| Jenkins pipeline traces | uFawkesPipe | OTel Collector → Tempo | Tempo (traces) |
-| Jenkins build metrics | uFawkesPipe | OTel Collector → Prometheus | Prometheus (metrics) |
-| Jenkins logs | uFawkesPipe | Alloy auto-discovery | Loki (logs) |
-| Dev service metrics | uFawkesDevX | OTel Collector → Prometheus | Prometheus (metrics) |
-| Dev service logs | uFawkesDevX | Alloy auto-discovery | Loki (logs) |
-| Dev service traces | uFawkesDevX | OTel Collector → Tempo | Tempo (traces) |
+| Signal                  | Source      | Route                       | Destination          |
+| ----------------------- | ----------- | --------------------------- | -------------------- |
+| Jenkins pipeline traces | uFawkesPipe | OTel Collector → Tempo      | Tempo (traces)       |
+| Jenkins build metrics   | uFawkesPipe | OTel Collector → Prometheus | Prometheus (metrics) |
+| Jenkins logs            | uFawkesPipe | Alloy auto-discovery        | Loki (logs)          |
+| Dev service metrics     | uFawkesDevX | OTel Collector → Prometheus | Prometheus (metrics) |
+| Dev service logs        | uFawkesDevX | Alloy auto-discovery        | Loki (logs)          |
+| Dev service traces      | uFawkesDevX | OTel Collector → Tempo      | Tempo (traces)       |
 
 ### Backstage Catalog Registration
 
@@ -346,6 +352,7 @@ All Fawkes planes should be registered in the parent
 in each plane's repository root for the entity definition.
 
 uFawkesObs registers as:
+
 - **System:** `ufawkesobs` (observability plane)
 - **Components:** One per service (otel-collector, prometheus, tempo, loki, alloy, grafana, alertmanager, node-exporter)
 - **API:** `ufawkesobs-otlp` (OTLP endpoint for external consumers)

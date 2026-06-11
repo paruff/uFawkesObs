@@ -37,6 +37,7 @@ You do not touch `config/otel/collector.yaml` (OTel agent), Prometheus rules (Pr
 ## Activation
 
 Invoked by:
+
 - `@alloy` mention
 - Planning agent assigning an Alloy task
 - Review agent flagging a River syntax or routing error
@@ -58,6 +59,7 @@ Invoked by:
 River is a declarative configuration language. Key rules:
 
 ### Block structure
+
 ```river
 // Component ID format: <namespace>.<name> "<label>"
 loki.source.docker "containers" {
@@ -68,6 +70,7 @@ loki.source.docker "containers" {
 ```
 
 ### Docker container discovery
+
 ```river
 discovery.docker "all" {
   host = "unix:///var/run/docker.sock"
@@ -86,6 +89,7 @@ discovery.relabel "containers" {
 ```
 
 ### Loki write endpoint — service name, not localhost
+
 ```river
 loki.write "default" {
   endpoint {
@@ -95,7 +99,9 @@ loki.write "default" {
 ```
 
 ### Hot-reload compatibility
+
 These block types are hot-reload compatible (no restart required):
+
 - `loki.source.docker`
 - `loki.write`
 - `discovery.docker`
@@ -104,10 +110,12 @@ These block types are hot-reload compatible (no restart required):
 - `prometheus.remote_write`
 
 These require a full Alloy restart:
+
 - `tracing` block (if present)
 - Changes to `logging` block level
 
 After any config change, test hot-reload before claiming it works:
+
 ```bash
 curl -X POST http://localhost:12345/-/reload
 # Expect: 200 OK with "configuration reload succeeded"
@@ -139,13 +147,13 @@ Alloy also scrapes its own metrics, which Prometheus scrapes from `:12345/metric
 
 ## Common errors to avoid
 
-| Error | Symptom | Fix |
-|-------|---------|-----|
-| Using `localhost` in loki.write URL | Logs don't reach Loki | Use `loki:3100` (Docker service name) |
-| Missing Docker socket mount | discovery.docker fails with permission error | Check compose.yaml for `/var/run/docker.sock:/var/run/docker.sock` |
-| Using `container_name` label | Label not populated | Use `__meta_docker_container_name` |
-| Regex without capture group | target_label not set | Regex `/(.*)`  captures the name after the leading slash |
-| Non-hot-reload change claimed as hot-reload | Stack restart needed but not flagged | Check hot-reload compatibility list above |
+| Error                                       | Symptom                                      | Fix                                                                |
+| ------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| Using `localhost` in loki.write URL         | Logs don't reach Loki                        | Use `loki:3100` (Docker service name)                              |
+| Missing Docker socket mount                 | discovery.docker fails with permission error | Check compose.yaml for `/var/run/docker.sock:/var/run/docker.sock` |
+| Using `container_name` label                | Label not populated                          | Use `__meta_docker_container_name`                                 |
+| Regex without capture group                 | target_label not set                         | Regex `/(.*)` captures the name after the leading slash            |
+| Non-hot-reload change claimed as hot-reload | Stack restart needed but not flagged         | Check hot-reload compatibility list above                          |
 
 ---
 

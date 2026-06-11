@@ -25,6 +25,7 @@ exporters:
 ```
 
 ### OTEL Collector Checklist
+
 - Receivers define what comes IN (otlp, hostmetrics, etc.)
 - Processors are applied in order (batch last, memory_limiter first)
 - Exporters define where telemetry goes OUT
@@ -36,16 +37,17 @@ exporters:
 ```yaml
 # ✅ Scrape targets use Compose service names
 scrape_configs:
-  - job_name: 'otel-collector'
+  - job_name: "otel-collector"
     static_configs:
-      - targets: ['otel-collector:8889']
+      - targets: ["otel-collector:8889"]
 
-  - job_name: 'tempo'
+  - job_name: "tempo"
     static_configs:
-      - targets: ['tempo:3200']
+      - targets: ["tempo:3200"]
 ```
 
 ### Prometheus Checklist
+
 - `scrape_interval` set globally and per-job where needed
 - Alert rules in separate `rules/` files, not inline
 - Recording rules documented with a comment explaining the use case
@@ -77,21 +79,23 @@ storage:
 ## Grafana (config/grafana/)
 
 ### Datasource Provisioning
+
 ```yaml
 # config/grafana/provisioning/datasources/datasources.yaml
 apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
-    url: http://prometheus:9090    # ← Compose service name, not localhost
+    url: http://prometheus:9090 # ← Compose service name, not localhost
     isDefault: true
 
   - name: Tempo
     type: tempo
-    url: http://tempo:3200         # ← Compose service name, not localhost
+    url: http://tempo:3200 # ← Compose service name, not localhost
 ```
 
 ### Dashboard Provisioning
+
 ```yaml
 # config/grafana/provisioning/dashboards/dashboards.yaml
 apiVersion: 1

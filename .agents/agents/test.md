@@ -25,6 +25,7 @@ Never combine a failing test commit with an implementation commit.
 ## Before Writing Tests
 
 Read first:
+
 1. `src/types/index.ts` (or equivalent) — all data shapes and valid ranges
 2. `docs/API_SURFACE.md` — existing public functions (don't re-test what exists)
 3. `docs/KNOWN_LIMITATIONS.md` — do not write tests that depend on broken behavior
@@ -42,6 +43,7 @@ Do not add coverage by testing trivial getters/setters.
 ## Test Quality Rules
 
 Each test must:
+
 - Have a descriptive name: `it("returns null when token is expired")` not `it("works")`
 - Test one specific behavior
 - Use actual data shapes from the types index
@@ -49,6 +51,7 @@ Each test must:
 - Not mock implementation details — mock at boundaries (API calls, DB, filesystem)
 
 Do not write:
+
 - Tests that always pass regardless of implementation
 - Tests that test mock behavior, not application behavior
 - Tests with `expect(true).toBe(true)` or equivalent
@@ -57,17 +60,18 @@ Do not write:
 ## Language Patterns
 
 Load the relevant skill for stack-specific tooling:
+
 - TypeScript/JS: load `lang-typescript` skill (Jest/Vitest patterns)
 - Python: load `lang-python` skill (pytest + pytest-cov)
 - Go: load `lang-go` skill (go test + coverage)
 
 ## File Placement
 
-| Language | Convention |
-|---|---|
-| TypeScript | `tests/[filename].test.ts` alongside source |
-| Python | `tests/test_[module].py` at project root |
-| Go | `[package]_test.go` in same package directory |
+| Language   | Convention                                    |
+| ---------- | --------------------------------------------- |
+| TypeScript | `tests/[filename].test.ts` alongside source   |
+| Python     | `tests/test_[module].py` at project root      |
+| Go         | `[package]_test.go` in same package directory |
 
 Never create a new testing convention without noting it in `docs/ARCHITECTURE.md`.
 
@@ -80,6 +84,7 @@ Never create a new testing convention without noting it in `docs/ARCHITECTURE.md
 [Which module is now tested and to what coverage level]
 
 **What could go wrong?**
+
 - Tests pass locally but fail in CI due to environment differences
 - Mock boundaries are incorrect (mocking too deep or too shallow)
 

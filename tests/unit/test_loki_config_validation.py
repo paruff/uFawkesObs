@@ -35,7 +35,7 @@ class TestLokiConfigStructure:
         """Test that required sections are present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         required_sections = ['server', 'schema_config']
         for section in required_sections:
             assert section in config, \
@@ -49,7 +49,7 @@ class TestLokiServerConfig:
         """Test that http_listen_port is defined."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'http_listen_port' in config['server'], \
             "server.http_listen_port should be defined"
 
@@ -57,7 +57,7 @@ class TestLokiServerConfig:
         """Test that http_listen_port is a valid port number."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         port = config['server']['http_listen_port']
         assert isinstance(port, int), \
             "http_listen_port should be an integer"
@@ -68,7 +68,7 @@ class TestLokiServerConfig:
         """Test that grpc_listen_port is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'grpc_listen_port' in config['server']:
             port = config['server']['grpc_listen_port']
             assert isinstance(port, int), \
@@ -80,7 +80,7 @@ class TestLokiServerConfig:
         """Test that log_level is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'log_level' in config['server']:
             log_level = config['server']['log_level']
             valid_levels = ['debug', 'info', 'warn', 'error']
@@ -95,7 +95,7 @@ class TestLokiAuthConfig:
         """Test that auth_enabled is a boolean."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'auth_enabled' in config, \
             "auth_enabled should be defined"
         assert isinstance(config['auth_enabled'], bool), \
@@ -109,7 +109,7 @@ class TestLokiSchemaConfig:
         """Test that schema_config has configs array."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'configs' in config['schema_config'], \
             "schema_config should have 'configs' array"
         assert isinstance(config['schema_config']['configs'], list), \
@@ -121,7 +121,7 @@ class TestLokiSchemaConfig:
         """Test that schema config entries are valid."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for idx, schema in enumerate(config['schema_config']['configs']):
             # Each schema should have required fields
             assert 'from' in schema, \
@@ -137,7 +137,7 @@ class TestLokiSchemaConfig:
         """Test that schema store types are valid."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         valid_stores = ['boltdb', 'boltdb-shipper', 'tsdb']
         for schema in config['schema_config']['configs']:
             store = schema['store']
@@ -148,7 +148,7 @@ class TestLokiSchemaConfig:
         """Test that object store types are valid."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         valid_object_stores = ['filesystem', 's3', 'gcs', 'azure', 'swift']
         for schema in config['schema_config']['configs']:
             object_store = schema['object_store']
@@ -163,7 +163,7 @@ class TestLokiStorageConfig:
         """Test that storage_config is present if using filesystem."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # If using filesystem in schema, storage_config should be present
         for schema in config['schema_config']['configs']:
             if schema['object_store'] == 'filesystem':
@@ -178,7 +178,7 @@ class TestLokiCommonConfig:
         """Test that common configuration is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'common' in config:
             common = config['common']
             assert isinstance(common, dict), \
@@ -188,7 +188,7 @@ class TestLokiCommonConfig:
         """Test that path_prefix is valid if present in common."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'common' in config and 'path_prefix' in config['common']:
             path_prefix = config['common']['path_prefix']
             assert isinstance(path_prefix, str), \
@@ -200,7 +200,7 @@ class TestLokiCommonConfig:
         """Test that filesystem storage in common is valid."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'common' in config and 'storage' in config['common']:
             storage = config['common']['storage']
             if 'filesystem' in storage:
@@ -218,7 +218,7 @@ class TestLokiLimitsConfig:
         """Test that limits_config is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'limits_config' in config:
             limits = config['limits_config']
             assert isinstance(limits, dict), \
@@ -228,7 +228,7 @@ class TestLokiLimitsConfig:
         """Test that retention_period is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'limits_config' in config and 'retention_period' in config['limits_config']:
             retention = config['limits_config']['retention_period']
             # Should be a string with time unit or integer
@@ -241,7 +241,7 @@ class TestLokiLimitsConfig:
         """Test that ingestion_rate_mb is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'limits_config' in config:
             limits = config['limits_config']
             if 'ingestion_rate_mb' in limits:
@@ -255,7 +255,7 @@ class TestLokiLimitsConfig:
         """Test that reject_old_samples is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'limits_config' in config and 'reject_old_samples' in config['limits_config']:
             reject_old = config['limits_config']['reject_old_samples']
             assert isinstance(reject_old, bool), \
@@ -269,7 +269,7 @@ class TestLokiCompactorConfig:
         """Test that compactor configuration is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'compactor' in config:
             compactor = config['compactor']
             assert isinstance(compactor, dict), \
@@ -279,7 +279,7 @@ class TestLokiCompactorConfig:
         """Test that compactor working_directory is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'compactor' in config and 'working_directory' in config['compactor']:
             working_dir = config['compactor']['working_directory']
             assert isinstance(working_dir, str), \
@@ -295,7 +295,7 @@ class TestLokiQueryConfig:
         """Test that query_range configuration is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'query_range' in config:
             qr = config['query_range']
             assert isinstance(qr, dict), \
@@ -305,7 +305,7 @@ class TestLokiQueryConfig:
         """Test that querier configuration is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'querier' in config:
             querier = config['querier']
             assert isinstance(querier, dict), \
@@ -315,7 +315,7 @@ class TestLokiQueryConfig:
         """Test that frontend configuration is valid if present."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'frontend' in config:
             frontend = config['frontend']
             assert isinstance(frontend, dict), \
@@ -329,15 +329,15 @@ class TestLokiConfigValidation:
         """Test that the complete configuration is valid."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # Should have essential sections
         assert 'auth_enabled' in config
         assert 'server' in config
         assert 'schema_config' in config
-        
+
         # Server should have HTTP port
         assert 'http_listen_port' in config['server']
-        
+
         # Schema should have configs
         assert 'configs' in config['schema_config']
         assert len(config['schema_config']['configs']) > 0
@@ -346,19 +346,19 @@ class TestLokiConfigValidation:
         """Test that schema and storage configurations are compatible."""
         with open(loki_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # If schema uses filesystem, verify storage is configured
         for schema in config['schema_config']['configs']:
             if schema['object_store'] == 'filesystem':
                 # Should have storage_config or common.storage with filesystem
                 has_storage = False
-                
+
                 if 'storage_config' in config and 'filesystem' in config['storage_config']:
                     has_storage = True
-                
+
                 if 'common' in config and 'storage' in config['common']:
                     if 'filesystem' in config['common']['storage']:
                         has_storage = True
-                
+
                 assert has_storage, \
                     "Filesystem object store requires filesystem storage configuration"

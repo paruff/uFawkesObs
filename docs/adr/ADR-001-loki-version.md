@@ -1,8 +1,8 @@
 # ADR-001: Use Loki 2.9.10 for Log Aggregation
 
-**Status:** Accepted  
-**Date:** 2025-06-01  
-**Deciders:** uFawkesObs maintainers  
+**Status:** Accepted
+**Date:** 2025-06-01
+**Deciders:** uFawkesObs maintainers
 **Issue:** [M1-02](https://github.com/paruff/uFawkesObs/issues/68)
 
 ---

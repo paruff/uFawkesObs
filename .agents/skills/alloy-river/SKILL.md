@@ -96,17 +96,17 @@ loki.write "default" {
 
 When using `discovery.docker`, these `__meta_docker_*` labels are available:
 
-| Label | Value |
-|-------|-------|
-| `__meta_docker_container_name` | Container name (with leading `/`) |
-| `__meta_docker_container_id` | Full container ID |
-| `__meta_docker_container_image` | Image name and tag |
-| `__meta_docker_container_status` | `running`, `paused`, etc. |
-| `__meta_docker_container_label_<key>` | Any Docker label (dots become underscores) |
-| `__meta_docker_container_label_com_docker_compose_service` | Compose service name |
-| `__meta_docker_container_label_com_docker_compose_project` | Compose project name |
+| Label                                                      | Value                                      |
+| ---------------------------------------------------------- | ------------------------------------------ |
+| `__meta_docker_container_name`                             | Container name (with leading `/`)          |
+| `__meta_docker_container_id`                               | Full container ID                          |
+| `__meta_docker_container_image`                            | Image name and tag                         |
+| `__meta_docker_container_status`                           | `running`, `paused`, etc.                  |
+| `__meta_docker_container_label_<key>`                      | Any Docker label (dots become underscores) |
+| `__meta_docker_container_label_com_docker_compose_service` | Compose service name                       |
+| `__meta_docker_container_label_com_docker_compose_project` | Compose project name                       |
 
-Always use `__meta_docker_container_name` with a regex `/(.*)`  to strip the leading slash. Using the raw value with the slash will produce logs with `container="/grafana"` instead of `container="grafana"`.
+Always use `__meta_docker_container_name` with a regex `/(.*)` to strip the leading slash. Using the raw value with the slash will produce logs with `container="/grafana"` instead of `container="grafana"`.
 
 ---
 
@@ -115,6 +115,7 @@ Always use `__meta_docker_container_name` with a regex `/(.*)`  to strip the lea
 Alloy supports hot-reload via `POST http://localhost:12345/-/reload`. Not all config changes are hot-reloadable.
 
 ### Hot-reload compatible (no restart required)
+
 - `loki.source.docker` — adding/removing/changing parameters
 - `loki.write` — changing endpoint URL or headers
 - `discovery.docker` — changing host or refresh interval
@@ -123,6 +124,7 @@ Alloy supports hot-reload via `POST http://localhost:12345/-/reload`. Not all co
 - `prometheus.remote_write` — changing endpoint
 
 ### Requires full restart (flag to Planning agent)
+
 - `logging` block — changing log level or format
 - `tracing` block — if present, any change
 - Adding a new component type not previously present (sometimes)
@@ -150,10 +152,11 @@ Alloy needs access to `/var/run/docker.sock` to use `discovery.docker` and `loki
 services:
   alloy:
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro   # ro = read-only is sufficient
+      - /var/run/docker.sock:/var/run/docker.sock:ro # ro = read-only is sufficient
 ```
 
 Before adding Docker discovery to the River config, verify this mount exists:
+
 ```bash
 docker compose config | grep docker.sock
 ```
@@ -185,13 +188,13 @@ This is an alternative to Prometheus scraping directly. In uFawkesObs, Prometheu
 
 ## Common errors
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `permission denied /var/run/docker.sock` | Socket not mounted or wrong permissions | Add volume mount to compose.yaml |
-| Container label `container="/grafana"` (with slash) | Missing regex strip | Use `regex = "/(.*)"` in relabel rule |
-| Logs not appearing in Loki | `forward_to` points to wrong component | Check component label matches exactly |
-| `connection refused loki:3100` | Loki not yet healthy at startup | Alloy retries — wait 30s, check loki health |
-| Hot-reload returns 400 | River syntax error | Check Alloy logs: `docker compose logs alloy` |
+| Error                                               | Cause                                   | Fix                                           |
+| --------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| `permission denied /var/run/docker.sock`            | Socket not mounted or wrong permissions | Add volume mount to compose.yaml              |
+| Container label `container="/grafana"` (with slash) | Missing regex strip                     | Use `regex = "/(.*)"` in relabel rule         |
+| Logs not appearing in Loki                          | `forward_to` points to wrong component  | Check component label matches exactly         |
+| `connection refused loki:3100`                      | Loki not yet healthy at startup         | Alloy retries — wait 30s, check loki health   |
+| Hot-reload returns 400                              | River syntax error                      | Check Alloy logs: `docker compose logs alloy` |
 
 ---
 

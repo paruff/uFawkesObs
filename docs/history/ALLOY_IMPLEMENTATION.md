@@ -1,8 +1,8 @@
 # Alloy Migration & Dashboard Validation - Complete Summary
 
-**Status:** ✅ **PRODUCTION READY**  
-**Completion Date:** January 27, 2026  
-**Migration Type:** Promtail → Grafana Alloy  
+**Status:** ✅ **PRODUCTION READY**
+**Completion Date:** January 27, 2026
+**Migration Type:** Promtail → Grafana Alloy
 **Test Coverage:** 38 tests (13 unit + 18 integration + 7 E2E scenarios)
 
 ---
@@ -10,6 +10,7 @@
 ## Quick Start
 
 ### Deploy the Stack
+
 ```bash
 docker compose --profile core up -d
 
@@ -24,6 +25,7 @@ open http://localhost:3000  # admin/admin
 ```
 
 ### Validate Everything
+
 ```bash
 # Unit tests (config validation) ~5s
 pytest tests/unit/test_alloy_config_validation.py -v
@@ -41,32 +43,36 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 
 ### 1. ✅ Migrated from Promtail to Grafana Alloy
 
-| Component | Before | After |
-|-----------|--------|-------|
-| **Log Collector** | Promtail v3.1.1 (deprecated) | Grafana Alloy v1.1.0 (active) |
-| **Config Language** | YAML | River (HCL-like) |
-| **Config Location** | `config/promtail/promtail.yaml` | `config/alloy/config.river` |
-| **Metrics Port** | 9080 | 12345 |
-| **Status** | ❌ Deprecated | ✅ Actively maintained |
+| Component           | Before                          | After                         |
+| ------------------- | ------------------------------- | ----------------------------- |
+| **Log Collector**   | Promtail v3.1.1 (deprecated)    | Grafana Alloy v1.1.0 (active) |
+| **Config Language** | YAML                            | River (HCL-like)              |
+| **Config Location** | `config/promtail/promtail.yaml` | `config/alloy/config.river`   |
+| **Metrics Port**    | 9080                            | 12345                         |
+| **Status**          | ❌ Deprecated                   | ✅ Actively maintained        |
 
 ### 2. ✅ Updated Infrastructure
 
 **Modified:**
+
 - `compose.yaml` - Replaced promtail service with alloy
 - `data/alloy/` - Created persistent state directory
 - `.gitignore` - Added alloy data directory
 
 **Removed:**
+
 - `config/promtail/` - Entire directory (deprecated)
 
 ### 3. ✅ Created Comprehensive Tests
 
 **New Test Files:**
+
 - `tests/unit/test_alloy_config_validation.py` - 13 config validation tests
-- `tests/integration/test_alloy_and_dashboards.py` - 18 component + dashboard tests  
+- `tests/integration/test_alloy_and_dashboards.py` - 18 component + dashboard tests
 - `tests/acceptance/observability-pipeline/test-dashboard-validation.sh` - 7 E2E BDD scenarios
 
 **Updated Test Files:**
+
 - `tests/integration/test_loki_integration.py` - Alloy tests replace Promtail
 - `tests/acceptance/observability-pipeline/test-loki-logs.sh` - Alloy health checks
 - `.github/workflows/integration-tests.yml` - Alloy diagnostic output
@@ -75,22 +81,24 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 
 All 4 dashboards now properly display **Metrics, Logs, and Traces**:
 
-| Dashboard | Metrics | Logs | Traces | Correlation |
-|-----------|---------|------|--------|-------------|
-| **Observability Stack Health** | ✅ Prometheus | ✅ Alloy→Loki | N/A | N/A |
-| **Application Performance** | ✅ Prometheus | ✅ Alloy→Loki | ✅ Tempo | ✅ traceID link |
-| **Infrastructure Overview** | ✅ Prometheus | ✅ Alloy→Loki | N/A | N/A |
-| **IoT Devices & MQTT** | ✅ Prometheus | N/A | N/A | N/A |
+| Dashboard                      | Metrics       | Logs          | Traces   | Correlation     |
+| ------------------------------ | ------------- | ------------- | -------- | --------------- |
+| **Observability Stack Health** | ✅ Prometheus | ✅ Alloy→Loki | N/A      | N/A             |
+| **Application Performance**    | ✅ Prometheus | ✅ Alloy→Loki | ✅ Tempo | ✅ traceID link |
+| **Infrastructure Overview**    | ✅ Prometheus | ✅ Alloy→Loki | N/A      | N/A             |
+| **IoT Devices & MQTT**         | ✅ Prometheus | N/A           | N/A      | N/A             |
 
 ### 5. ✅ Created Complete Documentation
 
 **New Documentation:**
+
 - `docs/alloy-operations.md` - Complete Alloy operations and troubleshooting guide
 - `docs/ALLOY_MIGRATION_PLAN.md` - Detailed migration plan with phases and checklists
 - `docs/TEST_SUITE_OVERVIEW.md` - Complete test documentation with execution guide
 - `MIGRATION_SUMMARY.md` - Executive summary (this repo level)
 
 **Updated Documentation:**
+
 - `docs/loki-operations.md` - Updated Promtail → Alloy references
 
 ---
@@ -98,6 +106,7 @@ All 4 dashboards now properly display **Metrics, Logs, and Traces**:
 ## Files Overview
 
 ### Configuration
+
 ```
 config/alloy/config.river          # Alloy River configuration (Docker log source)
 config/otel/collector.yaml         # OTel Collector (unchanged)
@@ -106,6 +115,7 @@ config/grafana/                    # Grafana dashboards & datasources (unchanged
 ```
 
 ### Infrastructure
+
 ```
 compose.yaml                       # Docker Compose (updated: +alloy, -promtail)
 data/alloy/                        # Alloy persistent state
@@ -113,6 +123,7 @@ data/alloy/                        # Alloy persistent state
 ```
 
 ### Tests
+
 ```
 tests/unit/test_alloy_config_validation.py              # 13 unit tests
 tests/integration/test_alloy_and_dashboards.py          # 18 integration tests
@@ -123,6 +134,7 @@ tests/acceptance/observability-pipeline/
 ```
 
 ### Documentation
+
 ```
 docs/alloy-operations.md                 # Alloy operations guide
 docs/ALLOY_MIGRATION_PLAN.md             # Detailed migration plan
@@ -136,6 +148,7 @@ MIGRATION_SUMMARY.md                     # Executive summary (project root)
 ## Test Categories & Coverage
 
 ### Unit Tests (13 tests) - Configuration Validation
+
 ```
 ✓ Config file exists, readable, not empty
 ✓ River syntax: logging, server, docker source, processing, write
@@ -147,6 +160,7 @@ MIGRATION_SUMMARY.md                     # Executive summary (project root)
 **Run:** `pytest tests/unit/test_alloy_config_validation.py -v`
 
 ### Integration Tests (18 tests) - Component & Dashboard Validation
+
 ```
 ✓ Alloy health (port 12345, metrics endpoint)
 ✓ Docker source discovery metrics present
@@ -163,6 +177,7 @@ MIGRATION_SUMMARY.md                     # Executive summary (project root)
 **Run:** `pytest tests/integration/test_alloy_and_dashboards.py -v`
 
 ### E2E/BDD Tests (7 scenarios) - Full Stack Validation
+
 ```
 ✓ Scenario 1: Infrastructure Ready (all 6 services up)
 ✓ Scenario 2: Dashboards Provisioned (all 4 dashboards)
@@ -180,6 +195,7 @@ MIGRATION_SUMMARY.md                     # Executive summary (project root)
 ## How Alloy Works
 
 ### Architecture
+
 ```
 Docker Containers (stdout/stderr)
     ↓
@@ -195,6 +211,7 @@ Grafana: Queries {job="docker"} or {compose_service="grafana"} etc.
 ```
 
 ### River Configuration
+
 ```river
 # 1. Discover containers via Docker socket
 loki.source.docker "containers" {
@@ -227,6 +244,7 @@ loki.write "loki" {
 ```
 
 ### Key Features
+
 - **Docker Integration:** Native `loki.source.docker` component
 - **Label Extraction:** Automatic from container names and Docker labels
 - **Position Tracking:** `/var/lib/alloy/positions.yaml` ensures no duplicate logs
@@ -238,6 +256,7 @@ loki.write "loki" {
 ## Dashboard Data Flow
 
 ### Metrics → Prometheus → Dashboards
+
 ```
 OTel Collector (app metrics)
 Prometheus (self-monitoring)
@@ -251,6 +270,7 @@ Dashboards: Panels query {job="otel-collector"}, etc.
 ```
 
 ### Logs → Alloy → Loki → Dashboards
+
 ```
 Docker Containers (stdout/stderr logs)
     ↓
@@ -266,6 +286,7 @@ Dashboards: Panels query {job="docker", compose_service="..."}
 ```
 
 ### Traces → OTel → Tempo → Dashboards
+
 ```
 Applications (OTLP traces)
     ↓
@@ -284,6 +305,7 @@ Logs: Derived fields → trace links
 ## Verification Commands
 
 ### Quick Health Check (30 seconds)
+
 ```bash
 # 1. Check all services running
 docker compose ps
@@ -299,6 +321,7 @@ open http://localhost:3000
 ```
 
 ### Full Validation (5 minutes)
+
 ```bash
 # Run all unit tests
 pytest tests/unit/test_alloy_config_validation.py -v
@@ -318,6 +341,7 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/observability-stack
 ## Troubleshooting
 
 ### No logs appearing in Loki
+
 ```bash
 # 1. Check Alloy is running
 docker compose ps alloy
@@ -336,6 +360,7 @@ sleep 30
 ```
 
 ### Alloy memory usage high
+
 ```bash
 # Reduce log volume by adding filter stages in config.river
 # Or restart with fresh positions file:
@@ -345,6 +370,7 @@ docker compose up -d alloy
 ```
 
 ### Dashboards not showing logs
+
 ```bash
 # 1. Check Loki datasource configured
 curl -u admin:admin http://localhost:3000/api/datasources | jq '.[] | select(.type=="loki")'
@@ -361,15 +387,18 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/application-perform
 ## Key Files & Documentation
 
 ### Start Here
+
 - **[MIGRATION_SUMMARY.md](MIGRATION_SUMMARY.md)** - This file (high-level overview)
 - **[docs/alloy-operations.md](docs/alloy-operations.md)** - Operational guide for Alloy
 
 ### Deep Dives
+
 - **[docs/ALLOY_MIGRATION_PLAN.md](docs/ALLOY_MIGRATION_PLAN.md)** - Complete migration with phases and checklists
 - **[docs/TEST_SUITE_OVERVIEW.md](docs/TEST_SUITE_OVERVIEW.md)** - All 38 tests documented with examples
 - **[docs/loki-operations.md](docs/loki-operations.md)** - Loki integration (updated for Alloy)
 
 ### Code
+
 - **[config/alloy/config.river](config/alloy/config.river)** - Alloy River configuration
 - **[compose.yaml](compose.yaml)** - Docker Compose (Alloy service)
 - **[tests/unit/test_alloy_config_validation.py](tests/unit/test_alloy_config_validation.py)** - Unit tests
@@ -381,11 +410,13 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/application-perform
 ## Performance & Resources
 
 ### Alloy Requirements
+
 - **CPU:** 0.1-0.5 cores (minimal)
 - **Memory:** 128-512 MB
 - **Disk:** Minimal (positions file only)
 
 ### Expected Timelines
+
 ```
 0s       Service startup
 5s       Prometheus metrics scraping begins
@@ -395,6 +426,7 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/application-perform
 ```
 
 ### Test Execution Times
+
 - Unit tests: ~5 seconds
 - Integration tests: ~30 seconds
 - E2E tests: ~2 minutes
@@ -405,6 +437,7 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/application-perform
 ## Next Steps
 
 ### Immediate (If deploying now)
+
 1. ✅ Run unit tests: `pytest tests/unit/ -v`
 2. ✅ Start stack: `docker compose --profile core up -d`
 3. ✅ Wait 60 seconds
@@ -413,12 +446,14 @@ curl -u admin:admin http://localhost:3000/api/dashboards/uid/application-perform
 6. ✅ View dashboards: `open http://localhost:3000`
 
 ### Future Enhancements
+
 - [ ] Add Alloy metrics export (prometheus.exporter component)
 - [ ] Configure log sampling for high-volume services
 - [ ] Add Alloy health monitoring to dashboards
 - [ ] Document advanced River config patterns
 
 ### Rollback (if needed)
+
 ```bash
 docker compose down
 git checkout HEAD~1 -- config/promtail/ compose.yaml
@@ -430,12 +465,14 @@ docker compose --profile core up -d
 ## Support & Resources
 
 ### Documentation
+
 - **Alloy Docs:** https://grafana.com/docs/alloy/latest/
 - **River Config:** https://grafana.com/docs/alloy/latest/concepts/config-language/
 - **Loki Integration:** https://grafana.com/docs/alloy/latest/reference/components/loki/
 - **Docker Source:** https://grafana.com/docs/alloy/latest/reference/components/loki.source.docker/
 
 ### In This Repository
+
 - **[docs/alloy-operations.md](docs/alloy-operations.md)** - Detailed operations guide
 - **[docs/TEST_SUITE_OVERVIEW.md](docs/TEST_SUITE_OVERVIEW.md)** - Test documentation
 - **[docs/ALLOY_MIGRATION_PLAN.md](docs/ALLOY_MIGRATION_PLAN.md)** - Migration details
@@ -462,6 +499,6 @@ docker compose --profile core up -d
 
 ---
 
-**Last Updated:** January 27, 2026  
-**Migration Owner:** GitHub Copilot  
+**Last Updated:** January 27, 2026
+**Migration Owner:** GitHub Copilot
 **Project:** uFawkesObs (Observability Stack)

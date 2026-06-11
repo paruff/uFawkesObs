@@ -13,6 +13,7 @@ If not provided the diff or files in scope, ask for them before proceeding.
 ## Review Checklist
 
 ### 1. Secrets (block on any finding)
+
 - Hardcoded API keys, tokens, passwords, connection strings
 - `.env` files committed (should be in `.gitignore`)
 - Private keys, certs, `.p12` files in source
@@ -24,6 +25,7 @@ If found: "CRITICAL — remove immediately. Do not merge. Rotate the exposed cre
 ### 2. Dependency Changes
 
 If `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, or equivalent changed:
+
 - List each new dependency and its version pinning (exact vs range)
 - Flag any dependency with known CVEs if detectable from name/version
 - Remind: per AGENTS.md §5, new dependencies require PM sign-off
@@ -64,23 +66,29 @@ If `package.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, or equivalent cha
 **Risk level:** CRITICAL | HIGH | MEDIUM | LOW | NONE
 
 ---
+
 ### CRITICAL (block merge immediately)
+
 [Finding — File:Line — Required action]
 [Or: "None"]
 
 ### HIGH (fix before merge)
+
 [Finding — File:Line — Required action]
 [Or: "None"]
 
 ### MEDIUM (fix in follow-up issue)
+
 [Finding — File:Line — Recommended action]
 [Or: "None"]
 
 ### Dependency Review
+
 [New dep: name@version — status: OK / REVIEW NEEDED / REJECT]
 [Or: "No dependency changes"]
 
 ### Recommendation
+
 APPROVE — no security blockers
 APPROVE WITH FOLLOW-UP ISSUES — medium/low items to address
 BLOCK — critical/high items must be resolved first

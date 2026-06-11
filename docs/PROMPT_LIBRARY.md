@@ -12,14 +12,14 @@
 
 **Checklist:**
 
-| Rule | Check |
-|------|-------|
-| All image tags are pinned (no `latest`) | `grep -n "image: .*:latest" compose.yaml` must return nothing |
-| Every service has `healthcheck:` | Each service block contains a `healthcheck:` key |
-| Every service has labels `plane`, `component`, `managed-by` | Each service block contains all three labels |
-| All services use the `observability` named network | Each service has `networks: [observability]` |
-| No inline secrets or passwords | No plaintext credentials — env vars only via `${VAR}` |
-| Named networks declared at the top level | `networks:` block exists with explicit `driver: bridge` |
+| Rule                                                        | Check                                                         |
+| ----------------------------------------------------------- | ------------------------------------------------------------- |
+| All image tags are pinned (no `latest`)                     | `grep -n "image: .*:latest" compose.yaml` must return nothing |
+| Every service has `healthcheck:`                            | Each service block contains a `healthcheck:` key              |
+| Every service has labels `plane`, `component`, `managed-by` | Each service block contains all three labels                  |
+| All services use the `observability` named network          | Each service has `networks: [observability]`                  |
+| No inline secrets or passwords                              | No plaintext credentials — env vars only via `${VAR}`         |
+| Named networks declared at the top level                    | `networks:` block exists with explicit `driver: bridge`       |
 
 **How to run:**
 
@@ -42,14 +42,14 @@ grep -R "image: .*:latest" compose.yaml && exit 1 || echo "PASS: no latest tags"
 
 **Checklist:**
 
-| Rule | Check |
-|------|-------|
-| Receivers are defined (at minimum `otlp`) | `receivers:` block with `otlp:` present |
-| `memory_limiter` processor is listed first in every pipeline | `processors: [memory_limiter, ...]` ordering |
-| `batch` processor is listed last in every pipeline | `processors: [..., batch]` ordering |
-| Exporters reference Compose service names, never `localhost` | No `localhost` in exporter endpoints |
-| All pipelines have at least one receiver and one exporter | Each pipeline under `service.pipelines` has both |
-| Telemetry metrics address uses `0.0.0.0`, not `localhost` | `address: "0.0.0.0:8888"` |
+| Rule                                                         | Check                                            |
+| ------------------------------------------------------------ | ------------------------------------------------ |
+| Receivers are defined (at minimum `otlp`)                    | `receivers:` block with `otlp:` present          |
+| `memory_limiter` processor is listed first in every pipeline | `processors: [memory_limiter, ...]` ordering     |
+| `batch` processor is listed last in every pipeline           | `processors: [..., batch]` ordering              |
+| Exporters reference Compose service names, never `localhost` | No `localhost` in exporter endpoints             |
+| All pipelines have at least one receiver and one exporter    | Each pipeline under `service.pipelines` has both |
+| Telemetry metrics address uses `0.0.0.0`, not `localhost`    | `address: "0.0.0.0:8888"`                        |
 
 **How to run:**
 
@@ -72,14 +72,14 @@ docker run --rm \
 
 **Checklist:**
 
-| Rule | Check |
-|------|-------|
-| Scrape targets use Compose service names (not `localhost`) | Targets like `otel-collector:8888`, `alertmanager:9093` |
+| Rule                                                             | Check                                                           |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| Scrape targets use Compose service names (not `localhost`)       | Targets like `otel-collector:8888`, `alertmanager:9093`         |
 | Self-monitoring uses `localhost:9090` (correct inside container) | `prometheus` job targets `localhost:9090` — this is intentional |
-| Alert rules are in a separate file, not inline | `rule_files:` points to `/etc/prometheus/alerts.yml` |
-| `global.scrape_interval` is set | Present in `global:` block |
-| `alerting.alertmanagers` targets Compose service name | `alertmanager:9093` — not localhost |
-| Recording rules have explanatory comments | Each recording rule group has a comment |
+| Alert rules are in a separate file, not inline                   | `rule_files:` points to `/etc/prometheus/alerts.yml`            |
+| `global.scrape_interval` is set                                  | Present in `global:` block                                      |
+| `alerting.alertmanagers` targets Compose service name            | `alertmanager:9093` — not localhost                             |
+| Recording rules have explanatory comments                        | Each recording rule group has a comment                         |
 
 **How to run:**
 
@@ -110,15 +110,15 @@ docker run --rm \
 
 **Checklist:**
 
-| Rule | Check |
-|------|-------|
-| Prometheus datasource URL uses service name | `url: http://prometheus:9090` |
-| Tempo datasource URL uses service name | `url: http://tempo:3200` |
-| Loki datasource URL uses service name | `url: http://loki:3100` |
-| Alertmanager datasource URL uses service name | `url: http://alertmanager:9093` |
-| No `localhost` in any datasource URL | `grep localhost config/grafana/provisioning/datasources/*.yaml` returns nothing |
+| Rule                                                    | Check                                                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Prometheus datasource URL uses service name             | `url: http://prometheus:9090`                                                          |
+| Tempo datasource URL uses service name                  | `url: http://tempo:3200`                                                               |
+| Loki datasource URL uses service name                   | `url: http://loki:3100`                                                                |
+| Alertmanager datasource URL uses service name           | `url: http://alertmanager:9093`                                                        |
+| No `localhost` in any datasource URL                    | `grep localhost config/grafana/provisioning/datasources/*.yaml` returns nothing        |
 | `grafana.ini` uses env-var substitution for credentials | `admin_user = ${GF_SECURITY_ADMIN_USER}`, `admin_password = ${GRAFANA_ADMIN_PASSWORD}` |
-| Dashboard UIDs are stable (explicitly set) | Each dashboard JSON has a `uid` field |
+| Dashboard UIDs are stable (explicitly set)              | Each dashboard JSON has a `uid` field                                                  |
 
 **How to run:**
 
@@ -143,14 +143,14 @@ yamllint config/grafana/provisioning/dashboards/dashboards.yaml
 
 **Checklist:**
 
-| Rule | Check |
-|------|-------|
-| Every `.sh` file starts with `#!/bin/bash` | First line of each file |
-| `set -euo pipefail` present near the top | Within first 10 lines |
-| No `readonly VAR=$(command)` pattern (SC2155) | Declare and assign separately |
-| No unused variables (SC2034) | All declared variables are actually used |
-| No hardcoded container names | Names read from env or compose service names |
-| Health check scripts exit non-zero on failure | Return codes checked |
+| Rule                                          | Check                                        |
+| --------------------------------------------- | -------------------------------------------- |
+| Every `.sh` file starts with `#!/bin/bash`    | First line of each file                      |
+| `set -euo pipefail` present near the top      | Within first 10 lines                        |
+| No `readonly VAR=$(command)` pattern (SC2155) | Declare and assign separately                |
+| No unused variables (SC2034)                  | All declared variables are actually used     |
+| No hardcoded container names                  | Names read from env or compose service names |
+| Health check scripts exit non-zero on failure | Return codes checked                         |
 
 **How to run:**
 

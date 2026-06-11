@@ -9,20 +9,20 @@ metadata:
 ---
 
 # Skill: Language — Python
-> **Load trigger:** `"load lang-python skill"`
-> **Stack:** Python 3.11+, ruff, mypy, pytest, pytest-cov, uv or pip
+
+> **Load trigger:** `"load lang-python skill"` > **Stack:** Python 3.11+, ruff, mypy, pytest, pytest-cov, uv or pip
 > **Token cost:** Low
 
 ## Toolchain Reference
 
-| Gate | Tool | Command | Config file |
-|---|---|---|---|
-| Lint | ruff | `ruff check .` | `pyproject.toml [tool.ruff]` |
-| Format | ruff | `ruff format .` | `pyproject.toml [tool.ruff.format]` |
-| Typecheck | mypy | `mypy src/` | `pyproject.toml [tool.mypy]` |
-| Test | pytest | `pytest` | `pyproject.toml [tool.pytest.ini_options]` |
-| Coverage | pytest-cov | `pytest --cov=src --cov-report=term-missing` | `.coveragerc` |
-| Preflight | shell | `./scripts/preflight.sh` | `scripts/preflight.sh` |
+| Gate      | Tool       | Command                                      | Config file                                |
+| --------- | ---------- | -------------------------------------------- | ------------------------------------------ |
+| Lint      | ruff       | `ruff check .`                               | `pyproject.toml [tool.ruff]`               |
+| Format    | ruff       | `ruff format .`                              | `pyproject.toml [tool.ruff.format]`        |
+| Typecheck | mypy       | `mypy src/`                                  | `pyproject.toml [tool.mypy]`               |
+| Test      | pytest     | `pytest`                                     | `pyproject.toml [tool.pytest.ini_options]` |
+| Coverage  | pytest-cov | `pytest --cov=src --cov-report=term-missing` | `.coveragerc`                              |
+| Preflight | shell      | `./scripts/preflight.sh`                     | `scripts/preflight.sh`                     |
 
 ## File Layout Convention
 
@@ -47,7 +47,7 @@ pyproject.toml          ← all tool config here (not setup.py)
 - name: Set up Python
   uses: actions/setup-python@v5
   with:
-    python-version: '3.11'
+    python-version: "3.11"
 
 - name: Install dependencies
   run: pip install -e ".[dev]"
@@ -105,6 +105,7 @@ service modules. Read `OTEL_SERVICE_NAME` and `OTEL_EXPORTER_OTLP_ENDPOINT` from
 ## fawkes Repo Context
 
 paruff/fawkes uses Python extensively (43.5% of codebase). Primary patterns:
+
 - FastAPI for HTTP services
 - Pydantic v2 for models
 - pytest with conftest fixtures

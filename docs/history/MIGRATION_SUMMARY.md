@@ -4,8 +4,8 @@
 
 Successfully migrated the observability stack from the deprecated **Promtail** log collector to **Grafana Alloy**, a modern, unified platform for collecting and processing logs, metrics, and traces. All dashboards now display metrics, logs, and traces with proper correlation.
 
-**Date Completed:** January 27, 2026  
-**Components Updated:** 47 files modified/created/removed  
+**Date Completed:** January 27, 2026
+**Components Updated:** 47 files modified/created/removed
 **Test Coverage:** Unit (13 tests), Integration (18 tests), E2E/BDD (7 scenarios)
 
 ---
@@ -13,6 +13,7 @@ Successfully migrated the observability stack from the deprecated **Promtail** l
 ## What Changed
 
 ### 1. Infrastructure (`compose.yaml`)
+
 - ❌ **Removed:** `promtail` service (deprecated)
 - ✅ **Added:** `alloy` service v1.1.0 (modern, maintained)
 - Mount points:
@@ -23,10 +24,12 @@ Successfully migrated the observability stack from the deprecated **Promtail** l
 - Dependency: Waits for Loki health check before starting
 
 ### 2. Configuration
+
 - ❌ **Removed:** `config/promtail/` directory
 - ✅ **Added:** `config/alloy/config.river` (River DSL)
 
 **Alloy Configuration Highlights:**
+
 ```river
 loki.source.docker "containers" {
   host = "unix:///var/run/docker.sock"
@@ -55,19 +58,23 @@ loki.write "loki" {
 ```
 
 ### 3. Data Persistence
+
 - ✅ **Added:** `data/alloy/` directory for state files
 - Positions file: `/var/lib/alloy/positions.yaml` (tracks log read positions across restarts)
 - Gitignored to prevent state pollution
 
 ### 4. Documentation
+
 - ✅ **Created:** `docs/alloy-operations.md` (complete Alloy operations guide)
 - ✅ **Updated:** `docs/loki-operations.md` (changed Promtail → Alloy references)
 - ✅ **Created:** `docs/ALLOY_MIGRATION_PLAN.md` (this migration document)
 
 ### 5. Tests
+
 All tests updated to validate Alloy instead of Promtail and verify dashboard data:
 
 #### **Unit Tests** (`tests/unit/test_alloy_config_validation.py`) - 13 tests
+
 ```
 ✓ Config file structure validation
 ✓ River syntax checks (logging, server, docker source, processing, write)
@@ -78,6 +85,7 @@ All tests updated to validate Alloy instead of Promtail and verify dashboard dat
 ```
 
 #### **Integration Tests** (`tests/integration/test_alloy_and_dashboards.py`) - 18 tests
+
 ```
 ✓ Alloy HTTP port (12345) open
 ✓ Alloy metrics endpoint responds
@@ -96,12 +104,13 @@ All tests updated to validate Alloy instead of Promtail and verify dashboard dat
 ```
 
 #### **E2E/BDD Tests** (`tests/acceptance/observability-pipeline/test-dashboard-validation.sh`) - 7 scenarios
+
 ```
 1. ✓ Infrastructure Ready
    - All 6 services running (prometheus, loki, tempo, grafana, alloy, otel-collector)
 
 2. ✓ Dashboards Provisioned
-   - All 4 dashboards in Grafana (observability-stack-health, application-performance, 
+   - All 4 dashboards in Grafana (observability-stack-health, application-performance,
      infrastructure-overview, iot-devices-mqtt)
 
 3. ✓ Metrics Available
@@ -124,6 +133,7 @@ All tests updated to validate Alloy instead of Promtail and verify dashboard dat
 ```
 
 #### **Updated Tests**
+
 - `tests/integration/test_loki_integration.py`: Replaced Promtail tests → Alloy tests
 - `tests/acceptance/observability-pipeline/test-loki-logs.sh`: Alloy health checks
 - `.github/workflows/integration-tests.yml`: Alloy logs instead of Promtail
@@ -135,52 +145,57 @@ All tests updated to validate Alloy instead of Promtail and verify dashboard dat
 All 4 dashboards now properly display **Metrics, Logs, and Traces**:
 
 ### **Observability Stack Health** (`observability-stack-health`)
-| Data Type | Source | Status |
-|-----------|--------|--------|
-| Metrics | Prometheus (status checks) | ✅ Live |
-| Logs | Alloy → Loki | ✅ Collected |
-| Correlation | Not applicable (monitoring dashboard) | N/A |
+
+| Data Type   | Source                                | Status       |
+| ----------- | ------------------------------------- | ------------ |
+| Metrics     | Prometheus (status checks)            | ✅ Live      |
+| Logs        | Alloy → Loki                          | ✅ Collected |
+| Correlation | Not applicable (monitoring dashboard) | N/A          |
 
 ### **Application Performance** (`application-performance`)
-| Data Type | Source | Status | Example Query |
-|-----------|--------|--------|---|
-| **Metrics (RED)** | Prometheus | ✅ Live | `sum(rate(...[5m]))` |
-| **Logs** | Alloy → Loki | ✅ Collected | `{compose_service=~"$service"}` |
-| **Traces** | Tempo (via traceID) | ✅ Linked | Derived field on traceID |
-| **Filtering** | Service variable | ✅ Dynamic | `$service` dropdown |
+
+| Data Type         | Source              | Status       | Example Query                   |
+| ----------------- | ------------------- | ------------ | ------------------------------- |
+| **Metrics (RED)** | Prometheus          | ✅ Live      | `sum(rate(...[5m]))`            |
+| **Logs**          | Alloy → Loki        | ✅ Collected | `{compose_service=~"$service"}` |
+| **Traces**        | Tempo (via traceID) | ✅ Linked    | Derived field on traceID        |
+| **Filtering**     | Service variable    | ✅ Dynamic   | `$service` dropdown             |
 
 ### **Infrastructure Overview** (`infrastructure-overview`)
-| Data Type | Source | Status | Example Query |
-|-----------|--------|--------|---|
-| **Metrics** | Prometheus | ✅ Live | Container CPU, memory, count |
-| **Logs** | Alloy → Loki | ✅ Collected | `{job="docker", stream="stderr"}` |
-| **Filtering** | Container variable | ✅ Dynamic | `$container` dropdown |
+
+| Data Type     | Source             | Status       | Example Query                     |
+| ------------- | ------------------ | ------------ | --------------------------------- |
+| **Metrics**   | Prometheus         | ✅ Live      | Container CPU, memory, count      |
+| **Logs**      | Alloy → Loki       | ✅ Collected | `{job="docker", stream="stderr"}` |
+| **Filtering** | Container variable | ✅ Dynamic   | `$container` dropdown             |
 
 ### **IoT Devices & MQTT** (`iot-devices-mqtt`)
-| Data Type | Source | Status |
-|-----------|--------|--------|
-| **Metrics** | Prometheus | ✅ Live |
+
+| Data Type     | Source         | Status     |
+| ------------- | -------------- | ---------- |
+| **Metrics**   | Prometheus     | ✅ Live    |
 | **Filtering** | Topic variable | ✅ Dynamic |
 
 ---
 
 ## Key Improvements Over Promtail
 
-| Aspect | Promtail | Alloy | Benefit |
-|--------|----------|-------|---------|
-| **Status** | ❌ Deprecated | ✅ Active | Long-term support |
-| **Config Language** | YAML | River (HCL) | More expressive |
-| **Docker Integration** | Job-based discovery | Native component | Simpler, faster |
-| **Metrics Endpoint** | :9080 | :12345 | Clear separation |
-| **Position Tracking** | `/tmp/positions.yaml` | `/var/lib/alloy/positions.yaml` | Persistent across mounts |
-| **Community** | Legacy | Modern | Better resources |
-| **Resource Usage** | Moderate | Lighter | Efficient |
+| Aspect                 | Promtail              | Alloy                           | Benefit                  |
+| ---------------------- | --------------------- | ------------------------------- | ------------------------ |
+| **Status**             | ❌ Deprecated         | ✅ Active                       | Long-term support        |
+| **Config Language**    | YAML                  | River (HCL)                     | More expressive          |
+| **Docker Integration** | Job-based discovery   | Native component                | Simpler, faster          |
+| **Metrics Endpoint**   | :9080                 | :12345                          | Clear separation         |
+| **Position Tracking**  | `/tmp/positions.yaml` | `/var/lib/alloy/positions.yaml` | Persistent across mounts |
+| **Community**          | Legacy                | Modern                          | Better resources         |
+| **Resource Usage**     | Moderate              | Lighter                         | Efficient                |
 
 ---
 
 ## How to Verify the Migration
 
 ### Quick Check (1 minute)
+
 ```bash
 # 1. Check Alloy is running
 docker compose ps alloy
@@ -196,6 +211,7 @@ open http://localhost:3000
 ```
 
 ### Full Validation (5 minutes)
+
 ```bash
 # Run all tests
 pytest tests/unit/test_alloy_config_validation.py -v
@@ -208,6 +224,7 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ## Files Modified/Created
 
 ### Created (New Files)
+
 ```
 ✅ config/alloy/config.river
 ✅ data/alloy/.gitkeep
@@ -219,6 +236,7 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ```
 
 ### Updated (Modified Files)
+
 ```
 ✅ compose.yaml (removed promtail, added alloy)
 ✅ .gitignore (added data/alloy)
@@ -229,11 +247,13 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ```
 
 ### Deleted (Removed Files)
+
 ```
 ❌ config/promtail/ (entire directory)
 ```
 
 ### Not Modified (Still Valid)
+
 ```
 ✓ config/prometheus/prometheus.yaml (no Promtail scrape job)
 ✓ config/grafana/datasources.yaml (Loki config unchanged)
@@ -246,6 +266,7 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ## Testing Commands
 
 ### Run Unit Tests (Configuration Validation)
+
 ```bash
 pytest tests/unit/test_alloy_config_validation.py -v
 
@@ -256,6 +277,7 @@ pytest tests/unit/test_alloy_config_validation.py -v
 ```
 
 ### Run Integration Tests (Component Validation + Dashboard Data)
+
 ```bash
 pytest tests/integration/test_alloy_and_dashboards.py -v
 pytest tests/integration/test_loki_integration.py::TestAlloyIntegration -v
@@ -267,6 +289,7 @@ pytest tests/integration/test_loki_integration.py::TestAlloyIntegration -v
 ```
 
 ### Run E2E Tests (Full Stack + Dashboard Validation)
+
 ```bash
 tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 
@@ -289,6 +312,7 @@ tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ## Deployment Steps
 
 ### Fresh Deployment
+
 ```bash
 cd /path/to/uFawkesObs
 
@@ -306,6 +330,7 @@ open http://localhost:3000  # admin/admin
 ```
 
 ### Existing Deployment
+
 ```bash
 # Pull latest changes
 git pull
@@ -327,6 +352,7 @@ curl http://localhost:12345/metrics | grep loki_source_docker
 ## Troubleshooting
 
 ### No Logs Appearing in Loki
+
 ```bash
 # 1. Check Alloy is running
 docker compose ps alloy
@@ -347,6 +373,7 @@ docker compose logs alloy | grep "successfully connected\|discovered"
 ```
 
 ### Alloy High Memory Usage
+
 ```bash
 # Check current memory usage
 docker stats alloy
@@ -356,6 +383,7 @@ docker stats alloy
 ```
 
 ### Duplicate or Missing Logs
+
 ```bash
 # Reset position tracking (only if needed)
 docker compose down
@@ -376,6 +404,7 @@ docker compose up -d alloy
 ## Support & Future Work
 
 ### Currently Implemented ✅
+
 - Docker container log collection (loki.source.docker)
 - Log processing and label extraction
 - Loki integration
@@ -384,6 +413,7 @@ docker compose up -d alloy
 - Comprehensive testing (unit, integration, e2e)
 
 ### Future Enhancements
+
 - [ ] Prometheus metrics export from Alloy
 - [ ] Log sampling for high-volume services
 - [ ] Alloy health dashboard panel

@@ -196,13 +196,13 @@ scrape_configs:
   # ... existing jobs ...
 
   # Jenkins metrics
-  - job_name: 'jenkins'
+  - job_name: "jenkins"
     static_configs:
-      - targets: ['jenkins:8080']
+      - targets: ["jenkins:8080"]
         labels:
-          component: 'jenkins'
-          service: 'deliveryd'
-    metrics_path: '/prometheus'
+          component: "jenkins"
+          service: "deliveryd"
+    metrics_path: "/prometheus"
     scrape_interval: 15s
 ```
 
@@ -289,14 +289,14 @@ curl 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select
 
 ## Service Endpoints Reference
 
-| Service | Endpoint | Protocol | Purpose |
-|---|---|---|---|
-| OTel Collector | `otel-collector:4317` | gRPC | OTLP traces/metrics/logs |
-| OTel Collector | `otel-collector:4318` | HTTP | OTLP traces/metrics/logs |
-| Prometheus | `prometheus:9090` | HTTP | Query Jenkins metrics |
-| Loki | `loki:3100` | HTTP | Query Jenkins logs |
-| Tempo | `tempo:3200` | HTTP | Query Jenkins traces |
-| Grafana | `grafana:3000` | HTTP | Visualization |
+| Service        | Endpoint              | Protocol | Purpose                  |
+| -------------- | --------------------- | -------- | ------------------------ |
+| OTel Collector | `otel-collector:4317` | gRPC     | OTLP traces/metrics/logs |
+| OTel Collector | `otel-collector:4318` | HTTP     | OTLP traces/metrics/logs |
+| Prometheus     | `prometheus:9090`     | HTTP     | Query Jenkins metrics    |
+| Loki           | `loki:3100`           | HTTP     | Query Jenkins logs       |
+| Tempo          | `tempo:3200`          | HTTP     | Query Jenkins traces     |
+| Grafana        | `grafana:3000`        | HTTP     | Visualization            |
 
 ---
 
@@ -304,11 +304,11 @@ curl 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select
 
 When modifying uFawkesObs to support uFawkesPipe integration, check:
 
-| Change in uFawkesObs | Impact on uFawkesPipe |
-|---|---|
+| Change in uFawkesObs                     | Impact on uFawkesPipe                        |
+| ---------------------------------------- | -------------------------------------------- |
 | OTEL Collector receiver port (4317/4318) | Jenkins OTEL plugin endpoint must be updated |
-| Network name in `compose.yaml` | uFawkesPipe must join the updated network |
-| Prometheus scrape config | Jenkins scrape job must be updated |
+| Network name in `compose.yaml`           | uFawkesPipe must join the updated network    |
+| Prometheus scrape config                 | Jenkins scrape job must be updated           |
 
 See `docs/CHANGE_IMPACT_MAP.md` for the full cross-plane impact matrix.
 

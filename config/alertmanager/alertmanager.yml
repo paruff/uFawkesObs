@@ -13,15 +13,15 @@ global:
 
 # Templates for notification messages
 templates:
-  - '/etc/alertmanager/templates/*.tmpl'
+  - "/etc/alertmanager/templates/*.tmpl"
 
 # Route defines the routing tree and notification destinations
 route:
   # Default receiver for all alerts
-  receiver: 'default-webhook'
+  receiver: "default-webhook"
 
   # Group alerts by these labels
-  group_by: ['alertname', 'cluster', 'service']
+  group_by: ["alertname", "cluster", "service"]
 
   # How long to wait before sending initial notification for a group
   group_wait: 30s
@@ -37,7 +37,7 @@ route:
     # uFawkesObs platform health alerts - dedicated receiver
     - match:
         alert_domain: ufawkesobs-health
-      receiver: 'ufawkesobs-health'
+      receiver: "ufawkesobs-health"
       group_wait: 15s
       repeat_interval: 1h
       continue: false
@@ -45,7 +45,7 @@ route:
     # Critical alerts - immediate notification
     - match:
         severity: critical
-      receiver: 'critical-alerts'
+      receiver: "critical-alerts"
       group_wait: 10s
       repeat_interval: 1h
       continue: false
@@ -53,7 +53,7 @@ route:
     # Warning alerts - standard notification
     - match:
         severity: warning
-      receiver: 'warning-alerts'
+      receiver: "warning-alerts"
       group_wait: 30s
       repeat_interval: 4h
       continue: false
@@ -61,7 +61,7 @@ route:
     # Info alerts - batched notification
     - match:
         severity: info
-      receiver: 'info-alerts'
+      receiver: "info-alerts"
       group_wait: 5m
       repeat_interval: 12h
       continue: false
@@ -70,37 +70,37 @@ route:
 inhibit_rules:
   # Inhibit warning and info if same alertname with critical severity exists
   - source_match:
-      severity: 'critical'
+      severity: "critical"
     target_match:
-      severity: 'warning'
-    equal: ['alertname', 'cluster', 'service']
+      severity: "warning"
+    equal: ["alertname", "cluster", "service"]
 
   - source_match:
-      severity: 'critical'
+      severity: "critical"
     target_match:
-      severity: 'info'
-    equal: ['alertname', 'cluster', 'service']
+      severity: "info"
+    equal: ["alertname", "cluster", "service"]
 
   # Inhibit info if same alertname with warning severity exists
   - source_match:
-      severity: 'warning'
+      severity: "warning"
     target_match:
-      severity: 'info'
-    equal: ['alertname', 'cluster', 'service']
+      severity: "info"
+    equal: ["alertname", "cluster", "service"]
 
 # Receivers define notification destinations
 receivers:
   # Default webhook receiver for testing
-  - name: 'default-webhook'
+  - name: "default-webhook"
     webhook_configs:
-      - url: 'http://host.docker.internal:5001/webhook'
+      - url: "http://host.docker.internal:5001/webhook"
         send_resolved: true
         max_alerts: 0
 
   # Critical alerts receiver
-  - name: 'critical-alerts'
+  - name: "critical-alerts"
     webhook_configs:
-      - url: 'http://host.docker.internal:5001/webhook/critical'
+      - url: "http://host.docker.internal:5001/webhook/critical"
         send_resolved: true
         max_alerts: 0
   # Uncomment for Slack integration (add under critical-alerts):
@@ -112,9 +112,9 @@ receivers:
   #     send_resolved: true
 
   # Warning alerts receiver
-  - name: 'warning-alerts'
+  - name: "warning-alerts"
     webhook_configs:
-      - url: 'http://host.docker.internal:5001/webhook/warning'
+      - url: "http://host.docker.internal:5001/webhook/warning"
         send_resolved: true
         max_alerts: 0
   # Uncomment for email notifications (add under warning-alerts):
@@ -125,16 +125,16 @@ receivers:
   #     send_resolved: true
 
   # Info alerts receiver
-  - name: 'info-alerts'
+  - name: "info-alerts"
     webhook_configs:
-      - url: 'http://host.docker.internal:5001/webhook/info'
+      - url: "http://host.docker.internal:5001/webhook/info"
         send_resolved: true
         max_alerts: 0
 
   # uFawkesObs platform health receiver
-  - name: 'ufawkesobs-health'
+  - name: "ufawkesobs-health"
     webhook_configs:
       # Dedicated host webhook sink for platform self-monitoring alerts.
-      - url: 'http://host.docker.internal:5001/webhook/ufawkesobs-health'
+      - url: "http://host.docker.internal:5001/webhook/ufawkesobs-health"
         send_resolved: true
         max_alerts: 0

@@ -38,6 +38,7 @@ You do not touch `compose.yaml`, Grafana dashboard JSON, Alloy config, or OTel c
 ## Activation
 
 Invoked by:
+
 - `@promql` mention
 - Planning agent assigning a PromQL task from Section 8
 - Review agent flagging a PromQL correctness issue
@@ -47,6 +48,7 @@ Invoked by:
 ## Pre-task checklist
 
 Before writing any rule:
+
 1. Load `promql` skill — read every constraint before producing output
 2. Load `component-versions` skill — confirm which Prometheus version is in scope
 3. Read the existing file in full (quote the section being changed back to Planning agent)
@@ -57,11 +59,13 @@ Before writing any rule:
 ## Correctness rules (non-negotiable)
 
 ### Counters vs gauges
+
 - `rate()` and `irate()` on **counters only** — never on gauges
 - Gauges use direct references or `avg_over_time()`, `max_over_time()`
 - If unsure: check the metric name suffix: `_total` → counter; `_bytes`, `_seconds` (no `_total`) → gauge
 
 ### absent() guards — required on ALL alerting rules
+
 Every alerting rule that fires when a metric is below a threshold MUST have a paired absent() guard:
 
 ```yaml
@@ -78,6 +82,7 @@ Every alerting rule that fires when a metric is below a threshold MUST have a pa
 Never produce an alerting rule without its absent() guard.
 
 ### or vector(0) — required in recording rules
+
 Any recording rule that computes a ratio or rate that may have no series during startup or gaps:
 
 ```yaml
@@ -90,12 +95,15 @@ expr: sum(rate(http_requests_total[5m]))
 ```
 
 ### irate() — never in recording rules
+
 `irate()` is for dashboards only (last 2 data points). Recording rules must use `rate()`.
 
 ### Label matchers
+
 Always include `job=` matcher when a metric exists on multiple targets. Ambiguous queries silently sum across targets.
 
 ### Time ranges
+
 - Recording rules: minimum `[5m]` range for rate()
 - Alerting rules: `for:` must be at least 1m (no instant alerts on noisy metrics)
 - DORA recording rules: use `[1h]` and `[24h]` ranges, not shorter

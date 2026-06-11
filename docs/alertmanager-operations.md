@@ -6,13 +6,13 @@ This document provides operational guidance for the Alertmanager service in the 
 
 ## Service Access
 
-| Endpoint | URL | Purpose |
-|----------|-----|---------|
-| **Web UI** | http://localhost:9093 | Alert management interface |
-| **Metrics** | http://localhost:9093/metrics | Alertmanager self-monitoring metrics |
-| **Health Check** | http://localhost:9093/-/healthy | Liveness probe |
-| **Ready Check** | http://localhost:9093/-/ready | Readiness probe |
-| **API** | http://localhost:9093/api/v2/* | Alert management API |
+| Endpoint         | URL                             | Purpose                              |
+| ---------------- | ------------------------------- | ------------------------------------ |
+| **Web UI**       | http://localhost:9093           | Alert management interface           |
+| **Metrics**      | http://localhost:9093/metrics   | Alertmanager self-monitoring metrics |
+| **Health Check** | http://localhost:9093/-/healthy | Liveness probe                       |
+| **Ready Check**  | http://localhost:9093/-/ready   | Readiness probe                      |
+| **API**          | http://localhost:9093/api/v2/\* | Alert management API                 |
 
 ## Common Operations
 
@@ -102,7 +102,7 @@ docker compose logs alertmanager --timestamps
 
 ### ServiceDown
 
-**Severity:** Critical  
+**Severity:** Critical
 **Category:** Availability
 
 **Description:** A monitored service has been down for more than 2 minutes.
@@ -110,16 +110,19 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check which service is down:
+
    ```bash
    curl -s http://localhost:9093/api/v2/alerts | jq '.[] | select(.labels.alertname=="ServiceDown")'
    ```
 
 2. Check the service status:
+
    ```bash
    docker compose ps
    ```
 
 3. View service logs:
+
    ```bash
    docker compose logs <service-name> --tail=100
    ```
@@ -132,6 +135,7 @@ docker compose logs alertmanager --timestamps
 **Resolution:**
 
 - If the service crashed, restart it:
+
   ```bash
   docker compose restart <service-name>
   ```
@@ -144,7 +148,7 @@ docker compose logs alertmanager --timestamps
 
 ### OTelCollectorDown
 
-**Severity:** Critical  
+**Severity:** Critical
 **Category:** Observability
 
 **Description:** The OpenTelemetry Collector has been down for more than 1 minute. This affects all telemetry data collection.
@@ -152,11 +156,13 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check OTel Collector status:
+
    ```bash
    docker compose ps otel-collector
    ```
 
 2. View OTel Collector logs:
+
    ```bash
    docker compose logs otel-collector --tail=100
    ```
@@ -169,6 +175,7 @@ docker compose logs alertmanager --timestamps
 **Resolution:**
 
 - Restart the OTel Collector:
+
   ```bash
   docker compose restart otel-collector
   ```
@@ -181,7 +188,7 @@ docker compose logs alertmanager --timestamps
 
 ### PrometheusScrapeFailure
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Monitoring
 
 **Description:** Prometheus has failed to scrape a target for more than 5 minutes.
@@ -189,9 +196,11 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check scrape targets in Prometheus UI:
+
    - Navigate to http://localhost:9090/targets
 
 2. Verify network connectivity:
+
    ```bash
    docker compose exec prometheus wget -O- http://<target-service>:<port>/metrics
    ```
@@ -209,7 +218,7 @@ docker compose logs alertmanager --timestamps
 
 ### OTelCollectorHighCPU
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Resource
 
 **Description:** OpenTelemetry Collector is using more than 80% of a CPU core for over 10 minutes.
@@ -217,11 +226,13 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check OTel Collector CPU usage:
+
    ```bash
    docker stats otel-collector --no-stream
    ```
 
 2. Review OTel Collector metrics:
+
    ```bash
    curl -s http://localhost:8888/metrics | grep cpu
    ```
@@ -242,7 +253,7 @@ docker compose logs alertmanager --timestamps
 
 ### OTelCollectorHighMemory
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Resource
 
 **Description:** OTel Collector is using more than 3GB of memory for over 5 minutes.
@@ -250,11 +261,13 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check current memory usage:
+
    ```bash
    docker stats otel-collector --no-stream
    ```
 
 2. Review OTel Collector metrics:
+
    ```bash
    curl -s http://localhost:8888/metrics | grep memory
    ```
@@ -267,6 +280,7 @@ docker compose logs alertmanager --timestamps
 **Resolution:**
 
 - Restart the OTel Collector to clear memory:
+
   ```bash
   docker compose restart otel-collector
   ```
@@ -278,7 +292,7 @@ docker compose logs alertmanager --timestamps
 
 ### PrometheusTSDBReloadsFailing
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Storage
 
 **Description:** Prometheus has had TSDB reload failures.
@@ -286,6 +300,7 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check Prometheus logs:
+
    ```bash
    docker compose logs prometheus --tail=100 | grep -i reload
    ```
@@ -299,20 +314,21 @@ docker compose logs alertmanager --timestamps
 
 - If disk space is low, free up space
 - If TSDB is corrupted, consider:
+
   ```bash
   # Stop Prometheus
   docker compose stop prometheus
-  
+
   # Backup data
   cp -r data/prometheus data/prometheus.backup
-  
+
   # Restart Prometheus
   docker compose start prometheus
   ```
 
 ### PrometheusSlowQueries
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Performance
 
 **Description:** 99th percentile of Prometheus query duration is above 5 seconds.
@@ -320,6 +336,7 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Identify slow queries in Prometheus UI:
+
    - Navigate to http://localhost:9090/graph
    - Use query: `topk(10, prometheus_engine_query_duration_seconds)`
 
@@ -335,7 +352,7 @@ docker compose logs alertmanager --timestamps
 
 ### PrometheusStorageAlmostFull
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Storage
 
 **Description:** Prometheus storage is over 80% full.
@@ -343,6 +360,7 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check current storage usage:
+
    ```bash
    du -sh data/prometheus
    ```
@@ -352,9 +370,10 @@ docker compose logs alertmanager --timestamps
 **Resolution:**
 
 - Decrease retention time:
+
   ```yaml
   # In compose.yaml
-  - "--storage.tsdb.retention.time=15d"  # Reduce from 30d
+  - "--storage.tsdb.retention.time=15d" # Reduce from 30d
   ```
 
 - Increase storage volume size
@@ -362,7 +381,7 @@ docker compose logs alertmanager --timestamps
 
 ### AlertmanagerConfigReloadFailed
 
-**Severity:** Warning  
+**Severity:** Warning
 **Category:** Alerting
 
 **Description:** Alertmanager configuration reload has failed.
@@ -370,6 +389,7 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check Alertmanager logs:
+
    ```bash
    docker compose logs alertmanager --tail=50
    ```
@@ -389,7 +409,7 @@ docker compose logs alertmanager --timestamps
 
 ### AlertmanagerClusterDown
 
-**Severity:** Critical  
+**Severity:** Critical
 **Category:** Alerting
 
 **Description:** No Alertmanager instances are reachable. Alert notifications are not being sent.
@@ -397,6 +417,7 @@ docker compose logs alertmanager --timestamps
 **Investigation Steps:**
 
 1. Check Alertmanager status:
+
    ```bash
    docker compose ps alertmanager
    ```
@@ -409,6 +430,7 @@ docker compose logs alertmanager --timestamps
 **Resolution:**
 
 - Restart Alertmanager:
+
   ```bash
   docker compose restart alertmanager
   ```
@@ -423,11 +445,13 @@ docker compose logs alertmanager --timestamps
 ### Alerts Not Firing
 
 1. Verify Prometheus is evaluating rules:
+
    ```bash
    curl -s http://localhost:9090/api/v1/rules | jq .
    ```
 
 2. Check if alert rules are loaded:
+
    ```bash
    curl -s http://localhost:9090/api/v1/rules | jq '.data.groups[].rules[] | select(.type=="alerting")'
    ```
@@ -440,11 +464,13 @@ docker compose logs alertmanager --timestamps
 ### Notifications Not Being Sent
 
 1. Check Alertmanager logs for errors:
+
    ```bash
    docker compose logs alertmanager | grep -i error
    ```
 
 2. Verify webhook endpoint is reachable (if using webhook):
+
    ```bash
    docker compose exec alertmanager wget -O- http://host.docker.internal:5001/webhook
    ```
@@ -454,6 +480,7 @@ docker compose logs alertmanager --timestamps
 ### Silences Not Working
 
 1. Verify silence is active:
+
    ```bash
    curl -s http://localhost:9093/api/v2/silences | jq .
    ```
@@ -470,7 +497,7 @@ docker compose logs alertmanager --timestamps
 - Adjust group interval to reduce notification frequency:
   ```yaml
   route:
-    group_interval: 10m  # Increase from 5m
+    group_interval: 10m # Increase from 5m
   ```
 
 ### Storage Optimization

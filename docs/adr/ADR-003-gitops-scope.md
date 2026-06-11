@@ -1,8 +1,8 @@
 # ADR-003: GitOps at the Configuration Layer; Push-Triggered Deployment Reconciliation
 
-**Status:** Accepted  
-**Date:** 2025-06-01  
-**Deciders:** uFawkesObs maintainers  
+**Status:** Accepted
+**Date:** 2025-06-01
+**Deciders:** uFawkesObs maintainers
 **Issue:** [M1-02](https://github.com/paruff/uFawkesObs/issues/68)
 
 ---
@@ -69,15 +69,15 @@ It does **not** mean:
 
 ## What "GitOps-first" Means Here
 
-| Practice | Supported in this release |
-|---|---|
-| All desired state in version control | ✅ Yes — `compose.yaml`, `config/`, `dashboards/` |
-| Declarative configuration | ✅ Yes — no manual UI changes; all config is file-based |
-| No out-of-band config changes | ✅ Yes — Grafana provisioning prevents UI-only changes from persisting |
-| Audit trail via Git history | ✅ Yes — every config change is a commit |
-| Push-triggered deployment | ✅ Yes — `make up` or CI pipeline on merge |
-| Pull-based drift detection | ❌ Not in this release (M5, Kubernetes track) |
-| Automatic reconciliation loop | ❌ Not in this release (M5, Kubernetes track) |
+| Practice                             | Supported in this release                                              |
+| ------------------------------------ | ---------------------------------------------------------------------- |
+| All desired state in version control | ✅ Yes — `compose.yaml`, `config/`, `dashboards/`                      |
+| Declarative configuration            | ✅ Yes — no manual UI changes; all config is file-based                |
+| No out-of-band config changes        | ✅ Yes — Grafana provisioning prevents UI-only changes from persisting |
+| Audit trail via Git history          | ✅ Yes — every config change is a commit                               |
+| Push-triggered deployment            | ✅ Yes — `make up` or CI pipeline on merge                             |
+| Pull-based drift detection           | ❌ Not in this release (M5, Kubernetes track)                          |
+| Automatic reconciliation loop        | ❌ Not in this release (M5, Kubernetes track)                          |
 
 ---
 

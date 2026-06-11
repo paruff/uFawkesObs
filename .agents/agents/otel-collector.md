@@ -41,6 +41,7 @@ You do not touch Prometheus rules, Grafana dashboards, or `compose.yaml` service
 ## Activation
 
 Invoked by:
+
 - `@otel` mention
 - Planning agent assigning an OTel or Alloy task
 - Review agent flagging a pipeline wiring error
@@ -60,6 +61,7 @@ Invoked by:
 ## OTel Collector pipeline rules
 
 ### Receiver → Processor → Exporter wiring
+
 Every pipeline must be explicitly declared in the `service.pipelines` block. A receiver or exporter defined but not referenced in a pipeline is silently unused — this is a common agent error.
 
 ```yaml
@@ -69,7 +71,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/tempo]    # ← must reference the exporter defined above
+      exporters: [otlp/tempo] # ← must reference the exporter defined above
     metrics:
       receivers: [otlp, prometheus]
       processors: [batch]
@@ -81,6 +83,7 @@ service:
 ```
 
 ### Exporter targets — use Docker Compose service names
+
 Never use `localhost` in exporter endpoints. Use the Docker Compose service name:
 
 ```yaml
@@ -96,18 +99,21 @@ exporters:
 ```
 
 ### Port reference table (uFawkesObs canonical)
-| Purpose | Port | Service name |
-|---------|------|-------------|
-| OTLP gRPC receiver | 4317 | otel-collector |
-| OTLP HTTP receiver | 4318 | otel-collector |
-| Collector self-telemetry | 8888 | otel-collector |
+
+| Purpose                         | Port | Service name   |
+| ------------------------------- | ---- | -------------- |
+| OTLP gRPC receiver              | 4317 | otel-collector |
+| OTLP HTTP receiver              | 4318 | otel-collector |
+| Collector self-telemetry        | 8888 | otel-collector |
 | App metrics (Prometheus scrape) | 8889 | otel-collector |
-| Tempo OTLP gRPC | 4317 | tempo |
-| Loki HTTP | 3100 | loki |
-| Prometheus remote write | 9090 | prometheus |
+| Tempo OTLP gRPC                 | 4317 | tempo          |
+| Loki HTTP                       | 3100 | loki           |
+| Prometheus remote write         | 9090 | prometheus     |
 
 ### AI pipeline additions (Wave 5 only)
+
 When adding `gen_ai.*` attribute handling:
+
 - Add to a **separate named pipeline**: `metrics/ai`, not to the default `metrics` pipeline
 - Adding processors to the default metrics pipeline risks breaking existing Prometheus scraping
 - Always test with `curl http://localhost:8888/metrics | grep otelcol_exporter` to confirm exporters are active
@@ -145,5 +151,5 @@ curl http://localhost:12345/-/ready
 - Never use `localhost` in exporter endpoint URLs
 - Never add a receiver/exporter/processor without wiring it into `service.pipelines`
 - Never modify `compose.yaml` — if a port or service change is needed, flag it to Planning agent
-- AI pipeline changes (gen_ai.*) require `model:gpt-5.1-codex` label per AGENTS.md model routing
+- AI pipeline changes (gen_ai.\*) require `model:gpt-5.1-codex` label per AGENTS.md model routing
 - Commit format: `fix(otel): description (#N)` or `fix(alloy): description (#N)`

@@ -140,11 +140,11 @@ import sys
 try:
     with open('./config/grafana/provisioning/datasources/datasources.yaml') as f:
         ds = yaml.safe_load(f)
-        
+
     if 'datasources' not in ds:
         print("❌ No datasources found in configuration")
         sys.exit(1)
-        
+
     prometheus_found = False
     for datasource in ds['datasources']:
         if datasource.get('name') == 'Prometheus':
@@ -155,11 +155,11 @@ try:
             if datasource.get('url') != 'http://prometheus:9090':
                 print("❌ Prometheus datasource has incorrect URL")
                 sys.exit(1)
-    
+
     if not prometheus_found:
         print("❌ Prometheus datasource not found")
         sys.exit(1)
-        
+
     print("✅ Datasource configuration valid")
 except Exception as e:
     print(f"❌ Error validating datasource configuration: {e}")

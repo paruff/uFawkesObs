@@ -18,11 +18,13 @@ Docker Host
 ### Log Flow
 
 1. **Alloy's Docker Source** (`loki.source.docker`)
+
    - Mounts `/var/run/docker.sock` to discover running containers
    - Scrapes stdout/stderr logs from all containers
    - Attaches metadata: container_name, container_id, compose_service, compose_project
 
 2. **Pipeline Processing** (`loki.process`)
+
    - Parses Docker JSON log format
    - Extracts labels from container metadata
    - Enriches log entries with compose labels
@@ -176,6 +178,7 @@ curl -s "http://localhost:3100/loki/api/v1/query_range?query={job=\"docker\"}&st
 **Symptom:** Loki has no logs with `{job="docker"}`
 
 **Root Cause:**
+
 1. Alloy metrics show no `loki_source_docker_targets_active`
 2. Docker socket permission issue
 3. Alloy → Loki network connectivity
@@ -183,40 +186,46 @@ curl -s "http://localhost:3100/loki/api/v1/query_range?query={job=\"docker\"}&st
 **Solutions:**
 
 1. **Check Docker Socket Access**
+
    ```bash
    docker exec alloy ls -la /var/run/docker.sock
    # Should show: srw-rw---- (writable by container)
    ```
 
 2. **Check Alloy Logs**
+
    ```bash
    docker compose logs alloy --tail 50 | grep -i "error\|docker\|connection"
    ```
 
 3. **Verify Loki Connectivity**
+
    ```bash
    docker exec alloy curl -v http://loki:3100/ready
    # Should return 200 OK
    ```
 
 4. **Restart Alloy**
+
    ```bash
    docker compose restart alloy
    # Wait 30s for discovery to complete
    sleep 30
-   
+
    docker compose logs alloy --tail 20
    ```
 
 ### Alloy High Memory Usage
 
 **Root Cause:**
+
 - Large number of containers generating high log volume
 - Positions file growing unbounded
 
 **Solution:**
 
 1. **Reduce batch size** (config.river):
+
    ```river
    # Add to loki.process if using write cache
    forward_to = [loki.write.loki.receiver]
@@ -237,6 +246,7 @@ curl -s "http://localhost:3100/loki/api/v1/query_range?query={job=\"docker\"}&st
 **Solution:**
 
 Check if container has compose labels:
+
 ```bash
 docker inspect <container_name> | jq '.Config.Labels'
 
@@ -253,7 +263,7 @@ In `config/alloy/config.river`, add filter stages:
 ```river
 loki.process "containers" {
   stage.docker {}
-  
+
   # Drop noisy services
   stage.drop {
     expression = "{{ .container_name | contains(\"debug\") }}"
@@ -280,10 +290,10 @@ In `compose.yaml`:
 deploy:
   resources:
     limits:
-      cpus: '1.0'      # Increase if high CPU usage
-      memory: 1G       # Increase if OOM kills
+      cpus: "1.0" # Increase if high CPU usage
+      memory: 1G # Increase if OOM kills
     reservations:
-      cpus: '0.25'
+      cpus: "0.25"
       memory: 256M
 ```
 
@@ -310,6 +320,7 @@ deploy:
 ### Combine with Metrics & Traces
 
 In Grafana dashboards:
+
 1. **Logs**: `{compose_service="my-service"}`
 2. **Metrics**: `rate(container_cpu_usage_seconds[5m])`
 3. **Traces**: Link via derived fields (configured in datasources.yaml)
@@ -318,16 +329,17 @@ In Grafana dashboards:
 
 **Key Differences:**
 
-| Aspect | Promtail | Alloy |
-|--------|----------|-------|
-| Config Format | YAML | River (HCL-like) |
-| Log Processing | Multiple job configs | Unified pipelines |
-| Metrics | `/metrics` on 9080 | `/metrics` on 12345 |
-| Docker Integration | Job with docker_sd | Native `loki.source.docker` |
-| Position Tracking | `/tmp/positions.yaml` | `/var/lib/alloy/positions.yaml` |
-| Community Support | Deprecated | Active development |
+| Aspect             | Promtail              | Alloy                           |
+| ------------------ | --------------------- | ------------------------------- |
+| Config Format      | YAML                  | River (HCL-like)                |
+| Log Processing     | Multiple job configs  | Unified pipelines               |
+| Metrics            | `/metrics` on 9080    | `/metrics` on 12345             |
+| Docker Integration | Job with docker_sd    | Native `loki.source.docker`     |
+| Position Tracking  | `/tmp/positions.yaml` | `/var/lib/alloy/positions.yaml` |
+| Community Support  | Deprecated            | Active development              |
 
 **Migration Checklist:**
+
 - [x] Update compose.yaml (alloy replaces promtail)
 - [x] Create config/alloy/config.river from promtail.yaml logic
 - [x] Mount data/alloy for state persistence
@@ -357,16 +369,18 @@ docker compose logs alloy | grep -i "error\|failed\|invalid"
 ### Enable Debug Logging
 
 In `compose.yaml`, update Alloy command:
+
 ```yaml
 command:
   - "run"
   - "--config.file=/etc/alloy/config.river"
-  - "--log.level=debug"   # Add this
+  - "--log.level=debug" # Add this
 ```
 
 ### Report Issues
 
 If Alloy is not collecting logs:
+
 1. Check `docker compose logs alloy --tail 100`
 2. Verify `http://localhost:12345/metrics` returns data
 3. Confirm `{job="docker"}` query returns logs in Grafana Explore

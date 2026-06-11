@@ -19,24 +19,24 @@ readonly NC='\033[0m'
 # Function to check if services are running
 check_services_running() {
     echo -e "${BLUE}Checking if services are already running...${NC}"
-    
+
     local all_running=true
-    
+
     if ! docker compose ps otel-collector 2>/dev/null | grep -q "Up"; then
         echo "OTel Collector is not running"
         all_running=false
     fi
-    
+
     if ! docker compose ps prometheus 2>/dev/null | grep -q "Up"; then
         echo "Prometheus is not running"
         all_running=false
     fi
-    
+
     if ! docker compose ps grafana 2>/dev/null | grep -q "Up"; then
         echo "Grafana is not running"
         all_running=false
     fi
-    
+
     if [[ "${all_running}" == "true" ]]; then
         echo -e "${GREEN}✅ All services are running${NC}"
         return 0
@@ -49,20 +49,20 @@ check_services_running() {
 # Function to start monitoring stack
 start_monitoring_stack() {
     echo -e "${BLUE}Starting monitoring stack...${NC}"
-    
+
     # Create data directories if they don't exist
     mkdir -p "${PROJECT_ROOT}/data/prometheus" "${PROJECT_ROOT}/data/grafana"
     chmod -R 755 "${PROJECT_ROOT}/data/" 2>/dev/null || true
-    
+
     # Start services
     docker compose --profile core up -d
-    
+
     # Wait for services to be ready
     echo -e "${BLUE}Waiting for services to be ready...${NC}"
     local max_wait=60
     local elapsed=0
     local interval=5
-    
+
     while [ $elapsed -lt $max_wait ]; do
         if check_services_running >/dev/null 2>&1; then
             break
@@ -71,18 +71,18 @@ start_monitoring_stack() {
         elapsed=$((elapsed + interval))
         echo "  Waiting... ($elapsed/$max_wait seconds)"
     done
-    
+
     # Additional wait for services to stabilize
     echo "Allowing services to stabilize..."
     sleep 30
-    
+
     # Verify services are running
     if ! docker compose ps | grep -q "Up"; then
         echo -e "${RED}❌ Services failed to start${NC}"
         docker compose logs --tail=50
         return 1
     fi
-    
+
     echo -e "${GREEN}✅ Monitoring stack started successfully${NC}"
     return 0
 }
@@ -101,7 +101,7 @@ stop_monitoring_stack() {
 # Function to run specific test scenario
 run_test_scenario() {
     local scenario=$1
-    
+
     case "${scenario}" in
         "full-pipeline")
             echo -e "${BLUE}Running full pipeline acceptance test...${NC}"
@@ -132,14 +132,14 @@ run_test_scenario() {
                 echo -e "${RED}❌ OTel Collector metrics not available${NC}"
                 return 1
             fi
-            
+
             if curl -sf http://localhost:9090/-/healthy >/dev/null 2>&1; then
                 echo -e "${GREEN}✅ Prometheus is healthy${NC}"
             else
                 echo -e "${RED}❌ Prometheus is unhealthy${NC}"
                 return 1
             fi
-            
+
             if curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
                 echo -e "${GREEN}✅ Grafana is healthy${NC}"
             else
@@ -158,7 +158,7 @@ run_test_scenario() {
 generate_documentation() {
     local report_dir
     report_dir=$(find "${TEST_DIR}/reports" -type d -name "2*" 2>/dev/null | sort -r | head -1)
-    
+
     if [[ -n "${report_dir}" ]] && [[ -f "${report_dir}/summary.md" ]]; then
         echo -e "${BLUE}Test report available at: ${report_dir}/summary.md${NC}"
     fi
@@ -168,13 +168,13 @@ generate_documentation() {
 main() {
     local scenario="${SCENARIO:-full-pipeline}"
     local start_services="${START_SERVICES:-auto}"
-    
+
     echo "========================================="
     echo "Observability Pipeline Acceptance Test"
     echo "========================================="
     echo "Scenario: ${scenario}"
     echo ""
-    
+
     # Determine if we need to start services
     if [[ "${start_services}" == "auto" ]]; then
         if ! check_services_running; then
@@ -183,38 +183,38 @@ main() {
     elif [[ "${start_services}" == "yes" ]]; then
         start_monitoring_stack || exit 1
     fi
-    
+
     # Run the specified test scenario
     if run_test_scenario "${scenario}"; then
         echo ""
         echo -e "${GREEN}=========================================${NC}"
         echo -e "${GREEN}✅ Test scenario '${scenario}' PASSED${NC}"
         echo -e "${GREEN}=========================================${NC}"
-        
+
         # Generate documentation
         generate_documentation
-        
+
         # Clean up if requested
         stop_monitoring_stack
-        
+
         exit 0
     else
         echo ""
         echo -e "${RED}=========================================${NC}"
         echo -e "${RED}❌ Test scenario '${scenario}' FAILED${NC}"
         echo -e "${RED}=========================================${NC}"
-        
+
         # Capture failure details
         echo ""
         echo -e "${YELLOW}=== Failure Diagnostics ===${NC}"
         docker compose logs --tail=50 otel-collector prometheus grafana 2>/dev/null || true
-        
+
         # Generate documentation even on failure
         generate_documentation
-        
+
         # Clean up if requested
         stop_monitoring_stack
-        
+
         exit 1
     fi
 }

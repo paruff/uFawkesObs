@@ -35,14 +35,14 @@ deployment.
 Each Grafana LGTM component runs as a specific unprivileged UID inside its
 container:
 
-| Service | Container UID | Directory |
-|---|---|---|
-| Grafana | 472 | `data/grafana` |
-| Prometheus | 65534 (nobody) | `data/prometheus` |
-| Alertmanager | 65534 (nobody) | `data/alertmanager` |
-| Loki | 10001 | `data/loki` |
-| Tempo | 10001 | `data/tempo` |
-| Alloy | host user / root | `data/alloy` |
+| Service      | Container UID    | Directory           |
+| ------------ | ---------------- | ------------------- |
+| Grafana      | 472              | `data/grafana`      |
+| Prometheus   | 65534 (nobody)   | `data/prometheus`   |
+| Alertmanager | 65534 (nobody)   | `data/alertmanager` |
+| Loki         | 10001            | `data/loki`         |
+| Tempo        | 10001            | `data/tempo`        |
+| Alloy        | host user / root | `data/alloy`        |
 
 ### Recommended: `make init`
 
@@ -213,7 +213,7 @@ host:
 # compose.yaml — file-based secret, no Swarm required
 secrets:
   grafana_admin_password:
-    file: ./secrets/grafana_admin_password.txt   # gitignored plain-text file
+    file: ./secrets/grafana_admin_password.txt # gitignored plain-text file
 
 services:
   grafana:

@@ -11,6 +11,7 @@ You write Grafana dashboard JSON that is provisioned automatically on stack star
 ## Before Writing Any Dashboard
 
 Read first:
+
 1. `dashboards/` — existing dashboards (understand naming, variable conventions, datasource UIDs)
 2. `config/prometheus.yml` — what scrape jobs exist and their label sets
 3. Check live metrics if stack is running: `curl -s http://localhost:9090/api/v1/label/__name__/values`
@@ -25,69 +26,88 @@ Examples: `fawkes-dora.json`, `obstackd-health.json`, `telemetry-generator.json`
 
 ## Datasource UIDs (use these exact values)
 
-| Backend | Datasource UID | Query language |
-|---|---|---|
-| Prometheus | `prometheus` | PromQL |
-| Loki | `loki` | LogQL |
-| Tempo | `tempo` | TraceQL |
+| Backend    | Datasource UID | Query language |
+| ---------- | -------------- | -------------- |
+| Prometheus | `prometheus`   | PromQL         |
+| Loki       | `loki`         | LogQL          |
+| Tempo      | `tempo`        | TraceQL        |
 
 Always reference datasources by UID, not by name. Names can change; UIDs are stable.
 
 ## Panel Templates
 
 ### Request Rate (PromQL)
+
 ```json
 {
   "type": "timeseries",
   "title": "Request Rate",
   "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "targets": [{
-    "expr": "sum(rate(http_requests_total{service=\"$service\"}[5m])) by (status_code)",
-    "legendFormat": "{{status_code}}"
-  }],
+  "targets": [
+    {
+      "expr": "sum(rate(http_requests_total{service=\"$service\"}[5m])) by (status_code)",
+      "legendFormat": "{{status_code}}"
+    }
+  ],
   "fieldConfig": { "defaults": { "unit": "reqps" } }
 }
 ```
 
 ### Error Rate % (PromQL)
+
 ```json
 {
   "type": "stat",
   "title": "Error Rate",
   "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "targets": [{
-    "expr": "sum(rate(http_requests_total{service=\"$service\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{service=\"$service\"}[5m])) * 100"
-  }],
+  "targets": [
+    {
+      "expr": "sum(rate(http_requests_total{service=\"$service\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{service=\"$service\"}[5m])) * 100"
+    }
+  ],
   "fieldConfig": {
     "defaults": { "unit": "percent" },
-    "overrides": [{ "matcher": {"id": "byValue", "options": {"op": "gte", "value": 5}}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]}]
+    "overrides": [
+      {
+        "matcher": { "id": "byValue", "options": { "op": "gte", "value": 5 } },
+        "properties": [
+          { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
+        ]
+      }
+    ]
   }
 }
 ```
 
 ### Log Stream (LogQL)
+
 ```json
 {
   "type": "logs",
   "title": "Service Logs",
   "datasource": { "type": "loki", "uid": "loki" },
-  "targets": [{
-    "expr": "{service=\"$service\"} |= \"$search\"",
-    "legendFormat": ""
-  }]
+  "targets": [
+    {
+      "expr": "{service=\"$service\"} |= \"$search\"",
+      "legendFormat": ""
+    }
+  ]
 }
 ```
 
 ### Trace Search (TraceQL)
+
 ```json
 {
   "type": "traces",
   "title": "Traces",
   "datasource": { "type": "tempo", "uid": "tempo" },
-  "targets": [{
-    "queryType": "traceql",
-    "query": "{ .service.name = \"$service\" && duration > 100ms }"
-  }]
+  "targets": [
+    {
+      "queryType": "traceql",
+      "query": "{ .service.name = \"$service\" && duration > 100ms }"
+    }
+  ]
 }
 ```
 
@@ -100,10 +120,12 @@ For DORA dashboards querying deployment span data:
   "type": "timeseries",
   "title": "Deployment Frequency",
   "datasource": { "type": "prometheus", "uid": "prometheus" },
-  "targets": [{
-    "expr": "increase(deployment_completed_total{service=\"$service\"}[1d])",
-    "legendFormat": "Deployments/day"
-  }]
+  "targets": [
+    {
+      "expr": "increase(deployment_completed_total{service=\"$service\"}[1d])",
+      "legendFormat": "Deployments/day"
+    }
+  ]
 }
 ```
 
@@ -117,8 +139,8 @@ Add this to Tempo datasource config in `config/grafana/provisioning/datasources/
 jsonData:
   tracesToLogsV2:
     datasourceUid: loki
-    spanStartTimeShift: '-1m'
-    spanEndTimeShift: '1m'
+    spanStartTimeShift: "-1m"
+    spanEndTimeShift: "1m"
     filterByTraceID: true
     filterBySpanID: false
     customQuery: true

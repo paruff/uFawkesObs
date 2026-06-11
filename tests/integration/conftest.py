@@ -31,7 +31,7 @@ def wait_for_prometheus(prometheus_base_url: str) -> None:
     """Wait for Prometheus to be ready."""
     max_retries = 30
     retry_interval = 2
-    
+
     for attempt in range(max_retries):
         try:
             response = requests.get(
@@ -43,9 +43,9 @@ def wait_for_prometheus(prometheus_base_url: str) -> None:
                 return
         except requests.exceptions.RequestException:
             pass
-        
+
         time.sleep(retry_interval)
-    
+
     pytest.fail("Prometheus did not become ready in time")
 
 
@@ -54,7 +54,7 @@ def wait_for_otel_collector(otel_collector_base_url: str) -> None:
     """Wait for OpenTelemetry Collector to be ready."""
     max_retries = 30
     retry_interval = 2
-    
+
     for attempt in range(max_retries):
         try:
             response = requests.get(
@@ -67,9 +67,9 @@ def wait_for_otel_collector(otel_collector_base_url: str) -> None:
                 return
         except requests.exceptions.RequestException:
             pass
-        
+
         time.sleep(retry_interval)
-    
+
     pytest.fail("OTel Collector did not become ready in time")
 
 
@@ -87,11 +87,11 @@ def wait_for_scrape_cycle() -> None:
 def query_prometheus(prometheus_base_url: str, query: str) -> Dict[str, Any]:
     """
     Helper function to query Prometheus.
-    
+
     Args:
         prometheus_base_url: Base URL for Prometheus
         query: PromQL query string
-        
+
     Returns:
         JSON response from Prometheus
     """
@@ -107,10 +107,10 @@ def query_prometheus(prometheus_base_url: str, query: str) -> Dict[str, Any]:
 def parse_prometheus_metrics(text: str) -> Dict[str, list]:
     """
     Parse Prometheus text format metrics into a dictionary.
-    
+
     Args:
         text: Prometheus text format metrics
-        
+
     Returns:
         Dictionary mapping metric names to lists of metric lines
     """
@@ -119,7 +119,7 @@ def parse_prometheus_metrics(text: str) -> Dict[str, list]:
         line = line.strip()
         if not line or line.startswith('#'):
             continue
-        
+
         # Extract metric name (before '{' or ' ')
         if '{' in line:
             metric_name = line.split('{')[0]
@@ -127,11 +127,11 @@ def parse_prometheus_metrics(text: str) -> Dict[str, list]:
             metric_name = line.split(' ')[0]
         else:
             continue
-        
+
         if metric_name not in metrics:
             metrics[metric_name] = []
         metrics[metric_name].append(line)
-    
+
     return metrics
 
 

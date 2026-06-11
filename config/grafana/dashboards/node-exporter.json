@@ -422,10 +422,7 @@
   "refresh": "30s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": [
-    "infrastructure",
-    "prometheus"
-  ],
+  "tags": ["infrastructure", "prometheus"],
   "templating": {
     "list": []
   },

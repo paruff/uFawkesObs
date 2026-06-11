@@ -7,6 +7,7 @@ To connect Media-Refinery to uFawkesObs, make these changes to `Media-Refinery/d
 ### 1. Update Networks Section
 
 **Replace:**
+
 ```yaml
 networks:
   media-refinery-network:
@@ -14,6 +15,7 @@ networks:
 ```
 
 **With:**
+
 ```yaml
 networks:
   media-refinery-network:
@@ -33,7 +35,7 @@ services:
     # ... existing config ...
     networks:
       - media-refinery-network
-      - observability-lab    # Add this line
+      - observability-lab # Add this line
     environment:
       # ... existing environment vars ...
       # Update these OTel variables:
@@ -61,13 +63,14 @@ services:
     # ... existing config ...
     networks:
       - media-refinery-network
-      - observability-lab    # Add this
+      - observability-lab # Add this
 
   tdarr:
     # ... existing config ...
     networks:
       - media-refinery-network
-      - observability-lab    # Add this
+      - observability-lab # Add this
+
 
   # ... same for radarr, sonarr, plex ...
 ```
@@ -109,7 +112,7 @@ Apply these changes to `/path/to/Media-Refinery/docker-compose.yml`:
 +  observability-lab:
 +    external: true
 +    name: observability-lab
- 
+
  volumes:
    input:
 ```
@@ -151,15 +154,15 @@ scrape_configs:
   # ... existing jobs ...
 
   # Media-Refinery metrics
-  - job_name: 'media-refinery'
+  - job_name: "media-refinery"
     static_configs:
-      - targets: ['media-refinery:9090']  # Adjust port if different
+      - targets: ["media-refinery:9090"] # Adjust port if different
         labels:
-          component: 'media-refinery'
-          service: 'media-processing'
+          component: "media-refinery"
+          service: "media-processing"
     scrape_interval: 15s
-    metrics_path: '/metrics'
-    scheme: 'http'
+    metrics_path: "/metrics"
+    scheme: "http"
 ```
 
 Then restart Prometheus:
@@ -172,6 +175,7 @@ docker compose restart prometheus
 ### 5. Verify Telemetry Flow
 
 #### Check OTel Collector
+
 ```bash
 # Check collector metrics
 curl http://localhost:8888/metrics | grep -i "receiver.*media"
@@ -181,6 +185,7 @@ docker logs otel-collector --tail 50
 ```
 
 #### Check Prometheus
+
 ```bash
 # Check targets
 curl 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select(.labels.component=="media-refinery")'
@@ -190,6 +195,7 @@ curl 'http://localhost:9090/api/v1/query?query=up{component="media-refinery"}' |
 ```
 
 #### Check Grafana
+
 1. Open http://localhost:3000
 2. Go to Explore
 3. Select "Loki" datasource
@@ -203,6 +209,7 @@ curl 'http://localhost:9090/api/v1/query?query=up{component="media-refinery"}' |
 **Cause:** Container not on observability-lab network
 
 **Solution:**
+
 ```bash
 # Inspect container
 docker inspect media-refinery | grep -A 20 Networks
@@ -228,7 +235,7 @@ services:
   media-refinery:
     networks:
       - your-app-network
-      - observability-lab  # ← Join uFawkesObs network for auto log collection
+      - observability-lab # ← Join uFawkesObs network for auto log collection
 
 networks:
   observability-lab:

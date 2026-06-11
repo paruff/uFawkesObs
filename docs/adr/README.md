@@ -13,11 +13,11 @@ Each ADR follows the format:
 
 ## Index
 
-| ADR | Title | Status | Date |
-|---|---|---|---|
-| [ADR-001](ADR-001-loki-version.md) | Use Loki 2.9.10 for Log Aggregation | Accepted | 2025-06-01 |
-| [ADR-002](ADR-002-docker-compose-scope.md) | Docker Compose as the Primary Deployment Runtime | Accepted | 2025-06-01 |
-| [ADR-003](ADR-003-gitops-scope.md) | GitOps at the Configuration Layer; Push-Triggered Deployment Reconciliation | Accepted | 2025-06-01 |
+| ADR                                        | Title                                                                       | Status   | Date       |
+| ------------------------------------------ | --------------------------------------------------------------------------- | -------- | ---------- |
+| [ADR-001](ADR-001-loki-version.md)         | Use Loki 2.9.10 for Log Aggregation                                         | Accepted | 2025-06-01 |
+| [ADR-002](ADR-002-docker-compose-scope.md) | Docker Compose as the Primary Deployment Runtime                            | Accepted | 2025-06-01 |
+| [ADR-003](ADR-003-gitops-scope.md)         | GitOps at the Configuration Layer; Push-Triggered Deployment Reconciliation | Accepted | 2025-06-01 |
 
 ---
 
@@ -40,11 +40,11 @@ declarative, no UI-driven changes.
 
 ## ADR Status Definitions
 
-| Status | Meaning |
-|---|---|
-| **Proposed** | Under discussion; not yet implemented |
-| **Accepted** | Approved and implemented |
-| **Deprecated** | Superseded but preserved for history |
+| Status         | Meaning                                                       |
+| -------------- | ------------------------------------------------------------- |
+| **Proposed**   | Under discussion; not yet implemented                         |
+| **Accepted**   | Approved and implemented                                      |
+| **Deprecated** | Superseded but preserved for history                          |
 | **Superseded** | Replaced by a later ADR (link provided in the superseded ADR) |
 
 ---

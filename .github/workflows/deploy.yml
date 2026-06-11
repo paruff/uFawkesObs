@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'config/**'
-      - 'compose.yaml'
-      - '.env.example'
-      - 'dashboards/**'
+      - "config/**"
+      - "compose.yaml"
+      - ".env.example"
+      - "dashboards/**"
 
 permissions:
   contents: write

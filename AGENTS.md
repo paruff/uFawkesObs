@@ -32,7 +32,9 @@ scripts/          → Shell automation (start, stop, reset, health-check)
 tests/            → Smoke tests validating stack health
 docs/             → Architecture decisions and runbooks
 ```
+
 **Hard rules:**
+
 - All config changes go in `config/` and are applied via `docker compose up -d --force-recreate`.
 - No credentials in `config/` — use `.env` (gitignored) with `.env.example` as the template.
 - Dashboards in `dashboards/` must be JSON — no manual Grafana UI edits that aren't exported back.
@@ -53,6 +55,7 @@ docs/             → Architecture decisions and runbooks
 ## 5. Token Budget
 
 Before any task touching > 3 files:
+
 1. State scope in one sentence.
 2. List files you plan to read.
 3. Confirm: "Proceed? (moderate/high token cost)"

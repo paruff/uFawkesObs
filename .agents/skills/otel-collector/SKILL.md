@@ -20,11 +20,11 @@ Load this skill before editing `config/otel/collector.yaml`.
 The OTel Collector config has four top-level sections. All must be consistent with each other.
 
 ```yaml
-receivers:       # Where data comes in
-processors:      # Transform, filter, batch
-exporters:       # Where data goes out
+receivers: # Where data comes in
+processors: # Transform, filter, batch
+exporters: # Where data goes out
 service:
-  pipelines:     # Wire receivers → processors → exporters
+  pipelines: # Wire receivers → processors → exporters
     traces: ...
     metrics: ...
     logs: ...
@@ -65,7 +65,7 @@ exporters:
   otlp/tempo:
     endpoint: tempo:4317
     tls:
-      insecure: true          # Required for plain gRPC without TLS
+      insecure: true # Required for plain gRPC without TLS
 
   prometheusremotewrite:
     endpoint: http://prometheus:9090/api/v1/write
@@ -77,6 +77,7 @@ exporters:
 ### TLS for gRPC exporters
 
 Any `otlp` exporter using gRPC without TLS certificates must include:
+
 ```yaml
 tls:
   insecure: true
@@ -109,9 +110,9 @@ receivers:
   prometheus:
     config:
       scrape_configs:
-        - job_name: 'otel-collector'
+        - job_name: "otel-collector"
           static_configs:
-            - targets: ['localhost:8888']   # Exception: localhost IS correct here
+            - targets: ["localhost:8888"] # Exception: localhost IS correct here
 ```
 
 `localhost:8888` is correct inside the collector container when scraping its own self-telemetry endpoint. This is the only valid localhost reference.
@@ -157,7 +158,7 @@ service:
       processors: [memory_limiter, batch]
       exporters: [prometheusremotewrite]
 
-    metrics/ai:                              # Separate pipeline — do not merge
+    metrics/ai: # Separate pipeline — do not merge
       receivers: [otlp]
       processors: [memory_limiter, batch, filter/ai]
       exporters: [prometheusremotewrite/ai]
@@ -181,6 +182,7 @@ curl http://localhost:8889/metrics
 ```
 
 Expected after healthy startup:
+
 - `otelcol_receiver_accepted_spans_total` — increasing
 - `otelcol_exporter_sent_spans_total` — increasing (if traces are flowing)
 - `otelcol_process_uptime` — present
@@ -189,9 +191,9 @@ Expected after healthy startup:
 
 ## Common failure modes
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Exporter defined but no data sent | Not wired in service.pipelines | Add to the correct pipeline |
-| `connection refused` to tempo:4317 | `tls.insecure: true` missing | Add TLS block |
-| Metrics reach Prometheus but traces don't reach Tempo | otlp/tempo exporter missing from traces pipeline | Check service.pipelines.traces.exporters |
-| Self-telemetry at :8888 works but :8889 is empty | prometheus exporter not wired in metrics pipeline | Add to service.pipelines.metrics.exporters |
+| Symptom                                               | Cause                                             | Fix                                        |
+| ----------------------------------------------------- | ------------------------------------------------- | ------------------------------------------ |
+| Exporter defined but no data sent                     | Not wired in service.pipelines                    | Add to the correct pipeline                |
+| `connection refused` to tempo:4317                    | `tls.insecure: true` missing                      | Add TLS block                              |
+| Metrics reach Prometheus but traces don't reach Tempo | otlp/tempo exporter missing from traces pipeline  | Check service.pipelines.traces.exporters   |
+| Self-telemetry at :8888 works but :8889 is empty      | prometheus exporter not wired in metrics pipeline | Add to service.pipelines.metrics.exporters |

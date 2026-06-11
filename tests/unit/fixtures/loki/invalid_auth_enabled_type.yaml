@@ -1,7 +1,7 @@
 # Invalid: auth_enabled is not a boolean
 # This should fail validation
 
-auth_enabled: "false"  # Should be boolean, not string!
+auth_enabled: "false" # Should be boolean, not string!
 
 server:
   http_listen_port: 3100
