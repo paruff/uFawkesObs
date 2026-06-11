@@ -77,3 +77,12 @@ test-acceptance:
 
 ## test: run unit tests then acceptance tests (requires stack to be running: make up)
 test: test-unit test-acceptance
+
+# GitOps targets
+pre-commit-setup: ## Install pre-commit hooks
+	@pip install pre-commit
+	@pre-commit install
+	@echo "✅ Pre-commit hooks installed"
+
+pre-commit-run: ## Run all pre-commit hooks
+	@pre-commit run --all-files
