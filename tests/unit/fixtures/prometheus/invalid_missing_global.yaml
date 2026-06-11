@@ -2,6 +2,6 @@
 # This should fail validation
 
 scrape_configs:
-  - job_name: 'test'
+  - job_name: "test"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]

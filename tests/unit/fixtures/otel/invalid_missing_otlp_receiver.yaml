@@ -17,6 +17,6 @@ exporters:
 service:
   pipelines:
     metrics:
-      receivers: [otlp]  # References undefined receiver
+      receivers: [otlp] # References undefined receiver
       processors: [batch]
       exporters: [debug]

@@ -55,13 +55,13 @@ If any required secret is missing, the workflow exits with an explicit error.
 
 ### Optional repository variable
 
-- `DEPLOY_PATH`: absolute path of the uFawkesObs clone on the target host  
+- `DEPLOY_PATH`: absolute path of the uFawkesObs clone on the target host
   Default if unset: `$HOME/<repo-name>`
 
 ### Optional secret (recommended)
 
 - `DEPLOY_HOST_KEY`: full host key line for `known_hosts` (for example:
-  `deploy.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFullKeyMaterialHere`)  
+  `deploy.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFullKeyMaterialHere`)
   The full key text is required (do not truncate).
   If unset, the workflow falls back to `ssh-keyscan` (TOFU behavior).
 

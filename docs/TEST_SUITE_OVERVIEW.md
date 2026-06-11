@@ -4,7 +4,7 @@
 
 Comprehensive test suite created to validate the Promtail → Alloy migration and ensure all dashboards properly display metrics, logs, and traces.
 
-**Total Tests:** 38 (13 unit + 18 integration + 7 E2E scenarios)  
+**Total Tests:** 38 (13 unit + 18 integration + 7 E2E scenarios)
 **Coverage:** Config validation, component health, data flow, dashboard rendering, trace correlation
 
 ---
@@ -61,6 +61,7 @@ tests/
 **File:** `tests/unit/test_alloy_config_validation.py`
 
 ### TestAlloyConfiguration (11 tests)
+
 Validates River configuration file structure and content.
 
 ```python
@@ -86,7 +87,7 @@ Validates River configuration file structure and content.
   loki.process with stage.docker and stage.labels
 
 ✓ test_alloy_config_has_required_labels
-  Extracts: job, stream, container_name, container_id, 
+  Extracts: job, stream, container_name, container_id,
            compose_service, compose_project
 
 ✓ test_alloy_config_has_loki_write
@@ -100,6 +101,7 @@ Validates River configuration file structure and content.
 ```
 
 ### TestAlloyConfigDocumentation (2 tests)
+
 Validates documentation completeness.
 
 ```python
@@ -124,6 +126,7 @@ Validates documentation completeness.
 Validates component integration and dashboard data availability.
 
 #### TestAlloyHealth (2 tests)
+
 ```python
 ✓ test_alloy_metrics_port_open
   Port 12345 is accepting connections
@@ -133,18 +136,21 @@ Validates component integration and dashboard data availability.
 ```
 
 #### TestAlloyDockerSource (1 test)
+
 ```python
 ✓ test_alloy_has_docker_metrics
   Metrics contain loki_source_docker entries indicating active discovery
 ```
 
 #### TestAlloyToLokiPipeline (1 test)
+
 ```python
 ✓ test_alloy_can_write_to_loki
   Write pipeline metrics indicate connection to Loki is healthy
 ```
 
 #### TestDashboardMetricsData (2 tests)
+
 ```python
 ✓ test_prometheus_has_otel_metrics
   Prometheus scraped OTel Collector metrics (up{job="otel-collector"})
@@ -154,6 +160,7 @@ Validates component integration and dashboard data availability.
 ```
 
 #### TestDashboardLogsData (2 tests)
+
 ```python
 ✓ test_loki_receives_docker_logs
   Loki query {job="docker"} returns log streams
@@ -163,6 +170,7 @@ Validates component integration and dashboard data availability.
 ```
 
 #### TestDashboardTracesData (2 tests)
+
 ```python
 ✓ test_tempo_is_ready
   Tempo /ready endpoint returns 200 OK
@@ -172,6 +180,7 @@ Validates component integration and dashboard data availability.
 ```
 
 #### TestDashboardMetricsLogsTracesCorrelation (2 tests)
+
 ```python
 ✓ test_loki_datasource_has_trace_correlation
   Loki datasource.jsonData.derivedFields contains traceID pattern
@@ -181,6 +190,7 @@ Validates component integration and dashboard data availability.
 ```
 
 #### TestDashboardRendering (3 tests)
+
 ```python
 ✓ test_infrastructure_dashboard_has_log_panel
   Infrastructure Overview dashboard has Loki query targets
@@ -195,6 +205,7 @@ Validates component integration and dashboard data availability.
 ### File: `tests/integration/test_loki_integration.py` (Updated - 3 new tests)
 
 #### TestAlloyIntegration (2 tests)
+
 ```python
 ✓ test_alloy_is_running
   Alloy HTTP port 12345 is open
@@ -204,6 +215,7 @@ Validates component integration and dashboard data availability.
 ```
 
 **Run:**
+
 ```bash
 pytest tests/integration/test_alloy_and_dashboards.py -v
 pytest tests/integration/test_loki_integration.py::TestAlloyIntegration -v
@@ -218,8 +230,9 @@ pytest tests/integration/test_loki_integration.py::TestAlloyIntegration -v
 BDD-style (Given-When-Then) end-to-end test validating full stack integration.
 
 ### Scenario 1: Infrastructure Ready ✅
-**Given:** Docker Compose stack started  
-**When:** All services checked  
+
+**Given:** Docker Compose stack started
+**When:** All services checked
 **Then:** All 6 services running (prometheus, loki, tempo, grafana, alloy, otel-collector)
 
 ```bash
@@ -236,8 +249,9 @@ Result: PASS if all 6 services "Up"
 ```
 
 ### Scenario 2: Dashboards Provisioned ✅
-**Given:** Grafana running  
-**When:** Query Grafana API for dashboards  
+
+**Given:** Grafana running
+**When:** Query Grafana API for dashboards
 **Then:** All 4 expected dashboards present
 
 ```bash
@@ -252,8 +266,9 @@ Result: PASS if all 4 found
 ```
 
 ### Scenario 3: Metrics Available ✅
-**Given:** Prometheus running with scrapers  
-**When:** Query Prometheus for metrics  
+
+**Given:** Prometheus running with scrapers
+**When:** Query Prometheus for metrics
 **Then:** Metrics from OTel, Prometheus self-monitoring, Alertmanager available
 
 ```bash
@@ -267,8 +282,9 @@ Result: PASS if prometheus metrics > 0
 ```
 
 ### Scenario 4: Logs Available from Alloy ✅
-**Given:** Alloy running, containers logging  
-**When:** Query Loki for docker logs  
+
+**Given:** Alloy running, containers logging
+**When:** Query Loki for docker logs
 **Then:** Logs present with compose_service labels
 
 ```bash
@@ -281,8 +297,9 @@ Result: PASS if log_streams > 0
 ```
 
 ### Scenario 5: Traces Available ✅
-**Given:** Tempo running  
-**When:** Check Tempo endpoints  
+
+**Given:** Tempo running
+**When:** Check Tempo endpoints
 **Then:** Trace endpoint accessible
 
 ```bash
@@ -295,8 +312,9 @@ Result: PASS if tempo_ready == "200"
 ```
 
 ### Scenario 6: Dashboards Render ✅
-**Given:** Grafana and all data sources ready  
-**When:** Fetch dashboard definitions from API  
+
+**Given:** Grafana and all data sources ready
+**When:** Fetch dashboard definitions from API
 **Then:** Dashboards load with panels and queries
 
 ```bash
@@ -315,8 +333,9 @@ Result: PASS if dashboard loads and has panels
 ```
 
 ### Scenario 7: Trace Correlation Works ✅
-**Given:** Loki and Tempo datasources configured  
-**When:** Check datasource configuration  
+
+**Given:** Loki and Tempo datasources configured
+**When:** Check datasource configuration
 **Then:** Trace correlation configured (derivedFields, serviceMap)
 
 ```bash
@@ -329,11 +348,13 @@ Result: PASS if both configured
 ```
 
 **Run:**
+
 ```bash
 tests/acceptance/observability-pipeline/test-dashboard-validation.sh
 ```
 
 **Expected Output:**
+
 ```
 🚀 Initializing Dashboard Validation E2E Test
 Test ID: OBS-E2E-DASHBOARD-VALIDATION-001
@@ -375,6 +396,7 @@ Report saved to: tests/acceptance/observability-pipeline/reports/dashboard-valid
 ## Test Execution Guide
 
 ### Run All Tests (Complete Validation)
+
 ```bash
 # 1. Unit tests (config validation) ~5s
 pytest tests/unit/test_alloy_config_validation.py -v
@@ -389,6 +411,7 @@ tests/acceptance/observability-pipeline/test-loki-logs.sh
 ```
 
 ### Run Specific Test Classes
+
 ```bash
 # Alloy health tests only
 pytest tests/integration/test_alloy_and_dashboards.py::TestAlloyHealth -v
@@ -401,6 +424,7 @@ pytest tests/unit/test_alloy_config_validation.py::TestAlloyConfiguration -v
 ```
 
 ### Run with Coverage
+
 ```bash
 pytest --cov=tests tests/unit/ tests/integration/ --cov-report=html
 ```
@@ -409,14 +433,15 @@ pytest --cov=tests tests/unit/ tests/integration/ --cov-report=html
 
 ## Dashboard Data Coverage Matrix
 
-| Dashboard | Metrics | Logs | Traces | Correlation | Status |
-|-----------|---------|------|--------|-------------|--------|
-| **Observability Stack Health** | ✅ Prometheus | ⚠️ Available | N/A | N/A | ✅ LIVE |
-| **Application Performance** | ✅ Prometheus | ✅ Alloy→Loki | ✅ Tempo | ✅ traceID link | ✅ LIVE |
-| **Infrastructure Overview** | ✅ Prometheus | ✅ Alloy→Loki | N/A | N/A | ✅ LIVE |
-| **IoT Devices & MQTT** | ✅ Prometheus | N/A | N/A | N/A | ✅ LIVE |
+| Dashboard                      | Metrics       | Logs          | Traces   | Correlation     | Status  |
+| ------------------------------ | ------------- | ------------- | -------- | --------------- | ------- |
+| **Observability Stack Health** | ✅ Prometheus | ⚠️ Available  | N/A      | N/A             | ✅ LIVE |
+| **Application Performance**    | ✅ Prometheus | ✅ Alloy→Loki | ✅ Tempo | ✅ traceID link | ✅ LIVE |
+| **Infrastructure Overview**    | ✅ Prometheus | ✅ Alloy→Loki | N/A      | N/A             | ✅ LIVE |
+| **IoT Devices & MQTT**         | ✅ Prometheus | N/A           | N/A      | N/A             | ✅ LIVE |
 
 **Legend:**
+
 - ✅ Fully tested and validated
 - ⚠️ Available but optional
 - N/A Not applicable for this dashboard
@@ -426,6 +451,7 @@ pytest --cov=tests tests/unit/ tests/integration/ --cov-report=html
 ## Test Data Requirements
 
 ### Minimum Data for Passing Tests
+
 - ✅ All services started (no data needed)
 - ✅ All dashboards provisioned (no data needed)
 - ✅ Loki receives >= 1 log stream (few seconds after container logs)
@@ -433,6 +459,7 @@ pytest --cov=tests tests/unit/ tests/integration/ --cov-report=html
 - ✅ Traces endpoint accessible (no data needed for ready check)
 
 ### Typical Data Timeline
+
 ```
 0s       - Services start
 5s       - Metrics scraping begins (Prometheus fills with data)
@@ -447,19 +474,23 @@ pytest --cov=tests tests/unit/ tests/integration/ --cov-report=html
 ## Common Test Failures & Solutions
 
 ### Test: `test_loki_receives_docker_logs` → Returns 0 streams
-**Cause:** Alloy hasn't discovered containers yet or logs haven't been pushed  
+
+**Cause:** Alloy hasn't discovered containers yet or logs haven't been pushed
 **Solution:** Wait 60 seconds after stack startup, then rerun
 
 ### Test: `test_prometheus_has_otel_metrics` → No results
-**Cause:** OTel Collector hasn't sent metrics yet  
+
+**Cause:** OTel Collector hasn't sent metrics yet
 **Solution:** Wait 30 seconds for first scrape interval, normal behavior
 
 ### Test: `test_alloy_metrics_endpoint` → Connection refused
-**Cause:** Alloy service not started or not healthy  
+
+**Cause:** Alloy service not started or not healthy
 **Solution:** Check `docker compose ps alloy` and `docker compose logs alloy`
 
 ### Test: `test_infrastructure_dashboard_has_log_panel` → 0 log panels
-**Cause:** Dashboard queries use prometheus datasource, not Loki  
+
+**Cause:** Dashboard queries use prometheus datasource, not Loki
 **Solution:** This is OK - infrastructure dashboard focuses on metrics
 
 ---
@@ -488,6 +519,7 @@ Tests are designed to run in CI/CD pipelines:
 ## Metrics & Performance
 
 ### Test Execution Time
+
 - Unit tests: ~5 seconds
 - Integration tests: ~30 seconds (including wait times)
 - E2E tests: ~2 minutes (includes 60s discovery wait)
@@ -495,6 +527,7 @@ Tests are designed to run in CI/CD pipelines:
 **Total:** ~2.5 minutes for complete validation
 
 ### Resource Usage During Tests
+
 - Pytest: ~200MB RAM
 - Running services: ~2-3GB RAM (standard for stack)
 - Disk: Test reports ~50KB per run
@@ -504,6 +537,7 @@ Tests are designed to run in CI/CD pipelines:
 ## Extending the Tests
 
 ### Add New Dashboard Test
+
 ```python
 def test_my_dashboard_has_data(self, grafana_auth: tuple):
     """Test MyDashboard dashboard structure."""
@@ -512,18 +546,19 @@ def test_my_dashboard_has_data(self, grafana_auth: tuple):
         auth=grafana_auth,
         timeout=10
     ).json()
-    
+
     panels = dashboard.get("dashboard", {}).get("panels", [])
     assert len(panels) > 0, "Dashboard should have panels"
 ```
 
 ### Add New Alloy Component Test
+
 ```python
 def test_alloy_metrics_detail(self, alloy_url: str):
     """Test specific Alloy metric."""
     response = requests.get(f"{alloy_url}/metrics", timeout=10)
     metrics = response.text
-    
+
     # Check for specific metric
     assert "loki_source_docker_scrape_duration_seconds" in metrics
 ```
@@ -543,6 +578,7 @@ def test_alloy_metrics_detail(self, alloy_url: str):
 **Test Suite Status:** ✅ **COMPLETE & VALIDATED**
 
 38 tests across 3 levels (unit/integration/e2e) covering:
+
 - Configuration validation
 - Component health & integration
 - Data flow (metrics → Prometheus, logs → Alloy→Loki, traces → Tempo)

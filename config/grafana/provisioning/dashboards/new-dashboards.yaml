@@ -3,9 +3,9 @@ apiVersion: 1
 
 providers:
   # Platform dashboards - for observability stack monitoring
-  - name: 'platform'
+  - name: "platform"
     orgId: 1
-    folder: 'Platform'
+    folder: "Platform"
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
@@ -16,9 +16,9 @@ providers:
       foldersFromFilesStructure: false
 
   # Service dashboards - for application monitoring
-  - name: 'services'
+  - name: "services"
     orgId: 1
-    folder: 'Services'
+    folder: "Services"
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10

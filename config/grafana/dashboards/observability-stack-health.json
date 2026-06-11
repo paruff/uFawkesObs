@@ -94,9 +94,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -170,9 +168,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -246,9 +242,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -310,9 +304,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -404,9 +396,7 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -490,9 +480,7 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -588,9 +576,7 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -673,9 +659,7 @@
       "id": 8,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -700,11 +684,7 @@
   "refresh": "30s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": [
-    "observability",
-    "stack-health",
-    "infrastructure"
-  ],
+  "tags": ["observability", "stack-health", "infrastructure"],
   "templating": {
     "list": []
   },

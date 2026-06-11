@@ -38,6 +38,7 @@ in `config/otel/collector.yaml`, `config/alloy/config.river`, and Grafana dataso
 under `./data/`. There is no object storage backend configured.
 
 **Impact:**
+
 - Data is lost if the host disk fails
 - No horizontal scaling
 - Tempo local storage is limited by disk capacity

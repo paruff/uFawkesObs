@@ -19,15 +19,15 @@ Load this skill before writing any Prometheus rule file or ad-hoc query.
 
 Before writing any query, identify the metric type. Getting this wrong silently produces wrong data.
 
-| Suffix pattern | Type | Correct function |
-|---------------|------|-----------------|
-| `_total` | Counter | `rate()`, `increase()` |
-| `_created` | Counter (timestamp) | Usually skip |
-| `_bytes_total`, `_requests_total` | Counter | `rate()`, `increase()` |
-| `_seconds` (no `_total`) | Gauge or histogram | `avg_over_time()`, direct reference |
-| `_ratio`, `_fraction` | Gauge | Direct reference or `avg_over_time()` |
-| `_bucket`, `_sum`, `_count` | Histogram | `histogram_quantile()` with `rate()` on _bucket |
-| `up` | Gauge (0 or 1) | Direct, `avg_over_time()` |
+| Suffix pattern                    | Type                | Correct function                                 |
+| --------------------------------- | ------------------- | ------------------------------------------------ |
+| `_total`                          | Counter             | `rate()`, `increase()`                           |
+| `_created`                        | Counter (timestamp) | Usually skip                                     |
+| `_bytes_total`, `_requests_total` | Counter             | `rate()`, `increase()`                           |
+| `_seconds` (no `_total`)          | Gauge or histogram  | `avg_over_time()`, direct reference              |
+| `_ratio`, `_fraction`             | Gauge               | Direct reference or `avg_over_time()`            |
+| `_bucket`, `_sum`, `_count`       | Histogram           | `histogram_quantile()` with `rate()` on \_bucket |
+| `up`                              | Gauge (0 or 1)      | Direct, `avg_over_time()`                        |
 
 **Critical:** `rate()` on a gauge returns meaningless results. It will not error — it will silently return wrong data.
 
@@ -40,7 +40,7 @@ Before writing any query, identify the metric type. Getting this wrong silently 
 ```yaml
 groups:
   - name: ufawkesobs.rules
-    interval: 60s        # Must match Prometheus scrape interval or longer
+    interval: 60s # Must match Prometheus scrape interval or longer
     rules:
       - record: job:request_rate5m:sum
         expr: sum(rate(http_requests_total[5m])) or vector(0)
@@ -86,6 +86,7 @@ expr: rate(http_requests_total[5m])
 ```
 
 Examples:
+
 - `job:http_request_rate5m:sum` — sum of request rate over 5m, per job
 - `job_service:deployments_total:rate5m` — deployment rate per job+service
 
@@ -122,12 +123,12 @@ groups:
 
 ### for: duration guidance
 
-| Scenario | Minimum `for:` |
-|---------|---------------|
-| Noisy metrics (request rates, error rates) | 5m |
-| Infrastructure health (up, memory, disk) | 2m |
-| Capacity alerts (disk filling) | 10m |
-| Critical path (data loss risk) | 1m |
+| Scenario                                   | Minimum `for:` |
+| ------------------------------------------ | -------------- |
+| Noisy metrics (request rates, error rates) | 5m             |
+| Infrastructure health (up, memory, disk)   | 2m             |
+| Capacity alerts (disk filling)             | 10m            |
+| Critical path (data loss risk)             | 1m             |
 
 Never use `for: 0s` on rate-based metrics — it will flap.
 
@@ -135,8 +136,8 @@ Never use `for: 0s` on rate-based metrics — it will flap.
 
 ```yaml
 labels:
-  severity: critical | warning | info   # Always one of these three
-  plane: ufawkesobs                      # Identifies the IDP plane
+  severity: critical | warning | info # Always one of these three
+  plane: ufawkesobs # Identifies the IDP plane
 
 annotations:
   summary: "One-line human-readable description"
@@ -151,6 +152,7 @@ annotations:
 These are the rules required for M1-03. Every rule in this file must have an `absent()` guard.
 
 Essential alert coverage:
+
 - OTel Collector down / absent
 - Prometheus down / absent (Prometheus can't alert on itself being down — use Alertmanager deadman)
 - Grafana down / absent
@@ -186,6 +188,7 @@ promtool check rules config/prometheus/rules/<file>.yml
 ```
 
 Must pass before any PR. Also validate the full config:
+
 ```bash
 promtool check config config/prometheus/prometheus.yaml
 ```

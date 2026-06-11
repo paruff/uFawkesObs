@@ -29,7 +29,7 @@ initialize_test() {
     echo -e "${BLUE}🚀 Initializing Dashboard Validation E2E Test${NC}"
     echo "Test ID: OBS-E2E-DASHBOARD-VALIDATION-001"
     echo "Timestamp: ${TIMESTAMP}"
-    
+
     mkdir -p "${REPORT_DIR}"
     exec > >(tee -a "${LOG_FILE}") 2>&1
 }
@@ -44,7 +44,7 @@ record_test_result() {
     local result=$2
     local duration=$3
     local message=$4
-    
+
     if [ "$result" = "PASS" ]; then
         ((TESTS_PASSED++))
         echo -e "${GREEN}✅ PASS${NC} [${test_id}] ${message} (${duration}s)"
@@ -52,7 +52,7 @@ record_test_result() {
         ((TESTS_FAILED++))
         echo -e "${RED}❌ FAIL${NC} [${test_id}] ${message} (${duration}s)"
     fi
-    
+
     echo "TEST: ${test_id} | RESULT: ${result} | DURATION: ${duration}s | MESSAGE: ${message}" \
         >> "${REPORT_DIR}/test-results.csv"
 }
@@ -63,13 +63,13 @@ check_infrastructure_ready() {
 
     start=$(date +%s)
     local test_id="INFRA-READY"
-    
+
     echo -e "\n${BLUE}[${test_id}] Checking Infrastructure${NC}"
-    
+
     # Check all required services
     local services=("prometheus" "loki" "tempo" "grafana" "alloy" "otel-collector")
     local ready=0
-    
+
     for service in "${services[@]}"; do
         if docker compose ps "$service" | grep -q "Up"; then
             echo -e "  ${GREEN}✓${NC} $service is running"
@@ -78,7 +78,7 @@ check_infrastructure_ready() {
             echo -e "  ${RED}✗${NC} $service is not running"
         fi
     done
-    
+
     if [[ $ready -eq ${#services[@]} ]]; then
         echo -e "${GREEN}✓ All services running${NC}"
         record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "All services ready"
@@ -96,18 +96,18 @@ check_dashboards_provisioned() {
 
     start=$(date +%s)
     local test_id="DASHBOARD-PROVISIONING"
-    
+
     echo -e "\n${BLUE}[${test_id}] Checking Dashboard Provisioning${NC}"
-    
+
     # Query Grafana API for dashboards
     local dashboards
     dashboards=$(curl -s -u "${GRAFANA_USER}:${GRAFANA_PASS}" "http://localhost:3000/api/search?type=dash-db" 2>/dev/null || echo "[]")
-    
+
     local dashboard_count
     dashboard_count=$(echo "$dashboards" | jq '. | length' 2>/dev/null || echo "0")
-    
+
     echo "  Found $dashboard_count dashboards in Grafana"
-    
+
     # Check for expected dashboards
     local expected_dashboards=(
         "observability-stack-health"
@@ -115,7 +115,7 @@ check_dashboards_provisioned() {
         "infrastructure-overview"
         "iot-devices-mqtt"
     )
-    
+
     local found=0
     for expected_uid in "${expected_dashboards[@]}"; do
         if echo "$dashboards" | jq -e ".[] | select(.uid==\"$expected_uid\")" > /dev/null 2>&1; then
@@ -125,7 +125,7 @@ check_dashboards_provisioned() {
             echo -e "  ${YELLOW}⚠${NC} Missing dashboard: $expected_uid"
         fi
     done
-    
+
     if [[ $found -eq ${#expected_dashboards[@]} ]]; then
         echo -e "${GREEN}✓ All expected dashboards provisioned${NC}"
         record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "All dashboards found"
@@ -143,24 +143,24 @@ check_metrics_available() {
 
     start=$(date +%s)
     local test_id="METRICS-DATA"
-    
+
     echo -e "\n${BLUE}[${test_id}] Checking Metrics Availability${NC}"
-    
+
     # Check for OTel Collector metrics
     local otel_metrics
     otel_metrics=$(curl -s "http://localhost:9090/api/v1/query?query=up{job=\"otel-collector\"}" 2>/dev/null | jq '.data.result | length' || echo "0")
     echo "  OTel Collector metrics: $otel_metrics series"
-    
+
     # Check for Prometheus self-metrics
     local prometheus_metrics
     prometheus_metrics=$(curl -s "http://localhost:9090/api/v1/query?query=up{job=\"prometheus\"}" 2>/dev/null | jq '.data.result | length' || echo "0")
     echo "  Prometheus self-metrics: $prometheus_metrics series"
-    
+
     # Check for Alertmanager metrics
     local alertmanager_metrics
     alertmanager_metrics=$(curl -s "http://localhost:9090/api/v1/query?query=up{job=\"alertmanager\"}" 2>/dev/null | jq '.data.result | length' || echo "0")
     echo "  Alertmanager metrics: $alertmanager_metrics series"
-    
+
     if [[ $prometheus_metrics -gt 0 ]]; then
         echo -e "${GREEN}✓ Prometheus metrics available${NC}"
         record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Metrics available"
@@ -178,34 +178,34 @@ check_logs_available() {
 
     start=$(date +%s)
     local test_id="LOGS-DATA"
-    
+
     echo -e "\n${BLUE}[${test_id}] Checking Logs Availability (Alloy → Loki)${NC}"
-    
+
     # Check for docker logs in Loki
     local now
     now=$(date +%s)000000000
     local ten_min_ago
     ten_min_ago=$(($(date +%s) - 600))000000000
-    
+
     local logs_response
     logs_response=$(curl -s -G "http://localhost:3100/loki/api/v1/query_range" \
         --data-urlencode 'query={job="docker"}' \
         --data-urlencode "start=$ten_min_ago" \
         --data-urlencode "end=$now" \
         --data-urlencode "limit=10" 2>/dev/null || echo '{"data":{"result":[]}}')
-    
+
     local log_streams
     log_streams=$(echo "$logs_response" | jq '.data.result | length' 2>/dev/null || echo "0")
     echo "  Docker log streams from Alloy: $log_streams"
-    
+
     # Check for compose_service labels
     local services_response
     services_response=$(curl -s "http://localhost:3100/loki/api/v1/label/compose_service/values" 2>/dev/null || echo '{"data":[]}')
-    
+
     local service_count
     service_count=$(echo "$services_response" | jq '.data | length' 2>/dev/null || echo "0")
     echo "  Services with logs: $service_count"
-    
+
     if [[ $log_streams -gt 0 ]]; then
         echo -e "${GREEN}✓ Logs available in Loki from Alloy${NC}"
         record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Logs available"
@@ -223,16 +223,16 @@ check_traces_available() {
 
     start=$(date +%s)
     local test_id="TRACES-DATA"
-    
+
     echo -e "\n${BLUE}[${test_id}] Checking Traces Availability${NC}"
-    
+
     # Check Tempo ready endpoint
     local tempo_ready
     tempo_ready=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:3200/ready" 2>/dev/null)
-    
+
     if [[ "$tempo_ready" == "200" ]]; then
         echo -e "  ${GREEN}✓${NC} Tempo is ready"
-        
+
         # Try to query for traces (may be empty but endpoint should work)
         curl -s "http://localhost:3200/api/traces?limit=10" > /dev/null 2>&1 || true
         echo -e "${GREEN}✓ Traces endpoint accessible${NC}"
@@ -251,20 +251,20 @@ test_dashboard_metrics_rendering() {
 
     start=$(date +%s)
     local test_id="DASHBOARD-METRICS-RENDER"
-    
+
     echo -e "\n${BLUE}[${test_id}] Testing Dashboard Metrics Rendering${NC}"
-    
+
     # Fetch observability-stack-health dashboard
     local dashboard
     dashboard=$(curl -s -u "${GRAFANA_USER}:${GRAFANA_PASS}" "http://localhost:3000/api/dashboards/uid/observability-stack-health" 2>/dev/null || echo '{}')
-    
+
     local title
     title=$(echo "$dashboard" | jq -r '.dashboard.title' 2>/dev/null || echo "")
-    
+
     if [[ "$title" == "Observability Stack Health" ]]; then
         local panel_count
         panel_count=$(echo "$dashboard" | jq '.dashboard.panels | length' 2>/dev/null || echo "0")
-        
+
         echo "  Dashboard loaded with $panel_count panels"
         echo -e "${GREEN}✓ Dashboard renders correctly${NC}"
         record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Dashboard renders"
@@ -282,17 +282,17 @@ test_dashboard_logs_queries() {
 
     start=$(date +%s)
     local test_id="DASHBOARD-LOGS-QUERIES"
-    
+
     echo -e "\n${BLUE}[${test_id}] Testing Dashboard Log Queries${NC}"
-    
+
     # Fetch application-performance dashboard
     local dashboard
     dashboard=$(curl -s -u "${GRAFANA_USER}:${GRAFANA_PASS}" "http://localhost:3000/api/dashboards/uid/application-performance" 2>/dev/null || echo '{}')
-    
+
     # Check for Loki queries in dashboard
     local loki_targets
     loki_targets=$(echo "$dashboard" | jq '[.. | select(.datasourceUid? == "loki")] | length' 2>/dev/null || echo "0")
-    
+
     if [[ "$loki_targets" -gt 0 ]]; then
         echo "  Dashboard has $loki_targets Loki targets"
         echo -e "${GREEN}✓ Dashboard has log queries${NC}"
@@ -311,21 +311,21 @@ test_trace_correlation() {
 
     start=$(date +%s)
     local test_id="TRACE-CORRELATION"
-    
+
     echo -e "\n${BLUE}[${test_id}] Testing Trace Correlation${NC}"
-    
+
     # Check datasources for trace correlation
     local datasources
     datasources=$(curl -s -u "${GRAFANA_USER}:${GRAFANA_PASS}" "http://localhost:3000/api/datasources" 2>/dev/null || echo '[]')
-    
+
     # Check Loki datasource for derivedFields
     local loki_derived
     loki_derived=$(echo "$datasources" | jq '[.[] | select(.type=="loki" and .jsonData.derivedFields)] | length' 2>/dev/null || echo "0")
-    
+
     # Check Tempo datasource for service map
     local tempo_services
     tempo_services=$(echo "$datasources" | jq '[.[] | select(.type=="tempo" and .jsonData.serviceMap)] | length' 2>/dev/null || echo "0")
-    
+
     if [[ $loki_derived -gt 0 && $tempo_services -gt 0 ]]; then
         echo "  Loki derivedFields: $loki_derived, Tempo serviceMap: $tempo_services"
         echo -e "${GREEN}✓ Trace correlation configured${NC}"
@@ -344,15 +344,15 @@ generate_summary_report() {
 
     end_time=$(date +%s)
     local total_duration=$((end_time - START_TIME))
-    
+
     local total=$((TESTS_PASSED + TESTS_FAILED))
-    
+
     cat > "${REPORT_DIR}/summary.md" << EOF
 # Dashboard Validation E2E Test - Summary
 
-**Test ID:** OBS-E2E-DASHBOARD-VALIDATION-001  
-**Timestamp:** ${TIMESTAMP}  
-**Duration:** ${total_duration}s  
+**Test ID:** OBS-E2E-DASHBOARD-VALIDATION-001
+**Timestamp:** ${TIMESTAMP}
+**Duration:** ${total_duration}s
 
 ## Results
 
@@ -365,7 +365,7 @@ generate_summary_report() {
 See full results in: ${REPORT_DIR}/test-results.csv
 
 EOF
-    
+
     if [[ ${TESTS_FAILED} -eq 0 ]]; then
         cat >> "${REPORT_DIR}/summary.md" << EOF
 
@@ -398,33 +398,33 @@ EOF
 # Main test execution
 main() {
     initialize_test
-    
+
     # Infrastructure checks
     check_infrastructure_ready || true
     check_dashboards_provisioned || true  # Warning only
-    
+
     # Data availability checks
     check_metrics_available || true
     check_logs_available || true
     check_traces_available || true
-    
+
     # Dashboard validation
     test_dashboard_metrics_rendering || true
     test_dashboard_logs_queries || true
     test_trace_correlation || true
-    
+
     # Generate report
     echo ""
     echo "========================================"
     generate_summary_report || true
     echo "========================================"
-    
+
     cat "${REPORT_DIR}/summary.md"
-    
+
     echo ""
     echo "Report saved to: ${REPORT_DIR}/summary.md"
     echo "Full logs: ${LOG_FILE}"
-    
+
     # Exit with failure if any tests failed
     if [[ ${TESTS_FAILED} -gt 0 ]]; then
         exit 1

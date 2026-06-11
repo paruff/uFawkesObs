@@ -13,6 +13,7 @@ It is a Docker Compose-based observability platform that provides the OpenTeleme
 uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap.
 
 **Tech Stack:**
+
 - **OpenTelemetry Collector** (v0.120.0) - Telemetry data collection and routing
 - **Prometheus** (v2.55.1) - Metrics storage and querying
 - **Alertmanager** (v0.27.0) - Alert management and routing
@@ -61,22 +62,27 @@ In this architecture, uFawkesObs provides the telemetry substrate; higher-level 
 ### Installation
 
 1. **Clone and enter:**
+
    ```bash
    git clone https://github.com/paruff/uFawkesObs.git
    cd uFawkesObs
    ```
 
 2. **Create and configure environment variables:**
+
    ```bash
    cp .env.example .env
    $EDITOR .env
    ```
+
    Set both `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` in `.env`.
 
 3. **Create data directories and start the stack:**
+
    ```bash
    make init && make up
    ```
+
    `make init` creates each `data/` directory with `755` permissions and prints
    the correct `chown` commands for your OS if a container cannot write to a
    directory. See [docs/production-hardening.md](docs/production-hardening.md)
@@ -91,30 +97,31 @@ In this architecture, uFawkesObs provides the telemetry substrate; higher-level 
 
 ## Ports
 
-| Service                   | Port  | Purpose                      | Access URL                      |
-|---------------------------|-------|------------------------------|---------------------------------|
-| **Grafana**               | 3000  | Visualization UI             | http://localhost:3000           |
-| **Loki**                  | 3100  | Log aggregation HTTP API     | http://localhost:3100           |
-| **Tempo**                 | 3200  | Tempo HTTP API               | http://localhost:3200           |
-| **OpenTelemetry**         | 4317  | OTLP gRPC receiver           | localhost:4317                  |
-| **OpenTelemetry**         | 4318  | OTLP HTTP receiver           | localhost:4318                  |
-| **OpenTelemetry**         | 8888  | Collector telemetry metrics  | http://localhost:8888/metrics   |
-| **OpenTelemetry**         | 8889  | App metrics (Prometheus)     | http://localhost:8889/metrics   |
-| **Prometheus**            | 9090  | Metrics storage & query UI   | http://localhost:9090           |
-| **Alertmanager**          | 9093  | Alert management UI          | http://localhost:9093           |
-| **Tempo**                 | 9095  | Tempo gRPC                   | localhost:9095                  |
-| **Loki**                  | 9096  | Loki gRPC                    | localhost:9096                  |
-| **Tempo**                 | 9411  | Zipkin receiver              | http://localhost:9411           |
-| **Alloy**                 | 12345 | Alloy HTTP/metrics           | http://localhost:12345          |
-| **Tempo**                 | 14250 | Jaeger gRPC receiver         | localhost:14250                 |
-| **Tempo**                 | 14268 | Jaeger HTTP receiver         | http://localhost:14268          |
-| **Telemetry Generator**   | 5001  | Demo app (apps profile)      | http://localhost:5001           |
+| Service                 | Port  | Purpose                     | Access URL                    |
+| ----------------------- | ----- | --------------------------- | ----------------------------- |
+| **Grafana**             | 3000  | Visualization UI            | http://localhost:3000         |
+| **Loki**                | 3100  | Log aggregation HTTP API    | http://localhost:3100         |
+| **Tempo**               | 3200  | Tempo HTTP API              | http://localhost:3200         |
+| **OpenTelemetry**       | 4317  | OTLP gRPC receiver          | localhost:4317                |
+| **OpenTelemetry**       | 4318  | OTLP HTTP receiver          | localhost:4318                |
+| **OpenTelemetry**       | 8888  | Collector telemetry metrics | http://localhost:8888/metrics |
+| **OpenTelemetry**       | 8889  | App metrics (Prometheus)    | http://localhost:8889/metrics |
+| **Prometheus**          | 9090  | Metrics storage & query UI  | http://localhost:9090         |
+| **Alertmanager**        | 9093  | Alert management UI         | http://localhost:9093         |
+| **Tempo**               | 9095  | Tempo gRPC                  | localhost:9095                |
+| **Loki**                | 9096  | Loki gRPC                   | localhost:9096                |
+| **Tempo**               | 9411  | Zipkin receiver             | http://localhost:9411         |
+| **Alloy**               | 12345 | Alloy HTTP/metrics          | http://localhost:12345        |
+| **Tempo**               | 14250 | Jaeger gRPC receiver        | localhost:14250               |
+| **Tempo**               | 14268 | Jaeger HTTP receiver        | http://localhost:14268        |
+| **Telemetry Generator** | 5001  | Demo app (apps profile)     | http://localhost:5001         |
 
 ---
 
 ## Access & Credentials
 
 ### Grafana Dashboard
+
 - **URL:** http://localhost:3000
 - **Username:** `GRAFANA_ADMIN_USER` from `.env` (default in `.env.example`: `admin`)
 - **Password:** `GRAFANA_ADMIN_PASSWORD` from `.env` (validated by `make check-env`)
@@ -122,6 +129,7 @@ In this architecture, uFawkesObs provides the telemetry substrate; higher-level 
 The Prometheus, Tempo, Loki, and Alertmanager datasources are pre-configured and ready to use.
 
 ### Alertmanager
+
 - **URL:** http://localhost:9093
 - Pre-configured with webhook receivers for testing
 - Alert rules automatically loaded from Prometheus
@@ -168,11 +176,12 @@ curl -s http://localhost:9093/api/v2/alerts | jq .
 The system uses Docker Compose profiles to control which services run:
 
 | Profile | Services                                                              | Purpose                  |
-|---------|-----------------------------------------------------------------------|--------------------------|
+| ------- | --------------------------------------------------------------------- | ------------------------ |
 | `core`  | otel-collector, tempo, loki, alloy, alertmanager, prometheus, grafana | Base observability stack |
 | `apps`  | telemetry-generator                                                   | Demo telemetry generator |
 
 **To start with a specific profile:**
+
 ```bash
 make up
 
@@ -265,14 +274,14 @@ docker compose down -v
 
 ## Documentation
 
-| Document | Description |
-|---|---|
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How services connect and depend on each other |
-| [docs/production-hardening.md](docs/production-hardening.md) | Correct permissions, TLS, secret management, when NOT to use this tool |
-| [docs/multi-stack-integration.md](docs/multi-stack-integration.md) | Connecting other Docker Compose applications |
-| [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) | Known issues and workarounds |
-| [docs/CHANGE_IMPACT_MAP.md](docs/CHANGE_IMPACT_MAP.md) | What breaks when configs change |
-| [docs/PROMPT_LIBRARY.md](docs/PROMPT_LIBRARY.md) | Tested prompt templates for common tasks |
+| Document                                                           | Description                                                            |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)                       | How services connect and depend on each other                          |
+| [docs/production-hardening.md](docs/production-hardening.md)       | Correct permissions, TLS, secret management, when NOT to use this tool |
+| [docs/multi-stack-integration.md](docs/multi-stack-integration.md) | Connecting other Docker Compose applications                           |
+| [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)             | Known issues and workarounds                                           |
+| [docs/CHANGE_IMPACT_MAP.md](docs/CHANGE_IMPACT_MAP.md)             | What breaks when configs change                                        |
+| [docs/PROMPT_LIBRARY.md](docs/PROMPT_LIBRARY.md)                   | Tested prompt templates for common tasks                               |
 
 ---
 
@@ -281,7 +290,9 @@ docker compose down -v
 ## Troubleshooting
 
 ### Ports Already in Use
+
 If you see port binding errors:
+
 ```bash
 # Check what's using the ports
 lsof -i :3000
@@ -291,6 +302,7 @@ lsof -i :9090
 ```
 
 ### Permission Denied on Data Directories
+
 Run `make init` first — it creates each directory with `755` permissions and
 prints the correct `chown` commands for your OS:
 
@@ -316,6 +328,7 @@ sudo chown -R 10001 data/loki data/tempo               # Loki/Tempo UID
 > for secure alternatives.
 
 ### Containers Won't Start
+
 ```bash
 # Check logs
 docker compose logs
@@ -325,6 +338,7 @@ docker compose logs grafana
 ```
 
 ### Reset Everything
+
 ```bash
 # Stop and remove everything
 docker compose down -v
@@ -352,6 +366,7 @@ make up
 The repository includes comprehensive unit tests that validate configuration files for all observability components. These tests catch configuration errors early in the development cycle, before deployment.
 
 **Validated components:**
+
 - OpenTelemetry Collector
 - Prometheus
 - Grafana
@@ -376,6 +391,7 @@ pytest tests/unit/test_loki_config_validation.py
 ```
 
 **What is validated:**
+
 - Valid YAML syntax
 - Required sections and fields
 - Port numbers in valid range
@@ -394,12 +410,15 @@ For detailed documentation, see [tests/unit/README.md](tests/unit/README.md)
 ## Observability Acceptance Test
 
 ### Purpose
+
 This automated test validates that the complete observability pipeline is functioning correctly:
+
 1. **OpenTelemetry Collector** → Exports self-telemetry metrics
 2. **Prometheus** → Scrapes and stores OTel Collector metrics
 3. **Grafana** → Queries and visualizes metrics
 
 ### Quick Start
+
 ```bash
 # Ensure services are running
 make up
@@ -410,6 +429,7 @@ sleep 30
 ```
 
 ### Expected Output
+
 ```
 ✅ OTel Collector healthy (0s)
 ✅ Prometheus scraping OTel metrics (1s, 1 metrics)
@@ -452,6 +472,7 @@ The E2E runner provides additional control over test execution:
 ### Test Results
 
 Test results are saved in `tests/acceptance/observability-pipeline/reports/` with timestamped directories containing:
+
 - `summary.md` - Human-readable test report
 - `report.json` - Machine-readable results for CI/CD
 - `e2e-test-evidence.md` - Detailed test evidence
@@ -508,6 +529,7 @@ jobs:
 ## Development Philosophy
 
 This project follows these principles:
+
 - ✅ **GitOps at the configuration layer:** all desired state is in version control and applied declaratively. In this release, deployment reconciliation is push-triggered (via `make up` or CI). Pull-based reconciliation (continuous sync from git to runtime state) requires the Helm + ArgoCD track.
 - ✅ **Reproducible:** Can be rebuilt from zero with `git clone` + `make up`
 - ✅ **No manual steps:** Zero UI clicks or CLI wizardry required
@@ -528,13 +550,13 @@ This project follows these principles:
 
 uFawkesObs is part of the [uFawkes](https://ufawkes.dev) platform engineering ecosystem:
 
-| Stack | Description | Link |
-|-------|-------------|------|
-| **uFawkesObs** | Observability — Prometheus, Grafana, AI dashboards | [GitHub](https://github.com/paruff/ufawkesobs) |
-| **uFawkesPipe** | CI/CD — Jenkins, Buildpacks, DevSecOps | [GitHub](https://github.com/paruff/ufawkespipe) |
+| Stack           | Description                                          | Link                                            |
+| --------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| **uFawkesObs**  | Observability — Prometheus, Grafana, AI dashboards   | [GitHub](https://github.com/paruff/ufawkesobs)  |
+| **uFawkesPipe** | CI/CD — Jenkins, Buildpacks, DevSecOps               | [GitHub](https://github.com/paruff/ufawkespipe) |
 | **uFawkesDORA** | DORA metrics — dashboards, VSM, delivery performance | [GitHub](https://github.com/paruff/ufawkesdora) |
-| **uFawkesSec** | Security — policy-as-code, supply chain, guardrails | [GitHub](https://github.com/paruff/ufawkessec) |
-| **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
-| **uFawkesAI** | AI agent templates — golden path scaffolding | [GitHub](https://github.com/paruff/ufawkesai) |
+| **uFawkesSec**  | Security — policy-as-code, supply chain, guardrails  | [GitHub](https://github.com/paruff/ufawkessec)  |
+| **uFawkesDevX** | Developer experience — golden paths, IDP templates   | [GitHub](https://github.com/paruff/ufawkesdevx) |
+| **uFawkesAI**   | AI agent templates — golden path scaffolding         | [GitHub](https://github.com/paruff/ufawkesai)   |
 
 **Product Suite Roadmap**: [fawkes/ROADMAP.md](https://github.com/paruff/fawkes/blob/main/ROADMAP.md)

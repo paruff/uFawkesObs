@@ -23,7 +23,7 @@ DASHBOARD VALIDATION
 ─────────────────────────────────────────────────────────────────────────────
 Dashboards Tested:      4
   ✅ Observability Stack Health
-  ✅ Application Performance  
+  ✅ Application Performance
   ✅ Infrastructure Overview
   ✅ IoT Devices & MQTT
 

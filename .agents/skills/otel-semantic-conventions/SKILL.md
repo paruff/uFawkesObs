@@ -9,46 +9,47 @@ compatibility: opencode
 
 ## Purpose
 
-OpenTelemetry semantic convention reference for uFawkesObs, focused on the conventions needed for Wave 5 (AI observability). Covers the `gen_ai.*` metric and span attribute namespace, which is required for OBS-AI-* issues.
+OpenTelemetry semantic convention reference for uFawkesObs, focused on the conventions needed for Wave 5 (AI observability). Covers the `gen_ai.*` metric and span attribute namespace, which is required for OBS-AI-\* issues.
 
 Load this skill for any task involving AI/LLM telemetry instrumentation or the `gen_ai.*` metric namespace.
 
-**Dependency:** Wave 5 requires OTel Collector 0.120+ (already at target). Verify via `component-versions` skill before implementing any gen_ai.* pipeline work.
+**Dependency:** Wave 5 requires OTel Collector 0.120+ (already at target). Verify via `component-versions` skill before implementing any gen_ai.\* pipeline work.
 
 ---
 
-## gen_ai.* — the AI/LLM semantic conventions
+## gen_ai.\* — the AI/LLM semantic conventions
 
 These are the OTel semantic conventions for generative AI systems. They define the standard attribute names for LLM spans and metrics.
 
 ### Span attributes (traces)
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| `gen_ai.system` | string | LLM provider: `openai`, `anthropic`, `aws.bedrock`, `vertex_ai` |
-| `gen_ai.request.model` | string | Model requested: `gpt-4`, `claude-3-opus`, etc. |
-| `gen_ai.response.model` | string | Actual model that responded (may differ from request) |
-| `gen_ai.request.max_tokens` | int | Max tokens requested |
-| `gen_ai.usage.input_tokens` | int | Tokens in the prompt |
-| `gen_ai.usage.output_tokens` | int | Tokens in the completion |
-| `gen_ai.operation.name` | string | `chat`, `text_completion`, `embeddings` |
-| `gen_ai.request.temperature` | float | Temperature setting |
-| `gen_ai.request.top_p` | float | Top-p setting |
-| `gen_ai.response.finish_reasons` | string[] | `stop`, `length`, `content_filter` |
-| `gen_ai.response.id` | string | Response ID from provider |
+| Attribute                        | Type     | Description                                                     |
+| -------------------------------- | -------- | --------------------------------------------------------------- |
+| `gen_ai.system`                  | string   | LLM provider: `openai`, `anthropic`, `aws.bedrock`, `vertex_ai` |
+| `gen_ai.request.model`           | string   | Model requested: `gpt-4`, `claude-3-opus`, etc.                 |
+| `gen_ai.response.model`          | string   | Actual model that responded (may differ from request)           |
+| `gen_ai.request.max_tokens`      | int      | Max tokens requested                                            |
+| `gen_ai.usage.input_tokens`      | int      | Tokens in the prompt                                            |
+| `gen_ai.usage.output_tokens`     | int      | Tokens in the completion                                        |
+| `gen_ai.operation.name`          | string   | `chat`, `text_completion`, `embeddings`                         |
+| `gen_ai.request.temperature`     | float    | Temperature setting                                             |
+| `gen_ai.request.top_p`           | float    | Top-p setting                                                   |
+| `gen_ai.response.finish_reasons` | string[] | `stop`, `length`, `content_filter`                              |
+| `gen_ai.response.id`             | string   | Response ID from provider                                       |
 
 ### Metric names (metrics)
 
-| Metric | Type | Unit | Description |
-|--------|------|------|-------------|
-| `gen_ai.client.token.usage` | Histogram | `{token}` | Distribution of token usage per request |
-| `gen_ai.client.operation.duration` | Histogram | `s` | Duration of LLM operations |
-| `gen_ai.server.request.duration` | Histogram | `s` | Server-side request duration (if instrumenting the server) |
-| `gen_ai.server.time_to_first_token` | Histogram | `s` | Latency to first token in streaming responses |
+| Metric                              | Type      | Unit      | Description                                                |
+| ----------------------------------- | --------- | --------- | ---------------------------------------------------------- |
+| `gen_ai.client.token.usage`         | Histogram | `{token}` | Distribution of token usage per request                    |
+| `gen_ai.client.operation.duration`  | Histogram | `s`       | Duration of LLM operations                                 |
+| `gen_ai.server.request.duration`    | Histogram | `s`       | Server-side request duration (if instrumenting the server) |
+| `gen_ai.server.time_to_first_token` | Histogram | `s`       | Latency to first token in streaming responses              |
 
 ### Standard labels on gen_ai metrics
 
 Every gen_ai metric will carry these labels:
+
 - `gen_ai.system` — the LLM provider
 - `gen_ai.request.model` — the model name
 - `gen_ai.operation.name` — the operation type
@@ -89,7 +90,7 @@ sum(rate(gen_ai_client_operation_duration_count{error_type!=""}[5m]))
 
 ---
 
-## OTel Collector config for gen_ai.* pipeline (Wave 5)
+## OTel Collector config for gen_ai.\* pipeline (Wave 5)
 
 Add a **separate** pipeline — do not modify the default metrics pipeline:
 
@@ -123,11 +124,11 @@ service:
 
 The `uFawkesAI` plane instruments agents that call LLMs. These resource attributes should be present on spans from uFawkesAI:
 
-| Resource attribute | Expected value |
-|-------------------|----------------|
-| `service.name` | The agent name (e.g. `build-agent`, `ux-agent`) |
-| `service.version` | The agent version or commit SHA |
-| `deployment.environment` | `development`, `staging`, `production` |
+| Resource attribute       | Expected value                                  |
+| ------------------------ | ----------------------------------------------- |
+| `service.name`           | The agent name (e.g. `build-agent`, `ux-agent`) |
+| `service.version`        | The agent version or commit SHA                 |
+| `deployment.environment` | `development`, `staging`, `production`          |
 
 Use these in dashboard filters and PromQL label selectors when building the AI capabilities dashboard.
 

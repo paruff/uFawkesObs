@@ -22,11 +22,11 @@ Export a dashboard from Grafana UI: Dashboard → Share → Export → Save to f
 
 ## Datasource UIDs (always use these)
 
-| Backend | UID |
-|---|---|
+| Backend    | UID          |
+| ---------- | ------------ |
 | Prometheus | `prometheus` |
-| Loki | `loki` |
-| Tempo | `tempo` |
+| Loki       | `loki`       |
+| Tempo      | `tempo`      |
 
 ## Dashboard JSON Skeleton
 
@@ -45,16 +45,16 @@ Export a dashboard from Grafana UI: Dashboard → Share → Export → Save to f
 
 ## Panel Type Reference
 
-| Panel | Use for |
-|---|---|
-| `timeseries` | Rate, latency, resource usage over time |
-| `stat` | Single current value (error rate %, uptime) |
-| `gauge` | Single value with thresholds |
-| `table` | Multi-column data, top-N lists |
-| `logs` | Loki log streams |
-| `traces` | Tempo trace search |
-| `alertlist` | Firing Prometheus alerts |
-| `text` | Markdown annotations, links |
+| Panel        | Use for                                     |
+| ------------ | ------------------------------------------- |
+| `timeseries` | Rate, latency, resource usage over time     |
+| `stat`       | Single current value (error rate %, uptime) |
+| `gauge`      | Single value with thresholds                |
+| `table`      | Multi-column data, top-N lists              |
+| `logs`       | Loki log streams                            |
+| `traces`     | Tempo trace search                          |
+| `alertlist`  | Firing Prometheus alerts                    |
+| `text`       | Markdown annotations, links                 |
 
 ## PromQL Query Patterns
 
@@ -65,7 +65,7 @@ sum(rate(metric_total{job="$service"}[$__rate_interval])) by (label)
 # Histogram quantile
 histogram_quantile(0.95, sum(rate(metric_bucket{job="$service"}[$__rate_interval])) by (le))
 
-# Ratio as percentage  
+# Ratio as percentage
 sum(rate(errors_total[5m])) / sum(rate(requests_total[5m])) * 100
 
 # Use $__rate_interval instead of hardcoded [5m] — Grafana sets it automatically
@@ -133,10 +133,10 @@ curl -s -X POST http://admin:${GRAFANA_ADMIN_PASSWORD}@localhost:3000/api/admin/
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---|---|
-| Dashboard saved in UI but not in `dashboards/` | Export JSON → commit to repo |
-| Hardcoded datasource name instead of UID | Replace with `{"uid": "prometheus"}` etc. |
-| `[5m]` hardcoded in query | Replace with `[$__rate_interval]` |
-| No `$service` variable | Add to templating section |
-| High-cardinality label in `by()` clause | Remove or aggregate more broadly |
+| Mistake                                        | Fix                                       |
+| ---------------------------------------------- | ----------------------------------------- |
+| Dashboard saved in UI but not in `dashboards/` | Export JSON → commit to repo              |
+| Hardcoded datasource name instead of UID       | Replace with `{"uid": "prometheus"}` etc. |
+| `[5m]` hardcoded in query                      | Replace with `[$__rate_interval]`         |
+| No `$service` variable                         | Add to templating section                 |
+| High-cardinality label in `by()` clause        | Remove or aggregate more broadly          |

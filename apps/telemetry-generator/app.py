@@ -81,31 +81,31 @@ def generate():
     """Generate telemetry: trace, logs, and metrics."""
     with tracer.start_as_current_span("generate_telemetry") as span:
         start_time = time.time()
-        
+
         # Add span attributes
         operation_id = random.randint(1000, 9999)
         span.set_attribute("operation.id", operation_id)
         span.set_attribute("operation.type", "generate")
-        
+
         # Generate logs
         logger.info(
             f"Processing request {operation_id}",
             extra={"operation.id": operation_id, "status": "started"}
         )
-        
+
         # Simulate work
         duration = random.uniform(0.01, 0.1)
         time.sleep(duration)
-        
+
         # Record metrics
         request_counter.add(1, {"endpoint": "/generate", "status": "success"})
         processing_time.record(duration, {"endpoint": "/generate"})
-        
+
         logger.info(
             f"Request {operation_id} completed",
             extra={"operation.id": operation_id, "status": "completed", "duration": duration}
         )
-        
+
         return jsonify({
             "operation_id": operation_id,
             "duration": duration,
@@ -120,7 +120,7 @@ def generate_error():
         span.set_attribute("error", True)
         logger.error("Intentional error generated for testing")
         request_counter.add(1, {"endpoint": "/error", "status": "error"})
-        
+
         return jsonify({"error": "Test error"}), 500
 
 @app.route("/slow")
@@ -129,15 +129,15 @@ def slow_request():
     with tracer.start_as_current_span("slow_request") as span:
         start_time = time.time()
         duration = random.uniform(1.0, 3.0)
-        
+
         span.set_attribute("duration", duration)
         logger.warning(f"Slow request detected: {duration:.2f}s")
-        
+
         time.sleep(duration)
-        
+
         request_counter.add(1, {"endpoint": "/slow", "status": "success"})
         processing_time.record(duration, {"endpoint": "/slow"})
-        
+
         return jsonify({"duration": duration})
 
 if __name__ == "__main__":

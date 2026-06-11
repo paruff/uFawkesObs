@@ -2,12 +2,12 @@
 
 ## TL;DR - Go Here Now
 
-| What You Want | URL |
-|---|---|
+| What You Want              | URL                                                               |
+| -------------------------- | ----------------------------------------------------------------- |
 | **Infrastructure Metrics** | http://localhost:3000 → Dashboards → "Observability Stack Health" |
-| **Container Logs** | http://localhost:3000 → Explore → Loki → Log Browser |
-| **System Health** | http://localhost:9090 (Prometheus) |
-| **Alerts** | http://localhost:3000 → Alerting → Alert rules |
+| **Container Logs**         | http://localhost:3000 → Explore → Loki → Log Browser              |
+| **System Health**          | http://localhost:9090 (Prometheus)                                |
+| **Alerts**                 | http://localhost:3000 → Alerting → Alert rules                    |
 
 ---
 
@@ -26,15 +26,18 @@
 ## Data Now Available
 
 ### 1. METRICS ✅
+
 **Source:** Prometheus
 **What:** Infrastructure metrics from observability stack
 **Targets (4 active):**
+
 - prometheus (self-monitoring)
 - otel-collector (collector internals)
 - otel-app-metrics (exported by collector)
 - alertmanager (alert system)
 
 **How to View:**
+
 ```
 Method 1: Dashboards
   Grafana → Dashboards → "Observability Stack Health"
@@ -46,10 +49,12 @@ Method 2: Query Directly
 ```
 
 ### 2. LOGS ✅
+
 **Source:** Docker containers via Grafana Alloy (v1.12.2)
 **What:** Stdout/stderr from all running containers
 
 **Containers Being Logged:**
+
 ```
 uFawkesObs Stack:
   - prometheus
@@ -62,6 +67,7 @@ uFawkesObs Stack:
 ```
 
 **How to View:**
+
 ```
 Grafana → Explore → Loki
 
@@ -73,11 +79,13 @@ Quick Filters:
 ```
 
 ### 3. TRACES ⚠️
+
 **Source:** Tempo (waiting for instrumentation)
 **Status:** Ready but empty
 **Requirement:** Code must emit OpenTelemetry spans
 
 **To Enable:**
+
 1. Add OpenTelemetry SDK to Media-Refinery Go code
 2. Initialize in main()
 3. Wrap operations with `tracer.Start()`
@@ -86,11 +94,13 @@ Quick Filters:
 See: [Instrumentation Guide](examples/media-refinery-integration.md)
 
 ### 4. ALERTS ✅
+
 **Source:** Alertmanager
 **What:** Pre-configured alert rules
 **Rules Defined:** See `config/prometheus/alerts.yml`
 
 **How to View:**
+
 ```
 Grafana → Alerting → Alert rules
 OR
@@ -134,33 +144,36 @@ Config is at `config/alloy/config.river` instead of `config/promtail/promtail.ya
 
 ## Port Reference
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Grafana | 3000 | Visualization UI |
-| Prometheus | 9090 | Query & scrape UI |
-| Loki | 3100 | Log API |
-| Tempo | 3200 | Trace API |
-| Alertmanager | 9093 | Alert UI |
-| OTel Collector | 4317/4318 | OTLP gRPC/HTTP |
-| Alloy | 12345 | Metrics/health check |
+| Service        | Port      | Purpose              |
+| -------------- | --------- | -------------------- |
+| Grafana        | 3000      | Visualization UI     |
+| Prometheus     | 9090      | Query & scrape UI    |
+| Loki           | 3100      | Log API              |
+| Tempo          | 3200      | Trace API            |
+| Alertmanager   | 9093      | Alert UI             |
+| OTel Collector | 4317/4318 | OTLP gRPC/HTTP       |
+| Alloy          | 12345     | Metrics/health check |
 
 ---
 
 ## Verification
 
 ### Check Prometheus Scraping
+
 ```bash
 curl http://localhost:9090/api/v1/targets
 # Should show 4 targets with health="up"
 ```
 
 ### Check Loki Receiving Logs
+
 ```bash
 curl http://localhost:3100/loki/api/v1/label/compose_service/values
 # Should show all 13 service names
 ```
 
 ### Check OTel Collector
+
 ```bash
 curl http://localhost:8888/metrics
 # Should show collector metrics
@@ -171,6 +184,7 @@ curl http://localhost:8888/metrics
 ## Common Queries
 
 ### Prometheus Queries
+
 ```promql
 # All targets
 up
@@ -186,6 +200,7 @@ alertmanager_alerts
 ```
 
 ### Loki Queries (LogQL)
+
 ```
 # All logs from media-refinery
 {compose_service="media-refinery"}
@@ -204,13 +219,13 @@ alertmanager_alerts
 
 ## What's Working vs What Needs Setup
 
-| Feature | Status | Action |
-|---------|--------|--------|
-| Metrics collection | ✅ Active | View in Grafana dashboards |
-| Log shipping | ✅ Active (FIXED) | Query in Loki explorer |
-| Trace collection | ⚠️ Ready/Empty | Add OTel SDK to code |
-| Alert rules | ✅ Configured | Check in Alerting section |
-| Multi-app support | ✅ Ready | Connect more stacks to observability-lab network |
+| Feature            | Status            | Action                                           |
+| ------------------ | ----------------- | ------------------------------------------------ |
+| Metrics collection | ✅ Active         | View in Grafana dashboards                       |
+| Log shipping       | ✅ Active (FIXED) | Query in Loki explorer                           |
+| Trace collection   | ⚠️ Ready/Empty    | Add OTel SDK to code                             |
+| Alert rules        | ✅ Configured     | Check in Alerting section                        |
+| Multi-app support  | ✅ Ready          | Connect more stacks to observability-lab network |
 
 ---
 
@@ -242,18 +257,20 @@ alertmanager_alerts
 ## Next Steps
 
 ### Now
+
 1. ✅ Open Grafana: http://localhost:3000
 2. ✅ View Dashboards → "Observability Stack Health"
 3. ✅ Explore Logs → Loki datasource
 4. ✅ Check alerts in Alerting menu
 
 ### This Week
+
 1. ⚠️ (Optional) Add OpenTelemetry SDK to Media-Refinery for traces
 2. ⚠️ (Optional) Create custom dashboards for app-specific metrics
 3. ⚠️ (Optional) Configure alert notifications via webhooks
 
 ### This Month
+
 1. ⚠️ (Optional) Add more applications to observability-lab network
 2. ⚠️ (Optional) Set up alerting to email/Slack/PagerDuty
 3. ⚠️ (Optional) Create runbooks for common alerts
-

@@ -7,6 +7,7 @@ applyTo: "compose.yaml,docker-compose*.yml,docker-compose*.yaml"
 # Docker Compose Instructions — uFawkesObs
 
 ## Read First
+
 - `AGENTS.md` → compose.yaml rules
 - `docs/CHANGE_IMPACT_MAP.md` — what breaks when services change
 
@@ -33,7 +34,15 @@ services:
   prometheus:
     image: prom/prometheus:v2.55.1
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9090/-/healthy",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

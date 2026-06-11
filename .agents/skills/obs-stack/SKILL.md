@@ -12,44 +12,44 @@ metadata:
 
 ## Service Versions and Ports
 
-| Service | Version | Internal port | Host port | Config file |
-|---|---|---|---|---|
-| OTel Collector | v0.103.1 | 4317/4318/8888/13133 | 4317/4318/8888/13133 | `config/otel-collector-config.yaml` |
-| Prometheus | v2.52.0 | 9090 | 9090 | `config/prometheus.yml` + `config/prometheus-rules/` |
-| Alertmanager | v0.27.0 | 9093 | 9093 | `config/alertmanager.yml` |
-| Tempo | v2.5.0 | 3200/9095 | 3200 | `config/tempo-config.yaml` |
-| Loki | v2.9.10 | 3100 | 3100 | `config/loki-config.yaml` |
-| Alloy | v1.12.2 | 12345 | 12345 | `config/alloy-config.alloy` |
-| Grafana | v10.4.5 | 3000 | 3000 | `config/grafana/` |
+| Service        | Version  | Internal port        | Host port            | Config file                                          |
+| -------------- | -------- | -------------------- | -------------------- | ---------------------------------------------------- |
+| OTel Collector | v0.103.1 | 4317/4318/8888/13133 | 4317/4318/8888/13133 | `config/otel-collector-config.yaml`                  |
+| Prometheus     | v2.52.0  | 9090                 | 9090                 | `config/prometheus.yml` + `config/prometheus-rules/` |
+| Alertmanager   | v0.27.0  | 9093                 | 9093                 | `config/alertmanager.yml`                            |
+| Tempo          | v2.5.0   | 3200/9095            | 3200                 | `config/tempo-config.yaml`                           |
+| Loki           | v2.9.10  | 3100                 | 3100                 | `config/loki-config.yaml`                            |
+| Alloy          | v1.12.2  | 12345                | 12345                | `config/alloy-config.alloy`                          |
+| Grafana        | v10.4.5  | 3000                 | 3000                 | `config/grafana/`                                    |
 
 ## Key Ports by Function
 
-| Port | Service | Purpose |
-|---|---|---|
-| 4318 | OTel Collector | OTLP HTTP receiver (traces, metrics, logs) |
-| 4317 | OTel Collector | OTLP gRPC receiver |
-| 8888 | OTel Collector | Self-monitoring metrics |
-| 13133 | OTel Collector | Health check endpoint |
-| 9090 | Prometheus | Query API + UI |
-| 9093 | Alertmanager | Alert routing UI + API |
-| 3200 | Tempo | Trace query API |
-| 3100 | Loki | Log query API |
-| 3000 | Grafana | UI + API |
+| Port  | Service        | Purpose                                    |
+| ----- | -------------- | ------------------------------------------ |
+| 4318  | OTel Collector | OTLP HTTP receiver (traces, metrics, logs) |
+| 4317  | OTel Collector | OTLP gRPC receiver                         |
+| 8888  | OTel Collector | Self-monitoring metrics                    |
+| 13133 | OTel Collector | Health check endpoint                      |
+| 9090  | Prometheus     | Query API + UI                             |
+| 9093  | Alertmanager   | Alert routing UI + API                     |
+| 3200  | Tempo          | Trace query API                            |
+| 3100  | Loki           | Log query API                              |
+| 3000  | Grafana        | UI + API                                   |
 
 ## OTel Collector Config Structure
 
 ```yaml
 receivers:
-  otlp:           # accepts OTLP from any service
+  otlp: # accepts OTLP from any service
     protocols:
       grpc: { endpoint: 0.0.0.0:4317 }
       http: { endpoint: 0.0.0.0:4318 }
-  prometheus:     # scrapes /metrics endpoints
+  prometheus: # scrapes /metrics endpoints
     config:
       scrape_configs: [...]
 
 processors:
-  batch: {}       # improves throughput
+  batch: {} # improves throughput
   memory_limiter: # prevents OOM
     limit_mib: 400
 
@@ -136,6 +136,7 @@ python main.py
 ```
 
 Verify it worked:
+
 - Metrics: `http://localhost:9090/graph?g0.expr=up{job="telemetry-generator"}`
 - Traces: Grafana → Explore → Tempo → search service=telemetry-generator
 - Logs: Grafana → Explore → Loki → `{service="telemetry-generator"}`
@@ -144,9 +145,9 @@ Verify it worked:
 
 Always use these UIDs in dashboard JSON:
 
-| Backend | UID |
-|---|---|
-| Prometheus | `prometheus` |
-| Loki | `loki` |
-| Tempo | `tempo` |
+| Backend      | UID            |
+| ------------ | -------------- |
+| Prometheus   | `prometheus`   |
+| Loki         | `loki`         |
+| Tempo        | `tempo`        |
 | Alertmanager | `alertmanager` |

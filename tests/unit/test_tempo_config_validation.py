@@ -35,7 +35,7 @@ class TestTempoConfigStructure:
         """Test that required sections are present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         required_sections = ['server', 'distributor', 'ingester', 'storage']
         for section in required_sections:
             assert section in config, \
@@ -49,7 +49,7 @@ class TestTempoServerConfig:
         """Test that http_listen_port is defined."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'http_listen_port' in config['server'], \
             "server.http_listen_port should be defined"
 
@@ -57,7 +57,7 @@ class TestTempoServerConfig:
         """Test that http_listen_port is a valid port number."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         port = config['server']['http_listen_port']
         assert isinstance(port, int), \
             "http_listen_port should be an integer"
@@ -68,7 +68,7 @@ class TestTempoServerConfig:
         """Test that grpc_listen_port is defined."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'grpc_listen_port' in config['server']:
             port = config['server']['grpc_listen_port']
             assert isinstance(port, int), \
@@ -80,7 +80,7 @@ class TestTempoServerConfig:
         """Test that log_level is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'log_level' in config['server']:
             log_level = config['server']['log_level']
             valid_levels = ['debug', 'info', 'warn', 'error']
@@ -95,7 +95,7 @@ class TestTempoDistributorConfig:
         """Test that receivers section exists in distributor."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'receivers' in config['distributor'], \
             "distributor.receivers should be present"
 
@@ -103,7 +103,7 @@ class TestTempoDistributorConfig:
         """Test that OTLP receiver is configured."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         receivers = config['distributor']['receivers']
         assert 'otlp' in receivers, \
             "OTLP receiver should be configured in distributor"
@@ -112,7 +112,7 @@ class TestTempoDistributorConfig:
         """Test that OTLP protocols are configured."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         otlp = config['distributor']['receivers']['otlp']
         assert 'protocols' in otlp, \
             "OTLP receiver should have protocols configured"
@@ -121,7 +121,7 @@ class TestTempoDistributorConfig:
         """Test that OTLP gRPC endpoint is valid if configured."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         protocols = config['distributor']['receivers']['otlp']['protocols']
         if 'grpc' in protocols:
             grpc = protocols['grpc']
@@ -137,7 +137,7 @@ class TestTempoDistributorConfig:
         """Test that OTLP HTTP endpoint is valid if configured."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         protocols = config['distributor']['receivers']['otlp']['protocols']
         if 'http' in protocols:
             http = protocols['http']
@@ -154,7 +154,7 @@ class TestTempoIngesterConfig:
         """Test that ingester section has configuration."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert isinstance(config['ingester'], dict), \
             "ingester should be a dictionary with configuration"
 
@@ -162,7 +162,7 @@ class TestTempoIngesterConfig:
         """Test that max_block_duration is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'max_block_duration' in config['ingester']:
             duration = config['ingester']['max_block_duration']
             # Should be a string with time unit
@@ -180,7 +180,7 @@ class TestTempoStorageConfig:
         """Test that trace storage is configured."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'trace' in config['storage'], \
             "storage.trace should be configured"
 
@@ -188,7 +188,7 @@ class TestTempoStorageConfig:
         """Test that storage backend is defined."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         trace_config = config['storage']['trace']
         assert 'backend' in trace_config, \
             "storage.trace.backend should be defined"
@@ -197,7 +197,7 @@ class TestTempoStorageConfig:
         """Test that storage backend is valid."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         backend = config['storage']['trace']['backend']
         valid_backends = ['local', 's3', 'gcs', 'azure']
         assert backend in valid_backends, \
@@ -207,7 +207,7 @@ class TestTempoStorageConfig:
         """Test that local storage path is defined for local backend."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         trace_config = config['storage']['trace']
         if trace_config['backend'] == 'local':
             assert 'local' in trace_config, \
@@ -223,7 +223,7 @@ class TestTempoCompactorConfig:
         """Test that compactor configuration is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'compactor' in config:
             compactor = config['compactor']
             assert isinstance(compactor, dict), \
@@ -237,7 +237,7 @@ class TestTempoMetricsGeneratorConfig:
         """Test that metrics_generator configuration is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'metrics_generator' in config:
             mg = config['metrics_generator']
             assert isinstance(mg, dict), \
@@ -247,7 +247,7 @@ class TestTempoMetricsGeneratorConfig:
         """Test that metrics_generator storage path is defined if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'metrics_generator' in config and 'storage' in config['metrics_generator']:
             storage = config['metrics_generator']['storage']
             if 'path' in storage:
@@ -265,7 +265,7 @@ class TestTempoQueryConfig:
         """Test that querier configuration is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'querier' in config:
             querier = config['querier']
             assert isinstance(querier, dict), \
@@ -275,7 +275,7 @@ class TestTempoQueryConfig:
         """Test that query_frontend configuration is valid if present."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         if 'query_frontend' in config:
             qf = config['query_frontend']
             assert isinstance(qf, dict), \
@@ -289,19 +289,19 @@ class TestTempoConfigValidation:
         """Test that the complete configuration is valid."""
         with open(tempo_config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # Should have all essential sections
         assert 'server' in config
         assert 'distributor' in config
         assert 'ingester' in config
         assert 'storage' in config
-        
+
         # Server should have ports
         assert 'http_listen_port' in config['server']
-        
+
         # Distributor should have receivers
         assert 'receivers' in config['distributor']
-        
+
         # Storage should have trace backend
         assert 'trace' in config['storage']
         assert 'backend' in config['storage']['trace']

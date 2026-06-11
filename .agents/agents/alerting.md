@@ -11,6 +11,7 @@ You write Prometheus alert rules and Alertmanager routing config that fire on re
 ## Before Writing Alert Rules
 
 Read first:
+
 1. `config/prometheus-rules/` — existing rules (avoid duplicates, follow naming convention)
 2. `config/prometheus.yml` — scrape targets and their labels
 3. Verify the metric exists: `curl -s http://localhost:9090/api/v1/query?query=<metric_name>`
@@ -42,6 +43,7 @@ groups:
 ## Standard Alert Patterns
 
 ### Service Down
+
 ```yaml
 - alert: ServiceDown
   expr: up{job="[service-name]"} == 0
@@ -54,6 +56,7 @@ groups:
 ```
 
 ### High Error Rate
+
 ```yaml
 - alert: HighErrorRate
   expr: |
@@ -69,6 +72,7 @@ groups:
 ```
 
 ### High Latency
+
 ```yaml
 - alert: HighP95Latency
   expr: |
@@ -84,6 +88,7 @@ groups:
 ```
 
 ### Disk Space (for Obstackd itself)
+
 ```yaml
 - alert: ObsstackdDiskSpaceLow
   expr: |
@@ -139,7 +144,7 @@ route:
 receivers:
   - name: default
     webhook_configs:
-      - url: "${ALERTMANAGER_WEBHOOK_URL}"  # from .env
+      - url: "${ALERTMANAGER_WEBHOOK_URL}" # from .env
   - name: critical-receiver
     # Add PagerDuty, Slack, email per deployment
   - name: warning-receiver

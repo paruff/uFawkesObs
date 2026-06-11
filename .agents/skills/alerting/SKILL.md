@@ -17,15 +17,16 @@ Loaded by Prometheus via `rule_files:` in `config/prometheus.yml`.
 
 ## Severity Levels
 
-| Severity | Use for | Repeat interval |
-|---|---|---|
-| `critical` | Service down, data loss risk, DORA threshold breach | 1h |
-| `warning` | Degraded performance, approaching thresholds | 4h |
-| `info` | Informational, trends worth watching | 12h |
+| Severity   | Use for                                             | Repeat interval |
+| ---------- | --------------------------------------------------- | --------------- |
+| `critical` | Service down, data loss risk, DORA threshold breach | 1h              |
+| `warning`  | Degraded performance, approaching thresholds        | 4h              |
+| `info`     | Informational, trends worth watching                | 12h             |
 
 ## Required Annotations
 
 Every alert must have:
+
 - `summary`: one sentence, includes service name
 - `description`: includes `{{ $value }}` so the value is visible in the alert
 - `runbook_url`: for `critical` alerts only — must be a real file in `docs/runbooks/`
@@ -57,6 +58,7 @@ metric{job="service-name", env="$ENVIRONMENT"}
 ## Alertmanager Receiver Templates
 
 ### Slack
+
 ```yaml
 - name: slack-warnings
   slack_configs:
@@ -68,6 +70,7 @@ metric{job="service-name", env="$ENVIRONMENT"}
 ```
 
 ### Webhook (generic)
+
 ```yaml
 - name: webhook
   webhook_configs:

@@ -72,10 +72,10 @@ def wait_for_stack(prometheus_url: str, tempo_url: str, loki_url: str, grafana_u
         (f"{loki_url}/ready", "Loki"),
         (f"{grafana_url}/api/health", "Grafana"),
     ]
-    
+
     max_retries = 60
     retry_interval = 2
-    
+
     for url, name in components:
         for attempt in range(max_retries):
             try:
@@ -85,12 +85,12 @@ def wait_for_stack(prometheus_url: str, tempo_url: str, loki_url: str, grafana_u
                     break
             except requests.exceptions.RequestException:
                 pass
-            
+
             if attempt == max_retries - 1:
                 pytest.fail(f"{name} did not become ready in time")
-            
+
             time.sleep(retry_interval)
-    
+
     # Give extra time for datasource provisioning in Grafana
     print("⏳ Waiting for datasource provisioning (10s)...")
     time.sleep(10)
@@ -100,12 +100,12 @@ def wait_for_stack(prometheus_url: str, tempo_url: str, loki_url: str, grafana_u
 def query_prometheus(prometheus_url: str, query: str, timeout: int = 10) -> Dict[str, Any]:
     """
     Query Prometheus.
-    
+
     Args:
         prometheus_url: Prometheus base URL
         query: PromQL query
         timeout: Request timeout in seconds
-        
+
     Returns:
         Query result
     """
@@ -121,12 +121,12 @@ def query_prometheus(prometheus_url: str, query: str, timeout: int = 10) -> Dict
 def query_tempo_trace(tempo_url: str, trace_id: str, timeout: int = 10) -> Dict[str, Any]:
     """
     Query Tempo for a trace.
-    
+
     Args:
         tempo_url: Tempo base URL
         trace_id: Trace ID to query
         timeout: Request timeout in seconds
-        
+
     Returns:
         Trace data
     """
@@ -141,12 +141,12 @@ def query_tempo_trace(tempo_url: str, trace_id: str, timeout: int = 10) -> Dict[
 def query_loki(loki_url: str, query: str, timeout: int = 10) -> Dict[str, Any]:
     """
     Query Loki.
-    
+
     Args:
         loki_url: Loki base URL
         query: LogQL query
         timeout: Request timeout in seconds
-        
+
     Returns:
         Query result
     """
@@ -168,14 +168,14 @@ def query_grafana_datasource(
 ) -> Dict[str, Any]:
     """
     Query a Grafana datasource.
-    
+
     Args:
         grafana_url: Grafana base URL
         grafana_auth: Authentication credentials
         datasource_uid: Datasource UID
         query_params: Query parameters
         timeout: Request timeout in seconds
-        
+
     Returns:
         Query result
     """

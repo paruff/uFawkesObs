@@ -41,11 +41,11 @@ This is the single most important rule. Numeric datasource IDs are instance-spec
 
 These UIDs are defined in `config/grafana/provisioning/datasources/datasources.yaml` and must be used verbatim in all dashboard JSON.
 
-| Datasource | uid value | type |
-|-----------|-----------|------|
-| Prometheus | `prometheus` | prometheus |
-| Loki | `loki` | loki |
-| Tempo | `tempo` | tempo |
+| Datasource   | uid value      | type         |
+| ------------ | -------------- | ------------ |
+| Prometheus   | `prometheus`   | prometheus   |
+| Loki         | `loki`         | loki         |
+| Tempo        | `tempo`        | tempo        |
 | Alertmanager | `alertmanager` | alertmanager |
 
 **Verify the UID** before writing: `curl http://localhost:3000/api/datasources` returns the list with UIDs.
@@ -81,6 +81,7 @@ Every dashboard JSON file in `dashboards/` must include these fields:
 **Never include `"id": <number>`** — remove it if it appears (e.g. from an exported dashboard).
 
 **UID naming convention:** `ufawkesobs-<slug>` where slug is kebab-case, e.g.:
+
 - `ufawkesobs-self-monitoring`
 - `ufawkesobs-dora-overview`
 - `ufawkesobs-ai-metrics`
@@ -89,10 +90,10 @@ Every dashboard JSON file in `dashboards/` must include these fields:
 
 ## schemaVersion by Grafana version
 
-| Grafana version | schemaVersion |
-|----------------|---------------|
-| 10.4.5 (current) | 39 |
-| 12.x (Wave 4 target) | 40 |
+| Grafana version      | schemaVersion |
+| -------------------- | ------------- |
+| 10.4.5 (current)     | 39            |
+| 12.x (Wave 4 target) | 40            |
 
 Always check `component-versions` skill before setting schemaVersion.
 
@@ -109,7 +110,7 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
-    uid: prometheus        # ← This is the string used in dashboard JSON
+    uid: prometheus # ← This is the string used in dashboard JSON
     url: http://prometheus:9090
     isDefault: true
     access: proxy
@@ -153,7 +154,7 @@ providers:
     updateIntervalSeconds: 10
     allowUiUpdates: false
     options:
-      path: /var/lib/grafana/dashboards    # Must match compose.yaml volume mount path
+      path: /var/lib/grafana/dashboards # Must match compose.yaml volume mount path
 ```
 
 The `path:` must exactly match the container-side path in the `compose.yaml` volume mount for the grafana service.
@@ -188,7 +189,7 @@ The `path:` must exactly match the container-side path in the `compose.yaml` vol
   "targets": [
     {
       "expr": "up{job=\"grafana\"}",
-      "instant": true,   // ← Required for stat panels
+      "instant": true, // ← Required for stat panels
       "refId": "A"
     }
   ]
@@ -203,7 +204,7 @@ The `path:` must exactly match the container-side path in the `compose.yaml` vol
   "targets": [
     {
       "expr": "...",
-      "instant": true,       // ← Required for tables
+      "instant": true, // ← Required for tables
       "format": "table",
       "refId": "A"
     }
@@ -216,6 +217,7 @@ The `path:` must exactly match the container-side path in the `compose.yaml` vol
 ## Exporting dashboards safely
 
 When exporting from a running Grafana for version control:
+
 1. Use Grafana UI: Dashboard → Share → Export → Export for sharing externally
 2. This replaces numeric datasource IDs with `${DS_PROMETHEUS}` variables — **remove these** and replace with the canonical UID object format above
 3. Remove `"id": <number>` from the top-level JSON object

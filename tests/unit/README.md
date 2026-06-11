@@ -5,6 +5,7 @@ This directory contains unit tests for validating observability platform configu
 ## Overview
 
 The unit tests validate configuration files for all components in the observability stack:
+
 - OpenTelemetry Collector
 - Prometheus
 - Grafana
@@ -16,9 +17,11 @@ These tests catch configuration errors early in the development cycle, before de
 ## Test Files
 
 ### `test_otel_config_validation.py`
+
 Validates OpenTelemetry Collector configuration (`config/otel/collector.yaml`).
 
 **Validates:**
+
 - YAML syntax
 - Required receivers (OTLP)
 - Processor configuration (memory_limiter, batch)
@@ -28,6 +31,7 @@ Validates OpenTelemetry Collector configuration (`config/otel/collector.yaml`).
 - Component references
 
 **Test Classes:**
+
 - `TestOTelConfigStructure` - Basic structure validation
 - `TestOTelReceivers` - Receiver configuration
 - `TestOTelProcessors` - Processor configuration
@@ -35,9 +39,11 @@ Validates OpenTelemetry Collector configuration (`config/otel/collector.yaml`).
 - `TestOTelServicePipelines` - Pipeline configuration
 
 ### `test_prometheus_config_validation.py`
+
 Validates Prometheus configuration (`config/prometheus/prometheus.yaml`).
 
 **Validates:**
+
 - YAML syntax
 - Global configuration (scrape_interval, evaluation_interval)
 - Alertmanager configuration
@@ -47,6 +53,7 @@ Validates Prometheus configuration (`config/prometheus/prometheus.yaml`).
 - Required observability stack jobs
 
 **Test Classes:**
+
 - `TestPrometheusConfigStructure` - Basic structure
 - `TestPrometheusGlobalConfig` - Global settings
 - `TestPrometheusAlertingConfig` - Alerting configuration
@@ -55,9 +62,11 @@ Validates Prometheus configuration (`config/prometheus/prometheus.yaml`).
 - `TestPrometheusJobsForObservabilityStack` - Required jobs
 
 ### `test_grafana_config_validation.py`
+
 Validates Grafana datasources configuration (`config/grafana/provisioning/datasources/datasources.yaml`).
 
 **Validates:**
+
 - YAML syntax
 - API version
 - Datasource definitions
@@ -67,6 +76,7 @@ Validates Grafana datasources configuration (`config/grafana/provisioning/dataso
 - jsonData configuration
 
 **Test Classes:**
+
 - `TestGrafanaConfigStructure` - Basic structure
 - `TestGrafanaDatasourceBasics` - Datasource basics
 - `TestGrafanaRequiredDatasources` - Required datasources
@@ -76,9 +86,11 @@ Validates Grafana datasources configuration (`config/grafana/provisioning/dataso
 - `TestGrafanaJsonDataConfiguration` - jsonData validation
 
 ### `test_tempo_config_validation.py`
+
 Validates Tempo configuration (`config/tempo/tempo.yaml`).
 
 **Validates:**
+
 - YAML syntax
 - Server configuration (ports, log level)
 - Distributor receivers (OTLP)
@@ -88,6 +100,7 @@ Validates Tempo configuration (`config/tempo/tempo.yaml`).
 - Query configuration
 
 **Test Classes:**
+
 - `TestTempoConfigStructure` - Basic structure
 - `TestTempoServerConfig` - Server settings
 - `TestTempoDistributorConfig` - Distributor and receivers
@@ -98,9 +111,11 @@ Validates Tempo configuration (`config/tempo/tempo.yaml`).
 - `TestTempoQueryConfig` - Query settings
 
 ### `test_loki_config_validation.py`
+
 Validates Loki configuration (`config/loki/loki.yaml`).
 
 **Validates:**
+
 - YAML syntax
 - Server configuration (ports, log level)
 - Authentication settings
@@ -112,6 +127,7 @@ Validates Loki configuration (`config/loki/loki.yaml`).
 - Query configuration
 
 **Test Classes:**
+
 - `TestLokiConfigStructure` - Basic structure
 - `TestLokiServerConfig` - Server settings
 - `TestLokiAuthConfig` - Authentication
@@ -186,6 +202,7 @@ pytest -m config_validation
 ## Test Coverage
 
 Current test coverage:
+
 - **OpenTelemetry Collector**: 74 tests
 - **Prometheus**: 21 tests
 - **Grafana**: 22 tests
@@ -199,6 +216,7 @@ Current test coverage:
 ### Common Validations
 
 All configuration files are validated for:
+
 1. Valid YAML syntax
 2. Required sections present
 3. No empty required fields
@@ -210,6 +228,7 @@ All configuration files are validated for:
 ### Component-Specific Validations
 
 #### OpenTelemetry Collector
+
 - OTLP receiver must be configured
 - memory_limiter processor recommended
 - batch processor recommended
@@ -218,6 +237,7 @@ All configuration files are validated for:
 - Exporter endpoints must be valid
 
 #### Prometheus
+
 - Global scrape_interval required
 - At least one scrape config required
 - All scrape configs must have job_name
@@ -226,6 +246,7 @@ All configuration files are validated for:
 - OTel Collector scrape job recommended
 
 #### Grafana
+
 - apiVersion must be 1
 - At least one datasource required
 - Prometheus, Tempo, and Loki datasources required
@@ -234,6 +255,7 @@ All configuration files are validated for:
 - All datasource URLs must be valid
 
 #### Tempo
+
 - Server HTTP port required
 - OTLP receiver required
 - Storage backend must be valid (local, s3, gcs, azure)
@@ -241,6 +263,7 @@ All configuration files are validated for:
 - Ports must be in valid range
 
 #### Loki
+
 - auth_enabled must be boolean
 - Server HTTP port required
 - Schema config required with at least one entry
@@ -268,15 +291,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
-      
+          python-version: "3.12"
+
       - name: Install dependencies
         run: pip install -r tests/unit/requirements.txt
-      
+
       - name: Run config validation tests
         run: pytest tests/unit/ -v
 ```
@@ -317,7 +340,7 @@ def test_new_validation_rule(self, config_path):
     """Test that <specific rule> is validated."""
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Your validation logic
     assert 'required_field' in config, \
         "Missing required field: required_field"
@@ -328,6 +351,7 @@ def test_new_validation_rule(self, config_path):
 ### Test Failures
 
 If tests fail, check:
+
 1. YAML syntax is valid
 2. Required sections are present
 3. All referenced components are defined
@@ -338,6 +362,7 @@ If tests fail, check:
 ### Common Issues
 
 **YAML syntax error**: Use a YAML linter to identify the issue
+
 ```bash
 yamllint config/otel/collector.yaml
 ```
@@ -362,6 +387,7 @@ yamllint config/otel/collector.yaml
 ## Future Enhancements
 
 Potential improvements:
+
 - [ ] Add negative test fixtures (invalid configurations)
 - [ ] Add JSON schema validation
 - [ ] Add custom validators for complex rules

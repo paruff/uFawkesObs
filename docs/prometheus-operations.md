@@ -6,14 +6,14 @@ This document provides operational guidance for the Prometheus service in the uF
 
 ## Service Access
 
-| Endpoint | URL | Purpose |
-|----------|-----|---------|
-| **Web UI** | http://localhost:9090 | Query interface and service status |
-| **Metrics** | http://localhost:9090/metrics | Prometheus self-monitoring metrics |
-| **Health Check** | http://localhost:9090/-/healthy | Liveness probe |
-| **Ready Check** | http://localhost:9090/-/ready | Readiness probe |
-| **API** | http://localhost:9090/api/v1/* | Query API |
-| **Targets** | http://localhost:9090/targets | Scrape target status |
+| Endpoint         | URL                             | Purpose                            |
+| ---------------- | ------------------------------- | ---------------------------------- |
+| **Web UI**       | http://localhost:9090           | Query interface and service status |
+| **Metrics**      | http://localhost:9090/metrics   | Prometheus self-monitoring metrics |
+| **Health Check** | http://localhost:9090/-/healthy | Liveness probe                     |
+| **Ready Check**  | http://localhost:9090/-/ready   | Readiness probe                    |
+| **API**          | http://localhost:9090/api/v1/\* | Query API                          |
+| **Targets**      | http://localhost:9090/targets   | Scrape target status               |
 
 ## Common Operations
 
@@ -157,10 +157,10 @@ docker compose up -d prometheus
 
 The service is configured with the following limits:
 
-| Resource | Reservation | Limit |
-|----------|-------------|-------|
-| CPU | 0.5 cores | 1.0 core |
-| Memory | 512 MB | 2 GB |
+| Resource | Reservation | Limit    |
+| -------- | ----------- | -------- |
+| CPU      | 0.5 cores   | 1.0 core |
+| Memory   | 512 MB      | 2 GB     |
 
 ### Monitoring Resource Usage
 
@@ -180,10 +180,10 @@ If you need to modify resource limits, edit `compose.yaml`:
 deploy:
   resources:
     limits:
-      cpus: '2.0'      # Increase CPU limit
-      memory: 4G       # Increase memory limit
+      cpus: "2.0" # Increase CPU limit
+      memory: 4G # Increase memory limit
     reservations:
-      cpus: '1.0'
+      cpus: "1.0"
       memory: 1G
 ```
 
@@ -194,16 +194,19 @@ Then restart: `docker compose up -d prometheus`
 ### Service Won't Start
 
 1. **Check logs for errors**:
+
    ```bash
    docker compose logs prometheus
    ```
 
 2. **Validate configuration**:
+
    ```bash
    ./scripts/prometheus/config-validator.sh
    ```
 
 3. **Check port availability**:
+
    ```bash
    lsof -i :9090
    ```
@@ -219,6 +222,7 @@ Then restart: `docker compose up -d prometheus`
 If Prometheus fails to start due to configuration errors:
 
 1. **Validate the configuration file**:
+
    ```bash
    docker run --rm -v "$(pwd)/config/prometheus:/etc/prometheus" \
      prom/prometheus:v2.55.1 \
@@ -226,6 +230,7 @@ If Prometheus fails to start due to configuration errors:
    ```
 
 2. **Check for syntax errors in YAML**:
+
    ```bash
    yamllint config/prometheus/prometheus.yaml
    ```
@@ -240,11 +245,13 @@ If Prometheus fails to start due to configuration errors:
 If the health check reports unhealthy:
 
 1. **Check if the service is responding**:
+
    ```bash
    curl -v http://localhost:9090/-/healthy
    ```
 
 2. **Inspect the health check configuration**:
+
    ```bash
    docker inspect prometheus | jq '.[0].State.Health'
    ```
@@ -259,6 +266,7 @@ If the health check reports unhealthy:
 If Prometheus approaches memory limits:
 
 1. **Check current memory usage**:
+
    ```bash
    docker stats prometheus --no-stream
    ```
@@ -274,11 +282,13 @@ If Prometheus approaches memory limits:
 If you suspect data corruption:
 
 1. **Check TSDB status**:
+
    ```bash
    docker exec prometheus promtool tsdb analyze /prometheus
    ```
 
 2. **Restore from backup**:
+
    ```bash
    docker compose down prometheus
    rm -rf ./data/prometheus/*
@@ -305,6 +315,7 @@ The admin API is **enabled** in this configuration with `--web.enable-admin-api`
 - Time series deletion
 
 **For production deployments**, consider:
+
 - Disabling the admin API
 - Placing Prometheus behind authentication proxy
 - Using network segmentation to restrict access
@@ -392,6 +403,7 @@ Current Prometheus command-line flags:
 ## Support
 
 For issues with the uFawkesObs observability stack:
+
 1. Check this operations guide
 2. Review logs and health checks
 3. Validate configuration with provided scripts

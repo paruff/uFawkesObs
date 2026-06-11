@@ -97,9 +97,9 @@ compactor:
 
 # Ingestion limits
 overrides:
-  ingestion_rate_limit_bytes: 10000000  # 10MB/s
+  ingestion_rate_limit_bytes: 10000000 # 10MB/s
   max_traces_per_user: 10000000
-  max_bytes_per_trace: 50000  # 50KB
+  max_bytes_per_trace: 50000 # 50KB
 ```
 
 ## Monitoring
@@ -157,18 +157,21 @@ The Tempo datasource is automatically provisioned in Grafana:
 ### Querying Traces
 
 **By Trace ID:**
+
 ```
 # In Grafana Explore, paste trace ID in the search box
 0123456789abcdef0123456789abcdef
 ```
 
 **By Service Name:**
+
 ```
 # Use the search builder in Grafana
 service.name = "my-service"
 ```
 
 **Via API:**
+
 ```bash
 # Search for traces
 curl "http://localhost:3200/api/search?tags=service.name%3Dmy-service" | jq '.'
@@ -184,6 +187,7 @@ curl "http://localhost:3200/api/traces/0123456789abcdef0123456789abcdef" | jq '.
 Send traces through the OTel Collector:
 
 **Python Example:**
+
 ```python
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -209,14 +213,17 @@ with tracer.start_as_current_span("my-operation"):
 ```
 
 **Node.js Example:**
+
 ```javascript
-const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
+const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
+const {
+  OTLPTraceExporter,
+} = require("@opentelemetry/exporter-trace-otlp-http");
+const { BatchSpanProcessor } = require("@opentelemetry/sdk-trace-base");
 
 const provider = new NodeTracerProvider();
 const exporter = new OTLPTraceExporter({
-  url: 'http://localhost:4318/v1/traces'
+  url: "http://localhost:4318/v1/traces",
 });
 
 provider.addSpanProcessor(new BatchSpanProcessor(exporter));
@@ -248,16 +255,19 @@ export ZIPKIN_ENDPOINT=http://localhost:9411
 **Symptom**: Health check fails, Tempo restarts repeatedly
 
 **Check logs:**
+
 ```bash
 docker compose logs tempo | tail -50
 ```
 
 **Common causes:**
+
 1. **Configuration error**: Validate `config/tempo/tempo.yaml` syntax
 2. **Storage permission**: Ensure `data/tempo/` is writable
 3. **Port conflict**: Check if ports 3200, 9095, 9411, 14250, 14268 are available
 
 **Solution:**
+
 ```bash
 # Fix permissions
 chmod -R 777 data/tempo/
@@ -274,6 +284,7 @@ lsof -i :3200
 **Symptom**: Traces sent but not visible in Grafana/queries
 
 **Verify trace ingestion:**
+
 ```bash
 # Check OTel Collector is forwarding
 docker compose logs otel-collector | grep -i trace
@@ -283,6 +294,7 @@ curl http://localhost:3200/metrics | grep tempo_distributor_spans_received_total
 ```
 
 **Verify trace format:**
+
 ```bash
 # Traces must be valid OTLP format
 # Check timestamp is in nanoseconds (Unix epoch * 1e9)
@@ -295,20 +307,22 @@ curl http://localhost:3200/metrics | grep tempo_distributor_spans_received_total
 **Symptom**: Tempo container using excessive memory
 
 **Check configuration:**
+
 ```yaml
 # In compose.yaml
 deploy:
   resources:
     limits:
-      memory: 4G  # Adjust as needed
+      memory: 4G # Adjust as needed
 ```
 
 **Tune Tempo settings:**
+
 ```yaml
 # In config/tempo/tempo.yaml
 ingester:
-  max_block_bytes: 500000000  # Reduce if needed
-  max_block_duration: 5m      # Increase to flush less often
+  max_block_bytes: 500000000 # Reduce if needed
+  max_block_duration: 5m # Increase to flush less often
 ```
 
 ### Storage Growing Too Fast
@@ -316,14 +330,16 @@ ingester:
 **Symptom**: `data/tempo/` directory size increasing rapidly
 
 **Check retention:**
+
 ```yaml
 # In config/tempo/tempo.yaml
 compactor:
   compaction:
-    block_retention: 24h  # Reduce retention period
+    block_retention: 24h # Reduce retention period
 ```
 
 **Manual cleanup:**
+
 ```bash
 # Stop Tempo
 docker compose stop tempo
@@ -374,7 +390,7 @@ docker compose start tempo
 ```yaml
 # In config/tempo/tempo.yaml
 overrides:
-  ingestion_rate_limit_bytes: 50000000  # 50MB/s
+  ingestion_rate_limit_bytes: 50000000 # 50MB/s
   ingestion_burst_size_bytes: 100000000 # 100MB
 
 storage:
@@ -389,12 +405,12 @@ storage:
 ```yaml
 # In config/tempo/tempo.yaml
 ingester:
-  max_block_duration: 1m     # Flush more frequently
-  flush_check_period: 5s     # Check more often
+  max_block_duration: 1m # Flush more frequently
+  flush_check_period: 5s # Check more often
 
 querier:
   search:
-    query_timeout: 10s       # Faster timeout
+    query_timeout: 10s # Faster timeout
 ```
 
 ## Security
@@ -429,6 +445,7 @@ server:
 ## Support
 
 For issues specific to this deployment:
+
 1. Check logs: `docker compose logs tempo`
 2. Validate configuration: `docker compose config tempo`
 3. Review this operations guide

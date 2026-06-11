@@ -162,9 +162,7 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -270,9 +268,7 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [
-            "last"
-          ],
+          "calcs": ["last"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -342,9 +338,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -460,11 +454,7 @@
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": [
-    "application",
-    "logs",
-    "media-refinery"
-  ],
+  "tags": ["application", "logs", "media-refinery"],
   "templating": {
     "list": []
   },

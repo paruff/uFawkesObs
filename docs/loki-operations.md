@@ -5,6 +5,7 @@
 Grafana Loki provides centralized log aggregation and query capabilities for the observability stack. It ingests logs from containers via Grafana Alloy and from applications via the OpenTelemetry Collector, storing them efficiently for querying through Grafana using LogQL.
 
 **Architecture Note:** Logs are collected through two primary paths:
+
 1. **Container logs**: Grafana Alloy scrapes Docker container logs and forwards them to Loki
 2. **Application logs**: Applications send structured logs via OTLP to the OpenTelemetry Collector, which forwards them to Loki
 
@@ -58,6 +59,7 @@ curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
 Location: `config/loki/loki.yaml`
 
 **Key Settings:**
+
 - **Retention Period**: 7 days (168h)
 - **Storage**: Local filesystem (`./data/loki`)
 - **Ingestion Rate Limit**: 10MB/s with 20MB burst
@@ -68,6 +70,7 @@ Location: `config/loki/loki.yaml`
 Location: `config/alloy/config.river`
 
 **Key Settings:**
+
 - **Docker Service Discovery**: Automatically discovers running containers
 - **Labels**: Extracts container name, ID, compose service, compose project
 - **Log Path**: `/var/lib/docker/containers/*/*.log`
@@ -165,6 +168,7 @@ topk(5, sum by (container) (count_over_time({job="docker"}[1h])))
 ### Log-Trace Correlation
 
 The Loki datasource is configured with trace correlation:
+
 - Grafana automatically detects `traceID=<value>` patterns in logs
 - Click on a trace ID to jump to Tempo
 - In Tempo, click "Logs for this span" to return to related logs
@@ -172,16 +176,19 @@ The Loki datasource is configured with trace correlation:
 ### Example Grafana Queries
 
 **Log Volume Dashboard:**
+
 ```
 sum by (container) (count_over_time({job="docker"}[1m]))
 ```
 
 **Error Rate Panel:**
+
 ```
 sum(rate({job="docker"} |= "error" [5m])) by (container)
 ```
 
 **Log Table:**
+
 ```
 {job="docker"} | json
 ```
@@ -248,6 +255,7 @@ curl -G -s "http://localhost:3100/loki/api/v1/query" \
 ### Troubleshooting
 
 **No logs appearing:**
+
 ```bash
 # 1. Check Alloy is running and discovering containers
 docker compose logs alloy | tail -50
@@ -267,6 +275,7 @@ curl -i -X POST "http://localhost:3100/loki/api/v1/push" \
 ```
 
 **High memory usage:**
+
 ```bash
 # Check ingestion rate
 curl -s http://localhost:3100/metrics | grep loki_distributor_bytes_received_total
@@ -280,6 +289,7 @@ curl -s http://localhost:3100/metrics | grep loki_cache_
 ```
 
 **Slow queries:**
+
 ```bash
 # Enable query logging (already enabled in config)
 # Check query metrics
@@ -298,6 +308,7 @@ curl -s http://localhost:3100/metrics | grep loki_query_
 Applications should use OpenTelemetry SDK to send structured logs via OTLP to the collector:
 
 **Python Example:**
+
 ```python
 from opentelemetry import logs
 from opentelemetry.sdk.logs import LoggerProvider, LoggingHandler
@@ -322,6 +333,7 @@ logging.info("Operation completed", extra={"traceID": "abc123"})
 ```
 
 **Go Example:**
+
 ```go
 import (
     "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
@@ -341,6 +353,7 @@ provider := log.NewLoggerProvider(
 ### Log Format Best Practices
 
 **Structured JSON:**
+
 ```json
 {
   "timestamp": "2024-01-15T10:30:00Z",
@@ -355,6 +368,7 @@ provider := log.NewLoggerProvider(
 ```
 
 **Include Trace Context:**
+
 - Always include `traceID` for correlation
 - Include `spanID` when available
 - Use consistent field names
@@ -395,16 +409,18 @@ docker compose start loki
 ### Ingestion Performance
 
 **In `config/loki/loki.yaml`:**
+
 ```yaml
 limits_config:
-  ingestion_rate_mb: 20           # Increase if dropping logs
-  ingestion_burst_size_mb: 40     # 2x ingestion_rate_mb
-  per_stream_rate_limit: 10MB     # Per-stream limit
+  ingestion_rate_mb: 20 # Increase if dropping logs
+  ingestion_burst_size_mb: 40 # 2x ingestion_rate_mb
+  per_stream_rate_limit: 10MB # Per-stream limit
 ```
 
 ### Query Performance
 
 **Enable caching:**
+
 ```yaml
 query_range:
   cache_results: true
@@ -413,11 +429,12 @@ query_range:
 ```
 
 **Index optimization:**
+
 ```yaml
 schema_config:
   configs:
     - index:
-        period: 24h   # Smaller = more indexes, better queries
+        period: 24h # Smaller = more indexes, better queries
 ```
 
 ## Security Considerations
@@ -439,17 +456,19 @@ This setup runs without authentication for local development. For production:
 ### Sensitive Data
 
 **Avoid logging:**
+
 - Passwords and API keys
 - Personal Identifiable Information (PII)
 - Credit card numbers
 - Session tokens
 
 **Use log scrubbing:**
+
 ```yaml
 # In alloy.yaml pipeline_stages:
 - replace:
     expression: 'password=\S+'
-    replace: 'password=***'
+    replace: "password=***"
 ```
 
 ## Maintenance
@@ -457,14 +476,17 @@ This setup runs without authentication for local development. For production:
 ### Regular Tasks
 
 **Daily:**
+
 - Monitor ingestion rate and storage growth
 - Check for error logs in Loki and Alloy
 
 **Weekly:**
+
 - Review retention and compaction metrics
 - Verify backups if enabled
 
 **Monthly:**
+
 - Review and optimize query patterns
 - Check for Loki/Alloy updates
 
@@ -521,6 +543,7 @@ scrape_configs:
 ## Support
 
 For issues:
+
 1. Check Docker logs: `docker compose logs loki alloy`
 2. Verify configuration syntax: `docker compose config`
 3. Review this guide's troubleshooting section

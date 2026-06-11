@@ -33,9 +33,9 @@ datasources:
     jsonData:
       httpMethod: GET
       tracesToMetrics:
-        datasourceUid: 'prometheus'
+        datasourceUid: "prometheus"
       serviceMap:
-        datasourceUid: 'prometheus'
+        datasourceUid: "prometheus"
       search:
         hide: false
       nodeGraph:
@@ -56,10 +56,10 @@ datasources:
       httpMethod: GET
       maxLines: 1000
       derivedFields:
-        - datasourceUid: 'tempo'
+        - datasourceUid: "tempo"
           matcherRegex: "traceID=(\\w+)"
           name: TraceID
-          url: '$${__value.raw}'
+          url: "$${__value.raw}"
 
     version: 1
     readOnly: true

@@ -40,6 +40,7 @@ You do not write PromQL recording rules (PromQL agent), OTel pipeline config (OT
 ## Activation
 
 Invoked by:
+
 - `@grafana` mention
 - Planning agent assigning a dashboard or provisioning task
 - Review agent flagging a dashboard JSON error
@@ -91,9 +92,9 @@ Every dashboard JSON file must include:
 
 ```json
 {
-  "uid": "ufawkesobs-<slug>",     // Stable, kebab-case, prefixed with ufawkesobs-
+  "uid": "ufawkesobs-<slug>", // Stable, kebab-case, prefixed with ufawkesobs-
   "title": "uFawkesObs — <Name>",
-  "schemaVersion": 39,             // Match the Grafana version in scope
+  "schemaVersion": 39, // Match the Grafana version in scope
   "version": 1,
   "refresh": "30s",
   "time": { "from": "now-1h", "to": "now" },
@@ -121,7 +122,7 @@ providers:
     disableDeletion: false
     updateIntervalSeconds: 10
     options:
-      path: /var/lib/grafana/dashboards    # Must match compose.yaml volume mount
+      path: /var/lib/grafana/dashboards # Must match compose.yaml volume mount
 ```
 
 Datasource provisioning (`config/grafana/provisioning/datasources/datasources.yaml`):
@@ -131,8 +132,8 @@ apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
-    uid: prometheus                        # This UID is what dashboard JSON references
-    url: http://prometheus:9090            # Docker Compose service name, not localhost
+    uid: prometheus # This UID is what dashboard JSON references
+    url: http://prometheus:9090 # Docker Compose service name, not localhost
     isDefault: true
 ```
 
@@ -141,11 +142,13 @@ datasources:
 ## Version-specific rules
 
 ### Grafana 10.4.5 (current pilot target)
+
 - `schemaVersion: 39`
 - Numeric datasource ID API still works but deprecated — use UID
 - No `transformations` API breaking changes
 
 ### Grafana 12.x (Wave 4 upgrade target)
+
 - `schemaVersion: 40` or higher
 - Numeric datasource ID API **disabled** — UID-only from this version forward
 - Check `component-versions` skill before writing any dashboard targeting Wave 4
@@ -155,6 +158,7 @@ datasources:
 ## Panel query validation
 
 For every Prometheus panel:
+
 - Confirm the metric name exists in the Prometheus target (check `/api/v1/label/__name__/values`)
 - Confirm the datasource UID matches the declared datasources
 - For table panels: include `"instant": true` to avoid time-series confusion

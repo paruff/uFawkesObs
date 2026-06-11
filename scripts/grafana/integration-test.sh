@@ -29,7 +29,7 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
         echo "✅ Grafana container is healthy"
         break
     fi
-    
+
     # Check for provisioning errors in logs
     if docker compose logs grafana 2>&1 | grep -i "error.*provisioning" | grep -v "context canceled"; then
         echo "❌ Provisioning error detected in logs"
@@ -38,7 +38,7 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
         docker compose logs --tail=50 grafana
         exit 1
     fi
-    
+
     sleep $INTERVAL
     ELAPSED=$((ELAPSED + INTERVAL))
     echo "  Waiting... ($ELAPSED/$TIMEOUT seconds)"
@@ -88,35 +88,35 @@ DATASOURCES=$(curl -s -u "admin:$ADMIN_PASSWORD" "http://localhost:3000/api/data
 
 if command -v jq &> /dev/null; then
     PROMETHEUS_DS=$(echo "$DATASOURCES" | jq '.[] | select(.name=="Prometheus")')
-    
+
     if [ -z "$PROMETHEUS_DS" ]; then
         echo "❌ Prometheus datasource not found"
         echo "Available datasources:"
         echo "$DATASOURCES" | jq -r '.[].name // "none"'
         exit 1
     fi
-    
+
     echo "✅ Prometheus datasource found"
-    
+
     # Verify datasource properties
     DS_TYPE=$(echo "$PROMETHEUS_DS" | jq -r '.type')
     DS_URL=$(echo "$PROMETHEUS_DS" | jq -r '.url')
     DS_DEFAULT=$(echo "$PROMETHEUS_DS" | jq -r '.isDefault')
-    
+
     if [ "$DS_TYPE" != "prometheus" ]; then
         echo "❌ Datasource type is $DS_TYPE, expected prometheus"
         exit 1
     fi
-    
+
     if [ "$DS_URL" != "http://prometheus:9090" ]; then
         echo "❌ Datasource URL is $DS_URL, expected http://prometheus:9090"
         exit 1
     fi
-    
+
     if [ "$DS_DEFAULT" != "true" ]; then
         echo "⚠️  Datasource is not set as default"
     fi
-    
+
     echo "✅ Datasource configuration validated"
 else
     echo "✅ Datasources endpoint reachable (jq not available for detailed check)"
@@ -131,13 +131,13 @@ DASHBOARDS=$(curl -s -u "admin:$ADMIN_PASSWORD" "http://localhost:3000/api/searc
 if command -v jq &> /dev/null; then
     DASHBOARD_COUNT=$(echo "$DASHBOARDS" | jq 'length')
     echo "Found $DASHBOARD_COUNT dashboard(s)"
-    
+
     # Check for required dashboards
     REQUIRED_DASHBOARDS=("node-exporter" "prometheus" "otel-collector")
-    
+
     for dashboard_uid in "${REQUIRED_DASHBOARDS[@]}"; do
         FOUND=$(echo "$DASHBOARDS" | jq -e --arg uid "$dashboard_uid" '.[] | select(.uid==$uid)' > /dev/null 2>&1 && echo "yes" || echo "no")
-        
+
         if [ "$FOUND" == "yes" ]; then
             TITLE=$(echo "$DASHBOARDS" | jq -r --arg uid "$dashboard_uid" '.[] | select(.uid==$uid) | .title')
             echo "✅ Found dashboard: $TITLE (uid: $dashboard_uid)"
@@ -146,12 +146,12 @@ if command -v jq &> /dev/null; then
             exit 1
         fi
     done
-    
+
     if [ "$DASHBOARD_COUNT" -lt "${#REQUIRED_DASHBOARDS[@]}" ]; then
         echo "❌ Insufficient dashboards provisioned"
         exit 1
     fi
-    
+
     echo "✅ All required dashboards provisioned"
 else
     echo "✅ Dashboards endpoint reachable (jq not available for detailed check)"
@@ -162,16 +162,16 @@ echo ""
 # Test 4: Datasource Connectivity (if Prometheus is running)
 if docker compose ps prometheus 2>/dev/null | grep -q "Up"; then
     echo "🔍 Test 4: Datasource Connectivity"
-    
+
     if command -v jq &> /dev/null; then
         DS_UID=$(echo "$DATASOURCES" | jq -r '.[] | select(.name=="Prometheus") | .uid')
-        
+
         if [ -n "$DS_UID" ] && [ "$DS_UID" != "null" ]; then
             QUERY_RESPONSE=$(curl -s -u "admin:$ADMIN_PASSWORD" -X POST \
                 -H "Content-Type: application/json" \
                 -d "{\"queries\":[{\"refId\":\"A\",\"datasource\":{\"uid\":\"$DS_UID\"},\"expr\":\"up\",\"instant\":true}]}" \
                 "http://localhost:3000/api/ds/query" || echo "{}")
-            
+
             if echo "$QUERY_RESPONSE" | jq -e '.results' > /dev/null 2>&1; then
                 echo "✅ Datasource connectivity validated"
             else

@@ -109,32 +109,40 @@ services:
 ### Language-Specific Setup
 
 **Go:**
+
 ```go
 import (
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 )
 ```
+
 See: [OpenTelemetry Go Getting Started](https://opentelemetry.io/docs/languages/go/getting-started/)
 
 **Python:**
+
 ```bash
 pip install opentelemetry-distro
 opentelemetry-bootstrap -a install
 ```
+
 See: [OpenTelemetry Python Getting Started](https://opentelemetry.io/docs/languages/python/getting-started/)
 
 **Node.js:**
+
 ```bash
 npm install @opentelemetry/sdk-node
 ```
+
 See: [OpenTelemetry JS Getting Started](https://opentelemetry.io/docs/languages/js/getting-started/)
 
 **Java:**
+
 ```bash
 # Attach Java agent
 -javaagent:/path/to/opentelemetry-javaagent.jar
 ```
+
 See: [OpenTelemetry Java Getting Started](https://opentelemetry.io/docs/languages/java/getting-started/)
 
 ---
@@ -156,7 +164,7 @@ services:
         max-file: "3"
         tag: "{{.Name}}"
     networks:
-      - observability-lab  # Alloy auto-discovers and ships logs
+      - observability-lab # Alloy auto-discovers and ships logs
 ```
 
 ---
@@ -172,15 +180,15 @@ scrape_configs:
   # ... existing jobs ...
 
   # Development API metrics
-  - job_name: 'dev-api'
+  - job_name: "dev-api"
     static_configs:
-      - targets: ['dev-api:8080']
+      - targets: ["dev-api:8080"]
         labels:
-          component: 'dev-api'
-          service: 'developerd'
+          component: "dev-api"
+          service: "developerd"
     scrape_interval: 15s
-    metrics_path: '/metrics'
-    scheme: 'http'
+    metrics_path: "/metrics"
+    scheme: "http"
 ```
 
 Restart Prometheus:
@@ -294,14 +302,14 @@ Traces require explicit OTel SDK instrumentation in application code.
 
 ## Service Endpoints Reference
 
-| Service | Endpoint | Protocol | Purpose |
-|---|---|---|---|
-| OTel Collector | `otel-collector:4317` | gRPC | OTLP traces/metrics/logs |
-| OTel Collector | `otel-collector:4318` | HTTP | OTLP traces/metrics/logs |
-| Prometheus | `prometheus:9090` | HTTP | Query dev metrics |
-| Loki | `loki:3100` | HTTP | Query dev logs |
-| Tempo | `tempo:3200` | HTTP | Query dev traces |
-| Grafana | `grafana:3000` | HTTP | Visualization |
+| Service        | Endpoint              | Protocol | Purpose                  |
+| -------------- | --------------------- | -------- | ------------------------ |
+| OTel Collector | `otel-collector:4317` | gRPC     | OTLP traces/metrics/logs |
+| OTel Collector | `otel-collector:4318` | HTTP     | OTLP traces/metrics/logs |
+| Prometheus     | `prometheus:9090`     | HTTP     | Query dev metrics        |
+| Loki           | `loki:3100`           | HTTP     | Query dev logs           |
+| Tempo          | `tempo:3200`          | HTTP     | Query dev traces         |
+| Grafana        | `grafana:3000`        | HTTP     | Visualization            |
 
 ---
 
@@ -309,11 +317,11 @@ Traces require explicit OTel SDK instrumentation in application code.
 
 When modifying uFawkesObs to support uFawkesDevX integration, check:
 
-| Change in uFawkesObs | Impact on uFawkesDevX |
-|---|---|
+| Change in uFawkesObs             | Impact on uFawkesDevX                                                     |
+| -------------------------------- | ------------------------------------------------------------------------- |
 | Grafana admin credentials format | Developer tooling that embeds Grafana panels must use updated credentials |
-| Network name in `compose.yaml` | uFawkesDevX must join the updated network |
-| Grafana datasource UIDs | Embedded panels referencing old numeric IDs will break |
+| Network name in `compose.yaml`   | uFawkesDevX must join the updated network                                 |
+| Grafana datasource UIDs          | Embedded panels referencing old numeric IDs will break                    |
 
 See `docs/CHANGE_IMPACT_MAP.md` for the full cross-plane impact matrix.
 

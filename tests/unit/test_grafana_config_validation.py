@@ -34,7 +34,7 @@ class TestGrafanaConfigStructure:
         """Test that apiVersion is present."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'apiVersion' in config, "apiVersion should be present"
         assert config['apiVersion'] == 1, "apiVersion should be 1"
 
@@ -42,7 +42,7 @@ class TestGrafanaConfigStructure:
         """Test that datasources section exists."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         assert 'datasources' in config, "datasources section should be present"
         assert isinstance(config['datasources'], list), \
             "datasources should be a list"
@@ -57,7 +57,7 @@ class TestGrafanaDatasourceBasics:
         """Test that each datasource has a name."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for idx, ds in enumerate(config['datasources']):
             assert 'name' in ds, \
                 f"Datasource at index {idx} missing name"
@@ -70,7 +70,7 @@ class TestGrafanaDatasourceBasics:
         """Test that each datasource has a type."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for ds in config['datasources']:
             name = ds.get('name', 'unknown')
             assert 'type' in ds, \
@@ -82,7 +82,7 @@ class TestGrafanaDatasourceBasics:
         """Test that each datasource has a URL."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for ds in config['datasources']:
             name = ds.get('name', 'unknown')
             assert 'url' in ds, \
@@ -94,7 +94,7 @@ class TestGrafanaDatasourceBasics:
         """Test that datasource URLs have valid format."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for ds in config['datasources']:
             name = ds.get('name', 'unknown')
             url = ds['url']
@@ -109,7 +109,7 @@ class TestGrafanaDatasourceBasics:
         """Test that access mode is valid if present."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         valid_access_modes = ['proxy', 'direct']
         for ds in config['datasources']:
             name = ds.get('name', 'unknown')
@@ -126,7 +126,7 @@ class TestGrafanaRequiredDatasources:
         """Test that Prometheus datasource is configured."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         ds_names = [ds['name'] for ds in config['datasources']]
         assert 'Prometheus' in ds_names, \
             "Prometheus datasource should be configured"
@@ -135,7 +135,7 @@ class TestGrafanaRequiredDatasources:
         """Test that Tempo datasource is configured."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         ds_names = [ds['name'] for ds in config['datasources']]
         assert 'Tempo' in ds_names, \
             "Tempo datasource should be configured"
@@ -144,7 +144,7 @@ class TestGrafanaRequiredDatasources:
         """Test that Loki datasource is configured."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         ds_names = [ds['name'] for ds in config['datasources']]
         assert 'Loki' in ds_names, \
             "Loki datasource should be configured"
@@ -153,8 +153,8 @@ class TestGrafanaRequiredDatasources:
         """Test that at least one datasource is set as default."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
-        default_datasources = [ds for ds in config['datasources'] 
+
+        default_datasources = [ds for ds in config['datasources']
                                if ds.get('isDefault', False)]
         assert len(default_datasources) >= 1, \
             "At least one datasource should be set as default"
@@ -167,10 +167,10 @@ class TestGrafanaPrometheusDatasource:
         """Test that Prometheus datasource has correct type."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         prom_ds = [ds for ds in config['datasources'] if ds['name'] == 'Prometheus']
         assert len(prom_ds) > 0, "Prometheus datasource not found"
-        
+
         assert prom_ds[0]['type'] == 'prometheus', \
             "Prometheus datasource type should be 'prometheus'"
 
@@ -178,7 +178,7 @@ class TestGrafanaPrometheusDatasource:
         """Test that Prometheus URL is correctly formatted."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         prom_ds = [ds for ds in config['datasources'] if ds['name'] == 'Prometheus']
         if prom_ds:
             url = prom_ds[0]['url']
@@ -194,10 +194,10 @@ class TestGrafanaTempoDatasource:
         """Test that Tempo datasource has correct type."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         tempo_ds = [ds for ds in config['datasources'] if ds['name'] == 'Tempo']
         assert len(tempo_ds) > 0, "Tempo datasource not found"
-        
+
         assert tempo_ds[0]['type'] == 'tempo', \
             "Tempo datasource type should be 'tempo'"
 
@@ -205,7 +205,7 @@ class TestGrafanaTempoDatasource:
         """Test that Tempo URL is correctly formatted."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         tempo_ds = [ds for ds in config['datasources'] if ds['name'] == 'Tempo']
         if tempo_ds:
             url = tempo_ds[0]['url']
@@ -221,10 +221,10 @@ class TestGrafanaLokiDatasource:
         """Test that Loki datasource has correct type."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         loki_ds = [ds for ds in config['datasources'] if ds['name'] == 'Loki']
         assert len(loki_ds) > 0, "Loki datasource not found"
-        
+
         assert loki_ds[0]['type'] == 'loki', \
             "Loki datasource type should be 'loki'"
 
@@ -232,7 +232,7 @@ class TestGrafanaLokiDatasource:
         """Test that Loki URL is correctly formatted."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         loki_ds = [ds for ds in config['datasources'] if ds['name'] == 'Loki']
         if loki_ds:
             url = loki_ds[0]['url']
@@ -248,7 +248,7 @@ class TestGrafanaJsonDataConfiguration:
         """Test that jsonData is a dictionary if present."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         for ds in config['datasources']:
             name = ds.get('name', 'unknown')
             if 'jsonData' in ds:
@@ -263,15 +263,15 @@ class TestGrafanaConfigValidation:
         """Test that the complete configuration is valid."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # Should have apiVersion
         assert 'apiVersion' in config
         assert config['apiVersion'] == 1
-        
+
         # Should have datasources
         assert 'datasources' in config
         assert len(config['datasources']) > 0
-        
+
         # All datasources should be valid
         for ds in config['datasources']:
             assert 'name' in ds
@@ -282,9 +282,9 @@ class TestGrafanaConfigValidation:
         """Test that there are no duplicate datasource names."""
         with open(grafana_datasources_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         ds_names = [ds['name'] for ds in config['datasources']]
         unique_names = set(ds_names)
-        
+
         assert len(ds_names) == len(unique_names), \
             "Datasource names should be unique"

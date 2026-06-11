@@ -29,6 +29,7 @@ Alertmanager (:9093)
 ## Before Making Any Config Changes
 
 Read first:
+
 1. `config/otel-collector-config.yaml` — current pipeline: receivers, processors, exporters
 2. `config/prometheus.yml` — current scrape targets and remote_write config
 3. `.env.example` — all supported env vars and their defaults
@@ -39,26 +40,28 @@ Read first:
 ## OTel Collector Config Patterns
 
 ### Adding a new metrics receiver
+
 ```yaml
 receivers:
   prometheus/new-source:
     config:
       scrape_configs:
-        - job_name: 'new-source'
+        - job_name: "new-source"
           static_configs:
-            - targets: ['new-service:8080']
+            - targets: ["new-service:8080"]
           metrics_path: /metrics
           scrape_interval: 15s
 
 service:
   pipelines:
     metrics:
-      receivers: [otlp, prometheus/existing, prometheus/new-source]  # add here
+      receivers: [otlp, prometheus/existing, prometheus/new-source] # add here
       processors: [batch, memory_limiter]
       exporters: [prometheus]
 ```
 
 ### Adding a new log source via Alloy
+
 ```alloy
 // In config/alloy-config.alloy
 loki.source.docker "new_service" {
@@ -94,13 +97,15 @@ curl -s http://localhost:13133/  # OTel Collector health endpoint
 Work through this sequence:
 
 **1. Is the source sending data?**
+
 ```bash
 # Check if OTLP endpoint is reachable
-curl -s http://localhost:4318/v1/traces -X POST -H "Content-Type: application/json" -d '{}' 
+curl -s http://localhost:4318/v1/traces -X POST -H "Content-Type: application/json" -d '{}'
 # Expect: 200 or 400 (not connection refused)
 ```
 
 **2. Is the collector receiving it?**
+
 ```bash
 # Check collector logs for pipeline errors
 docker compose logs otel-collector --tail=50 | grep -E "error|warn|dropped"
@@ -109,6 +114,7 @@ curl -s http://localhost:8888/metrics | grep otelcol_receiver_accepted
 ```
 
 **3. Is the backend receiving it?**
+
 ```bash
 # Prometheus: check targets
 curl -s http://localhost:9090/api/v1/targets | python3 -m json.tool | grep health
@@ -133,14 +139,14 @@ When a new fawkes service needs to send telemetry to Obstackd:
 
 ## Compose Service Health Reference
 
-| Service | Health endpoint | Expected response |
-|---|---|---|
-| OTel Collector | http://localhost:13133/ | `{"status":"Server available"}` |
-| Prometheus | http://localhost:9090/-/healthy | `Prometheus Server is Healthy.` |
-| Alertmanager | http://localhost:9093/-/healthy | `OK` |
-| Tempo | http://localhost:3200/ready | `ready` |
-| Loki | http://localhost:3100/ready | `ready` |
-| Grafana | http://localhost:3000/api/health | `{"database":"ok"}` |
+| Service        | Health endpoint                  | Expected response               |
+| -------------- | -------------------------------- | ------------------------------- |
+| OTel Collector | http://localhost:13133/          | `{"status":"Server available"}` |
+| Prometheus     | http://localhost:9090/-/healthy  | `Prometheus Server is Healthy.` |
+| Alertmanager   | http://localhost:9093/-/healthy  | `OK`                            |
+| Tempo          | http://localhost:3200/ready      | `ready`                         |
+| Loki           | http://localhost:3100/ready      | `ready`                         |
+| Grafana        | http://localhost:3000/api/health | `{"database":"ok"}`             |
 
 ## PR Description for Stack Config PRs
 
@@ -151,11 +157,13 @@ When a new fawkes service needs to send telemetry to Obstackd:
 [Which service config changed and what signal path is affected]
 
 **What could go wrong?**
+
 - Malformed YAML silences the collector (validate with yamllint before merge)
 - New scrape target unreachable causes Prometheus to log errors
 - Changed pipeline drops data between old and new config during recreate
 
 **Tested with:**
+
 - [ ] `yamllint` on all changed config files
 - [ ] `docker compose up -d --force-recreate [service]` applied successfully
 - [ ] Health endpoint returns healthy after change

@@ -13,6 +13,7 @@ You review PRs with two goals: catching real problems before merge, and maintain
 ### 1. PR Size Gate
 
 Count changed lines. If > 400:
+
 ```
 ⚠ PR SIZE: [N] changed lines exceeds the 400-line limit.
 CI will block this unless `large-pr-approved` label is applied by a human.
@@ -22,6 +23,7 @@ This review proceeds but the label issue must be resolved before merge.
 ### 2. AGENTS.md Line Budget
 
 Count lines in AGENTS.md. If > 88:
+
 ```
 ⚠ AGENTS.md: [N] lines exceeds the 88-line hard limit.
 Offload content to .agents/skills/ files. This will fail the agents-md-budget CI gate.
@@ -30,6 +32,7 @@ Offload content to .agents/skills/ files. This will fail the agents-md-budget CI
 ### 3. Architecture Compliance
 
 Read `docs/ARCHITECTURE.md` and AGENTS.md §4. Check:
+
 - No Firebase/DB calls in screen/controller/view layer
 - No business logic in UI components
 - No circular imports
@@ -42,6 +45,7 @@ Report each violation: `File:Line — Rule violated — Recommended fix`
 ### 4. Test Coverage
 
 For each changed source file, is there a corresponding test change?
+
 - Docs-only or config-only change → acceptable
 - Refactor with no behavior change → verify
 - Feature or bug fix with no new tests → flag, require explanation
@@ -49,6 +53,7 @@ For each changed source file, is there a corresponding test change?
 ### 5. Security Surface
 
 Flag for `@security` review if:
+
 - Auth flow changes
 - New environment variables
 - New third-party dependencies
@@ -59,6 +64,7 @@ Flag for `@security` review if:
 ### 6. AI-Assisted Review Block
 
 Check that the PR description contains a completed AI-Assisted Review Block (AGENTS.md §7). If missing:
+
 ```
 ⚠ MISSING: AI-Assisted Review Block required in every agent PR.
 Template is in AGENTS.md §7. The PR author must complete it before merge.
@@ -81,22 +87,28 @@ Read the "What I was NOT sure about" section. These items require direct human a
 **Review Block:** COMPLETE / MISSING / INCOMPLETE
 
 ---
+
 ### Architecture Violations
+
 [File:Line — Rule violated — Recommended fix]
 [Or: "None found"]
 
 ### Test Gaps
+
 [Source file — Behavior not covered — Recommended test]
 [Or: "Coverage adequate"]
 
 ### Security Flags
+
 [What changed — Risk — Recommended action]
 [Or: "No security surface changes detected"]
 
 ### Items Requiring Human Judgment
+
 [From the "not sure about" section + any ambiguities found]
 
 ### Overall Recommendation
+
 APPROVE — no blocking issues found
 APPROVE WITH COMMENTS — minor issues, not blocking
 REQUEST CHANGES — [N] blocking issues listed above

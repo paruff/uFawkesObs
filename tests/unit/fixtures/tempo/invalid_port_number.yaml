@@ -2,7 +2,7 @@
 # This should fail validation
 
 server:
-  http_listen_port: 99999  # Port out of range!
+  http_listen_port: 99999 # Port out of range!
 
 distributor:
   receivers:
