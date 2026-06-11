@@ -1,0 +1,202 @@
+name: CI Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Unit Tests ───────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/unit/requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --tb=short
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: tests/unit/reports/
+          if-no-files-found: ignore
+
+  # ─── Compose Smoke Test ──────────────────────────────────────────────────
+  compose-smoke:
+    name: Compose Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start core
+        run: |
+          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana}
+          chmod -R 777 data/
+          docker compose --profile core up -d --build
+
+      - name: Wait for services
+        run: sleep 90
+
+      - name: Verify service health
+        run: |
+          curl -f http://localhost:3100/ready
+          curl -f http://localhost:9090/-/healthy
+          curl -f http://localhost:3000/api/health
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v
+
+  # ─── Integration Tests ───────────────────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [compose-smoke]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/integration/requirements.txt
+
+      - name: Create data directories
+        run: |
+          mkdir -p data/prometheus data/grafana data/tempo data/loki data/alertmanager
+          chmod -R 777 data/
+
+      - name: Start observability stack
+        run: docker compose --profile core up -d --build
+
+      - name: Wait for services
+        run: |
+          timeout 90 bash -c 'until curl -sf http://localhost:9090/-/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3200/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3100/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:8888/metrics; do sleep 2; done'
+          sleep 20
+
+      - name: Run Prometheus scraping tests
+        run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
+        env:
+          PROMETHEUS_URL: http://localhost:9090
+
+      - name: Run OTel Collector tests
+        run: pytest tests/integration/test_otel_collector.py -v --tb=short
+        env:
+          OTEL_METRICS_URL: http://localhost:8888
+
+      - name: Run Grafana integration tests
+        run: pytest tests/integration/test_grafana_integration.py -v --tb=short
+        env:
+          GRAFANA_URL: http://localhost:3000
+          GRAFANA_USER: admin
+          GRAFANA_PASSWORD: admin
+
+      - name: Run Tempo integration tests
+        run: pytest tests/integration/test_tempo_integration.py -v --tb=short
+        env:
+          TEMPO_URL: http://localhost:3200
+
+      - name: Run Loki integration tests
+        run: pytest tests/integration/test_loki_integration.py -v --tb=short
+        env:
+          LOKI_URL: http://localhost:3100
+
+      - name: Run dashboard tests
+        run: pytest tests/integration/test_dashboards.py -v --tb=short
+        env:
+          GRAFANA_URL: http://localhost:3000
+          GRAFANA_USER: admin
+          GRAFANA_PASSWORD: admin
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=50 prometheus grafana otel-collector tempo loki alloy
+
+      - name: Shutdown
+        if: always()
+        run: docker compose --profile core down -v
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            tests/integration/reports/
+            pytest-report.xml
+          if-no-files-found: ignore
+
+  # ─── Golden Path App ─────────────────────────────────────────────────────
+  apps-test:
+    name: Golden Path App
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [compose-smoke]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for app services
+        id: check_apps
+        run: |
+          if grep -q '"8080:8080"' compose.yaml; then
+            echo "has_apps=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_apps=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and start full stack
+        if: steps.check_apps.outputs.has_apps == 'true'
+        run: |
+          mkdir -p data/prometheus data/grafana
+          chmod -R 777 data/
+          docker compose --profile core --profile apps up -d --build
+
+      - name: Wait
+        if: steps.check_apps.outputs.has_apps == 'true'
+        run: sleep 30
+
+      - name: Hit endpoints
+        if: steps.check_apps.outputs.has_apps == 'true'
+        run: |
+          curl -f http://localhost:8080/
+          curl -f http://localhost:8080/slow
+          curl -f http://localhost:8080/error || true
+
+      - name: Shutdown
+        if: always() && steps.check_apps.outputs.has_apps == 'true'
+        run: docker compose down -v
+
+      - name: Skip
+        if: steps.check_apps.outputs.has_apps == 'false'
+        run: echo "No demo app services (port 8080) found. Skipping."

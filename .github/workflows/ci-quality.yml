@@ -1,0 +1,111 @@
+name: CI Quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 0"  # weekly security scan
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # ─── Security ─────────────────────────────────────────────────────────────
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+  # ─── Supply Chain ─────────────────────────────────────────────────────────
+  supply-chain:
+    name: Supply Chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if ':latest' is used
+        run: |
+          if grep -R "image: .*:latest" -n compose.yaml; then
+            echo "::error::Do not use :latest tags in compose.yaml"
+            exit 1
+          fi
+
+  # ─── Config Validation ───────────────────────────────────────────────────
+  validate-config:
+    name: Validate Configs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Prometheus config
+        if: hashFiles('config/prometheus/prometheus.yaml') != ''
+        run: |
+          docker run --rm \
+            -v $PWD/config/prometheus:/etc/prometheus \
+            --entrypoint promtool \
+            prom/prometheus:v2.55.1 \
+            check config /etc/prometheus/prometheus.yaml
+
+      - name: Validate OTel config
+        if: hashFiles('config/otel/collector.yaml') != ''
+        run: |
+          docker run --rm \
+            -v $PWD/config/otel/collector.yaml:/etc/otel/config.yaml \
+            otel/opentelemetry-collector-contrib:0.120.0 \
+            validate --config=/etc/otel/config.yaml
+
+      - name: Validate Tempo config
+        if: hashFiles('config/tempo/tempo.yaml') != ''
+        run: |
+          docker run --rm \
+            -v $PWD/config/tempo/tempo.yaml:/etc/tempo.yaml \
+            grafana/tempo:2.4.1 \
+            -config.file=/etc/tempo.yaml -config.verify=true
+
+  # ─── PR Size Gate ────────────────────────────────────────────────────────
+  pr-size:
+    name: PR Size
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 2
+    steps:
+      - name: Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const total = pr.additions + pr.deletions;
+            const limit = 400;
+            const hasOverride = pr.labels.some(l => l.name === 'large-pr-approved');
+            console.log(`PR #${pr.number}: +${pr.additions} -${pr.deletions} = ${total} lines`);
+            if (hasOverride) {
+              console.log('✅ large-pr-approved override accepted');
+              return;
+            }
+            if (total > limit) {
+              core.setFailed(
+                `❌ PR size: ${total} lines (limit: ${limit})\n` +
+                `Split into smaller PRs or get large-pr-approved label from a human.`
+              );
+            } else {
+              console.log(`✅ PR size: ${total} lines — within limit`);
+            }
