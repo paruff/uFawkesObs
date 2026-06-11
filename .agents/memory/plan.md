@@ -1,8 +1,18 @@
 # Implementation Plan — uFawkesObs
 
 > Generated from platform audit (June 2026). Integrates existing GitHub issues (#64, #71, #74-87) with 16 new findings from codebase review. Updated as issues are completed.
+> **Phase 5 revised 2026-06-09** against DORA 2025 State of AI, 2025 AI Capabilities Model, and 2026 ROI reports.
 >
 > **Models:** All tasks use opencode zen free (default). Simple single-file YAML edits may use ollama gemma4:e4b (local, zero cost).
+
+### DORA Research Sources (Phase 5 revision)
+
+| Report | Date | Key Finding for uFawkesObs |
+|---|---|---|
+| [DORA 2025 State of AI](https://services.google.com/fh/files/misc/2025_state_of_ai_assisted_software_development.pdf) | Sep 2025 | AI is an amplifier; 7 team archetypes; VSM is the force multiplier |
+| [DORA 2025 AI Capabilities Model](https://services.google.com/fh/files/misc/2025_dora_ai_capabilities_model.pdf) | Sep 2025 | 7 capabilities: clear AI stance, healthy data ecosystems, AI-accessible data, version control, small batches, user-centricity, quality platforms |
+| [DORA 2026 ROI of AI](https://services.google.com/fh/files/misc/dora-roi-of-ai-assisted-software-development-2026.pdf) | Apr 2026 | J-Curve, verification tax, instability tax, 39% ROI (sensitive to J-curve duration), ROI calculator framework |
+| [Faros AI Acceleration Whiplash](https://www.faros.ai/blog/dora-ai-roi-calculator-telemetry-inputs) | Apr 2026 | Telemetry: incidents/PR +242.7%, bugs/dev +54%, 31.3% PRs merge without review, J-curve 12+ months |
 
 ---
 
@@ -50,6 +60,13 @@
 | N14 | `.bak` file committed in config/grafana/dashboards/ | LOW | `chore: remove .bak file from config/grafana/dashboards/` | 0 |
 | N15 | `e2e-runner.sh` uses `chmod -R 777` | LOW | `fix(scripts): replace chmod 777 with proper permission handling` | 3 |
 | N16 | OTel `debug` exporter at `verbosity: detailed` | LOW | `chore(otel): reduce debug exporter verbosity to normal` | 3 |
+
+### New Issues from Phase 5 Revision (DORA Research)
+
+| ID | Title | Rationale | Phase |
+|---|---|---|---|
+| N17 | Provision AI adoption impact dashboard | Track verification tax, rework/churn ratio, review coverage, instability metrics per Faros/DORA 2026 | 5A |
+| N18 | J-Curve tracker dashboard panels | Pre- vs post-AI adoption metric comparison per DORA 2026 ROI framework | 5A |
 
 ---
 
@@ -162,18 +179,36 @@ Created: uFawkesPipe and uFawkesDevX integration guides, Backstage catalog regis
 
 ---
 
-## Phase 5 — M4 Completion (DORA Metrics)
+## Phase 5 — M4 Completion (DORA Metrics) — REVISED 2026-06-09
 
-Sequential — each depends on the previous. Human gate required between 5.1 and 5.2.
+> **Revision basis:** DORA 2025 State of AI report, 2025 AI Capabilities Model, 2026 ROI of AI report.
+> Key change: DevLake is now optional (5B). Phase 5A uses existing Prometheus/OTel stack.
+> Adds AI-era metrics (verification tax, rework ratio, review coverage) and J-Curve tracking
+> per Faros telemetry and DORA ROI framework.
+
+### Phase 5A — DORA Core Metrics (no new services)
+
+5A.1 has a human gate before 5A.2.
 
 | Order | ID | Title | Effort | Model | Rationale | Blocked By | Status |
 |---|---|---|---|---|---|---|---|
-| 5.1 | #80 | Define DORA data contract spec | L | zen free | Spec document requiring cross-referencing Jenkins events, GitHub API, Grafana annotations, and PromQL expressions | — | ⬜ |
-| 5.2 | #81 | Add DevLake to compose stack | XL | zen free | Multi-service compose addition (DevLake + MySQL + UI) with healthchecks, resource limits, port allocation, and datasource provisioning | 5.1 (spec-approved label) | ⬜ |
-| 5.3 | #82 | Add DORA recording rules | L | zen free | PromQL recording rules require absent() guards, or vector(0) arithmetic, correct rate() ranges, and validation against live data | 5.1, 5.2 | ⬜ |
-| 5.4 | #83 | Provision DORA metrics dashboard | M | zen free | Grafana JSON with multiple panels, datasource UID references, recording rule metric names, and help annotations | 5.3 | ⬜ |
+| 5A.1 | #80 | Define DORA data contract spec | L | zen free | Spec covering: (a) classic DORA 4 metrics sourced from existing Prometheus/OTel, (b) AI-era metrics (verification tax, rework ratio, review coverage, instability tax), (c) DORA AI Capabilities Model survey methodology for 7 capabilities. References DORA 2025 reports and Faros 2026 methodology. | — | ⬜ |
+| 5A.2 | #82 | Add DORA recording rules | L | zen free | PromQL rules for classic DORA metrics + AI-era metrics. All rules require absent() guards, or vector(0), correct rate() ranges. Metrics sourced from OTel traces/spans, Prometheus counters, and Alloy logs — no new services. | 5A.1 (spec-approved label) | ⬜ |
+| 5A.3 | #83 | Provision DORA metrics dashboard | M | zen free | Grafana JSON: classic DORA 4 panels (deployment frequency, lead time, CFR, time to restore) using UID datasource refs, recording rule metric names, schemaVersion 39. | 5A.2 | ⬜ |
+| 5A.4 | N17 | Provision AI adoption impact dashboard | M | zen free | Grafana JSON: verification tax proxy (PR open→merge time delta), rework/churn ratio, review coverage (% PRs without review), incidents/PR, AI adoption rate. Per Faros 2026 methodology. | 5A.2 | ⬜ |
+| 5A.5 | N18 | J-Curve tracker dashboard panels | M | zen free | Grafana JSON: pre- vs post-adoption comparison panels, J-Curve progression tracking, productivity dip visualization. Per DORA 2026 ROI framework. | 5A.2 | ⬜ |
 
-**Dependency:** Strictly sequential. Human gate: maintainer must add `spec-approved` label to #80 before #81 is assigned.
+**Dependency:** 5A.1 → human gate → 5A.2 → 5A.3/5A.4/5A.5 (parallel after 5A.2).
+
+### Phase 5B — DevLake Integration (optional, deferred)
+
+DevLake is no longer a prerequisite. It is only needed if 5A.1 reveals that Prometheus/OTel
+cannot provide sufficient granularity for GitHub/Jira cross-referencing. If the data contract
+spec (5A.1) confirms existing stack coverage, close #81 as "not needed."
+
+| Order | ID | Title | Effort | Model | Rationale | Blocked By | Status |
+|---|---|---|---|---|---|---|---|
+| 5B.1 | #81 | Add DevLake to compose stack | XL | zen free | Multi-service compose addition (DevLake + MySQL + UI) with healthchecks, resource limits, port allocation, and datasource provisioning. Only if 5A.1 data contract reveals gap. | 5A.1 (gap-identified label) | ⬜ |
 
 ---
 
@@ -209,9 +244,12 @@ Week 2:  Phase 1 (alerting/testing) ── all 5 parallel
          Phase 3.1-3.3 (M2 docs) ───── parallel with Phase 1
 Week 3:  Phase 3.4-3.8 (dashboards) ─ depends on Phase 0.3
          Phase 4 (integration guides) ─ all 4 parallel
-Week 4+: Phase 5 (DORA) ────────────── sequential, human gate
-         Phase 6 (K8s) ──────────────── sequential, parallel with Phase 5
-         Phase 7 (GitOps) ───────────── anytime
+Week 4+: Phase 5A.1 (DORA data contract) ──── spec-first, human gate
+         Phase 5A.2 (recording rules) ──────── after gate
+         Phase 5A.3-5A.5 (dashboards) ──────── parallel after 5A.2
+         Phase 5B.1 (DevLake, optional) ────── only if gap identified
+         Phase 6 (K8s) ──────────────────────── sequential, parallel with Phase 5
+         Phase 7 (GitOps) ──────────────────── anytime
 ```
 
 ---
@@ -222,7 +260,9 @@ Week 4+: Phase 5 (DORA) ────────────── sequential, h
 |---|---|---|---|
 | D1 | Dashboard provisioning (N4) | Remove legacy dashboards.yaml; compose.yaml already has correct mounts | Compose mounts were correct; legacy provisioner was loading old dashboards |
 | D2 | alerts.yml consolidation (N6) | Keep both files, add absent() guards to alerts.yml | They serve different purposes (service-specific vs platform-level) |
-| D3 | DORA phase timing (Phase 5) | Include in plan with human gate noted | Blocks downstream milestones; plan should show full picture |
+| D3 | Phase 5 structure (revised) | Split into 5A (core metrics, no new services) + 5B (DevLake, optional) | DORA 2025/2026 research shows AI-era metrics matter more than DevLake; existing Prometheus/OTel stack sufficient for baseline DORA |
+| D4 | DevLake dependency | Optional — only if 5A.1 data contract reveals Prometheus/OTel gap | Faros/DORA methodology uses CI/CD pipeline data, not a separate data platform |
+| D5 | AI-era metrics scope | Add verification tax, rework/churn ratio, review coverage, instability tax, AI adoption rate | 2025 DORA research: "software delivery metrics alone aren't sufficient"; 2026 ROI report: instability tax and verification tax are primary cost drivers |
 
 ---
 
@@ -236,3 +276,4 @@ Week 4+: Phase 5 (DORA) ────────────── sequential, h
 | 2026-06-07 | Phase 2 complete: LICENSE exists, README license link fixed, SPDX identifier added to compose.yaml | #64 |
 | 2026-06-07 | Phase 3 partial: legacy dashboards upgraded to schemaVersion 39, service UIDs prefixed with ufawkesobs-, CI badge added, deprecated table_manager removed from Loki, OTel debug verbosity reduced, chmod 777→755, community docs added | #71, N8, N10, N12, N15, N16 |
 | 2026-06-07 | Phase 4 complete: uFawkesPipe and uFawkesDevX integration guides, Backstage catalog registration, multi-stack-integration.md updated with plane join patterns | #76, #77, #78, #79 |
+| 2026-06-09 | Phase 5 revised against DORA 2025/2026 research: split into 5A (core metrics, no new services) + 5B (DevLake, optional); added AI-era metrics (N17) and J-Curve tracker (N18) | — |
