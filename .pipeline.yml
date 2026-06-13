@@ -1,0 +1,93 @@
+# uFawkesObs Pipeline Configuration
+# Repo type: stack (Docker Compose observability stack)
+
+repo-type: stack
+language: python
+
+stages:
+  preflight:
+    enabled: true
+    timeout: 3
+    checks:
+      pre-commit: true
+      commit-format: true
+      pr-size: true
+      secret-detection: true
+
+  lint:
+    enabled: true
+    timeout: 5
+    languages:
+      python:
+        enabled: true
+        tools: ["ruff", "black"]
+      docker:
+        enabled: true
+        tools: ["hadolint"]
+      markdown:
+        enabled: true
+        tools: ["markdownlint"]
+
+  build:
+    enabled: true
+    timeout: 10
+    config-validation:
+      prometheus: true
+      otel: true
+      tempo: true
+      grafana: true
+    supply-chain:
+      fail-on-latest: true
+
+  security:
+    enabled: true
+    timeout: 15
+    vulnerabilities:
+      enabled: true
+      severity: CRITICAL,HIGH
+      ignore-unfixed: true
+    secrets:
+      enabled: true
+    dependencies:
+      enabled: true
+
+  tests:
+    enabled: true
+    timeout: 25
+    unit:
+      enabled: true
+      min-coverage: 80
+    integration:
+      enabled: true
+      min-coverage: 70
+      docker-stack: true
+    compose-smoke:
+      enabled: true
+
+  quality:
+    enabled: true
+    timeout: 15
+    lighthouse:
+      enabled: false
+    accessibility:
+      enabled: false
+    pr-size:
+      enabled: true
+      max-lines: 400
+
+  deploy:
+    enabled: true
+    strategy: gitops
+    target: ssh
+    manual-approval: false
+
+gates:
+  require-all-stage-pass: true
+  emergency-bypass: true
+  bypass-label: emergency-bypass
+
+notifications:
+  failure:
+    - github-actions
+  success:
+    - github-actions

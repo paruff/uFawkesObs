@@ -1,0 +1,91 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── Stage 0: Pre-flight ──────────────────────────────────────────────────
+  preflight:
+    name: Pre-flight
+    uses: ./.github/workflows/reusable-preflight.yml
+
+  # ─── Stage 1: Lint ───────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    needs: [preflight]
+    uses: ./.github/workflows/reusable-lint.yml
+
+  # ─── Stage 2: Build & Validate ───────────────────────────────────────────
+  build:
+    name: Build & Validate
+    needs: [lint]
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      validate-prometheus: true
+      validate-otel: true
+      validate-tempo: true
+      validate-grafana: true
+      fail-on-latest: true
+
+  # ─── Stage 3: Security ───────────────────────────────────────────────────
+  security:
+    name: Security Scanning
+    needs: [build]
+    uses: ./.github/workflows/reusable-security-scanning.yml
+    with:
+      scan-type: all
+      severity-threshold: MEDIUM
+      fail-on-critical: true
+      upload-sarif: true
+
+  # ─── Stage 4: Tests (existing workflow) ──────────────────────────────────
+  tests:
+    name: Tests
+    needs: [security]
+    uses: ./.github/workflows/ci-tests.yml
+
+  # ─── Gate: Pipeline Complete ─────────────────────────────────────────────
+  pipeline-complete:
+    name: Pipeline Complete
+    needs: [preflight, lint, build, security, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          echo "=== Pipeline Results ==="
+          echo "Preflight: ${{ needs.preflight.result }}"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Tests: ${{ needs.tests.result }}"
+
+          if [ "${{ needs.preflight.result }}" == "failure" ] || \
+             [ "${{ needs.lint.result }}" == "failure" ] || \
+             [ "${{ needs.build.result }}" == "failure" ] || \
+             [ "${{ needs.security.result }}" == "failure" ] || \
+             [ "${{ needs.tests.result }}" == "failure" ]; then
+            echo "❌ Pipeline failed"
+            exit 1
+          fi
+
+          echo "✅ Pipeline passed"
+
+      - name: DORA pipeline finish
+        if: always()
+        run: |
+          echo "pipeline-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "pipeline-result:${{ contains(needs.*.result, 'failure') && 'failure' || 'success' }}"
