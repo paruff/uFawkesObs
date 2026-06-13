@@ -196,7 +196,7 @@ jobs:
           fi
 
           sensitive_key_regex='(SECRET|TOKEN|PASSWORD|PRIVATE_KEY|ACCESS_KEY|API_KEY|DATABASE_URL|CONN_STRING|DSN)'
-          placeholder_value_regex='^(|<.*>|REDACTED|CHANGEME|changeme|example|your_.*)$'
+          placeholder_value_regex='^(|<.*>|REDACTED|CHANGEME|changeme|REPLACE_ME|example|your_.*)$'
 
           while IFS= read -r line || [ -n "$line" ]; do
             trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
