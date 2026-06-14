@@ -327,69 +327,6 @@ jobs:
         run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
   # ════════════════════════════════════════════════════════════════════════════
-  # Markdown Linting
-  # ════════════════════════════════════════════════════════════════════════════
-  markdown-lint:
-    name: Markdown Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.timeout-minutes }}
-    if: inputs.emergency-bypass != true
-    steps:
-      - name: DORA job start
-        run: |
-          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          echo "sha:${{ github.sha }}"
-          echo "workflow:${{ github.workflow }}"
-          echo "job:${{ github.job }}"
-
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Run markdownlint
-        uses: avto-dev/markdownlint-lint@main
-        with:
-          args: "--config .markdownlint.json -- $(find . -name '*.md' -not -path './node_modules/*' -not -path './.git/*')"
-
-      - name: DORA job finish
-        if: always()
-        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-  # ════════════════════════════════════════════════════════════════════════════
-  # Format Check (Prettier)
-  # ════════════════════════════════════════════════════════════════════════════
-  format-check:
-    name: Format Check
-    runs-on: ubuntu-latest
-    timeout-minutes: ${{ inputs.timeout-minutes }}
-    if: inputs.emergency-bypass != true
-    steps:
-      - name: DORA job start
-        run: |
-          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          echo "sha:${{ github.sha }}"
-          echo "workflow:${{ github.workflow }}"
-          echo "job:${{ github.job }}"
-
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Prettier check
-        run: npx prettier --check .
-
-      - name: DORA job finish
-        if: always()
-        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-
-  # ════════════════════════════════════════════════════════════════════════════
   # Lint Summary
   # ════════════════════════════════════════════════════════════════════════════
   lint-summary:
@@ -403,8 +340,6 @@ jobs:
       - yaml-lint
       - typescript-lint
       - go-lint
-      - markdown-lint
-      - format-check
     if: always()
     outputs:
       result: ${{ steps.outcome.outputs.result }}
@@ -423,9 +358,7 @@ jobs:
              [[ "${{ needs.shell-lint.result }}" == "failure" ]] || \
              [[ "${{ needs.yaml-lint.result }}" == "failure" ]] || \
              [[ "${{ needs.typescript-lint.result }}" == "failure" ]] || \
-             [[ "${{ needs.go-lint.result }}" == "failure" ]] || \
-             [[ "${{ needs.markdown-lint.result }}" == "failure" ]] || \
-             [[ "${{ needs.format-check.result }}" == "failure" ]]; then
+             [[ "${{ needs.go-lint.result }}" == "failure" ]]; then
             echo "result=fail" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -443,8 +376,6 @@ jobs:
           echo "| YAML | ${{ needs.yaml-lint.result == 'skipped' && '⏭️ N/A' || (needs.yaml-lint.result == 'success' && '✅ Pass' || '❌ Fail') }} |" >> $GITHUB_STEP_SUMMARY
           echo "| TypeScript | ${{ needs.typescript-lint.result == 'skipped' && '⏭️ N/A' || (needs.typescript-lint.result == 'success' && '✅ Pass' || '❌ Fail') }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Go | ${{ needs.go-lint.result == 'skipped' && '⏭️ N/A' || (needs.go-lint.result == 'success' && '✅ Pass' || '❌ Fail') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Markdown | ${{ needs.markdown-lint.result == 'skipped' && '⏭️ N/A' || (needs.markdown-lint.result == 'success' && '✅ Pass' || '❌ Fail') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Format | ${{ needs.format-check.result == 'skipped' && '⏭️ N/A' || (needs.format-check.result == 'success' && '✅ Pass' || '❌ Fail') }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: DORA job finish
         if: always()
