@@ -1,0 +1,141 @@
+# uFawkesObs Pipeline Configuration
+# Repo type: stack (Docker Compose observability stack)
+# Schema version: 2
+#
+# Pipeline ordering: shift-left principle
+# Static analysis BEFORE expensive operations (build, test, deploy)
+
+version: "2"
+repo-type: stack
+language: python
+
+stages:
+  # Stage 0: Fastest feedback — pre-commit, PR size, commit format, secrets
+  preflight:
+    enabled: true
+    timeout: 3
+    checks:
+      pre-commit: true
+      commit-format: true
+      pr-size: true
+      secret-detection: true
+
+  # Stage 1: Static code analysis — catch quality issues early
+  lint:
+    enabled: true
+    timeout: 5
+    languages:
+      python:
+        enabled: true
+        tools: ["ruff", "black"]
+      docker:
+        enabled: true
+        tools: ["hadolint"]
+      markdown:
+        enabled: true
+        tools: ["markdownlint"]
+
+  # Stage 2: Static security scanning — BEFORE build
+  # Secrets (Gitleaks), vulnerabilities (Trivy), dependencies
+  security:
+    enabled: true
+    timeout: 15
+    vulnerabilities:
+      enabled: true
+      severity: CRITICAL,HIGH
+      ignore-unfixed: true
+    secrets:
+      enabled: true
+    dependencies:
+      enabled: true
+      fail-on: high
+
+  # Stage 2b: Dependency review — GitHub dependency graph analysis
+  dependency-review:
+    enabled: true
+    timeout: 5
+    fail-on: high
+    comment-summary: true
+
+  # Stage 3: Build & validate — only after code is clean
+  build:
+    enabled: true
+    timeout: 10
+    config-validation:
+      prometheus: true
+      otel: true
+      tempo: true
+      grafana: true
+    supply-chain:
+      :latest-check: true
+      sbom: true
+      signing: true
+      slsa: true
+      container-scan: true
+
+  # Stage 4: Tests — on validated, clean code
+  tests:
+    enabled: true
+    timeout: 30
+    coverage-thresholds:
+      unit:
+        total: 60
+        diff: 80
+      acceptance:
+        total: 50
+        diff: 70
+    unit:
+      enabled: true
+    integration:
+      enabled: true
+      docker-stack: true
+    compose-smoke:
+      enabled: true
+    acceptance:
+      enabled: true
+      timeout: 10
+    load:
+      enabled: true
+      tool: k6
+      max-vusers: 50
+      duration: 90s
+      thresholds:
+        p95-latency: 500
+        error-rate: 1
+    performance:
+      enabled: true
+      tool: k6
+      thresholds:
+        p95-latency: 500
+        error-rate: 1
+        memory: 2048
+
+  # Stage 5: Quality gates — accessibility, performance
+  quality:
+    enabled: true
+    timeout: 15
+    lighthouse:
+      enabled: false
+    accessibility:
+      enabled: false
+    pr-size:
+      enabled: true
+      max-lines: 400
+
+  # Stage 6: Deploy — GitOps reconciliation
+  deploy:
+    enabled: true
+    strategy: gitops
+    target: ssh
+    manual-approval: false
+
+gates:
+  require-all-stage-pass: true
+  emergency-bypass: true
+  bypass-label: emergency-bypass
+
+notifications:
+  failure:
+    - github-actions
+  success:
+    - github-actions
