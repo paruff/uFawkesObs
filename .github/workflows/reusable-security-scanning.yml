@@ -57,17 +57,24 @@ jobs:
 
       # ─── Secret Scanning (Gitleaks) ─────────────────────────────────────
       - name: Run secret scanning
+        id: gitleaks
         if: inputs.scan-type == 'all' || inputs.scan-type == 'secrets'
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_SUMMARY: true
         continue-on-error: true
 
+      - name: Check gitleaks results
+        if: steps.gitleaks.outcome == 'failure'
+        run: |
+          echo "::warning::Gitleaks detected potential secrets. Check the Security tab for details."
+          # Don't fail the job - gitleaks may find false positives in test fixtures
+
       # ─── Vulnerability Scanning (Trivy FS) ─────────────────────────────
       - name: Run Trivy vulnerability scanner
         if: inputs.scan-type == 'all' || inputs.scan-type == 'vulnerabilities'
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: "fs"
           scan-ref: ${{ inputs.scan-path }}

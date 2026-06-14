@@ -8,11 +8,21 @@ on:
         required: false
         type: string
         default: "high"
-      comment-summary:
+      comment-summary-in-pr:
         description: "Post PR comment with dependency review summary"
         required: false
-        type: boolean
-        default: true
+        type: string
+        default: "true"
+      base-ref:
+        description: "Base ref for comparison (auto-detected for PRs)"
+        required: false
+        type: string
+        default: ""
+      head-ref:
+        description: "Head ref for comparison (auto-detected for PRs)"
+        required: false
+        type: string
+        default: ""
       allow-licenses:
         description: "Comma-separated list of allowed licenses (empty = allow all)"
         required: false
@@ -69,15 +79,50 @@ jobs:
               throw error;
             }
 
-      - name: Review dependencies
+      - name: Determine refs
+        id: refs
         if: steps.dependency-graph.outputs.enabled == 'true'
-        uses: actions/dependency-review-action@v5
+        uses: actions/github-script@v9
+        with:
+          script: |
+            let baseRef = '${{ inputs.base-ref }}';
+            let headRef = '${{ inputs.head-ref }}';
+
+            // Auto-detect for PRs
+            if (!baseRef || !headRef) {
+              if (context.eventName === 'pull_request') {
+                baseRef = baseRef || context.payload.pull_request.base.sha;
+                headRef = headRef || context.payload.pull_request.head.sha;
+              } else if (context.eventName === 'push') {
+                // For push events, compare against the previous commit
+                baseRef = baseRef || context.payload.before;
+                headRef = headRef || context.sha;
+              }
+            }
+
+            if (!baseRef || !headRef) {
+              core.warning('Could not determine base/head refs; skipping dependency review');
+              core.setOutput('skip', 'true');
+              return;
+            }
+
+            console.log(`Base ref: ${baseRef}`);
+            console.log(`Head ref: ${headRef}`);
+            core.setOutput('base-ref', baseRef);
+            core.setOutput('head-ref', headRef);
+            core.setOutput('skip', 'false');
+
+      - name: Review dependencies
+        if: steps.dependency-graph.outputs.enabled == 'true' && steps.refs.outputs.skip != 'true'
+        uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: ${{ inputs.fail-on-severity }}
-          comment-summary: ${{ inputs.comment-summary }}
+          base-ref: ${{ steps.refs.outputs.base-ref }}
+          head-ref: ${{ steps.refs.outputs.head-ref }}
+          comment-summary-in-pr: ${{ inputs.comment-summary-in-pr }}
 
       - name: Deny specific licenses
-        if: inputs.deny-licenses != '' && steps.dependency-graph.outputs.enabled == 'true'
+        if: inputs.deny-licenses != '' && steps.dependency-graph.outputs.enabled == 'true' && steps.refs.outputs.skip != 'true'
         uses: actions/github-script@v9
         with:
           script: |
