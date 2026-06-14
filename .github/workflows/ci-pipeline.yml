@@ -18,20 +18,46 @@ concurrency:
 
 jobs:
   # ─── Stage 0: Pre-flight ──────────────────────────────────────────────────
+  # Fastest feedback: pre-commit hooks, PR size, commit format, secret detection
   preflight:
     name: Pre-flight
     uses: ./.github/workflows/reusable-preflight.yml
 
-  # ─── Stage 1: Lint ───────────────────────────────────────────────────────
+  # ─── Stage 1: Static Analysis (Lint) ────────────────────────────────────
+  # Catch code quality issues BEFORE security scan or build
   lint:
-    name: Lint
+    name: Static Analysis
     needs: [preflight]
     uses: ./.github/workflows/reusable-lint.yml
 
-  # ─── Stage 2: Build & Validate ───────────────────────────────────────────
+  # ─── Stage 2: Security Scanning ─────────────────────────────────────────
+  # Static security: secrets (Gitleaks), vulnerabilities (Trivy), dependencies
+  # Runs BEFORE build — don't build code with known vulnerabilities
+  security:
+    name: Security Scanning
+    needs: [lint]
+    uses: ./.github/workflows/reusable-security-scanning.yml
+    with:
+      scan-type: all
+      severity-threshold: MEDIUM
+      fail-on-critical: true
+      upload-sarif: true
+
+  # ─── Stage 2b: Dependency Review ────────────────────────────────────────
+  # GitHub dependency graph analysis — blocks on critical/high
+  dependency-review:
+    name: Dependency Review
+    needs: [lint]
+    uses: ./.github/workflows/reusable-dependency-review.yml
+    with:
+      fail-on-severity: high
+      comment-summary: true
+
+  # ─── Stage 3: Build & Validate ─────────────────────────────────────────
+  # Config validation + supply chain — only runs after code is clean
   build:
     name: Build & Validate
-    needs: [lint]
+    needs: [security, dependency-review]
     uses: ./.github/workflows/reusable-build.yml
     with:
       validate-prometheus: true
@@ -40,49 +66,43 @@ jobs:
       validate-grafana: true
       fail-on-latest: true
 
-  # ─── Stage 3: Security ───────────────────────────────────────────────────
-  security:
-    name: Security Scanning
-    needs: [build]
-    uses: ./.github/workflows/reusable-security-scanning.yml
-    with:
-      scan-type: all
-      severity-threshold: MEDIUM
-      fail-on-critical: true
-      upload-sarif: true
-
-  # ─── Stage 4: Tests (existing workflow) ──────────────────────────────────
+  # ─── Stage 4: Tests ────────────────────────────────────────────────────
+  # Unit, integration, compose-smoke — runs on validated code
   tests:
     name: Tests
-    needs: [security]
+    needs: [build]
     uses: ./.github/workflows/ci-tests.yml
 
-  # ─── Gate: Pipeline Complete ─────────────────────────────────────────────
+  # ─── Gate: Pipeline Complete ────────────────────────────────────────────
   pipeline-complete:
     name: Pipeline Complete
-    needs: [preflight, lint, build, security, tests]
+    needs: [preflight, lint, security, dependency-review, build, tests]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
           echo "=== Pipeline Results ==="
-          echo "Preflight: ${{ needs.preflight.result }}"
-          echo "Lint: ${{ needs.lint.result }}"
-          echo "Build: ${{ needs.build.result }}"
-          echo "Security: ${{ needs.security.result }}"
-          echo "Tests: ${{ needs.tests.result }}"
+          echo "Preflight:          ${{ needs.preflight.result }}"
+          echo "Static Analysis:    ${{ needs.lint.result }}"
+          echo "Security Scanning:  ${{ needs.security.result }}"
+          echo "Dependency Review:  ${{ needs.dependency-review.result }}"
+          echo "Build & Validate:   ${{ needs.build.result }}"
+          echo "Tests:              ${{ needs.tests.result }}"
 
           if [ "${{ needs.preflight.result }}" == "failure" ] || \
              [ "${{ needs.lint.result }}" == "failure" ] || \
-             [ "${{ needs.build.result }}" == "failure" ] || \
              [ "${{ needs.security.result }}" == "failure" ] || \
+             [ "${{ needs.dependency-review.result }}" == "failure" ] || \
+             [ "${{ needs.build.result }}" == "failure" ] || \
              [ "${{ needs.tests.result }}" == "failure" ]; then
-            echo "❌ Pipeline failed"
+            echo ""
+            echo "❌ Pipeline FAILED"
             exit 1
           fi
 
-          echo "✅ Pipeline passed"
+          echo ""
+          echo "✅ Pipeline PASSED"
 
       - name: DORA pipeline finish
         if: always()
