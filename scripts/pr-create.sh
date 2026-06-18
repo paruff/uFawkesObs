@@ -71,11 +71,11 @@ info "Changes to commit:"
 echo ""
 if [ -n "${CHANGED_FILES}" ]; then
   echo "  Modified:"
-  echo "${CHANGED_FILES}" | sed 's/^/    /'
+  while IFS= read -r line; do echo "    ${line}"; done <<< "${CHANGED_FILES}"
 fi
 if [ -n "${UNTRACKED_FILES}" ]; then
   echo "  Untracked:"
-  echo "${UNTRACKED_FILES}" | sed 's/^/    /'
+  while IFS= read -r line; do echo "    ${line}"; done <<< "${UNTRACKED_FILES}"
 fi
 echo ""
 
