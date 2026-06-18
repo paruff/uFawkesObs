@@ -30,7 +30,7 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "prometheus": "prom/prometheus:v2.55.1",
     "alertmanager": "prom/alertmanager:v0.28.0",
     "tempo": "grafana/tempo:2.10.5",
-    "loki": "grafana/loki:2.9.10",
+    "loki": "grafana/loki:3.3.2",
     "alloy": "grafana/alloy:v1.12.2",
     "grafana": "grafana/grafana:12.3.7",
 }

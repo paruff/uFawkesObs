@@ -112,3 +112,34 @@ class TestLokiSchema3x:
             "storage_config contains 'boltdb_shipper' key — "
             "remove it and use tsdb_shipper for Loki 3.x compatibility."
         )
+
+    def test_delete_request_store_configured(self, loki_config: dict) -> None:
+        """Assert compactor.delete-request-store is set when retention is enabled.
+
+        Loki 3.x requires delete-request-store when retention is enabled.
+        Missing this field causes a startup error.
+        """
+        compactor = loki_config.get("compactor")
+        assert compactor is not None, (
+            "loki.yaml is missing 'compactor' key"
+        )
+        retention_enabled = compactor.get("retention_enabled", False)
+        if retention_enabled:
+            delete_store = compactor.get("delete_request_store")
+            assert delete_store is not None, (
+                "compactor.retention_enabled is true but "
+                "compactor.delete_request_store is not set. "
+                "Loki 3.x requires delete-request-store when retention is enabled."
+            )
+
+    def test_no_shared_store_in_tsdb_shipper(self, loki_config: dict) -> None:
+        """Assert tsdb_shipper does not contain the removed shared_store field.
+
+        Loki 3.x removed the shared_store field from indexshipper.Config.
+        """
+        storage_config = loki_config.get("storage_config", {})
+        tsdb_shipper = storage_config.get("tsdb_shipper", {})
+        assert "shared_store" not in tsdb_shipper, (
+            "storage_config.tsdb_shipper contains 'shared_store' key — "
+            "this field was removed in Loki 3.x."
+        )
