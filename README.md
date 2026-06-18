@@ -16,11 +16,11 @@ uFawkesObs provides the observability substrate required for DORA measurement â€
 
 - **OpenTelemetry Collector** (v0.120.0) - Telemetry data collection and routing
 - **Prometheus** (v2.55.1) - Metrics storage and querying
-- **Alertmanager** (v0.27.0) - Alert management and routing
+- **Alertmanager** (v0.28.0) - Alert management and routing
 - **Tempo** (v2.10.5) - Distributed tracing backend
-- **Loki** (v2.9.10) - Log aggregation and querying
+- **Loki** (v3.3.2) - Log aggregation and querying
 - **Alloy** (v1.12.2) - Log and telemetry collection agent
-- **Grafana** (v10.4.5) - Visualization and dashboards
+- **Grafana** (v12.3.7) - Visualization and dashboards
 - **Docker Compose** - Service orchestration
 
 **Primary Use Case:** Provides a self-hosted observability foundation deployable with `make up`. Configure secure Grafana credentials in `.env` first. Startup validation blocks insecure deployments.
