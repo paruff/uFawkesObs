@@ -277,11 +277,11 @@ Compose application, but with plane-specific considerations.
 
 ### Plane Overview
 
-| Plane                        | Repository          | Role            | Telemetry Type                                                  |
-| ---------------------------- | ------------------- | --------------- | --------------------------------------------------------------- |
-| **uFawkesObs**               | `paruff/uFawkesObs` | Observability   | Metrics, logs, traces, dashboards                               |
-| **uFawkesPipe** (deliveryd)  | `paruff/deliveryd`  | CI/CD           | Jenkins pipeline traces, deployment events, build metrics       |
-| **uFawkesDevX** (developerd) | `paruff/developerd` | Developer tools | Local service metrics, development logs, dev environment traces |
+| Plane           | Repository          | Role            | Telemetry Type                                                  |
+| --------------- | ------------------- | --------------- | --------------------------------------------------------------- |
+| **uFawkesObs**  | `paruff/uFawkesObs` | Observability   | Metrics, logs, traces, dashboards                               |
+| **uFawkesPipe** | `paruff/deliveryd`  | CI/CD           | Jenkins pipeline traces, deployment events, build metrics       |
+| **uFawkesDevX** | `paruff/developerd` | Developer tools | Local service metrics, development logs, dev environment traces |
 
 ### Integration Pattern for Any Fawkes Plane
 
