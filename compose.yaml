@@ -107,7 +107,7 @@ services:
     profiles: ["core"]
 
   loki:
-    image: grafana/loki:2.9.10
+    image: grafana/loki:3.3.2
     container_name: loki
     restart: unless-stopped
     command:
