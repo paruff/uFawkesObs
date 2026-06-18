@@ -165,7 +165,7 @@ pass "Pushed to origin/${PR_BRANCH}"
 # ── 7) Create PR ─────────────────────────────────────────────────────────────
 
 # Auto-generate PR body if not provided
-if [ -z "${PR_BODY}" ]; then
+if [ -z "${PR_BODY:-}" ]; then
   # Count files changed
   FILES_CHANGED=$(git diff --stat HEAD~1 --name-only 2>/dev/null | wc -l | tr -d ' ')
   LINES_ADDED=$(git diff --stat HEAD~1 2>/dev/null | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
