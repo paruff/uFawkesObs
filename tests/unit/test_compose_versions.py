@@ -32,7 +32,7 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "tempo": "grafana/tempo:2.10.5",
     "loki": "grafana/loki:2.9.10",
     "alloy": "grafana/alloy:v1.12.2",
-    "grafana": "grafana/grafana:10.4.5",
+    "grafana": "grafana/grafana:12.3.7",
 }
 
 

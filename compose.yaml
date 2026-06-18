@@ -332,7 +332,7 @@ services:
     profiles: ["core"]
 
   grafana:
-    image: grafana/grafana:10.4.5
+    image: grafana/grafana:12.3.7
     container_name: grafana
     restart: unless-stopped
     environment:
