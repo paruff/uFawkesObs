@@ -43,8 +43,8 @@ uFawkesObs provides the observability substrate required for DORA measurement �
 uFawkesObs is the observability plane in the [Fawkes IDP](https://github.com/paruff/fawkes) family.
 
 - **uFawkesObs**: observability plane (metrics, logs, traces, dashboards)
-- **deliveryd** (also referred to as **uFawkesPipe**): CI/CD plane for pipeline orchestration and deployment event flow
-- **developerd** (also referred to as **uFawkesDevX**): developer plane for local development workflows and tooling
+- **uFawkesPipe**: CI/CD plane for pipeline orchestration and deployment event flow
+- **uFawkesDevX**: developer plane for local development workflows and tooling
 
 In this architecture, uFawkesObs provides the telemetry substrate; higher-level delivery and developer planes provide the event context needed for end-to-end DORA measurement.
 
@@ -552,7 +552,7 @@ uFawkesObs is part of the [uFawkes](https://ufawkes.dev) platform engineering ec
 
 | Stack           | Description                                          | Link                                            |
 | --------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| **uFawkesObs**  | Observability — Prometheus, Grafana, AI dashboards   | [GitHub](https://github.com/paruff/ufawkesobs)  |
+| **uFawkesObs**  | Observability — Prometheus, Grafana, AI dashboards   | [GitHub](https://github.com/paruff/uFawkesObs)  |
 | **uFawkesPipe** | CI/CD — Jenkins, Buildpacks, DevSecOps               | [GitHub](https://github.com/paruff/ufawkespipe) |
 | **uFawkesDORA** | DORA metrics — dashboards, VSM, delivery performance | [GitHub](https://github.com/paruff/ufawkesdora) |
 | **uFawkesSec**  | Security — policy-as-code, supply chain, guardrails  | [GitHub](https://github.com/paruff/ufawkessec)  |

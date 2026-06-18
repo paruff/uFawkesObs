@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 name: ufawkesobs
 
+# Stack nickname used in service labels: obstackd
+# User-facing product name: uFawkesObs
+# https://github.com/paruff/uFawkesObs
+
 services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.120.0

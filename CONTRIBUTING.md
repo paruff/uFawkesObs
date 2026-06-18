@@ -1,56 +1,97 @@
 # Contributing to uFawkesObs
 
-Thank you for your interest in contributing to uFawkesObs!
+Thanks for your interest in contributing to uFawkesObs — the self-hosted observability plane for the Fawkes IDP.
 
-## Getting Started
+## Reporting Bugs
+
+Open a [GitHub issue](https://github.com/paruff/uFawkesObs/issues/new?template=bug_report.md) with the bug template. Include:
+
+- What you expected to happen vs. what actually happened
+- Steps to reproduce
+- `docker compose ps` output
+- `docker compose logs <service>` output for the affected service
+- Your OS and Docker version
+
+## Suggesting Features
+
+Open a [GitHub issue](https://github.com/paruff/uFawkesObs/issues/new?template=feature_request.md) with the feature template. Link it to the wave or milestone it belongs to if known.
+
+## Submitting a Pull Request
 
 1. **Fork** the repository
-2. **Clone** your fork: `git clone https://github.com/<your-username>/uFawkesObs.git`
-3. **Create** a branch: `git checkout -b feat/my-feature`
-4. **Make** your changes
-5. **Test** your changes: `make test-acceptance`
-6. **Commit** with a conventional commit message
-7. **Push** and open a Pull Request
+2. **Create a branch** from `main`:
+   - `fix/<description>` for bug fixes
+   - `feat/<description>` for new features
+3. **Make your changes** — one logical change per PR
+4. **Run tests** before opening the PR:
+   ```bash
+   make test-unit
+   ```
+5. **Open a PR** against `main`. The PR description must include:
+   - What changed (one sentence per service affected)
+   - Services affected and how tested
+   - Secrets check: confirmed nothing sensitive committed
 
 ## Development Setup
 
 ```bash
-# Start the full observability stack
+git clone https://github.com/paruff/uFawkesObs.git
+cd uFawkesObs
+cp .env.example .env
+make init
 make up
-
-# Run acceptance tests
-make test-acceptance
-
-# Stop the stack
-make down
+pytest tests/unit/ -v
 ```
 
-## Commit Convention
+This starts the full stack (Prometheus, Grafana, Loki, Tempo, OTel Collector, Alertmanager, Alloy) and runs the unit tests. No external services required.
+
+## Code Conventions
+
+### Commit Messages
 
 We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat(compose): add new exporter
-fix(config): correct scrape interval
+fix(prometheus): correct scrape interval
+feat(grafana): add DORA dashboard
 docs: update README
-chore: bump prometheus version
+test(loki): add schema validation
 ```
 
-Prefixes: `feat`, `fix`, `docs`, `chore`, `test`, `refactor`, `perf`, `ci`
+**Valid scopes:** `prometheus`, `otel`, `loki`, `tempo`, `grafana`, `alloy`, `alertmanager`, `scripts`, `docs`, `ci`
 
-## Pull Request Requirements
+### YAML
 
-- All acceptance tests must pass
-- Docker Compose config must validate: `docker compose config --quiet`
-- PR description must follow the AI-Assisted Review Block format (see AGENTS.md)
-- One component per PR — no bundled changes
-- All image versions must be pinned (no `latest`)
+- 2-space indentation, no tabs
+- `yamllint` must pass
+- Quoted strings for values that could be misread as other types
 
-## Reporting Issues
+### Shell Scripts
 
-- Use GitHub Issues for bugs and feature requests
-- Include stack traces, logs, and reproduction steps for bugs
-- Tag issues with appropriate labels
+- `set -euo pipefail` at the top of every script
+- `shellcheck` must pass
+- No hardcoded container names
+
+### Docker Compose
+
+- All image versions must be pinned — no `:latest` tags
+- All services must have `healthcheck:` defined
+- Secrets go in `.env` (gitignored) — never in `compose.yaml`
+
+## What We Don't Accept
+
+- **Bundled multi-component upgrades** in a single PR — upgrade one service at a time
+- **`:latest` image tags** — all versions must be pinned to a specific patch
+- **Credentials or secrets** in any file — use `.env` and environment variable substitution
+- **Direct pushes to `main`** — all changes go through PRs
+
+## Running the Full Test Suite
+
+```bash
+make test-unit         # Unit tests (no running stack needed)
+make test-acceptance   # Acceptance tests (requires: make up)
+make test              # Both
+```
 
 ## Code of Conduct
 
