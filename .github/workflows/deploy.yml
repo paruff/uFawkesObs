@@ -25,7 +25,7 @@ jobs:
       reload_changed: ${{ steps.filter.outputs.reload }}
       non_reloadable_config_changed: ${{ steps.filter.outputs.non_reloadable_config }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
