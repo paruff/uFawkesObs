@@ -64,7 +64,9 @@ def grafana_auth() -> tuple:
 
 
 @pytest.fixture(scope="session")
-def wait_for_stack(prometheus_url: str, tempo_url: str, loki_url: str, grafana_url: str) -> None:
+def wait_for_stack(
+    prometheus_url: str, tempo_url: str, loki_url: str, grafana_url: str
+) -> None:
     """Wait for all Obstackd stack components to be ready."""
     components = [
         (f"{prometheus_url}/-/healthy", "Prometheus"),
@@ -97,7 +99,9 @@ def wait_for_stack(prometheus_url: str, tempo_url: str, loki_url: str, grafana_u
     print("✅ All stack components ready")
 
 
-def query_prometheus(prometheus_url: str, query: str, timeout: int = 10) -> Dict[str, Any]:
+def query_prometheus(
+    prometheus_url: str, query: str, timeout: int = 10
+) -> Dict[str, Any]:
     """
     Query Prometheus.
 
@@ -110,15 +114,15 @@ def query_prometheus(prometheus_url: str, query: str, timeout: int = 10) -> Dict
         Query result
     """
     response = requests.get(
-        f"{prometheus_url}/api/v1/query",
-        params={"query": query},
-        timeout=timeout
+        f"{prometheus_url}/api/v1/query", params={"query": query}, timeout=timeout
     )
     response.raise_for_status()
     return response.json()
 
 
-def query_tempo_trace(tempo_url: str, trace_id: str, timeout: int = 10) -> Dict[str, Any]:
+def query_tempo_trace(
+    tempo_url: str, trace_id: str, timeout: int = 10
+) -> Dict[str, Any]:
     """
     Query Tempo for a trace.
 
@@ -130,10 +134,7 @@ def query_tempo_trace(tempo_url: str, trace_id: str, timeout: int = 10) -> Dict[
     Returns:
         Trace data
     """
-    response = requests.get(
-        f"{tempo_url}/api/traces/{trace_id}",
-        timeout=timeout
-    )
+    response = requests.get(f"{tempo_url}/api/traces/{trace_id}", timeout=timeout)
     response.raise_for_status()
     return response.json()
 
@@ -151,9 +152,7 @@ def query_loki(loki_url: str, query: str, timeout: int = 10) -> Dict[str, Any]:
         Query result
     """
     response = requests.get(
-        f"{loki_url}/loki/api/v1/query",
-        params={"query": query},
-        timeout=timeout
+        f"{loki_url}/loki/api/v1/query", params={"query": query}, timeout=timeout
     )
     response.raise_for_status()
     return response.json()
@@ -164,7 +163,7 @@ def query_grafana_datasource(
     grafana_auth: tuple,
     datasource_uid: str,
     query_params: Dict[str, Any],
-    timeout: int = 10
+    timeout: int = 10,
 ) -> Dict[str, Any]:
     """
     Query a Grafana datasource.
@@ -182,13 +181,8 @@ def query_grafana_datasource(
     response = requests.post(
         f"{grafana_url}/api/ds/query",
         auth=grafana_auth,
-        json={
-            "queries": [{
-                "datasource": {"uid": datasource_uid},
-                **query_params
-            }]
-        },
-        timeout=timeout
+        json={"queries": [{"datasource": {"uid": datasource_uid}, **query_params}]},
+        timeout=timeout,
     )
     response.raise_for_status()
     return response.json()
@@ -197,30 +191,42 @@ def query_grafana_datasource(
 @pytest.fixture(scope="function")
 def prometheus_query(prometheus_url: str):
     """Fixture that provides Prometheus query function."""
+
     def _query(query: str, timeout: int = 10) -> Dict[str, Any]:
         return query_prometheus(prometheus_url, query, timeout)
+
     return _query
 
 
 @pytest.fixture(scope="function")
 def tempo_query(tempo_url: str):
     """Fixture that provides Tempo query function."""
+
     def _query(trace_id: str, timeout: int = 10) -> Dict[str, Any]:
         return query_tempo_trace(tempo_url, trace_id, timeout)
+
     return _query
 
 
 @pytest.fixture(scope="function")
 def loki_query(loki_url: str):
     """Fixture that provides Loki query function."""
+
     def _query(query: str, timeout: int = 10) -> Dict[str, Any]:
         return query_loki(loki_url, query, timeout)
+
     return _query
 
 
 @pytest.fixture(scope="function")
 def grafana_query(grafana_url: str, grafana_auth: tuple):
     """Fixture that provides Grafana datasource query function."""
-    def _query(datasource_uid: str, query_params: Dict[str, Any], timeout: int = 10) -> Dict[str, Any]:
-        return query_grafana_datasource(grafana_url, grafana_auth, datasource_uid, query_params, timeout)
+
+    def _query(
+        datasource_uid: str, query_params: Dict[str, Any], timeout: int = 10
+    ) -> Dict[str, Any]:
+        return query_grafana_datasource(
+            grafana_url, grafana_auth, datasource_uid, query_params, timeout
+        )
+
     return _query

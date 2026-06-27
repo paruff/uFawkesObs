@@ -7,7 +7,6 @@ import os
 import time
 import requests
 import pytest
-from typing import Dict, Any
 
 
 # Configuration
@@ -28,10 +27,7 @@ def wait_for_tempo(tempo_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{tempo_url}/ready",
-                timeout=5
-            )
+            response = requests.get(f"{tempo_url}/ready", timeout=5)
             if response.status_code == 200:
                 print(f"✅ Tempo is ready after {attempt + 1} attempts")
                 return
@@ -71,7 +67,7 @@ class TestTempoHealth:
                 print(f"✅ Tempo version: {version}")
             except requests.exceptions.JSONDecodeError:
                 # Response may not be JSON
-                print(f"✅ Tempo version endpoint responded (non-JSON response)")
+                print("✅ Tempo version endpoint responded (non-JSON response)")
         else:
             # Some Tempo versions may not have this endpoint
             print("⚠️  Tempo version endpoint not available")
@@ -88,7 +84,7 @@ class TestTempoPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 3200))
+            result = sock.connect_ex(("localhost", 3200))
             assert result == 0, "Tempo HTTP port 3200 should be open"
             print("✅ Tempo HTTP port (3200) is open")
         finally:
@@ -102,7 +98,7 @@ class TestTempoPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 9095))
+            result = sock.connect_ex(("localhost", 9095))
             assert result == 0, "Tempo gRPC port 9095 should be open"
             print("✅ Tempo gRPC port (9095) is open")
         finally:
@@ -116,7 +112,7 @@ class TestTempoPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 14250))
+            result = sock.connect_ex(("localhost", 14250))
             assert result == 0, "Jaeger gRPC port 14250 should be open"
             print("✅ Jaeger gRPC receiver port (14250) is open")
         finally:
@@ -130,7 +126,7 @@ class TestTempoPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 14268))
+            result = sock.connect_ex(("localhost", 14268))
             assert result == 0, "Jaeger HTTP port 14268 should be open"
             print("✅ Jaeger HTTP receiver port (14268) is open")
         finally:
@@ -144,7 +140,7 @@ class TestTempoPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 9411))
+            result = sock.connect_ex(("localhost", 9411))
             assert result == 0, "Zipkin port 9411 should be open"
             print("✅ Zipkin receiver port (9411) is open")
         finally:
@@ -168,7 +164,7 @@ class TestTempoMetrics:
             expected_metrics = [
                 "tempo_ingester_",
                 "tempo_distributor_",
-                "tempo_querier_"
+                "tempo_querier_",
             ]
 
             found_metrics = []
@@ -176,7 +172,9 @@ class TestTempoMetrics:
                 if metric_prefix in metrics:
                     found_metrics.append(metric_prefix)
 
-            print(f"✅ Tempo metrics endpoint is available ({len(found_metrics)} metric families found)")
+            print(
+                f"✅ Tempo metrics endpoint is available ({len(found_metrics)} metric families found)"
+            )
         else:
             print("⚠️  Tempo metrics endpoint not available")
 
@@ -186,14 +184,12 @@ class TestTempoAPI:
 
     def test_tempo_search_tags_endpoint(self, wait_for_tempo, tempo_url: str):
         """Test that Tempo search tags endpoint is accessible."""
-        response = requests.get(
-            f"{tempo_url}/api/search/tags",
-            timeout=10
-        )
+        response = requests.get(f"{tempo_url}/api/search/tags", timeout=10)
 
         # Should return 200 even if no traces exist
-        assert response.status_code == 200, \
+        assert response.status_code == 200, (
             "Tempo search tags endpoint should be accessible"
+        )
 
         print("✅ Tempo search tags endpoint is accessible")
 
@@ -201,13 +197,13 @@ class TestTempoAPI:
         """Test that Tempo search tag values endpoint is accessible."""
         # Query for service.name tag values (common tag)
         response = requests.get(
-            f"{tempo_url}/api/search/tag/service.name/values",
-            timeout=10
+            f"{tempo_url}/api/search/tag/service.name/values", timeout=10
         )
 
         # Should return 200 even if no traces exist
-        assert response.status_code == 200, \
+        assert response.status_code == 200, (
             "Tempo search tag values endpoint should be accessible"
+        )
 
         print("✅ Tempo search tag values endpoint is accessible")
 
@@ -215,14 +211,11 @@ class TestTempoAPI:
         """Test that Tempo search endpoint works."""
         # Try to search for traces (may return empty if no traces exist)
         response = requests.get(
-            f"{tempo_url}/api/search",
-            params={"limit": 10},
-            timeout=10
+            f"{tempo_url}/api/search", params={"limit": 10}, timeout=10
         )
 
         # Should return 200 even if no traces found
-        assert response.status_code == 200, \
-            "Tempo search endpoint should be accessible"
+        assert response.status_code == 200, "Tempo search endpoint should be accessible"
 
         if response.status_code == 200:
             data = response.json()

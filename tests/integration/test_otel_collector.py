@@ -7,7 +7,6 @@ import os
 import time
 import requests
 import pytest
-from typing import Dict, Any
 
 
 # Configuration
@@ -35,10 +34,7 @@ def wait_for_otel_collector(otel_metrics_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{otel_metrics_url}/metrics",
-                timeout=5
-            )
+            response = requests.get(f"{otel_metrics_url}/metrics", timeout=5)
             if response.status_code == 200:
                 print(f"✅ OTel Collector is ready after {attempt + 1} attempts")
                 return
@@ -60,10 +56,7 @@ def get_otel_metrics(otel_metrics_url: str) -> str:
     Returns:
         Metrics in Prometheus text format
     """
-    response = requests.get(
-        f"{otel_metrics_url}/metrics",
-        timeout=10
-    )
+    response = requests.get(f"{otel_metrics_url}/metrics", timeout=10)
     response.raise_for_status()
     return response.text
 
@@ -79,7 +72,7 @@ def parse_prometheus_metric(metrics_text: str, metric_name: str) -> list:
     Returns:
         List of matching metric lines
     """
-    lines = metrics_text.split('\n')
+    lines = metrics_text.split("\n")
     matching_lines = []
 
     for line in lines:
@@ -92,7 +85,9 @@ def parse_prometheus_metric(metrics_text: str, metric_name: str) -> list:
 class TestOTelCollectorHealth:
     """Test OTel Collector health and availability."""
 
-    def test_otel_collector_is_running(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_otel_collector_is_running(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that OTel Collector is running and serving metrics."""
         response = requests.get(f"{otel_metrics_url}/metrics")
         assert response.status_code == 200, "OTel Collector should return 200 OK"
@@ -103,7 +98,9 @@ class TestOTelCollectorHealth:
 
         print("✅ OTel Collector is running and serving metrics")
 
-    def test_otel_collector_uptime(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_otel_collector_uptime(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that OTel Collector reports uptime."""
         metrics = get_otel_metrics(otel_metrics_url)
 
@@ -117,7 +114,9 @@ class TestOTelCollectorHealth:
         assert uptime_value > 0, "Uptime should be positive"
         print(f"✅ OTel Collector uptime: {uptime_value:.2f}s")
 
-    def test_otel_collector_runtime_info(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_otel_collector_runtime_info(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that OTel Collector reports runtime information."""
         metrics = get_otel_metrics(otel_metrics_url)
 
@@ -125,7 +124,7 @@ class TestOTelCollectorHealth:
         runtime_metrics = [
             "otelcol_process_runtime_heap_alloc_bytes",
             "otelcol_process_runtime_total_alloc_bytes",
-            "otelcol_process_cpu_seconds"
+            "otelcol_process_cpu_seconds",
         ]
 
         for metric in runtime_metrics:
@@ -147,7 +146,7 @@ class TestOTelCollectorReceivers:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 4317))
+            result = sock.connect_ex(("localhost", 4317))
             assert result == 0, "OTLP gRPC port 4317 should be open"
             print("✅ OTLP gRPC receiver port (4317) is open")
         finally:
@@ -161,13 +160,15 @@ class TestOTelCollectorReceivers:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 4318))
+            result = sock.connect_ex(("localhost", 4318))
             assert result == 0, "OTLP HTTP port 4318 should be open"
             print("✅ OTLP HTTP receiver port (4318) is open")
         finally:
             sock.close()
 
-    def test_receiver_accepted_metrics(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_receiver_accepted_metrics(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that receiver accepted metrics are being tracked."""
         metrics = get_otel_metrics(otel_metrics_url)
 
@@ -176,7 +177,7 @@ class TestOTelCollectorReceivers:
             "otelcol_receiver_accepted_spans",
             "otelcol_receiver_accepted_metric_points",
             "otelcol_receiver_refused_spans",
-            "otelcol_receiver_refused_metric_points"
+            "otelcol_receiver_refused_metric_points",
         ]
 
         for metric in receiver_metrics:
@@ -186,22 +187,26 @@ class TestOTelCollectorReceivers:
 
         print("✅ Receiver metrics are being tracked")
 
-    def test_receiver_no_refused_data(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_receiver_no_refused_data(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that receivers are not refusing data."""
         metrics = get_otel_metrics(otel_metrics_url)
 
         refused_metrics = [
             "otelcol_receiver_refused_spans",
-            "otelcol_receiver_refused_metric_points"
+            "otelcol_receiver_refused_metric_points",
         ]
 
         for metric in refused_metrics:
             lines = parse_prometheus_metric(metrics, metric)
 
             for line in lines:
-                if not line.startswith('#'):
+                if not line.startswith("#"):
                     value = float(line.split()[-1])
-                    assert value == 0, f"{metric} should be 0, got {value} (data is being refused)"
+                    assert value == 0, (
+                        f"{metric} should be 0, got {value} (data is being refused)"
+                    )
 
         print("✅ No data is being refused by receivers")
 
@@ -209,7 +214,9 @@ class TestOTelCollectorReceivers:
 class TestOTelCollectorExporters:
     """Test OTel Collector exporters are operational."""
 
-    def test_exporter_sent_metrics(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_exporter_sent_metrics(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that exporter sent metrics are being tracked."""
         metrics = get_otel_metrics(otel_metrics_url)
 
@@ -218,7 +225,7 @@ class TestOTelCollectorExporters:
             "otelcol_exporter_sent_spans",
             "otelcol_exporter_sent_metric_points",
             "otelcol_exporter_send_failed_spans",
-            "otelcol_exporter_send_failed_metric_points"
+            "otelcol_exporter_send_failed_metric_points",
         ]
 
         for metric in exporter_metrics:
@@ -228,24 +235,27 @@ class TestOTelCollectorExporters:
 
         print("✅ Exporter metrics are being tracked")
 
-    def test_exporter_no_send_failures(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_exporter_no_send_failures(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that exporters are not failing to send data."""
         metrics = get_otel_metrics(otel_metrics_url)
 
         failed_metrics = [
             "otelcol_exporter_send_failed_spans",
-            "otelcol_exporter_send_failed_metric_points"
+            "otelcol_exporter_send_failed_metric_points",
         ]
 
         for metric in failed_metrics:
             lines = parse_prometheus_metric(metrics, metric)
 
             for line in lines:
-                if not line.startswith('#'):
+                if not line.startswith("#"):
                     value = float(line.split()[-1])
                     # Allow some failures during startup, but not excessive
-                    assert value < 100, \
+                    assert value < 100, (
                         f"{metric} should be low, got {value} (exporters are failing)"
+                    )
 
         print("✅ Exporters are not failing excessively")
 
@@ -257,7 +267,7 @@ class TestOTelCollectorExporters:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 8889))
+            result = sock.connect_ex(("localhost", 8889))
             assert result == 0, "Prometheus exporter port 8889 should be open"
             print("✅ Prometheus exporter port (8889) is open")
         finally:
@@ -267,14 +277,16 @@ class TestOTelCollectorExporters:
 class TestOTelCollectorProcessors:
     """Test OTel Collector processors are operational."""
 
-    def test_batch_processor_metrics(self, wait_for_otel_collector, otel_metrics_url: str):
+    def test_batch_processor_metrics(
+        self, wait_for_otel_collector, otel_metrics_url: str
+    ):
         """Test that batch processor metrics are available."""
         metrics = get_otel_metrics(otel_metrics_url)
 
         # Check for processor metrics
         processor_metrics = [
             "otelcol_processor_batch_batch_send_size_bucket",
-            "otelcol_processor_batch_timeout_trigger_send"
+            "otelcol_processor_batch_timeout_trigger_send",
         ]
 
         for metric in processor_metrics:
@@ -295,7 +307,7 @@ class TestOTelCollectorQueueMetrics:
         # Check for queue metrics
         queue_metrics = [
             "otelcol_exporter_queue_size",
-            "otelcol_exporter_queue_capacity"
+            "otelcol_exporter_queue_capacity",
         ]
 
         for metric in queue_metrics:
@@ -309,31 +321,34 @@ class TestOTelCollectorQueueMetrics:
         metrics = get_otel_metrics(otel_metrics_url)
 
         size_lines = parse_prometheus_metric(metrics, "otelcol_exporter_queue_size")
-        capacity_lines = parse_prometheus_metric(metrics, "otelcol_exporter_queue_capacity")
+        capacity_lines = parse_prometheus_metric(
+            metrics, "otelcol_exporter_queue_capacity"
+        )
 
         # Build a map of queue sizes and capacities
         queue_data = {}
 
         for line in size_lines:
-            if not line.startswith('#'):
+            if not line.startswith("#"):
                 # Extract labels and value
                 parts = line.split()
                 value = float(parts[-1])
                 # Simple parsing - in production, use a proper parser
-                queue_data.setdefault(line, {})['size'] = value
+                queue_data.setdefault(line, {})["size"] = value
 
         for line in capacity_lines:
-            if not line.startswith('#'):
+            if not line.startswith("#"):
                 parts = line.split()
                 value = float(parts[-1])
-                queue_data.setdefault(line, {})['capacity'] = value
+                queue_data.setdefault(line, {})["capacity"] = value
 
         # Check that no queue is close to full (>80%)
         for queue, data in queue_data.items():
-            if 'size' in data and 'capacity' in data and data['capacity'] > 0:
-                utilization = data['size'] / data['capacity']
-                assert utilization < 0.8, \
+            if "size" in data and "capacity" in data and data["capacity"] > 0:
+                utilization = data["size"] / data["capacity"]
+                assert utilization < 0.8, (
                     f"Queue utilization is too high: {utilization:.1%} (indicates backpressure)"
+                )
 
         print("✅ Queues are not full (no backpressure detected)")
 
@@ -345,14 +360,15 @@ class TestOTelCollectorConfiguration:
         """Test that expected metrics endpoints are available."""
         endpoints = [
             ("http://localhost:8888/metrics", "Internal metrics"),
-            ("http://localhost:8889/metrics", "Prometheus exporter")
+            ("http://localhost:8889/metrics", "Prometheus exporter"),
         ]
 
         for url, description in endpoints:
             try:
                 response = requests.get(url, timeout=5)
-                assert response.status_code == 200, \
+                assert response.status_code == 200, (
                     f"{description} endpoint should be available at {url}"
+                )
                 print(f"✅ {description} endpoint available: {url}")
             except requests.exceptions.RequestException as e:
                 pytest.fail(f"{description} endpoint not available: {e}")

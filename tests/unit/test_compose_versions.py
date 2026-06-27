@@ -119,6 +119,5 @@ class TestComposeImageVersions:
         )
         tag = actual_image.split(":")[-1]
         assert tag != "", (
-            f"Service '{service}' image has an empty tag — "
-            f"expected '{expected_image}'"
+            f"Service '{service}' image has an empty tag — expected '{expected_image}'"
         )

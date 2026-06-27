@@ -59,7 +59,11 @@ def _has_numeric_datasource_id(obj: object, path: str = "") -> list[str]:
         # Only check 'datasource' keys — panel "id" fields are fine
         if "datasource" in obj:
             ds = obj["datasource"]
-            if isinstance(ds, dict) and "id" in ds and isinstance(ds["id"], (int, float)):
+            if (
+                isinstance(ds, dict)
+                and "id" in ds
+                and isinstance(ds["id"], (int, float))
+            ):
                 hits.append(f"{path}.datasource")
         for k, v in obj.items():
             hits.extend(_has_numeric_datasource_id(v, f"{path}.{k}"))
@@ -79,7 +83,10 @@ _dashboard_ids = [str(p.relative_to(DASHBOARDS_DIR)) for p in _dashboard_files]
 @pytest.fixture(scope="module")
 def dashboards() -> list[tuple[str, dict]]:
     """Load all dashboards as (relative_path, parsed_json) pairs."""
-    return [(fid, _load_dashboard(fpath)) for fid, fpath in zip(_dashboard_ids, _dashboard_files)]
+    return [
+        (fid, _load_dashboard(fpath))
+        for fid, fpath in zip(_dashboard_ids, _dashboard_files)
+    ]
 
 
 # ---------------------------------------------------------------------------

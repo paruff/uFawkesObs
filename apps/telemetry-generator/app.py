@@ -2,6 +2,7 @@
 Simple Telemetry Generator
 Produces metrics, logs, and traces for testing observability stack
 """
+
 import logging
 import random
 import time
@@ -44,14 +45,12 @@ meter = metrics.get_meter(__name__)
 
 # Create custom metrics
 request_counter = meter.create_counter(
-    "requests_total",
-    description="Total number of requests",
-    unit="1"
+    "requests_total", description="Total number of requests", unit="1"
 )
 processing_time = meter.create_histogram(
     "processing_duration_seconds",
     description="Time taken to process requests",
-    unit="s"
+    unit="s",
 )
 
 # Logs
@@ -67,20 +66,24 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 
+
 @app.route("/")
 def index():
     """Health check endpoint."""
-    return jsonify({
-        "service": SERVICE_NAME,
-        "status": "healthy",
-        "endpoints": ["/", "/generate", "/error", "/slow"]
-    })
+    return jsonify(
+        {
+            "service": SERVICE_NAME,
+            "status": "healthy",
+            "endpoints": ["/", "/generate", "/error", "/slow"],
+        }
+    )
+
 
 @app.route("/generate")
 def generate():
     """Generate telemetry: trace, logs, and metrics."""
     with tracer.start_as_current_span("generate_telemetry") as span:
-        start_time = time.time()
+        _start_time = time.time()
 
         # Add span attributes
         operation_id = random.randint(1000, 9999)
@@ -90,7 +93,7 @@ def generate():
         # Generate logs
         logger.info(
             f"Processing request {operation_id}",
-            extra={"operation.id": operation_id, "status": "started"}
+            extra={"operation.id": operation_id, "status": "started"},
         )
 
         # Simulate work
@@ -103,15 +106,22 @@ def generate():
 
         logger.info(
             f"Request {operation_id} completed",
-            extra={"operation.id": operation_id, "status": "completed", "duration": duration}
+            extra={
+                "operation.id": operation_id,
+                "status": "completed",
+                "duration": duration,
+            },
         )
 
-        return jsonify({
-            "operation_id": operation_id,
-            "duration": duration,
-            "trace_id": format(span.get_span_context().trace_id, '032x'),
-            "span_id": format(span.get_span_context().span_id, '016x')
-        })
+        return jsonify(
+            {
+                "operation_id": operation_id,
+                "duration": duration,
+                "trace_id": format(span.get_span_context().trace_id, "032x"),
+                "span_id": format(span.get_span_context().span_id, "016x"),
+            }
+        )
+
 
 @app.route("/error")
 def generate_error():
@@ -123,11 +133,12 @@ def generate_error():
 
         return jsonify({"error": "Test error"}), 500
 
+
 @app.route("/slow")
 def slow_request():
     """Generate a slow request for latency testing."""
     with tracer.start_as_current_span("slow_request") as span:
-        start_time = time.time()
+        _start_time = time.time()
         duration = random.uniform(1.0, 3.0)
 
         span.set_attribute("duration", duration)
@@ -139,6 +150,7 @@ def slow_request():
         processing_time.record(duration, {"endpoint": "/slow"})
 
         return jsonify({"duration": duration})
+
 
 if __name__ == "__main__":
     logger.info(f"{SERVICE_NAME} starting up")

@@ -11,17 +11,21 @@ BDD Scenarios:
 import time
 import uuid
 import pytest
-from typing import Dict, Any
-from opentelemetry import trace, metrics
+from typing import Dict
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as HTTPSpanExporter
-from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter as HTTPMetricExporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as GRPCSpanExporter
-import logging
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HTTPSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
+    OTLPMetricExporter as HTTPMetricExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter as GRPCSpanExporter,
+)
 
 
 class TelemetryGenerator:
@@ -39,11 +43,13 @@ class TelemetryGenerator:
         self.use_grpc = use_grpc
 
         # Create resource with service name
-        resource = Resource.create({
-            "service.name": "e2e-test-service",
-            "service.version": "1.0.0",
-            "deployment.environment": "test"
-        })
+        resource = Resource.create(
+            {
+                "service.name": "e2e-test-service",
+                "service.version": "1.0.0",
+                "deployment.environment": "test",
+            }
+        )
 
         # Setup tracing
         if use_grpc:
@@ -59,25 +65,27 @@ class TelemetryGenerator:
         metric_exporter = HTTPMetricExporter(endpoint=f"{otel_endpoint}/v1/metrics")
         metric_reader = PeriodicExportingMetricReader(
             metric_exporter,
-            export_interval_millis=1000  # Export every 1 second for testing
+            export_interval_millis=1000,  # Export every 1 second for testing
         )
-        meter_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+        meter_provider = MeterProvider(
+            resource=resource, metric_readers=[metric_reader]
+        )
         self.meter = meter_provider.get_meter(__name__)
 
         # Create test metric instruments
         self.test_counter = self.meter.create_counter(
-            "e2e_test_counter",
-            description="Test counter for E2E validation",
-            unit="1"
+            "e2e_test_counter", description="Test counter for E2E validation", unit="1"
         )
 
         self.test_histogram = self.meter.create_histogram(
             "e2e_test_duration",
             description="Test histogram for E2E validation",
-            unit="ms"
+            unit="ms",
         )
 
-    def send_test_metric(self, metric_name: str, value: float, labels: Dict[str, str] = None) -> str:
+    def send_test_metric(
+        self, metric_name: str, value: float, labels: Dict[str, str] = None
+    ) -> str:
         """
         Send a test metric.
 
@@ -101,7 +109,9 @@ class TelemetryGenerator:
         print(f"📊 Sent metric '{metric_name}' with value={value}, test_id={test_id}")
         return test_id
 
-    def send_test_trace(self, trace_name: str, span_count: int = 3, labels: Dict[str, str] = None) -> str:
+    def send_test_trace(
+        self, trace_name: str, span_count: int = 3, labels: Dict[str, str] = None
+    ) -> str:
         """
         Send a test trace with multiple spans.
 
@@ -119,15 +129,19 @@ class TelemetryGenerator:
 
         with self.tracer.start_as_current_span(trace_name) as parent_span:
             parent_span.set_attributes(labels)
-            trace_id = format(parent_span.get_span_context().trace_id, '032x')
+            trace_id = format(parent_span.get_span_context().trace_id, "032x")
 
             # Create child spans
             for i in range(span_count - 1):
-                with self.tracer.start_as_current_span(f"{trace_name}_child_{i}") as child_span:
+                with self.tracer.start_as_current_span(
+                    f"{trace_name}_child_{i}"
+                ) as child_span:
                     child_span.set_attributes({**labels, "span_index": str(i)})
                     time.sleep(0.01)  # Simulate work
 
-        print(f"🔍 Sent trace '{trace_name}' with {span_count} spans, trace_id={trace_id}")
+        print(
+            f"🔍 Sent trace '{trace_name}' with {span_count} spans, trace_id={trace_id}"
+        )
         return trace_id
 
     def send_correlated_telemetry(self, trace_name: str) -> Dict[str, str]:
@@ -145,14 +159,12 @@ class TelemetryGenerator:
         # Send trace first
         with self.tracer.start_as_current_span(trace_name) as span:
             span.set_attributes({"test_id": test_id})
-            trace_id = format(span.get_span_context().trace_id, '032x')
+            trace_id = format(span.get_span_context().trace_id, "032x")
 
             # Send metric with trace_id in labels
-            self.test_counter.add(1, {
-                "test_id": test_id,
-                "trace_id": trace_id,
-                "correlated": "true"
-            })
+            self.test_counter.add(
+                1, {"test_id": test_id, "trace_id": trace_id, "correlated": "true"}
+            )
 
             time.sleep(0.01)
 
@@ -165,10 +177,7 @@ class TestMetricsFlow:
     """Test metrics flow from application to Grafana."""
 
     def test_metric_reaches_prometheus(
-        self,
-        wait_for_stack,
-        otel_http_endpoint: str,
-        prometheus_query
+        self, wait_for_stack, otel_http_endpoint: str, prometheus_query
     ):
         """
         Test that a metric sent via OTLP reaches Prometheus.
@@ -198,7 +207,9 @@ class TestMetricsFlow:
         while time.time() - start_time < max_wait:
             try:
                 # Note: OTel Collector adds namespace prefix "app_metrics_" and "_total" suffix for counters
-                result = prometheus_query(f'app_metrics_e2e_test_counter_total{{test_id="{test_id}"}}')
+                result = prometheus_query(
+                    f'app_metrics_e2e_test_counter_total{{test_id="{test_id}"}}'
+                )
 
                 if result["status"] == "success" and len(result["data"]["result"]) > 0:
                     metric_data = result["data"]["result"][0]
@@ -211,7 +222,9 @@ class TestMetricsFlow:
                     # Validate labels
                     assert "test_id" in labels, "Metric should have test_id label"
                     assert labels["test_id"] == test_id, "test_id label should match"
-                    assert "environment" in labels, "Metric should have environment label"
+                    assert "environment" in labels, (
+                        "Metric should have environment label"
+                    )
 
                     end_time = time.time()
                     latency = end_time - start_time
@@ -227,13 +240,12 @@ class TestMetricsFlow:
 
             time.sleep(2)
 
-        assert metric_found, f"Metric with test_id={test_id} not found in Prometheus after 30 seconds"
+        assert metric_found, (
+            f"Metric with test_id={test_id} not found in Prometheus after 30 seconds"
+        )
 
     def test_metric_queryable_in_grafana(
-        self,
-        wait_for_stack,
-        otel_http_endpoint: str,
-        grafana_query
+        self, wait_for_stack, otel_http_endpoint: str, grafana_query
     ):
         """
         Test that a metric is queryable in Grafana.
@@ -248,7 +260,9 @@ class TestMetricsFlow:
 
         # When: Send test metric
         generator = TelemetryGenerator(otel_http_endpoint, use_grpc=False)
-        test_id = generator.send_test_metric("counter", 100.0, {"source": "grafana_test"})
+        test_id = generator.send_test_metric(
+            "counter", 100.0, {"source": "grafana_test"}
+        )
 
         # Wait for metric propagation
         print("⏳ Waiting for metric propagation (15 seconds)...")
@@ -268,8 +282,8 @@ class TestMetricsFlow:
                     {
                         "expr": f'app_metrics_e2e_test_counter_total{{test_id="{test_id}"}}',
                         "refId": "A",
-                        "format": "time_series"
-                    }
+                        "format": "time_series",
+                    },
                 )
 
                 if result and "results" in result:
@@ -286,7 +300,9 @@ class TestMetricsFlow:
 
             time.sleep(2)
 
-        assert metric_found, f"Metric with test_id={test_id} not queryable in Grafana after 30 seconds"
+        assert metric_found, (
+            f"Metric with test_id={test_id} not queryable in Grafana after 30 seconds"
+        )
 
 
 @pytest.mark.e2e
@@ -294,10 +310,7 @@ class TestTracesFlow:
     """Test traces flow from application to Tempo."""
 
     def test_trace_reaches_tempo_via_grpc(
-        self,
-        wait_for_stack,
-        otel_grpc_endpoint: str,
-        tempo_query
+        self, wait_for_stack, otel_grpc_endpoint: str, tempo_query
     ):
         """
         Test that a trace sent via OTLP gRPC reaches Tempo.
@@ -313,7 +326,9 @@ class TestTracesFlow:
 
         # When: Send test trace via OTLP gRPC
         generator = TelemetryGenerator(otel_grpc_endpoint, use_grpc=True)
-        trace_id = generator.send_test_trace("e2e_test_trace", span_count=3, labels={"test": "grpc"})
+        trace_id = generator.send_test_trace(
+            "e2e_test_trace", span_count=3, labels={"test": "grpc"}
+        )
 
         # Wait for trace propagation
         print("⏳ Waiting for trace propagation (10 seconds)...")
@@ -356,10 +371,7 @@ class TestTracesFlow:
         assert trace_found, f"Trace {trace_id} not found in Tempo after 20 seconds"
 
     def test_trace_viewable_in_grafana(
-        self,
-        wait_for_stack,
-        otel_http_endpoint: str,
-        grafana_query
+        self, wait_for_stack, otel_http_endpoint: str, grafana_query
     ):
         """
         Test that a trace is viewable in Grafana Explore.
@@ -391,11 +403,7 @@ class TestTracesFlow:
                 # Check actual UID with: curl -u admin:admin http://localhost:3000/api/datasources
                 result = grafana_query(
                     "tempo",  # Tempo datasource UID (may need adjustment)
-                    {
-                        "queryType": "traceql",
-                        "query": trace_id,
-                        "refId": "A"
-                    }
+                    {"queryType": "traceql", "query": trace_id, "refId": "A"},
                 )
 
                 if result and "results" in result:
@@ -420,11 +428,7 @@ class TestCorrelation:
     """Test correlation between traces and metrics."""
 
     def test_trace_and_metric_correlation(
-        self,
-        wait_for_stack,
-        otel_http_endpoint: str,
-        prometheus_query,
-        tempo_query
+        self, wait_for_stack, otel_http_endpoint: str, prometheus_query, tempo_query
     ):
         """
         Test that traces and metrics can be correlated via trace_id.
@@ -450,10 +454,12 @@ class TestCorrelation:
 
         # Then: Query metrics by trace_id
         metric_found = False
-        start_time = time.time()
+        _start_time = time.time()
 
         try:
-            result = prometheus_query(f'app_metrics_e2e_test_counter_total{{trace_id="{trace_id}"}}')
+            result = prometheus_query(
+                f'app_metrics_e2e_test_counter_total{{trace_id="{trace_id}"}}'
+            )
 
             if result["status"] == "success" and len(result["data"]["result"]) > 0:
                 metric_data = result["data"]["result"][0]
@@ -473,13 +479,12 @@ class TestCorrelation:
         assert metric_found, f"Metric with trace_id={trace_id} not found"
 
         # And: Verify trace exists
-        trace_found = False
 
         try:
             trace_data = tempo_query(trace_id)
 
             if trace_data:
-                trace_found = True
+                _trace_found = True
                 print(f"✅ Trace found with trace_id={trace_id}")
         except Exception as e:
             print(f"⏳ Trace query: {e}")
@@ -493,10 +498,7 @@ class TestEndToEndLatency:
     """Test end-to-end latency measurements."""
 
     def test_metric_e2e_latency_under_5s(
-        self,
-        wait_for_stack,
-        otel_http_endpoint: str,
-        prometheus_query
+        self, wait_for_stack, otel_http_endpoint: str, prometheus_query
     ):
         """
         Test that metric end-to-end latency is under 5 seconds.
@@ -513,7 +515,9 @@ class TestEndToEndLatency:
         generator = TelemetryGenerator(otel_http_endpoint, use_grpc=False)
 
         send_time = time.time()
-        test_id = generator.send_test_metric("histogram", 123.45, {"latency_test": "true"})
+        test_id = generator.send_test_metric(
+            "histogram", 123.45, {"latency_test": "true"}
+        )
 
         # Poll for metric with timeout
         max_wait = 30  # Give enough time, but measure actual latency
@@ -522,7 +526,9 @@ class TestEndToEndLatency:
 
         while time.time() - send_time < max_wait:
             try:
-                result = prometheus_query(f'app_metrics_e2e_test_duration_sum{{test_id="{test_id}"}}')
+                result = prometheus_query(
+                    f'app_metrics_e2e_test_duration_sum{{test_id="{test_id}"}}'
+                )
 
                 if result["status"] == "success" and len(result["data"]["result"]) > 0:
                     actual_latency = time.time() - send_time
@@ -544,4 +550,6 @@ class TestEndToEndLatency:
         else:
             print(f"⚠️  Latency exceeds SLA: {actual_latency:.2f}s > 5s")
             print("   This may be due to batch processing and scrape intervals")
-            print("   Consider tuning OTel batch processor and Prometheus scrape interval")
+            print(
+                "   Consider tuning OTel batch processor and Prometheus scrape interval"
+            )
