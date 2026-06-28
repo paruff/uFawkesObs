@@ -1,99 +1,55 @@
-# Design — M2-02: GitOps Standards
+# Design — M2-04: Add Repository Metadata, Topics, and CI Badge
 
-**Based on:** specification.md (M2-02), Keep a Changelog format, Dependabot docs
+**Based on:** specification.md (M2-04)
 
 ---
 
 ## Impacted Components
 
-| Component | File | Change Type |
+| Component | File / Resource | Change Type |
 |---|---|---|
-| Dependabot config | `.github/dependabot.yml` | **Update** — add Docker ecosystem |
-| Funding config | `.github/FUNDING.yml` | **Update** — fix array syntax |
-| Changelog | `CHANGELOG.md` | **Create** — Keep a Changelog v1.1.0 |
-| Git tag | `v0.1.0` | **Apply** — semver tag on main |
-| GitHub label | `good-first-issue` | **Create** — repo label |
+| README test count | `README.md` | **Update** — 118 → 239 |
+| GitHub repo metadata | GitHub API | **Update** — homepage URL + topics |
 
 ---
 
 ## Technical Approach
 
-### 1. `.github/dependabot.yml` Update
+### 1. CI Badge (Already Present)
 
-Current config has only `github-actions` ecosystem. Add Docker ecosystem with weekly
-schedule and explicit version pinning strategy:
-
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-```
-
-Docker ecosystem scans `compose.yaml` and any `Dockerfile` for base image updates.
-
-### 2. `.github/FUNDING.yml` Fix
-
-Current: `github: paruff` (string — ignored by GitHub)
-Target: `github: [paruff]` (array — renders funding button)
-
-GitHub FUNDING.yml requires array format for multiple funders. Single funder still
-requires `[` brackets `]`.
-
-### 3. `CHANGELOG.md` Creation
-
-Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) v1.1.0 format:
-
+Line 3 of README.md:
 ```markdown
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-### Added
-- ...
-
-## [0.1.0] — 2026-06-28
-
-### Added
-- Initial OpenTelemetry-based observability stack
-- ...
+[![CI](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml/badge.svg)](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml)
 ```
 
-Include entries for all merged work up to this point (Loki 3.3.2 migration, Grafana 12
-upgrade, OTel AI pipeline, Prometheus AI rules, Grafana AI dashboard, AI observability docs).
+Verified present — no change needed.
 
-### 4. CODEOWNERS
+### 2. Update Test Count
 
-Already exists with `* @paruff` — no change needed.
+Line 404 in README.md:
+```
+**Test coverage:** 118 tests covering all configuration aspects
+```
+→ Change to `239` (count from `pytest tests/unit/`).
 
-### 5. Tag `v0.1.0`
+### 3. Set Homepage URL
 
-`git tag v0.1.0 && git push origin v0.1.0`
+`gh repo edit --homepage "https://ufawkes.dev"` — sets the project landing page URL
+on the GitHub repo sidebar.
 
-Applied from `main` at the current HEAD.
+### 4. Add Missing Topics
 
-### 6. `good-first-issue` Label
+Current topics: devops, dora-metrics, grafana, observability, open-source,
+platform-engineering, prometheus, ufawkes
 
-`gh label create good-first-issue --description "Good for new contributors" --color "7057ff"`
+Missing: opentelemetry, docker-compose, gitops, alertmanager, tempo, loki
 
-Then apply to 3–5 open issues that are well-scoped and documented.
+`gh repo edit --add-topic opentelemetry,docker-compose,gitops,alertmanager,tempo,loki`
 
 ---
 
 ## Constraints
 
-1. Dependabot Docker ecosystem scans from `compose.yaml` — no additional config needed
-2. Tags must be signed or annotated per repo conventions (annotated: `git tag -a`)
-3. CHANGELOG.md must be valid markdown (markdownlint)
-4. Label creation requires `gh` CLI with repo write access
+1. Homepage URL must be a valid URL
+2. GitHub topics are limited to printable ASCII characters
+3. README.md must pass markdownlint after edits

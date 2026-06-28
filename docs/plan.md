@@ -179,13 +179,17 @@
 - **Description:** Harden repo landing pages with metadata, appropriate topics, and automated workflow badges.
 - **Backlog Issue:** #75
 - **Dependencies:** M2-03
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #130)
 - **Tasks:**
-  1. Add a live GitHub Actions CI pipeline passing status badge to `README.md`.
-  2. Update repo description, landing page URLs, and tags (such as `opentelemetry`, `prometheus`, `grafana`, `docker-compose`, `gitops`).
+  1. Verified CI badge already present in `README.md` (line 3)
+  2. Fixed stale test count: 118 → 239
+  3. Set GitHub homepage URL: https://ufawkes.dev
+  4. Added GitHub topics: opentelemetry, docker-compose, gitops, alertmanager, tempo, loki
 - **Acceptance Criteria:**
-  - `README.md` includes the GHA badge.
-  - GitHub topics updated.
+  - [x] `README.md` includes the GHA badge (verified present)
+  - [x] Test count shows 239 (not 118)
+  - [x] Homepage URL set to https://ufawkes.dev
+  - [x] GitHub topics updated with missing technology identifiers
 
 ---
 

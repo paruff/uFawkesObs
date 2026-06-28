@@ -2,82 +2,57 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Update .github/dependabot.yml with Docker ecosystem",
-      "description": "Add Docker package-ecosystem to dependabot config alongside existing github-actions entry.",
+      "title": "Verify CI badge exists in README.md",
+      "description": "Line 3 has CI badge — confirm it points to ci.yml workflow.",
       "depends_on": [],
       "acceptance_criteria": [
-        "dependabot.yml has both github-actions and docker ecosystems",
-        "Both have weekly update schedule",
-        "yamllint passes"
+        "README.md contains CI badge markdown link",
+        "Badge URL references ci.yml workflow"
       ],
-      "files": [".github/dependabot.yml"]
+      "files": ["README.md"]
     },
     {
       "id": "T2",
-      "title": "Fix .github/FUNDING.yml syntax to array format",
-      "description": "Change github: paruff to github: [paruff] to match GitHub FUNDING.yml array format.",
+      "title": "Update stale test count 118→239",
+      "description": "Change '118 tests' to '239 tests' on line 404 of README.md.",
       "depends_on": [],
       "acceptance_criteria": [
-        "FUNDING.yml uses github: [paruff] array format",
-        "yamllint passes"
+        "README.md test count shows 239"
       ],
-      "files": [".github/FUNDING.yml"]
+      "files": ["README.md"]
     },
     {
       "id": "T3",
-      "title": "Create CHANGELOG.md",
-      "description": "Create root CHANGELOG.md in Keep a Changelog v1.1.0 format with entries for v0.1.0 covering all work to date.",
+      "title": "Set GitHub homepage URL",
+      "description": "gh repo edit --homepage https://ufawkes.dev",
       "depends_on": [],
       "acceptance_criteria": [
-        "CHANGELOG.md exists at repo root",
-        "Keep a Changelog format",
-        "Unreleased section present",
-        "v0.1.0 section with entries for all merged features",
-        "markdownlint passes"
+        "GitHub repo shows homepage URL as ufawkes.dev"
       ],
-      "files": ["CHANGELOG.md"]
+      "files": []
     },
     {
       "id": "T4",
-      "title": "Verify CODEOWNERS exists",
-      "description": "Confirm .github/CODEOWNERS exists with * @paruff. No changes needed — already correct.",
+      "title": "Add missing GitHub topics",
+      "description": "Add opentelemetry, docker-compose, gitops, alertmanager, tempo, loki to repo topics.",
       "depends_on": [],
       "acceptance_criteria": [
-        "CODEOWNERS file exists",
-        "Contains * @paruff"
+        "Topics include opentelemetry",
+        "Topics include docker-compose",
+        "Topics include gitops",
+        "Topics include alertmanager",
+        "Topics include tempo",
+        "Topics include loki"
       ],
-      "files": [".github/CODEOWNERS"]
+      "files": []
     },
     {
       "id": "T5",
-      "title": "Apply v0.1.0 tag",
-      "description": "Create annotated git tag v0.1.0 on main HEAD and push to GitHub.",
-      "depends_on": [],
+      "title": "Run markdownlint and unit tests",
+      "description": "markdownlint on README.md and full unit test suite.",
+      "depends_on": ["T1", "T2"],
       "acceptance_criteria": [
-        "git tag v0.1.0 exists locally",
-        "Tag pushed to origin"
-      ],
-      "files": []
-    },
-    {
-      "id": "T6",
-      "title": "Create good-first-issue label and apply to issues",
-      "description": "Create good-first-issue label on GitHub. Find 3-5 well-scoped open issues and apply the label.",
-      "depends_on": [],
-      "acceptance_criteria": [
-        "good-first-issue label exists",
-        "Label applied to 3-5 open issues"
-      ],
-      "files": []
-    },
-    {
-      "id": "T7",
-      "title": "Validate: yamllint, markdownlint, unit tests",
-      "description": "Run yamllint on YAML files, markdownlint on CHANGELOG.md, and run full unit test suite.",
-      "depends_on": ["T1", "T2", "T3", "T4"],
-      "acceptance_criteria": [
-        "yamllint passes on .github/*.yml",
-        "markdownlint passes on CHANGELOG.md",
+        "markdownlint passes on README.md",
         "pytest tests/unit/ passes"
       ],
       "files": []

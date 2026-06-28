@@ -401,7 +401,7 @@ pytest tests/unit/test_loki_config_validation.py
 - Pipeline configurations
 - Common misconfigurations
 
-**Test coverage:** 118 tests covering all configuration aspects
+**Test coverage:** 239 tests covering all configuration aspects
 
 For detailed documentation, see [tests/unit/README.md](tests/unit/README.md)
 
