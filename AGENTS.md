@@ -24,14 +24,14 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 
 **Stack:**
 | Service | Version | Role |
-|---|---|---|
+|---|---|---|---|
 | OpenTelemetry Collector | v0.120.0 | Telemetry ingestion and routing |
 | Prometheus | v2.55.1 | Metrics storage and querying |
-| Alertmanager | v0.27.0 | Alert routing and deduplication |
+| Alertmanager | v0.28.0 | Alert routing and deduplication |
 | Tempo | v2.10.5 | Distributed tracing backend |
-| Loki | v2.9.10 | Log aggregation and storage |
-| Alloy | v1.12.2 | Log collection (replaced Promtail) |
-| Grafana | v10.4.5 | Visualisation and dashboards |
+| Loki | v3.3.2 | Log aggregation and storage |
+| Alloy | v1.12.2 | Log collection and shipping |
+| Grafana | v12.3.7 | Visualisation and dashboards |
 | Docker Compose | latest stable | Service orchestration |
 
 **Repository:** github.com/paruff/uFawkesObs
@@ -60,6 +60,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 | 2.5      | `docs/adr/README.md`        | Deliberate technology decisions — Loki version, Compose scope, GitOps scope |
 | 3        | `docs/ARCHITECTURE.md`      | How services connect and depend on each other                               |
 | 4        | `docs/KNOWN_LIMITATIONS.md` | Known issues — do not make these worse                                      |
+| 4.5      | `docs/ai-observability-guide.md` | AI observability: OTel AI pipeline, recording rules, dashboard, alerts  |
 | 5        | `docs/CHANGE_IMPACT_MAP.md` | What breaks when a service config changes                                   |
 
 ---

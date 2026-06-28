@@ -238,11 +238,16 @@
 - **Description:** Add AI observability setup guide and update AGENTS.md with AI pipeline documentation.
 - **Backlog Issue:** #58
 - **Dependencies:** OBS-AI-02, OBS-AI-03
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #127)
+- **Tasks:**
+  1. Created `docs/ai-observability-guide.md` with architecture diagram, metrics/alert/dashboard reference, instrumentation guide, and DORA 2025 thresholds
+  2. Updated `AGENTS.md` — fixed version table (Loki 3.3.2, Grafana 12.3.7), added AI guide to context files
+  3. Updated `.agents/skills/otel-collector/SKILL.md` — synced pipeline map and AI pipeline to actual config
+  4. Updated `docs/CHANGE_IMPACT_MAP.md` — added dashboards section, AI entries
 - **Acceptance Criteria:**
-  - [ ] `docs/ai-observability-guide.md` created with AI observability overview
-  - [ ] `AGENTS.md` updated with AI pipeline and rule references
-  - [ ] Skills files updated if needed
+  - [x] `docs/ai-observability-guide.md` created with AI observability overview
+  - [x] `AGENTS.md` updated with AI pipeline and rule references
+  - [x] Skills files updated if needed
 
 ---
 

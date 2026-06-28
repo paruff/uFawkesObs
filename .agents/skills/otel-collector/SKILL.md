@@ -39,12 +39,17 @@ service:
 ```
 OTLP receiver (gRPC :4317, HTTP :4318)
       │
-      ├──► traces ──► batch processor ──► otlp/tempo exporter (tempo:4317)
+      ├──► traces ──► memory_limiter ──► batch ──► otlp/tempo (tempo:4317)
+      │                                                  └──► debug (console)
       │
-      ├──► metrics ──► batch processor ──► prometheusremotewrite (prometheus:9090)
-      │                                ──► prometheus exporter (:8889)
+      ├──► metrics ──► memory_limiter ──► batch ──► prometheus (:8889)
+      │                                                  └──► debug (console)
       │
-      └──► logs ────► batch processor ──► loki exporter (loki:3100)
+      ├──► metrics/ai ──► memory_limiter ──► filter/ai ──► attributes/ai ──► batch ──► prometheus (:8889)
+      │   (gen_ai.* metrics only)
+      │
+      └──► logs ────► memory_limiter ──► batch ──► loki (loki:3100)
+                                                     └──► debug (console)
 
 Self-telemetry:
   Collector emits its own metrics at :8888
@@ -67,8 +72,11 @@ exporters:
     tls:
       insecure: true # Required for plain gRPC without TLS
 
-  prometheusremotewrite:
-    endpoint: http://prometheus:9090/api/v1/write
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: app_metrics
+    const_labels:
+      service: otel-collector
 
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
@@ -146,9 +154,38 @@ If present, `memory_limiter` must be the FIRST processor in every pipeline.
 
 ---
 
-## AI pipeline additions (Wave 5 — OTel 0.120+ required)
+## AI pipeline (`metrics/ai`)
 
-When adding `gen_ai.*` attribute handling, use a **separate named pipeline**:
+The AI pipeline filters `gen_ai.*` metrics from all OTLP telemetry and routes them through
+dedicated processors. It uses a **separate named pipeline** from the default `metrics` pipeline
+to avoid risking existing metric scraping.
+
+### Processors
+
+```yaml
+processors:
+  filter/ai:                    # Passes only AI-related metric names
+    error_mode: ignore
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+          - "gen_ai\\..*"
+          - "llm\\..*"
+          - "openllmetry\\..*"
+          - "ai\\..*"
+
+  attributes/ai:                # Enriches AI metrics with environment labels
+    actions:
+      - key: ai.environment
+        value: development
+        action: insert
+      - key: ai.platform
+        value: fawkes-idp
+        action: insert
+```
+
+### Pipeline wiring
 
 ```yaml
 service:
@@ -156,15 +193,23 @@ service:
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [prometheusremotewrite]
+      exporters: [prometheus, debug]
 
-    metrics/ai: # Separate pipeline — do not merge
+    metrics/ai:              # Separate pipeline — do not merge with metrics
       receivers: [otlp]
-      processors: [memory_limiter, batch, filter/ai]
-      exporters: [prometheusremotewrite/ai]
+      processors: [memory_limiter, filter/ai, attributes/ai, batch]
+      exporters: [prometheus]
 ```
 
-Never add AI-specific processors to the default `metrics` pipeline — this risks breaking existing Prometheus scraping.
+### Rules
+
+- `filter/ai` uses `error_mode: ignore` — if a metric name pattern fails, the pipeline
+  continues without dropping data
+- `memory_limiter` must always be the **first** processor, even in the AI pipeline
+- `attributes/ai` inserts `ai.environment` and `ai.platform` labels on every AI metric
+- The `prometheus` exporter on port 8889 (shared with the default `metrics` pipeline)
+- Never add AI-specific processors to the default `metrics` pipeline — filter/ai would
+  drop infrastructure metrics
 
 ---
 
