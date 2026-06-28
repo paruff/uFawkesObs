@@ -160,9 +160,136 @@ networks:
     name: observability-lab
 ```
 
+## Kubernetes Integration
+
+Kubernetes-deployed applications can send telemetry to uFawkesObs running on Docker
+Compose. Since k8s pods are not on the Docker bridge network by default, you need
+to route OTLP traffic through the host network.
+
+### Architecture
+
+```
+┌──────────────────────────────────────────────┐
+│              Kubernetes Cluster               │
+│  ┌────────────┐  ┌────────────┐             │
+│  │ Pod (Go)   │  │ Pod (Node) │             │
+│  │ OTel SDK   │  │ OTel SDK   │  ...         │
+│  └─────┬──────┘  └─────┬──────┘             │
+│        │               │                     │
+│        └──────┬────────┘                     │
+│               │ OTLP HTTP/gRPC               │
+└───────────────┼──────────────────────────────┘
+                │
+                │ host.docker.internal / host IP
+                │
+┌───────────────▼──────────────────────────────┐
+│           Docker Host (same machine)          │
+│  ┌──────────────────────────────────────────┐ │
+│  │         uFawkesObs Stack                  │ │
+│  │  OTel Collector :4318                     │ │
+│  └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
+```
+
+### Approach A: Host Network (Same Machine)
+
+If your Kubernetes cluster runs on the same Docker host as uFawkesObs (e.g.,
+kind, k3d, Docker Desktop):
+
+```yaml
+# k8s-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: my-app
+          image: my-app:latest
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://host.docker.internal:4318"
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_SERVICE_NAME
+              value: "my-app"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "k8s.cluster=local,k8s.namespace=default"
+```
+
+**Note:** `host.docker.internal` works on macOS and Windows Docker Desktop.
+On Linux, use the host's actual IP address or `host.containers.internal`.
+
+### Approach B: NodePort (Different Host)
+
+If Kubernetes and uFawkesObs are on different machines, expose the OTel
+Collector HTTP port as a NodePort:
+
+```bash
+# On the uFawkesObs host, expose port 4318
+docker run -d \
+  --name otel-collector-external \
+  -p 30418:4318 \
+  --network host \
+  otel/opentelemetry-collector-contrib:latest
+```
+
+Then in your k8s manifests:
+
+```yaml
+env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://<ufawkesobs-host-ip>:30418"
+```
+
+### Approach C: External DNS
+
+If your uFawkesObs instance has a resolvable DNS name (or you use a service
+like ngrok, Tailscale Funnel, or a cloud load balancer):
+
+```yaml
+env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://observability.example.com:4318"
+```
+
+### Prometheus Scraping from Kubernetes
+
+If you run the Prometheus Operator in your k8s cluster, add a
+`PodMonitor` or `ServiceMonitor` pointing to your app's metrics endpoint:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-app-monitor
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  endpoints:
+    - port: metrics
+      interval: 15s
+```
+
+If you scrape directly from uFawkesObs's Prometheus (not recommended for
+dynamic k8s environments), add a static target:
+
+```yaml
+# config/prometheus/prometheus.yaml
+scrape_configs:
+  - job_name: "my-app-k8s"
+    static_configs:
+      - targets: ["<k8s-node-ip>:<node-port>"]
+```
+
+---
+
 ## Validation
 
-### Test Network Connectivity
+### Network Connectivity (Docker Compose)
 
 From your application container:
 
@@ -177,23 +304,49 @@ docker exec your-app-container curl http://loki:3100/ready
 docker exec your-app-container curl http://prometheus:9090/-/healthy
 ```
 
-### Verify Telemetry Flow
+### Network Connectivity (Kubernetes)
 
-1. **Check OTel Collector is receiving data:**
+```bash
+# From a k8s pod, test connectivity to uFawkesObs
+kubectl exec deploy/my-app -- curl -v http://<host>:4318/
 
-   ```bash
-   curl http://localhost:8888/metrics | grep receiver
-   ```
+# Check the pod can resolve the endpoint
+kubectl exec deploy/my-app -- nslookup <host>
+```
 
-2. **Check Prometheus targets:**
+### Per-Integration Verification Checklist
 
-   ```bash
-   curl http://localhost:9090/api/v1/targets
-   ```
+Use this table to confirm data is flowing for your integration type:
 
-3. **Check Grafana dashboards:**
-   - Open http://localhost:3000
-   - Navigate to Infrastructure Overview dashboard
+| Integration Type    | Signal  | Where to Check in Grafana                           | Query                                                       |
+| ------------------- | ------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| Docker Compose      | Traces  | Explore → Tempo datasource                          | `{service.name="your-app"}`                                 |
+| Docker Compose      | Logs    | Explore → Loki datasource                           | `{container_name=~".*your-app.*"}`                          |
+| Docker Compose      | Metrics | Explore → Prometheus datasource                     | `up{job="your-app"}`                                        |
+| Kubernetes (OTel)   | Traces  | Explore → Tempo datasource                          | `{service.name="my-app"}`                                   |
+| Kubernetes (OTel)   | Logs    | Explore → Loki datasource                           | `{k8s.namespace="default",k8s.pod=~".*my-app.*"}`           |
+| Kubernetes (OTel)   | Metrics | Explore → Prometheus datasource (in-cluster)        | `up{pod=~"my-app-.*"}`                                      |
+| Prometheus scrape   | Metrics | Explore → Prometheus datasource                     | `up{job="your-app"}`                                        |
+| Alloy auto-logging  | Logs    | Explore → Loki datasource                           | `{container_name=~".*your-app.*"}`                          |
+| Plane (any)         | Any     | Infrastructure Overview dashboard → service panel   | Check target appears under the plane's service group        |
+
+### Quick Health Check Script
+
+```bash
+#!/bin/bash
+# verify-integration.sh - Run from uFawkesObs host
+
+echo "=== OTel Collector ==="
+curl -s http://localhost:8888/metrics | grep -c "otelcol_receiver_accepted"
+echo "=== Prometheus Targets ==="
+curl -s http://localhost:9090/api/v1/targets | grep -c '"health":"up"'
+echo "=== Loki Ready ==="
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3100/ready
+echo ""
+echo "=== Grafana ==="
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health
+echo ""
+```
 
 ## Troubleshooting
 
@@ -277,11 +430,13 @@ Compose application, but with plane-specific considerations.
 
 ### Plane Overview
 
-| Plane           | Repository          | Role            | Telemetry Type                                                  |
-| --------------- | ------------------- | --------------- | --------------------------------------------------------------- |
-| **uFawkesObs**  | `paruff/uFawkesObs` | Observability   | Metrics, logs, traces, dashboards                               |
-| **uFawkesPipe** | `paruff/deliveryd`  | CI/CD           | Jenkins pipeline traces, deployment events, build metrics       |
-| **uFawkesDevX** | `paruff/developerd` | Developer tools | Local service metrics, development logs, dev environment traces |
+| Plane           | Repository                  | Role            | Telemetry Type                                                  |
+| --------------- | --------------------------- | --------------- | --------------------------------------------------------------- |
+| **uFawkesObs**  | `paruff/uFawkesObs`         | Observability   | Metrics, logs, traces, dashboards                               |
+| **uFawkesRes**  | `paruff/uFawkesRes`         | Resources       | Infrastructure health, ingress metrics, SSO audit logs          |
+| **uFawkesPipe** | `paruff/ufawkespipe`        | CI/CD           | Jenkins pipeline traces, deployment events, build metrics       |
+| **uFawkesDevX** | `paruff/ufawkesdevx`        | Developer tools | Local service metrics, development logs, dev environment traces |
+| **uFawkesDORA** | `paruff/ufawkesdora`        | DORA metrics    | DORA computation logs, ingestion API metrics, deployment events |
 
 ### Integration Pattern for Any Fawkes Plane
 
@@ -315,35 +470,40 @@ networks:
 
 ### Plane-Specific Guides
 
-| Plane       | Integration Guide                                              | Key Considerations                                                             |
-| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| uFawkesPipe | [uFawkesPipe Integration](examples/uFawkesPipe-integration.md) | Jenkins OTEL plugin, pipeline span instrumentation, deployment events for DORA |
-| uFawkesDevX | [uFawkesDevX Integration](examples/uFawkesDevX-integration.md) | Grafana panel embedding, developer portal access, local service metrics        |
+| Plane         | Integration Guide                                                 | Key Considerations                                                             |
+| ------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| uFawkesPipe   | [uFawkesPipe Integration](examples/uFawkesPipe-integration.md)   | Jenkins OTEL plugin, pipeline span instrumentation, deployment events for DORA |
+| uFawkesDevX   | [uFawkesDevX Integration](examples/uFawkesDevX-integration.md)   | Grafana panel embedding, developer portal access, local service metrics        |
+| uFawkesRes    | _(uses uFawkesObs as standard OTLP consumer)_                    | Infrastructure health metrics, SSO audit logs via Alloy                        |
+| uFawkesDORA   | _(connects to uFawkesObs Grafana for dashboards)_                | DORA computation metrics via Postgres → Grafana, ingestion API logs            |
 
 ### Cross-Plane Change Impact
 
 When modifying uFawkesObs, check the impact on connected planes:
 
-| Change in uFawkesObs                     | Impact                                                       |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| OTEL Collector receiver port (4317/4318) | uFawkesPipe Jenkins traces; uFawkesDevX local service traces |
-| Network name in `compose.yaml`           | All planes must update their external network reference      |
-| Prometheus scrape config                 | Any plane with a custom scrape job must be updated           |
-| Grafana admin credentials                | uFawkesDevX developer portal panels may break                |
-| Grafana datasource UIDs                  | Embedded panels referencing old numeric IDs will break       |
+| Change in uFawkesObs                     | Impact                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| OTEL Collector receiver port (4317/4318) | uFawkesPipe Jenkins traces; uFawkesDevX local service traces             |
+| Network name in `compose.yaml`           | All planes must update their external network reference                  |
+| Prometheus scrape config                 | Any plane with a custom scrape job must be updated                       |
+| Grafana admin credentials                | uFawkesDevX developer portal panels; uFawkesDORA dashboard embeds        |
+| Grafana datasource UIDs                  | Embedded panels (uFawkesDevX, uFawkesDORA) referencing old IDs will break |
 
 See `docs/CHANGE_IMPACT_MAP.md` for the full cross-plane impact matrix.
 
 ### Telemetry Routing by Plane
 
-| Signal                  | Source      | Route                       | Destination          |
-| ----------------------- | ----------- | --------------------------- | -------------------- |
-| Jenkins pipeline traces | uFawkesPipe | OTel Collector → Tempo      | Tempo (traces)       |
-| Jenkins build metrics   | uFawkesPipe | OTel Collector → Prometheus | Prometheus (metrics) |
-| Jenkins logs            | uFawkesPipe | Alloy auto-discovery        | Loki (logs)          |
-| Dev service metrics     | uFawkesDevX | OTel Collector → Prometheus | Prometheus (metrics) |
-| Dev service logs        | uFawkesDevX | Alloy auto-discovery        | Loki (logs)          |
-| Dev service traces      | uFawkesDevX | OTel Collector → Tempo      | Tempo (traces)       |
+| Signal                  | Source        | Route                       | Destination          |
+| ----------------------- | ------------- | --------------------------- | -------------------- |
+| Jenkins pipeline traces | uFawkesPipe   | OTel Collector → Tempo      | Tempo (traces)       |
+| Jenkins build metrics   | uFawkesPipe   | OTel Collector → Prometheus | Prometheus (metrics) |
+| Jenkins logs            | uFawkesPipe   | Alloy auto-discovery        | Loki (logs)          |
+| Dev service metrics     | uFawkesDevX   | OTel Collector → Prometheus | Prometheus (metrics) |
+| Dev service logs        | uFawkesDevX   | Alloy auto-discovery        | Loki (logs)          |
+| Dev service traces      | uFawkesDevX   | OTel Collector → Tempo      | Tempo (traces)       |
+| Infrastructure metrics  | uFawkesRes    | Direct Prometheus scrape    | Prometheus (metrics) |
+| SSO audit logs          | uFawkesRes    | Alloy auto-discovery        | Loki (logs)          |
+| DORA compute metrics    | uFawkesDORA   | Postgres → Grafana          | Grafana (dashboards) |
 
 ### Backstage Catalog Registration
 
@@ -357,3 +517,68 @@ uFawkesObs registers as:
 - **Components:** One per service (otel-collector, prometheus, tempo, loki, alloy, grafana, alertmanager, node-exporter)
 - **API:** `ufawkesobs-otlp` (OTLP endpoint for external consumers)
 - **Resources:** Prometheus, Tempo, Loki, Alertmanager instances
+
+---
+
+## Lite / Minimal Startup for Small Teams
+
+### Do I need other stacks?
+
+**No.** uFawkesObs is fully self-contained. It does not require uFawkesPipe,
+uFawkesDevX, or any other plane to function. A small team can start with
+just uFawkesObs and get immediate value from its built-in dashboards.
+
+### Standard Startup (Core Profile)
+
+```bash
+cd /path/to/uFawkesObs
+make up
+```
+
+This starts all 8 core services — the full observability stack including
+metrics (Prometheus), logs (Loki), traces (Tempo), and visualization
+(Grafana). ~4 GB RAM minimum.
+
+### Metrics-Only Startup (Minimal)
+
+If you only need metrics and don't require log aggregation or distributed
+tracing, start only Prometheus and Grafana:
+
+```bash
+# Start just the metrics stack
+docker compose up -d prometheus grafana
+```
+
+This runs 2 containers instead of 8. ~1 GB RAM.
+
+### Minimal + OTel Collector
+
+If you want to receive OTLP telemetry from external applications but don't
+need Loki/Tempo storage:
+
+```bash
+docker compose up -d otel-collector prometheus grafana
+```
+
+The OTel Collector will forward metrics to Prometheus, and you can drop
+traces/logs at the collector level if you don't want to store them. ~1.5 GB RAM.
+
+### What About a Dedicated `minimal` Profile?
+
+A `minimal` compose profile (Prometheus + Grafana + OTel Collector) is a
+planned enhancement. Currently, use the manual service selection approach
+above. Once a `minimal` profile is added, it will work as:
+
+```bash
+docker compose --profile minimal up -d   # Future
+```
+
+### Scaling Up
+
+As your team grows and needs more signals:
+
+1. **Add Loki + Alloy** for centralized log aggregation
+2. **Add Tempo** for distributed tracing
+3. **Add Alertmanager** for alert routing
+4. **Connect uFawkesPipe** for CI/CD observability and DORA metrics
+5. **Connect uFawkesDORA** for DORA performance dashboards

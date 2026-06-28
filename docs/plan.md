@@ -304,14 +304,23 @@
 
 ### Task M3-04: Update Multi-Stack Integration Guide
 
-- **Description:** Document compose project joining patterns to connect developer services to the local observability network.
+- **Description:** Document compose project joining patterns, Kubernetes integration, and minimal startup options.
 - **Backlog Issue:** #79
 - **Dependencies:** M3-01, M3-02
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Update `docs/multi-stack-integration.md` with explicit details on how external compose networks join the `observability-lab` bridge.
+  1. Added "Kubernetes Integration" section with 3 approaches (host network, NodePort, external DNS) and k8s manifest examples
+  2. Added per-integration-type verification checklist table (Docker Compose, k8s, Prometheus scrape, Alloy auto-logging)
+  3. Fixed stale plane references (deliveryd → ufawkespipe, developerd → ufawkesdevx)
+  4. Added uFawkesRes and uFawkesDORA to plane overview table and telemetry routing
+  5. Added "Lite / Minimal Startup for Small Teams" section documenting core, metrics-only, and minimal+OTel startup patterns
+  6. Updated Backstage section and cross-plane impact tables
 - **Acceptance Criteria:**
-  - `docs/multi-stack-integration.md` contains networking section with `external: true` example.
+  - [x] Kubernetes integration section exists with manifest snippets
+  - [x] Verification checklist table covers all integration types
+  - [x] Plane references are correct and include all 7 planes
+  - [x] Lite/minimal startup section exists
+  - [x] Guide passes markdownlint
 
 ### Task M3-05: Create docker-compose.integration.yml and Multi-Stack Network Join Docs
 
