@@ -146,21 +146,21 @@
 
 - **Description:** Implement cross-repo GitOps standards as defined in issue #63.
 - **Backlog Issue:** #63
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #128)
 - **Tasks:**
-  1. Create `.github/dependabot.yml` with weekly Docker + GitHub Actions update schedules
-  2. Create `.github/FUNDING.yml` with `github: [paruff]`
-  3. Create `CHANGELOG.md` at repo root (keepachangelog.com format)
-  4. Create `CODEOWNERS` file: `* @paruff`
-  5. Apply semantic version tag `v0.1.0`
-  6. Create `good-first-issue` label and apply to 3-5 issues
+  1. Updated `.github/dependabot.yml` — added Docker ecosystem alongside existing GHA
+  2. Fixed `.github/FUNDING.yml` — `github: paruff` → `github: [paruff]` (array format)
+  3. Created `CHANGELOG.md` in Keep a Changelog v1.1.0 format
+  4. Verified `.github/CODEOWNERS` — already exists with `* @paruff` (no change needed)
+  5. Applied `v0.1.0` tag (annotated) to main HEAD, pushed
+  6. Created `good-first-issue` label and applied to 5 issues (#71, #75, #84, #79, #78)
 - **Acceptance Criteria:**
-  - [ ] `.github/dependabot.yml` exists with Docker and GHA ecosystems
-  - [ ] `.github/FUNDING.yml` exists
-  - [ ] `CHANGELOG.md` exists with initial entry
-  - [ ] `CODEOWNERS` exists
-  - [ ] Tag `v0.1.0` applied
-  - [ ] `good-first-issue` label created
+  - [x] `.github/dependabot.yml` exists with Docker and GHA ecosystems
+  - [x] `.github/FUNDING.yml` exists with array format
+  - [x] `CHANGELOG.md` exists with initial entry
+  - [x] `CODEOWNERS` exists
+  - [x] Tag `v0.1.0` applied
+  - [x] `good-first-issue` label created and applied
 
 ### Task M2-03: Publish and Verify Platform Documentation
 

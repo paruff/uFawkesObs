@@ -1,6 +1,6 @@
-# Design — OBS-AI-04: AI Observability Documentation
+# Design — M2-02: GitOps Standards
 
-**Based on:** specification.md (OBS-AI-04), existing doc patterns
+**Based on:** specification.md (M2-02), Keep a Changelog format, Dependabot docs
 
 ---
 
@@ -8,70 +8,92 @@
 
 | Component | File | Change Type |
 |---|---|---|
-| AI observability guide | `docs/ai-observability-guide.md` | **Create** — full reference doc |
-| Agent instructions | `AGENTS.md` | Update version table + AI refs |
-| OTel collector skill | `.agents/skills/otel-collector/SKILL.md` | Update AI pipeline section |
-| Change impact map | `docs/CHANGE_IMPACT_MAP.md` | Add AI entries |
+| Dependabot config | `.github/dependabot.yml` | **Update** — add Docker ecosystem |
+| Funding config | `.github/FUNDING.yml` | **Update** — fix array syntax |
+| Changelog | `CHANGELOG.md` | **Create** — Keep a Changelog v1.1.0 |
+| Git tag | `v0.1.0` | **Apply** — semver tag on main |
+| GitHub label | `good-first-issue` | **Create** — repo label |
 
 ---
 
 ## Technical Approach
 
-### 1. `docs/ai-observability-guide.md`
+### 1. `.github/dependabot.yml` Update
 
-Structure following existing runbook/doc conventions:
+Current config has only `github-actions` ecosystem. Add Docker ecosystem with weekly
+schedule and explicit version pinning strategy:
 
-```
-# AI Observability Guide
-
-## Overview
-Brief: what OBS-AI-01/02/03 provide together.
-
-## Architecture
-ASCII diagram showing: App → OTel metrics/ai pipeline → Prometheus rules → Grafana dashboard
-
-## Metrics Reference
-Table of all gen_ai.* raw metrics and ai:* recording rules with descriptions and PromQL.
-
-## Alert Reference
-Table of all AI alert rules with thresholds, severity, and DORA band.
-
-## Grafana Dashboard
-How to find and interpret the AI capabilities dashboard.
-Screenshot description and panel-by-panel guide.
-
-## Instrumenting Your Application
-How to emit gen_ai.* telemetry from Python/Node/Go services.
-OTel SDK configuration, required attributes, exporter endpoint.
-
-## DORA 2025 Thresholds
-Reference table for Elite/High/Medium/Low bands.
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
 ```
 
-### 2. `AGENTS.md` Updates
+Docker ecosystem scans `compose.yaml` and any `Dockerfile` for base image updates.
 
-- Fix version table: Alertmanager v0.27.0 → v0.28.0, Loki v2.9.10 → v3.3.2, Grafana v10.4.5 → v12.3.7
-- Add `docs/ai-observability-guide.md` to Context Files table (priority 4.5)
-- Add AI observability references in appropriate sections
+### 2. `.github/FUNDING.yml` Fix
 
-### 3. `.agents/skills/otel-collector/SKILL.md` Updates
+Current: `github: paruff` (string — ignored by GitHub)
+Target: `github: [paruff]` (array — renders funding button)
 
-- Fix AI pipeline section to match actual `config/otel/collector.yaml`:
-  - Add `filter/ai` and `attributes/ai` processors
-  - Add `metrics/ai` pipeline with correct processor ordering
-  - Update exporter references (uses `prometheus` not `prometheusremotewrite`)
-  - Remove stale `prometheusremotewrite/ai` reference
+GitHub FUNDING.yml requires array format for multiple funders. Single funder still
+requires `[` brackets `]`.
 
-### 4. `docs/CHANGE_IMPACT_MAP.md` Updates
+### 3. `CHANGELOG.md` Creation
 
-- Add rows for `config/otel/collector.yaml` AI processor changes
-- Add rows for `dashboards/platform/ai-capabilities.json`
+Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) v1.1.0 format:
+
+```markdown
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- ...
+
+## [0.1.0] — 2026-06-28
+
+### Added
+- Initial OpenTelemetry-based observability stack
+- ...
+```
+
+Include entries for all merged work up to this point (Loki 3.3.2 migration, Grafana 12
+upgrade, OTel AI pipeline, Prometheus AI rules, Grafana AI dashboard, AI observability docs).
+
+### 4. CODEOWNERS
+
+Already exists with `* @paruff` — no change needed.
+
+### 5. Tag `v0.1.0`
+
+`git tag v0.1.0 && git push origin v0.1.0`
+
+Applied from `main` at the current HEAD.
+
+### 6. `good-first-issue` Label
+
+`gh label create good-first-issue --description "Good for new contributors" --color "7057ff"`
+
+Then apply to 3–5 open issues that are well-scoped and documented.
 
 ---
 
 ## Constraints
 
-1. All documentation must follow existing Markdown conventions (markdownlint)
-2. AGENTS.md version table must match `compose.yaml` exactly
-3. Do not modify `compose.yaml`, Prometheus config, OTel config, or dashboard JSON
-4. Do not modify existing sections of AGENTS.md that are unrelated to AI or versions
+1. Dependabot Docker ecosystem scans from `compose.yaml` — no additional config needed
+2. Tags must be signed or annotated per repo conventions (annotated: `git tag -a`)
+3. CHANGELOG.md must be valid markdown (markdownlint)
+4. Label creation requires `gh` CLI with repo write access

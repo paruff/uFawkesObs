@@ -2,61 +2,82 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Create docs/ai-observability-guide.md",
-      "description": "Create comprehensive AI observability guide covering architecture, metrics reference, alert reference, dashboard guide, instrumentation guide, and DORA 2025 thresholds.",
+      "title": "Update .github/dependabot.yml with Docker ecosystem",
+      "description": "Add Docker package-ecosystem to dependabot config alongside existing github-actions entry.",
       "depends_on": [],
       "acceptance_criteria": [
-        "Covers architecture (OTel AI pipeline → Prometheus rules → Grafana dashboard)",
-        "Metrics reference table for gen_ai.* and ai:* metrics",
-        "Alert reference table with thresholds and severity",
-        "Dashboard guide for AI capabilities Grafana dashboard",
-        "Instrumentation guide for emitting gen_ai.* telemetry",
-        "DORA 2025 performance bands reference"
+        "dependabot.yml has both github-actions and docker ecosystems",
+        "Both have weekly update schedule",
+        "yamllint passes"
       ],
-      "files": ["docs/ai-observability-guide.md"]
+      "files": [".github/dependabot.yml"]
     },
     {
       "id": "T2",
-      "title": "Update AGENTS.md version table and add AI references",
-      "description": "Fix stale versions (Alertmanager 0.28.0, Loki 3.3.2, Grafana 12.3.7). Add ai-observability-guide.md to context files. Add AI architecture references.",
+      "title": "Fix .github/FUNDING.yml syntax to array format",
+      "description": "Change github: paruff to github: [paruff] to match GitHub FUNDING.yml array format.",
       "depends_on": [],
       "acceptance_criteria": [
-        "Version table matches compose.yaml",
-        "docs/ai-observability-guide.md listed in context files",
-        "AI pipeline mentioned in architecture rules"
+        "FUNDING.yml uses github: [paruff] array format",
+        "yamllint passes"
       ],
-      "files": ["AGENTS.md"]
+      "files": [".github/FUNDING.yml"]
     },
     {
       "id": "T3",
-      "title": "Update otel-collector skill with actual AI pipeline config",
-      "description": "Fix the AI pipeline section in .agents/skills/otel-collector/SKILL.md to match actual config/otel/collector.yaml. Add filter/ai and attributes/ai processors. Update exporter references from prometheusremotewrite to prometheus.",
+      "title": "Create CHANGELOG.md",
+      "description": "Create root CHANGELOG.md in Keep a Changelog v1.1.0 format with entries for v0.1.0 covering all work to date.",
       "depends_on": [],
       "acceptance_criteria": [
-        "AI pipeline section shows correct processors (memory_limiter, filter/ai, attributes/ai, batch)",
-        "Exporter references use prometheus not prometheusremotewrite",
-        "All pipeline names match actual config"
+        "CHANGELOG.md exists at repo root",
+        "Keep a Changelog format",
+        "Unreleased section present",
+        "v0.1.0 section with entries for all merged features",
+        "markdownlint passes"
       ],
-      "files": [".agents/skills/otel-collector/SKILL.md"]
+      "files": ["CHANGELOG.md"]
     },
     {
       "id": "T4",
-      "title": "Update CHANGE_IMPACT_MAP.md with AI entries",
-      "description": "Add entries for config/otel/collector.yaml AI processor changes and dashboards/platform/ai-capabilities.json.",
+      "title": "Verify CODEOWNERS exists",
+      "description": "Confirm .github/CODEOWNERS exists with * @paruff. No changes needed — already correct.",
       "depends_on": [],
       "acceptance_criteria": [
-        "AI pipeline config changes listed in config/ section",
-        "AI dashboard listed in dashboards/ section"
+        "CODEOWNERS file exists",
+        "Contains * @paruff"
       ],
-      "files": ["docs/CHANGE_IMPACT_MAP.md"]
+      "files": [".github/CODEOWNERS"]
     },
     {
       "id": "T5",
-      "title": "Validate: markdownlint and unit tests pass",
-      "description": "Run markdownlint on all new and modified files. Run pytest tests/unit/ to confirm no regressions.",
+      "title": "Apply v0.1.0 tag",
+      "description": "Create annotated git tag v0.1.0 on main HEAD and push to GitHub.",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "git tag v0.1.0 exists locally",
+        "Tag pushed to origin"
+      ],
+      "files": []
+    },
+    {
+      "id": "T6",
+      "title": "Create good-first-issue label and apply to issues",
+      "description": "Create good-first-issue label on GitHub. Find 3-5 well-scoped open issues and apply the label.",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "good-first-issue label exists",
+        "Label applied to 3-5 open issues"
+      ],
+      "files": []
+    },
+    {
+      "id": "T7",
+      "title": "Validate: yamllint, markdownlint, unit tests",
+      "description": "Run yamllint on YAML files, markdownlint on CHANGELOG.md, and run full unit test suite.",
       "depends_on": ["T1", "T2", "T3", "T4"],
       "acceptance_criteria": [
-        "markdownlint passes on all files",
+        "yamllint passes on .github/*.yml",
+        "markdownlint passes on CHANGELOG.md",
         "pytest tests/unit/ passes"
       ],
       "files": []
