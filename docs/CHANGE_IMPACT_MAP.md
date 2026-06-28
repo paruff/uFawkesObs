@@ -39,6 +39,7 @@
 | Prometheus alert rules                                       | `docs/RUNBOOKS.md` — does the runbook cover this alert?                                                                |
 | Self-monitoring TSDB capacity threshold (`2147483648` bytes) | Keep `config/prometheus/rules/ufawkesobs-self-monitoring.yml` and `dashboards/platform/ufawkesobs-health.json` aligned |
 | Prometheus recording rules                                   | Any Grafana panels using the recording rule metric name                                                                |
+| `config/prometheus/ai-rules.yml`                             | Grafana AI capabilities dashboard panels that reference `ai:*` recording rules; `docs/ai-runbook.md`                   |
 | Grafana datasource URLs                                      | Must use Compose service name, not `localhost`                                                                         |
 | Grafana dashboard UIDs                                       | Any cross-dashboard links that reference the UID                                                                       |
 | Tempo storage path                                           | Must match volume mount in `compose.yaml`                                                                              |

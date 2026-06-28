@@ -45,3 +45,6 @@ build/
 .venv/
 venv/
 graphify-out
+
+# Agent memory/cache databases
+.headroom/

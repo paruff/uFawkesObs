@@ -1,0 +1,171 @@
+# SPDX-License-Identifier: Apache-2.0
+# AI Capability Recording Rules and Alerts
+# DORA 2025 AI capability model thresholds
+#
+# Metric naming: OTel Collector prometheus exporter uses namespace "app_metrics".
+# gen_ai.client.operation.duration -> app_metrics_gen_ai_client_operation_duration_seconds_{bucket,sum,count}
+# gen_ai.client.token.usage -> app_metrics_gen_ai_client_token_usage_{bucket,sum,count}
+
+groups:
+  # AI capability recording rules
+  # All rules use or vector(0) to prevent absent() gaps
+  - name: ai_capability_recording_rules
+    interval: 60s
+    rules:
+      # P99 LLM response time
+      - record: ai:llm_request_latency_p99:seconds
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(app_metrics_gen_ai_client_operation_duration_seconds_bucket[5m]))
+              by (le)
+          )
+          or vector(0)
+
+      # P50 LLM response time
+      - record: ai:llm_request_latency_p50:seconds
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(app_metrics_gen_ai_client_operation_duration_seconds_bucket[5m]))
+              by (le)
+          )
+          or vector(0)
+
+      # Token usage rate (tokens per minute)
+      - record: ai:token_usage_rate:per_minute
+        expr: |
+          sum(rate(app_metrics_gen_ai_client_token_usage_sum[5m])) * 60
+          or vector(0)
+
+      # Suggestion acceptance rate — placeholder until AI SDK emits acceptance metrics
+      # Will be replaced with: sum(rate(gen_ai_suggestion_accepted_total[5m]))
+      #                        / (sum(rate(gen_ai_suggestion_total[5m])) or vector(0))
+      - record: ai:suggestion_acceptance_rate:ratio
+        expr: |
+          0
+
+  # AI capability alerting rules
+  # All alerts have category: ai-capability label
+  # All alerts have paired absent() guards
+  - name: ai_capability_alerts
+    interval: 60s
+    rules:
+      # LLM Latency
+      - alert: AILLMLatencyHigh
+        expr: |
+          ai:llm_request_latency_p99:seconds > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "LLM p99 latency is above 10s"
+          description: |
+            p99 LLM response time is {{ $value | humanizeDuration }}
+            for the last 5 minutes. Review model selection, quota, or
+            provider status.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aillmlatencyhigh"
+
+      - alert: AILLMLatencyHighAbsent
+        expr: |
+          absent(ai:llm_request_latency_p99:seconds)
+        for: 5m
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "LLM latency metrics are missing"
+          description: |
+            LLM latency recording rule ai:llm_request_latency_p99:seconds
+            is absent. AI SDK telemetry may not be flowing.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aillmlatencyhighabsent"
+
+      # Rework Rate — Watch Threshold
+      - alert: AIReworkRateHigh
+        expr: |
+          (dora:rework_rate:ratio or vector(0)) > 0.10
+        for: 7d
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "AI rework rate is above 10% — watch threshold"
+          description: |
+            Current rework rate: {{ $value | humanizePercentage }}.
+            DORA 2025: rates approaching 20% indicate AI instructions
+            need attention. Monitor trend and review prompt quality.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aireworkratehigh"
+
+      - alert: AIReworkRateHighAbsent
+        expr: |
+          absent(dora:rework_rate:ratio)
+        for: 7d
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "AI rework rate metric is missing"
+          description: |
+            dora:rework_rate:ratio metric is absent. DORA recording
+            rules may not be configured yet.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aireworkratehighabsent"
+
+      # Rework Rate — Critical Threshold
+      - alert: AIReworkRateCritical
+        expr: |
+          (dora:rework_rate:ratio or vector(0)) > 0.20
+        for: 7d
+        labels:
+          severity: critical
+          category: ai-capability
+        annotations:
+          summary: "AI rework rate is above 20% — stop features, fix instructions"
+          description: |
+            Current rework rate: {{ $value | humanizePercentage }}.
+            DORA 2025: rework rate above 20% signals AI-generated code
+            is creating more problems than it solves. Review AGENTS.md
+            and PROMPT_LIBRARY.md before adding new features.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aireworkratecritical"
+
+      - alert: AIReworkRateCriticalAbsent
+        expr: |
+          absent(dora:rework_rate:ratio)
+        for: 7d
+        labels:
+          severity: critical
+          category: ai-capability
+        annotations:
+          summary: "AI rework rate metric is missing"
+          description: |
+            dora:rework_rate:ratio metric is absent. DORA recording
+            rules may not be configured yet.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aireworkratecriticalabsent"
+
+      # Token Budget
+      - alert: AITokenBudgetHigh
+        expr: |
+          ai:token_usage_rate:per_minute > 100000
+        for: 5m
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "AI token usage rate is above 100,000 tokens/min"
+          description: |
+            Current token usage rate: {{ $value | humanize }} tokens/min.
+            Review which services are consuming tokens and consider
+            rate limiting or model optimization.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aitokenbudgethigh"
+
+      - alert: AITokenBudgetHighAbsent
+        expr: |
+          absent(ai:token_usage_rate:per_minute)
+        for: 5m
+        labels:
+          severity: warning
+          category: ai-capability
+        annotations:
+          summary: "AI token usage metrics are missing"
+          description: |
+            ai:token_usage_rate:per_minute metric is absent.
+            AI SDK telemetry may not be flowing.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/ai-runbook.md#aitokenbudgethighabsent"
