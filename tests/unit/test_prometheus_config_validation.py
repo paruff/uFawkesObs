@@ -432,7 +432,11 @@ class TestPrometheusAIRules:
         import pathlib
 
         rules_path = (
-            pathlib.Path(project_root) / "config" / "prometheus" / "ai-rules.yml"
+            pathlib.Path(project_root)
+            / "config"
+            / "prometheus"
+            / "rules"
+            / "ai-rules.yml"
         )
         with open(rules_path, "r") as f:
             return yaml.safe_load(f), rules_path
