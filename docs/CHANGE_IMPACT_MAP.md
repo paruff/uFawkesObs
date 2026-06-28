@@ -19,7 +19,7 @@
 | Grafana port (default 3000)                                 | `scripts/` health checks, acceptance tests, `README.md`                                                       |
 | Node Exporter port (default 9100)                           | Prometheus scrape config, `docs/` port reference, acceptance tests                                            |
 | OTEL Collector ports (4317 gRPC / 4318 HTTP / 8889 metrics) | Any upstream services sending telemetry, Prometheus scrape config                                             |
-| Volume mount paths                                          | `config/` file paths that reference them, `docs/RUNBOOKS.md` backup procedures                                |
+| Volume mount paths                                          | `config/` file paths that reference them, `docs/runbooks/` backup procedures                                |
 | Network name                                                | All services that reference it, `scripts/` that use `docker network inspect`                                  |
 | Environment variable names                                  | `.env.example`, `docs/`, CI workflows that set them                                                           |
 | Adding a new service                                        | Add healthcheck, add to acceptance tests, add Grafana datasource if applicable, update `docs/ARCHITECTURE.md` |
@@ -47,10 +47,10 @@
 | OTEL `filter/ai` or `attributes/ai` processors                | `config/prometheus/rules/ai-rules.yml` recording rules that consume the processed metrics                               |
 | `metrics/ai` pipeline                                         | Prometheus scrape target at `otel-collector:8889` must be active; `config/prometheus/rules/ai-rules.yml` must exist    |
 | Prometheus scrape targets                                    | Verify target service names match Compose service names exactly                                                        |
-| Prometheus alert rules                                       | `docs/RUNBOOKS.md` — does the runbook cover this alert?                                                                |
+| Prometheus alert rules                                       | `docs/ai-runbook.md` — does the runbook cover this alert?                                                              |
 | Self-monitoring TSDB capacity threshold (`2147483648` bytes) | Keep `config/prometheus/rules/ufawkesobs-self-monitoring.yml` and `dashboards/platform/ufawkesobs-health.json` aligned |
 | Prometheus recording rules                                   | Any Grafana panels using the recording rule metric name                                                                |
-| `config/prometheus/ai-rules.yml`                             | Grafana AI capabilities dashboard panels that reference `ai:*` recording rules; `docs/ai-runbook.md`                   |
+| `config/prometheus/rules/ai-rules.yml`                       | Grafana AI capabilities dashboard panels that reference `ai:*` recording rules; `docs/ai-runbook.md`                   |
 | Grafana datasource URLs                                      | Must use Compose service name, not `localhost`                                                                         |
 | Grafana dashboard UIDs                                       | Any cross-dashboard links that reference the UID                                                                       |
 | Tempo storage path                                           | Must match volume mount in `compose.yaml`                                                                              |
@@ -78,4 +78,4 @@
 | ------------------------------------ | ------------------------------------------------------------- |
 | Port numbers in health check scripts | Must match `compose.yaml` exposed ports                       |
 | Container name references            | Must match Compose service names (or use `docker compose ps`) |
-| `run-acceptance-tests.sh`            | All test files it calls in `tests/acceptance/`                |
+| `tests/acceptance/`                  | All test files within that directory                           |

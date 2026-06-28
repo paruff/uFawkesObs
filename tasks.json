@@ -2,82 +2,43 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Update .github/dependabot.yml with Docker ecosystem",
-      "description": "Add Docker package-ecosystem to dependabot config alongside existing github-actions entry.",
+      "title": "Fix stale path in CHANGE_IMPACT_MAP.md",
+      "description": "Change config/prometheus/ai-rules.yml to config/prometheus/rules/ai-rules.yml line 53.",
       "depends_on": [],
       "acceptance_criteria": [
-        "dependabot.yml has both github-actions and docker ecosystems",
-        "Both have weekly update schedule",
-        "yamllint passes"
+        "CHANGE_IMPACT_MAP.md references config/prometheus/rules/ai-rules.yml",
+        "No references to non-existent config/prometheus/ai-rules.yml remain"
       ],
-      "files": [".github/dependabot.yml"]
+      "files": ["docs/CHANGE_IMPACT_MAP.md"]
     },
     {
       "id": "T2",
-      "title": "Fix .github/FUNDING.yml syntax to array format",
-      "description": "Change github: paruff to github: [paruff] to match GitHub FUNDING.yml array format.",
+      "title": "Verify ARCHITECTURE.md is correct",
+      "description": "Confirm ARCHITECTURE.md passes markdownlint, versions match compose.yaml, config paths resolve.",
       "depends_on": [],
       "acceptance_criteria": [
-        "FUNDING.yml uses github: [paruff] array format",
-        "yamllint passes"
+        "markdownlint passes on ARCHITECTURE.md",
+        "All referenced file paths exist"
       ],
-      "files": [".github/FUNDING.yml"]
+      "files": ["docs/ARCHITECTURE.md"]
     },
     {
       "id": "T3",
-      "title": "Create CHANGELOG.md",
-      "description": "Create root CHANGELOG.md in Keep a Changelog v1.1.0 format with entries for v0.1.0 covering all work to date.",
+      "title": "Verify KNOWN_LIMITATIONS.md is correct",
+      "description": "Confirm KNOWN_LIMITATIONS.md passes markdownlint and covers storage limits, retention, auth gaps, dev setup.",
       "depends_on": [],
       "acceptance_criteria": [
-        "CHANGELOG.md exists at repo root",
-        "Keep a Changelog format",
-        "Unreleased section present",
-        "v0.1.0 section with entries for all merged features",
-        "markdownlint passes"
+        "markdownlint passes on KNOWN_LIMITATIONS.md"
       ],
-      "files": ["CHANGELOG.md"]
+      "files": ["docs/KNOWN_LIMITATIONS.md"]
     },
     {
       "id": "T4",
-      "title": "Verify CODEOWNERS exists",
-      "description": "Confirm .github/CODEOWNERS exists with * @paruff. No changes needed — already correct.",
-      "depends_on": [],
+      "title": "Run markdownlint and unit tests",
+      "description": "Validate all three docs with markdownlint and run the full unit test suite.",
+      "depends_on": ["T1", "T2", "T3"],
       "acceptance_criteria": [
-        "CODEOWNERS file exists",
-        "Contains * @paruff"
-      ],
-      "files": [".github/CODEOWNERS"]
-    },
-    {
-      "id": "T5",
-      "title": "Apply v0.1.0 tag",
-      "description": "Create annotated git tag v0.1.0 on main HEAD and push to GitHub.",
-      "depends_on": [],
-      "acceptance_criteria": [
-        "git tag v0.1.0 exists locally",
-        "Tag pushed to origin"
-      ],
-      "files": []
-    },
-    {
-      "id": "T6",
-      "title": "Create good-first-issue label and apply to issues",
-      "description": "Create good-first-issue label on GitHub. Find 3-5 well-scoped open issues and apply the label.",
-      "depends_on": [],
-      "acceptance_criteria": [
-        "good-first-issue label exists",
-        "Label applied to 3-5 open issues"
-      ],
-      "files": []
-    },
-    {
-      "id": "T7",
-      "title": "Validate: yamllint, markdownlint, unit tests",
-      "description": "Run yamllint on YAML files, markdownlint on CHANGELOG.md, and run full unit test suite.",
-      "depends_on": ["T1", "T2", "T3", "T4"],
-      "acceptance_criteria": [
-        "yamllint passes on .github/*.yml",
-        "markdownlint passes on CHANGELOG.md",
+        "markdownlint passes on all three docs",
         "pytest tests/unit/ passes"
       ],
       "files": []
