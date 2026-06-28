@@ -312,6 +312,135 @@ class TestOTelServicePipelines:
                 )
 
 
+class TestOTelAIPipeline:
+    """Test the metrics/ai pipeline and its AI-specific processors."""
+
+    def test_metrics_ai_pipeline_exists(self, otel_config_path):
+        """Test that the metrics/ai pipeline is defined."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        assert "metrics/ai" in config["service"]["pipelines"], (
+            "metrics/ai pipeline should be defined"
+        )
+
+    def test_metrics_ai_pipeline_receivers(self, otel_config_path):
+        """Test that metrics/ai pipeline uses the otlp receiver."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        ai_pipeline = config["service"]["pipelines"]["metrics/ai"]
+        assert "otlp" in ai_pipeline["receivers"], (
+            "metrics/ai pipeline should use otlp receiver"
+        )
+
+    def test_metrics_ai_pipeline_processors(self, otel_config_path):
+        """Test that metrics/ai pipeline has the correct processor order."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        ai_pipeline = config["service"]["pipelines"]["metrics/ai"]
+        expected_processors = ["memory_limiter", "filter/ai", "attributes/ai", "batch"]
+        assert ai_pipeline["processors"] == expected_processors, (
+            f"metrics/ai pipeline processors should be {expected_processors}, "
+            f"got {ai_pipeline['processors']}"
+        )
+
+    def test_metrics_ai_pipeline_exporters(self, otel_config_path):
+        """Test that metrics/ai pipeline exports to prometheus."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        ai_pipeline = config["service"]["pipelines"]["metrics/ai"]
+        assert "prometheus" in ai_pipeline["exporters"], (
+            "metrics/ai pipeline should export to prometheus"
+        )
+
+    def test_filter_ai_processor_exists(self, otel_config_path):
+        """Test that filter/ai processor is defined with error_mode: ignore."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        assert "filter/ai" in config["processors"], (
+            "filter/ai processor should be defined"
+        )
+        filter_ai = config["processors"]["filter/ai"]
+        assert filter_ai["error_mode"] == "ignore", (
+            "filter/ai should have error_mode: ignore"
+        )
+
+    def test_filter_ai_processor_includes_ai_metrics(self, otel_config_path):
+        """Test that filter/ai processor includes gen_ai.*, llm.*, openllmetry.*, ai.* patterns."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        filter_ai = config["processors"]["filter/ai"]
+        assert "metrics" in filter_ai, "filter/ai should have metrics config"
+        assert "include" in filter_ai["metrics"], "filter/ai should have include filter"
+        assert filter_ai["metrics"]["include"]["match_type"] == "regexp", (
+            "filter/ai include should use regexp match_type"
+        )
+        metric_names = filter_ai["metrics"]["include"]["metric_names"]
+        assert len(metric_names) >= 4, (
+            "filter/ai should include at least 4 metric name patterns"
+        )
+
+    def test_attributes_ai_processor_exists(self, otel_config_path):
+        """Test that attributes/ai processor is defined with insert actions."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        assert "attributes/ai" in config["processors"], (
+            "attributes/ai processor should be defined"
+        )
+        attrs_ai = config["processors"]["attributes/ai"]
+        assert "actions" in attrs_ai, "attributes/ai should have actions"
+        assert len(attrs_ai["actions"]) >= 2, (
+            "attributes/ai should have at least 2 insert actions"
+        )
+
+    def test_attributes_ai_processor_environment_and_platform(self, otel_config_path):
+        """Test that attributes/ai inserts ai.environment and ai.platform."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        attrs_ai = config["processors"]["attributes/ai"]
+        action_keys = [a["key"] for a in attrs_ai["actions"]]
+        assert "ai.environment" in action_keys, (
+            "attributes/ai should insert ai.environment"
+        )
+        assert "ai.platform" in action_keys, "attributes/ai should insert ai.platform"
+        for action in attrs_ai["actions"]:
+            assert action["action"] == "insert", (
+                f"attributes/ai action for {action['key']} should use 'insert', "
+                f"got '{action['action']}'"
+            )
+
+    def test_existing_pipelines_unchanged(self, otel_config_path):
+        """Test that existing metrics, traces, and logs pipelines are not modified."""
+        with open(otel_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        pipelines = config["service"]["pipelines"]
+
+        # metrics pipeline
+        assert "metrics" in pipelines, "Original metrics pipeline should still exist"
+        assert pipelines["metrics"]["receivers"] == ["otlp"]
+        assert pipelines["metrics"]["processors"] == ["memory_limiter", "batch"]
+        assert "prometheus" in pipelines["metrics"]["exporters"]
+        assert "debug" in pipelines["metrics"]["exporters"]
+
+        # traces pipeline
+        assert "traces" in pipelines, "Original traces pipeline should still exist"
+        assert pipelines["traces"]["receivers"] == ["otlp"]
+        assert pipelines["traces"]["processors"] == ["memory_limiter", "batch"]
+
+        # logs pipeline
+        assert "logs" in pipelines, "Original logs pipeline should still exist"
+        assert pipelines["logs"]["receivers"] == ["otlp"]
+        assert pipelines["logs"]["processors"] == ["memory_limiter", "batch"]
+
+
 class TestOTelConfigValidationWithFixtures:
     """Test validation with fixture configurations."""
 

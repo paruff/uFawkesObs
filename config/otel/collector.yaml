@@ -17,6 +17,26 @@ processors:
     send_batch_size: 10000
     timeout: 10s
 
+  filter/ai:
+    error_mode: ignore
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+          - "gen_ai\\..*"
+          - "llm\\..*"
+          - "openllmetry\\..*"
+          - "ai\\..*"
+
+  attributes/ai:
+    actions:
+      - key: ai.environment
+        value: development
+        action: insert
+      - key: ai.platform
+        value: fawkes-idp
+        action: insert
+
 exporters:
   debug:
     verbosity: normal
@@ -62,3 +82,8 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, batch]
       exporters: [loki, debug]
+
+    metrics/ai:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/ai, attributes/ai, batch]
+      exporters: [prometheus]

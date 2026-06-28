@@ -1,0 +1,56 @@
+{
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Add filter/ai and attributes/ai processors to config/otel/collector.yaml",
+      "description": "Add two new processors after the existing batch processor: filter/ai (regexp include for gen_ai.*, llm.*, openllmetry.*, ai.*) with error_mode: ignore, and attributes/ai (insert ai.environment=development, ai.platform=fawkes-idp)",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "filter/ai processor exists in processors section with error_mode: ignore and regexp metric_names include",
+        "attributes/ai processor exists in processors section with two insert actions",
+        "Existing memory_limiter and batch processors are unchanged"
+      ],
+      "files": ["config/otel/collector.yaml"]
+    },
+    {
+      "id": "T2",
+      "title": "Add metrics/ai pipeline to service.pipelines in config/otel/collector.yaml",
+      "description": "Add metrics/ai pipeline: receivers [otlp], processors [memory_limiter, filter/ai, attributes/ai, batch], exporters [prometheus]. Do NOT modify existing metrics, traces, or logs pipelines.",
+      "depends_on": ["T1"],
+      "acceptance_criteria": [
+        "metrics/ai pipeline exists in service.pipelines",
+        "Pipeline has receivers: [otlp]",
+        "Pipeline has processors: [memory_limiter, filter/ai, attributes/ai, batch]",
+        "Pipeline has exporters: [prometheus]",
+        "Existing metrics, traces, logs pipelines are unchanged"
+      ],
+      "files": ["config/otel/collector.yaml"]
+    },
+    {
+      "id": "T3",
+      "title": "Add unit test for metrics/ai pipeline in test_otel_config_validation.py",
+      "description": "Add a TestOTelAIPipeline test class that verifies metrics/ai pipeline exists, has correct receivers/processors/exporters, filter/ai and attributes/ai processors are defined, and existing pipelines are not modified.",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "Test class TestOTelAIPipeline exists",
+        "Tests verify metrics/ai pipeline exists",
+        "Tests verify filter/ai processor definition",
+        "Tests verify attributes/ai processor definition",
+        "Tests verify existing pipelines are unchanged"
+      ],
+      "files": ["tests/unit/test_otel_config_validation.py"]
+    },
+    {
+      "id": "T4",
+      "title": "Validate: yamllint and unit tests pass",
+      "description": "Run yamllint on config/otel/collector.yaml and run the full unit test suite. All must pass.",
+      "depends_on": ["T3"],
+      "acceptance_criteria": [
+        "yamllint config/otel/collector.yaml passes with no errors",
+        "pytest tests/unit/ passes with all tests green",
+        "No existing tests are broken"
+      ],
+      "files": []
+    }
+  ]
+}
