@@ -1,35 +1,27 @@
-# Review Report — M2-03: Publish and Verify Platform Documentation
+# Review Report — M2-04: Add Repository Metadata, Topics, and CI Badge
 
 ## Correctness
 
-| Requirement | Status | Notes |
-|---|---|---|
-| FR-1: ARCHITECTURE.md maps pipelines, ports, deps | ✅ | Correct versions, ports, and config paths |
-| FR-2: KNOWN_LIMITATIONS.md covers limits + auth | ✅ | 12 limitations across 7 categories |
-| FR-3: CHANGE_IMPACT_MAP.md with correct paths | ✅ | All 24 paths verified; 3 stale paths fixed |
+| Requirement | Status |
+|---|---|
+| FR-1: CI badge exists | ✅ Present (line 3) |
+| FR-2: Test count 239 | ✅ Changed 118→239 |
+| FR-3: Homepage URL set | ✅ https://ufawkes.dev |
+| FR-4: 6 new topics added | ✅ All present |
 
 ## Scope Check
 
 | Check | Status |
 |---|---|
 | No changes to compose.yaml, config/, scripts/ | ✅ PASS |
-| No changes to dashboards/ or tests/ | ✅ PASS |
-| Only docs/ modified | ✅ PASS |
-
-## Maintainability
-
-| Check | Status |
-|---|---|
-| All three docs pass markdownlint | ✅ |
-| File paths resolve to actual files/directories | ✅ |
-| Cross-references between docs (ARCHITECTURE → CHANGE_IMPACT_MAP → KNOWN_LIMITATIONS) | ✅ |
+| Only README.md modified | ✅ PASS |
 
 ## Risk Assessment
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Stale file paths in docs cause confusion | Low | All 24 paths verified; 3 stale ones fixed |
-| Docs drift from compose.yaml | None | Fixed stale paths; versions already synced in M1.5 |
+| Stale test count misleads visitors | Low | Fixed 118→239 |
+| Missing topics reduce discoverability | Low | Added 6 technology topics |
 
 ## Result
 

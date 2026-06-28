@@ -1,52 +1,55 @@
-# Design — M2-03: Publish and Verify Platform Documentation
+# Design — M2-04: Add Repository Metadata, Topics, and CI Badge
 
-**Based on:** specification.md (M2-03), plan.md
+**Based on:** specification.md (M2-04)
 
 ---
 
 ## Impacted Components
 
-| Component | File | Change Type |
+| Component | File / Resource | Change Type |
 |---|---|---|
-| Change impact map | `docs/CHANGE_IMPACT_MAP.md` | **Fix** — stale path `config/prometheus/ai-rules.yml` → `config/prometheus/rules/ai-rules.yml` |
-| Architecture | `docs/ARCHITECTURE.md` | **Verify** — already synced in M1.5, confirm correct |
-| Known limitations | `docs/KNOWN_LIMITATIONS.md` | **Verify** — comprehensive, confirm correct |
+| README test count | `README.md` | **Update** — 118 → 239 |
+| GitHub repo metadata | GitHub API | **Update** — homepage URL + topics |
 
 ---
 
 ## Technical Approach
 
-### 1. Verify ARCHITECTURE.md
+### 1. CI Badge (Already Present)
 
-The doc was already synced in M1.5 (PR #125) with correct versions, ports, and config
-paths. Run `markdownlint` to validate. If it passes, no changes needed.
-
-### 2. Verify KNOWN_LIMITATIONS.md
-
-The doc is 186 lines with 12 documented limitations across 7 categories. It already
-covers all required topics. Run `markdownlint` to validate. If it passes, no changes
-needed.
-
-### 3. Fix CHANGE_IMPACT_MAP.md
-
-Line 53 references `config/prometheus/ai-rules.yml` which does not exist at that path.
-The file was moved to `config/prometheus/rules/ai-rules.yml` in PR #124.
-
-Change:
-```
-| `config/prometheus/ai-rules.yml`                             | Grafana AI capabilities dashboard panels that reference `ai:*` recording rules; `docs/ai-runbook.md`                   |
-```
-To:
-```
-| `config/prometheus/rules/ai-rules.yml`                       | Grafana AI capabilities dashboard panels that reference `ai:*` recording rules; `docs/ai-runbook.md`                   |
+Line 3 of README.md:
+```markdown
+[![CI](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml/badge.svg)](https://github.com/paruff/uFawkesObs/actions/workflows/ci.yml)
 ```
 
-Also verify all other file paths resolve by checking against filesystem.
+Verified present — no change needed.
+
+### 2. Update Test Count
+
+Line 404 in README.md:
+```
+**Test coverage:** 118 tests covering all configuration aspects
+```
+→ Change to `239` (count from `pytest tests/unit/`).
+
+### 3. Set Homepage URL
+
+`gh repo edit --homepage "https://ufawkes.dev"` — sets the project landing page URL
+on the GitHub repo sidebar.
+
+### 4. Add Missing Topics
+
+Current topics: devops, dora-metrics, grafana, observability, open-source,
+platform-engineering, prometheus, ufawkes
+
+Missing: opentelemetry, docker-compose, gitops, alertmanager, tempo, loki
+
+`gh repo edit --add-topic opentelemetry,docker-compose,gitops,alertmanager,tempo,loki`
 
 ---
 
 ## Constraints
 
-1. All three docs must pass markdownlint
-2. No new limitations should be added unless they represent actual known issues
-3. No architecture changes should be introduced — verification only
+1. Homepage URL must be a valid URL
+2. GitHub topics are limited to printable ASCII characters
+3. README.md must pass markdownlint after edits

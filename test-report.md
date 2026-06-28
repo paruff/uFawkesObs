@@ -1,13 +1,18 @@
-# Test Report — M2-03: Publish and Verify Platform Documentation
+# Test Report — M2-04: Add Repository Metadata, Topics, and CI Badge
 
 ## Test Results
 
 | Acceptance Criterion | Status | Evidence |
 |---|---|---|
-| `docs/ARCHITECTURE.md` exists and passes markdownlint | ✅ PASS | markdownlint: no errors |
-| `docs/KNOWN_LIMITATIONS.md` exists and passes markdownlint | ✅ PASS | markdownlint: no errors |
-| `docs/CHANGE_IMPACT_MAP.md` exists and passes markdownlint | ✅ PASS | markdownlint: no errors |
-| All file paths in CHANGE_IMPACT_MAP.md verified | ✅ PASS | 24 paths checked; 3 stale paths found and fixed |
+| README.md has CI badge | ✅ PASS | Line 3, references ci.yml workflow |
+| README.md test count shows 239 | ✅ PASS | Changed from 118 to 239 |
+| GitHub homepage URL set | ✅ PASS | https://ufawkes.dev |
+| Topics include opentelemetry | ✅ PASS | Verified via gh repo view |
+| Topics include docker-compose | ✅ PASS | |
+| Topics include gitops | ✅ PASS | |
+| Topics include alertmanager | ✅ PASS | |
+| Topics include tempo | ✅ PASS | |
+| Topics include loki | ✅ PASS | |
 
 ## Regression Risk
 
@@ -15,9 +20,9 @@
 |---|---|
 | No service configs changed | ✅ PASS |
 | No compose.yaml, config/, or scripts/ changes | ✅ PASS |
-| Markdown lint passes on all docs | ✅ 3/3 |
+| markdownlint on README.md | ✅ PASS |
 | Unit tests pass | ✅ 239/239 |
 
 ## Result
 
-**PASS** — All acceptance criteria met. No regression risk.
+**PASS** — All acceptance criteria met.

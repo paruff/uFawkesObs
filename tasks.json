@@ -2,43 +2,57 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Fix stale path in CHANGE_IMPACT_MAP.md",
-      "description": "Change config/prometheus/ai-rules.yml to config/prometheus/rules/ai-rules.yml line 53.",
+      "title": "Verify CI badge exists in README.md",
+      "description": "Line 3 has CI badge — confirm it points to ci.yml workflow.",
       "depends_on": [],
       "acceptance_criteria": [
-        "CHANGE_IMPACT_MAP.md references config/prometheus/rules/ai-rules.yml",
-        "No references to non-existent config/prometheus/ai-rules.yml remain"
+        "README.md contains CI badge markdown link",
+        "Badge URL references ci.yml workflow"
       ],
-      "files": ["docs/CHANGE_IMPACT_MAP.md"]
+      "files": ["README.md"]
     },
     {
       "id": "T2",
-      "title": "Verify ARCHITECTURE.md is correct",
-      "description": "Confirm ARCHITECTURE.md passes markdownlint, versions match compose.yaml, config paths resolve.",
+      "title": "Update stale test count 118→239",
+      "description": "Change '118 tests' to '239 tests' on line 404 of README.md.",
       "depends_on": [],
       "acceptance_criteria": [
-        "markdownlint passes on ARCHITECTURE.md",
-        "All referenced file paths exist"
+        "README.md test count shows 239"
       ],
-      "files": ["docs/ARCHITECTURE.md"]
+      "files": ["README.md"]
     },
     {
       "id": "T3",
-      "title": "Verify KNOWN_LIMITATIONS.md is correct",
-      "description": "Confirm KNOWN_LIMITATIONS.md passes markdownlint and covers storage limits, retention, auth gaps, dev setup.",
+      "title": "Set GitHub homepage URL",
+      "description": "gh repo edit --homepage https://ufawkes.dev",
       "depends_on": [],
       "acceptance_criteria": [
-        "markdownlint passes on KNOWN_LIMITATIONS.md"
+        "GitHub repo shows homepage URL as ufawkes.dev"
       ],
-      "files": ["docs/KNOWN_LIMITATIONS.md"]
+      "files": []
     },
     {
       "id": "T4",
-      "title": "Run markdownlint and unit tests",
-      "description": "Validate all three docs with markdownlint and run the full unit test suite.",
-      "depends_on": ["T1", "T2", "T3"],
+      "title": "Add missing GitHub topics",
+      "description": "Add opentelemetry, docker-compose, gitops, alertmanager, tempo, loki to repo topics.",
+      "depends_on": [],
       "acceptance_criteria": [
-        "markdownlint passes on all three docs",
+        "Topics include opentelemetry",
+        "Topics include docker-compose",
+        "Topics include gitops",
+        "Topics include alertmanager",
+        "Topics include tempo",
+        "Topics include loki"
+      ],
+      "files": []
+    },
+    {
+      "id": "T5",
+      "title": "Run markdownlint and unit tests",
+      "description": "markdownlint on README.md and full unit test suite.",
+      "depends_on": ["T1", "T2"],
+      "acceptance_criteria": [
+        "markdownlint passes on README.md",
         "pytest tests/unit/ passes"
       ],
       "files": []

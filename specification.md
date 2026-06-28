@@ -1,17 +1,17 @@
-# Specification — M2-03: Publish and Verify Platform Documentation
+# Specification — M2-04: Add Repository Metadata, Topics, and CI Badge
 
-**Source:** GitHub Issue #74
+**Source:** GitHub Issue #75
 **Priority:** P0
-**Labels:** `documentation`
+**Labels:** `documentation`, `chore`
 
 ---
 
 ## Problem Statement
 
-Platform documentation files must be verified and published. ARCHITECTURE.md,
-KNOWN_LIMITATIONS.md, and CHANGE_IMPACT_MAP.md exist but may contain stale paths,
-outdated version references, or missing cross-links. A final pass ensures these
-three core docs are accurate, complete, and pass validation gates.
+The uFawkesObs repository landing page has gaps: the README test count is stale (118
+vs actual 239), the GitHub homepage URL is not set, and repository topics are missing
+key technology identifiers like `opentelemetry` and `docker-compose`. These gaps reduce
+discoverability on GitHub and mislead visitors.
 
 ---
 
@@ -19,33 +19,30 @@ three core docs are accurate, complete, and pass validation gates.
 
 ### Functional Requirements
 
-1. **FR-1:** `docs/ARCHITECTURE.md` must map OTel Collector pipelines, service ports,
-   container dependencies, and all configuration file paths with current values from
-   `compose.yaml`
-2. **FR-2:** `docs/KNOWN_LIMITATIONS.md` must document storage limits, retention behaviors,
-   authentication gaps, and development setup caveats
-3. **FR-3:** `docs/CHANGE_IMPACT_MAP.md` must map cross-service and cross-plane effects
-   with correct file paths
+1. **FR-1:** `README.md` includes a live CI badge for the main branch
+2. **FR-2:** `README.md` test coverage count reflects actual test count (239, not 118)
+3. **FR-3:** GitHub repository homepage URL is set to project URL
+4. **FR-4:** GitHub repository topics include: `opentelemetry`, `docker-compose`, `gitops`,
+   `alertmanager`, `tempo`, `loki`
 
 ### Non-functional Requirements
 
-4. **NFR-1:** All three docs pass `markdownlint`
-5. **NFR-2:** All file paths referenced in CHANGE_IMPACT_MAP.md must resolve to actual files
+5. **NFR-1:** README.md passes markdownlint
+6. **NFR-2:** Only README.md is modified (no compose.yaml, configs, etc.)
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `docs/ARCHITECTURE.md` exists and passes markdownlint
-- [ ] `docs/KNOWN_LIMITATIONS.md` exists and passes markdownlint
-- [ ] `docs/CHANGE_IMPACT_MAP.md` exists and passes markdownlint
-- [ ] All file paths in CHANGE_IMPACT_MAP.md are verified against actual filesystem paths
+- [ ] `README.md` has CI badge (verify present)
+- [ ] `README.md` test count shows 239, not 118
+- [ ] GitHub homepage URL is set
+- [ ] GitHub topics include opentelemetry, docker-compose, gitops, alertmanager, tempo, loki
 
 ---
 
 ## Out of Scope
 
-- Creating new documentation files beyond the three target docs
-- Adding new limitations or architecture changes
-- Updating README.md or GitHub metadata (M2-04)
-- Adding version badge or CI status badge (M2-04)
+- Adding new README sections or restructuring content
+- Changing compose.yaml or service configs
+- Adding CONTRIBUTING.md or issue templates (M2-01)
