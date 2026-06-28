@@ -40,13 +40,19 @@ uFawkesObs provides the observability substrate required for DORA measurement �
 
 ## Part of the Fawkes IDP
 
-uFawkesObs is the observability plane in the [Fawkes IDP](https://github.com/paruff/fawkes) family.
+uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com/paruff/fawkes) family — a suite of composable platform engineering stacks.
 
-- **uFawkesObs**: observability plane (metrics, logs, traces, dashboards)
-- **uFawkesPipe**: CI/CD plane for pipeline orchestration and deployment event flow
-- **uFawkesDevX**: developer plane for local development workflows and tooling
+| Plane | Role | Repository |
+|---|---|---|
+| **uFawkesObs** | Observability — metrics, logs, traces, dashboards | [GitHub](https://github.com/paruff/uFawkesObs) |
+| **uFawkesRes** | Resources — ingress, SSO, Postgres, Valkey | [GitHub](https://github.com/paruff/uFawkesRes) |
+| **uFawkesPipe** | CI/CD — pipeline orchestration, deployment events | [GitHub](https://github.com/paruff/ufawkespipe) |
+| **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
+| **uFawkesDORA** | DORA metrics — dashboards, VSM, delivery performance | [GitHub](https://github.com/paruff/ufawkesdora) |
+| **uFawkesSec** | Security — policy-as-code, supply chain, guardrails | [GitHub](https://github.com/paruff/ufawkessec) |
+| **uFawkesAI** | AI agent templates — golden path scaffolding | [GitHub](https://github.com/paruff/ufawkesai) |
 
-In this architecture, uFawkesObs provides the telemetry substrate; higher-level delivery and developer planes provide the event context needed for end-to-end DORA measurement.
+In this architecture, uFawkesObs provides the telemetry substrate consumed by all other planes. The OTLP API (`otel-collector:4317`/`4318`) is how every plane ships metrics, logs, and traces to uFawkesObs for centralized observability.
 
 ---
 

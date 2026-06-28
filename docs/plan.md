@@ -257,6 +257,8 @@
 
 ## Milestone 3 — Cross-Plane Integration Guides
 
+**Status: ✅ COMPLETE**
+
 *Theme: Provide guides enabling other planes (e.g. uFawkesPipe, uFawkesDevX) to join the observability subnet.*
 
 **Priority: P1**
@@ -288,11 +290,17 @@
 
 - **Description:** Add uFawkesObs metadata in the central Backstage platform catalog.
 - **Backlog Issue:** #78
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Verify and populate `catalog-info.yaml` with service owner, system plane, lifecycle, and component taxonomy details.
+  1. Verified `catalog-info.yaml` already exists with 17 entities (1 System, 8 Components, 4 Resources, 1 API)
+  2. Updated System entity with ecosystem tags and links to uFawkesRes + uFawkesDORA
+  3. Updated OTLP API entity with `consumedBy` listing all 4 consuming planes
+  4. Expanded README "Part of Fawkes IDP" section to 7-plane table (matching uFawkesRes format)
+  5. Filed mirror issue paruff/fawkes#1480 requesting Location imports
 - **Acceptance Criteria:**
-  - `catalog-info.yaml` parses correctly and conforms to Backstage schema models.
+  - [x] `catalog-info.yaml` exists and parses correctly
+  - [x] README ecosystem section references all planes
+  - [x] Mirror issue filed in fawkes
 
 ### Task M3-04: Update Multi-Stack Integration Guide
 
@@ -343,11 +351,12 @@
 - **Description:** Integrate Apache DevLake database and worker instances into the docker-compose orchestration.
 - **Backlog Issue:** #81, #51
 - **Dependencies:** M4-01
-- **Status:** 🔲 PENDING
+- **Status:** 🔲 PENDING — **scope review required (see below)**
 - **Tasks:**
   1. Define `devlake` and `mysql` services inside `compose.yaml` under the `dora` profile.
   2. Pin exact semantic images and define volume paths for persistent storage.
   3. Define custom healthchecks for DevLake.
+- **Ecosystem Review Note 2026-06-28:** See `docs/reviews/M4-02-ecosystem-review.md`. The creation of [uFawkesRes](https://github.com/paruff/uFawkesRes) (resource plane with shared Postgres) and [uFawkesDORA](https://github.com/paruff/ufawkesdora) (standalone DORA metrics plane) changes this task's scope. Recommendation: move DevLake to uFawkesDORA, use uFawkesRes's shared Postgres instead of MySQL, and limit uFawkesObs's M4 scope to recording rules (M4-03) and dashboard (M4-04) only.
 - **Acceptance Criteria:**
   - `docker compose --profile dora config` succeeds with zero parsing warnings.
 

@@ -22,12 +22,19 @@ metadata:
     - prometheus
     - grafana
     - fawkes
+    - ecosystem
   links:
     - url: https://github.com/paruff/uFawkesObs
       title: GitHub Repository
       icon: github
     - url: https://github.com/paruff/fawkes
       title: Fawkes IDP (Parent)
+      icon: github
+    - url: https://github.com/paruff/uFawkesRes
+      title: uFawkesRes — Resource Plane
+      icon: github
+    - url: https://github.com/paruff/ufawkesdora
+      title: uFawkesDORA — DORA Metrics Plane
       icon: github
 spec:
   type: observability
@@ -36,6 +43,8 @@ spec:
   dependsOn:
     - system:ufawkespipe
     - system:ufawkesdevx
+    - system:ufawkesres
+    - system:ufawkesdora
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format
 apiVersion: backstage.io/v1alpha1
@@ -316,3 +325,8 @@ spec:
   system: ufawkesobs
   definition:
     $text: https://opentelemetry.io/docs/specs/otlp/
+  consumedBy:
+    - system:ufawkespipe
+    - system:ufawkesdevx
+    - system:ufawkesres
+    - system:ufawkesdora
