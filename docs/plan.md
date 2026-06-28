@@ -71,49 +71,55 @@
 
 **Priority: P0** — Must be done before any new features, because stale docs cause agent confusion.
 
-### Task M1.5-01: Update ADR-001 (Loki Version) and Create ADR-002 (Grafana 12)
+### Task M1.5-01: Update ADR-001 (Loki Version) and Create ADR-004 (Grafana 12)
 
-- **Description:** ADR-001 is stale — it says "Use Loki 2.9.10" but the actual deployment is 3.3.2. ADR-002 for Grafana 12 migration was never created.
+- **Description:** ADR-001 was stale — it said "Use Loki 2.9.10" but the actual deployment is 3.3.2. ADR-004 for Grafana 12 migration was never created.
 - **Backlog Issue:** #62 (OBS-VER-04)
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Update `docs/adr/ADR-001-loki-version.md`:
-     - Change stated version from 2.9.10 to 3.3.2
-     - Update schema references from v11/boltdb to v13/TSDB
-     - Update decision date, add supersession notes
-     - Add migration summary referencing PR #116
-  2. Create `docs/adr/ADR-002-grafana-11x-migration.md`:
-     - Document the 10.4.5 → 12.3.7 upgrade
-     - Note breaking changes encountered
-     - Reference current version in `compose.yaml`
+  1. Updated `docs/adr/ADR-001-loki-version.md`:
+     - Changed stated version from 2.9.10 to 3.3.2
+     - Updated schema references from v11/boltdb to v13/TSDB
+     - Added update date (2026-06-28) and supersession notes
+     - Added migration summary referencing PR #116
+  2. Created `docs/adr/ADR-004-grafana-12x-migration.md`:
+     - Documented the 10.4.5 → 12.3.7 upgrade
+     - Noted breaking changes assessed (Angular removal, legacy alerting, etc.)
+     - Verified all provisioning config compatible with Grafana 12.x
+     - Referenced current version in `compose.yaml`
+  3. Updated `docs/adr/README.md` index with ADR-004 row and corrected ADR-001 entry
 - **Acceptance Criteria:**
-  - [ ] `docs/adr/ADR-001-loki-version.md` references Loki 3.3.2
-  - [ ] `docs/adr/ADR-002-grafana-11x-migration.md` exists
-  - [ ] All ADRs pass markdownlint
+  - [x] `docs/adr/ADR-001-loki-version.md` references Loki 3.3.2
+  - [x] `docs/adr/ADR-004-grafana-12x-migration.md` exists
+  - [x] All ADRs pass markdownlint
 
 ### Task M1.5-02: Sync ARCHITECTURE.md with Real Versions
 
-- **Description:** `docs/ARCHITECTURE.md` lists Loki v2.9.10 and Grafana v10.4.5 — both are wrong.
+- **Description:** `docs/ARCHITECTURE.md` listed Loki v2.9.10 and Grafana v10.4.5 — both were wrong.
 - **Backlog Issue:** N/A (tech debt discovered during audit)
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Update service version table: Loki → 3.3.2, Grafana → 12.3.7
-  2. Update any stale config paths or port references
+  1. Updated service version table: Loki → 3.3.2, Grafana → 12.3.7, Alertmanager → 0.28.0
+  2. Added Prometheus rules directory to config files table
 - **Acceptance Criteria:**
-  - [ ] `docs/ARCHITECTURE.md` version table matches `compose.yaml`
-  - [ ] markdownlint passes
+  - [x] `docs/ARCHITECTURE.md` version table matches `compose.yaml`
+  - [x] markdownlint passes
 
 ### Task M1.5-03: Sync .agents/skills/obs-stack/SKILL.md with Real Versions
 
-- **Description:** The obs-stack skill lists all old versions — OTel v0.103.1 (actual: 0.120.0), Prometheus v2.52.0 (actual: 2.55.1), Loki v2.9.10 (actual: 3.3.2), Tempo v2.5.0 (actual: 2.10.5), Grafana v10.4.5 (actual: 12.3.7).
+- **Description:** The obs-stack skill listed all old versions — OTel v0.103.1 (actual: 0.120.0), Prometheus v2.52.0 (actual: 2.55.1), Loki v2.9.10 (actual: 3.3.2), Tempo v2.5.0 (actual: 2.10.5), Grafana v10.4.5 (actual: 12.3.7).
 - **Backlog Issue:** N/A (tech debt discovered during audit)
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Update service version table in `.agents/skills/obs-stack/SKILL.md`
-  2. Verify port map and config file paths are still accurate
+  1. Updated service version table — all versions now match `compose.yaml`
+  2. Fixed config file paths (were using old-style names like `config/otel-collector-config.yaml`)
+  3. Updated OTel pipeline example to match actual `collector.yaml` contents
+  4. Added Prometheus rule files table
+  5. Updated port map with Tempo's additional ports (9411, 14250, 14268)
+  6. Added profiles section and related skills reference
 - **Acceptance Criteria:**
-  - [ ] `.agents/skills/obs-stack/SKILL.md` versions match `compose.yaml`
-  - [ ] markdownlint passes
+  - [x] `.agents/skills/obs-stack/SKILL.md` versions match `compose.yaml`
+  - [x] markdownlint passes
 
 ---
 

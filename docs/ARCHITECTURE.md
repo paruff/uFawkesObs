@@ -14,11 +14,11 @@ All services run in the `observability-lab` Docker Compose project on the `obser
 | --------------------- | ----------------------------------------- | ------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `otel-collector`      | `otel/opentelemetry-collector-contrib`    | 0.120.0 | 4317 (gRPC), 4318 (HTTP), 8888 (self-metrics), 8889 (Prometheus exporter)         | Receives OTLP telemetry, routes metrics → Prometheus, traces → Tempo, logs → Loki |
 | `prometheus`          | `prom/prometheus`                         | v2.55.1 | 9090                                                                              | Stores and queries metrics; scrapes otel-collector and alloy                      |
-| `alertmanager`        | `prom/alertmanager`                       | v0.27.0 | 9093                                                                              | Receives alerts from Prometheus, routes notifications                             |
+| `alertmanager`        | `prom/alertmanager`                       | v0.28.0 | 9093                                                                              | Receives alerts from Prometheus, routes notifications                             |
 | `tempo`               | `grafana/tempo`                           | 2.10.5  | 3200 (HTTP), 9095 (gRPC), 9411 (Zipkin), 14250 (Jaeger gRPC), 14268 (Jaeger HTTP) | Stores and queries distributed traces                                             |
-| `loki`                | `grafana/loki`                            | 2.9.10  | 3100 (HTTP), 9096 (gRPC)                                                          | Stores and queries logs                                                           |
+| `loki`                | `grafana/loki`                            | 3.3.2   | 3100 (HTTP), 9096 (gRPC)                                                          | Stores and queries logs                                                           |
 | `alloy`               | `grafana/alloy`                           | v1.12.2 | 12345 (HTTP/metrics)                                                              | Scrapes Docker container logs, forwards to Loki                                   |
-| `grafana`             | `grafana/grafana`                         | 10.4.5  | 3000                                                                              | Visualization UI; datasources: Prometheus, Tempo, Loki, Alertmanager              |
+| `grafana`             | `grafana/grafana`                         | 12.3.7  | 3000                                                                              | Visualization UI; datasources: Prometheus, Tempo, Loki, Alertmanager              |
 | `node-exporter`       | `prom/node-exporter`                      | v1.8.1  | 9100                                                                              | Exposes host-level hardware and OS metrics for Prometheus                         |
 | `telemetry-generator` | custom build (`apps/telemetry-generator`) | —       | 5001 (external) / 5000 (internal)                                                 | Demo app that emits OTLP telemetry (profile: `apps`)                              |
 
@@ -104,6 +104,7 @@ alloy         → depends_on: loki (healthy)
 | ---------------------- | ---------------------------------------------------------- | ---------------------------------------- |
 | otel-collector         | `config/otel/collector.yaml`                               | `/etc/otel/collector.yaml`               |
 | prometheus             | `config/prometheus/prometheus.yaml`                        | `/etc/prometheus/prometheus.yaml`        |
+| prometheus rules       | `config/prometheus/rules/`                                 | `/etc/prometheus/rules/`                 |
 | prometheus alerts      | `config/prometheus/alerts.yml`                             | `/etc/prometheus/alerts.yml`             |
 | alertmanager           | `config/alertmanager/alertmanager.yml`                     | `/etc/alertmanager/alertmanager.yml`     |
 | tempo                  | `config/tempo/tempo.yaml`                                  | `/etc/tempo/tempo.yaml`                  |
