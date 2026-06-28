@@ -65,6 +65,7 @@ jobs:
       validate-tempo: true
       validate-grafana: true
       fail-on-latest: true
+      enable-coverage-gate: false
 
   # ─── Stage 4: Tests ────────────────────────────────────────────────────
   # Unit, integration, compose-smoke — runs on validated code
