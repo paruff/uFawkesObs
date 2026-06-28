@@ -422,3 +422,152 @@ class TestPrometheusConfigValidation:
         # All scrape configs should be valid
         for sc in config["scrape_configs"]:
             assert "job_name" in sc
+
+
+class TestPrometheusAIRules:
+    """Test the AI capability rules file configuration."""
+
+    def _load_ai_rules(self, project_root):
+        """Helper to load ai-rules.yml from the project root."""
+        import pathlib
+
+        rules_path = (
+            pathlib.Path(project_root)
+            / "config"
+            / "prometheus"
+            / "rules"
+            / "ai-rules.yml"
+        )
+        with open(rules_path, "r") as f:
+            return yaml.safe_load(f), rules_path
+
+    def test_ai_rules_file_exists(self, project_root):
+        """Test that the AI rules file exists."""
+        rules, path = self._load_ai_rules(project_root)
+        assert path.exists(), f"AI rules file not found: {path}"
+
+    def test_ai_rules_valid_yaml(self, project_root):
+        """Test that the AI rules file contains valid YAML."""
+        rules, _ = self._load_ai_rules(project_root)
+        assert rules is not None, "AI rules file is empty"
+
+    def test_ai_rules_has_recording_group(self, project_root):
+        """Test that the AI rules file has a recording rules group."""
+        rules, _ = self._load_ai_rules(project_root)
+        assert "groups" in rules, "No groups defined in ai-rules.yml"
+        group_names = [g["name"] for g in rules["groups"]]
+        assert "ai_capability_recording_rules" in group_names, (
+            "Missing ai_capability_recording_rules group"
+        )
+
+    def test_ai_rules_has_alert_group(self, project_root):
+        """Test that the AI rules file has an alert rules group."""
+        rules, _ = self._load_ai_rules(project_root)
+        group_names = [g["name"] for g in rules["groups"]]
+        assert "ai_capability_alerts" in group_names, (
+            "Missing ai_capability_alerts group"
+        )
+
+    def test_ai_recording_rules_exist(self, project_root):
+        """Test that all required recording rules are defined."""
+        rules, _ = self._load_ai_rules(project_root)
+        for group in rules["groups"]:
+            if group["name"] == "ai_capability_recording_rules":
+                record_names = [r["record"] for r in group["rules"]]
+                required = [
+                    "ai:llm_request_latency_p99:seconds",
+                    "ai:llm_request_latency_p50:seconds",
+                    "ai:token_usage_rate:per_minute",
+                    "ai:suggestion_acceptance_rate:ratio",
+                ]
+                for name in required:
+                    assert name in record_names, f"Missing recording rule: {name}"
+                return
+        pytest.fail("Recording rules group not found")
+
+    def test_ai_alert_rules_exist(self, project_root):
+        """Test that all required alert rules are defined."""
+        rules, _ = self._load_ai_rules(project_root)
+        for group in rules["groups"]:
+            if group["name"] == "ai_capability_alerts":
+                alert_names = [r["alert"] for r in group["rules"]]
+                required = [
+                    "AILLMLatencyHigh",
+                    "AIReworkRateHigh",
+                    "AIReworkRateCritical",
+                    "AITokenBudgetHigh",
+                ]
+                for name in required:
+                    assert name in alert_names, f"Missing alert rule: {name}"
+                return
+        pytest.fail("Alert rules group not found")
+
+    def test_alert_rules_have_category_label(self, project_root):
+        """Test that all alert rules have category: ai-capability label."""
+        rules, _ = self._load_ai_rules(project_root)
+        for group in rules["groups"]:
+            if group["name"] == "ai_capability_alerts":
+                for rule in group["rules"]:
+                    if "alert" in rule:
+                        labels = rule.get("labels", {})
+                        assert labels.get("category") == "ai-capability", (
+                            f"Alert {rule['alert']} missing category: ai-capability label"
+                        )
+                return
+
+    def test_alert_rules_have_runbook_url(self, project_root):
+        """Test that all alert rules have a runbook_url annotation."""
+        rules, _ = self._load_ai_rules(project_root)
+        for group in rules["groups"]:
+            if group["name"] == "ai_capability_alerts":
+                for rule in group["rules"]:
+                    if "alert" in rule:
+                        annotations = rule.get("annotations", {})
+                        assert "runbook_url" in annotations, (
+                            f"Alert {rule['alert']} missing runbook_url annotation"
+                        )
+                        assert "ai-runbook.md" in annotations["runbook_url"], (
+                            f"Alert {rule['alert']} runbook_url should reference ai-runbook.md"
+                        )
+                return
+
+    def test_aireworkratecritical_has_dora_annotation(self, project_root):
+        """Test that AIReworkRateCritical has the DORA 2025 annotation."""
+        rules, _ = self._load_ai_rules(project_root)
+        for group in rules["groups"]:
+            if group["name"] == "ai_capability_alerts":
+                for rule in group["rules"]:
+                    if rule.get("alert") == "AIReworkRateCritical":
+                        description = rule.get("annotations", {}).get("description", "")
+                        assert "DORA 2025" in description, (
+                            "AIReworkRateCritical should reference DORA 2025"
+                        )
+                        assert "20%" in description or "20 %" in description, (
+                            "AIReworkRateCritical should mention 20% threshold"
+                        )
+                return
+
+    def test_ai_rules_in_prometheus_rule_files(self, prometheus_config_path):
+        """Test that the Prometheus config references ai-rules.yml."""
+        with open(prometheus_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        assert "rule_files" in config, "Missing rule_files section"
+        rule_files = config["rule_files"]
+        ai_match = [f for f in rule_files if "ai-rules" in f]
+        assert len(ai_match) > 0, "ai-rules.yml not found in prometheus rule_files"
+
+    def test_ai_rules_existing_rule_files_preserved(self, prometheus_config_path):
+        """Test that existing rule file references are preserved."""
+        with open(prometheus_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        rule_files = config["rule_files"]
+        expected_existing = [
+            "/etc/prometheus/alerts.yml",
+            "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml",
+        ]
+        for ref in expected_existing:
+            assert ref in rule_files, (
+                f"Existing rule file reference {ref} should be preserved"
+            )

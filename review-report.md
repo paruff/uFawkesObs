@@ -1,4 +1,4 @@
-# Review Report — OBS-AI-01
+# Review Report — OBS-AI-02
 
 ## Review Result: **APPROVED**
 
@@ -6,41 +6,38 @@
 
 | Check | Status | Detail |
 |---|---|---|
-| Implementation matches requirements (specification.md) | ✅ PASS | All 10 acceptance criteria verified passing |
-| Pipeline wiring correct | ✅ PASS | `receivers: [otlp]`, `processors: [memory_limiter, filter/ai, attributes/ai, batch]`, `exporters: [prometheus]` |
-| filter/ai regexp matches spec | ✅ PASS | `gen_ai\..*`, `llm\..*`, `openllmetry\..*`, `ai\..*` — all 4 patterns present |
-| attributes/ai matches spec | ✅ PASS | `ai.environment=development` and `ai.platform=fawkes-idp` with `action: insert` |
-| Backward compatibility | ✅ PASS | All 3 existing pipelines (`metrics`, `traces`, `logs`) unchanged |
+| Recording rules use correct PromQL | ✅ PASS | `histogram_quantile` on `_bucket`, `rate` on `_sum`, all guarded with `or vector(0)` |
+| Alert rules have absent() guards | ✅ PASS | Each primary alert has a paired `XxxAbsent` alert per promql skill |
+| All alerts have `category: ai-capability` | ✅ PASS | Verified by unit test |
+| AIReworkRateCritical has DORA 2025 annotation | ✅ PASS | Summary mentions DORA 2025 threshold |
+| promtool check rules passes | ✅ PASS | 12 rules found, SUCCESS |
 
 ## Scope Discipline
 
 | Check | Status | Detail |
 |---|---|---|
-| Only files in scope touched | ✅ PASS | Only `config/otel/collector.yaml` and `tests/unit/test_otel_config_validation.py` changed |
-| No compose.yaml changes | ✅ PASS | No services, ports, volumes, or networks modified |
-| No new services added | ✅ PASS | Reuses existing `otlp` receiver and `prometheus` exporter |
-| No config changes to other services | ✅ PASS | Prometheus, Tempo, Loki, Grafana, Alloy configs untouched |
+| Only files in scope touched | ✅ PASS | Prometheus rule file, config, runbook, change map, tests |
+| No compose.yaml changes | ✅ PASS | No services, ports, volumes modified |
+| No OTel Collector config changes | ✅ PASS | No pipeline modifications |
+| No Grafana config changes | ✅ PASS | Dashboard not in scope |
 
 ## Maintainability
 
 | Check | Status | Detail |
 |---|---|---|
-| Follows project patterns | ✅ PASS | YAML structure, naming, indentation consistent with existing config |
-| OTel skill guidance followed | ✅ PASS | Separate `metrics/ai` pipeline per skill instruction — not merged into existing `metrics` |
-| Tests follow existing patterns | ✅ PASS | `TestOTelAIPipeline` class follows same conventions as `TestOTelServicePipelines` |
-| yamllint passes | ✅ PASS | Clean |
-| Readable and documented | ✅ PASS | Processors have clear names; attributes have meaningful keys |
+| Follows existing alert patterns | ✅ PASS | Same YAML structure as `alerts.yml` and `ufawkesobs-self-monitoring.yml` |
+| Adequate documentation | ✅ PASS | `docs/ai-runbook.md` covers all alerts with triage steps |
+| Change impact documented | ✅ PASS | `docs/CHANGE_IMPACT_MAP.md` updated |
 
 ## Risk Assessment
 
 | Risk | Severity | Assessment |
 |---|---|---|
-| Security | 🟢 None | No secrets, no new ports exposed, no authentication changes |
-| Performance | 🟢 None | `filter/ai` with `error_mode: ignore` adds zero overhead when no AI metrics flow |
-| Breaking changes | 🟢 None | All existing pipelines and configs untouched; all 225 existing tests pass |
-| Regressions | 🟢 None | Full unit test suite (225 tests) passes in 2.03s |
-| OTel compatibility | 🟢 None | v0.120.0 supports `filter` and `attributes` processors natively |
+| Security | 🟢 None | No new ports, secrets, or auth changes |
+| Performance | 🟢 None | Recording rules evaluated every 60s — negligible impact |
+| False positives | 🟢 Low | `or vector(0)` prevents alerting on absent data; `for: 7d` on rework rate prevents noise |
+| Regressions | 🟢 None | All 227 existing tests pass |
 
 ## Decision
 
-**APPROVED** — ready for delivery preparation.
+**APPROVED** — ready for delivery.

@@ -1,6 +1,6 @@
-# Design — OBS-AI-01: Add AI Metrics Pipeline to OTel Collector Config
+# Design — OBS-AI-02: Prometheus AI Recording Rules and Alerts
 
-**Specification:** specification.md (OBS-AI-01)
+**Based on:** specification.md (OBS-AI-02), promql skill, existing alert patterns
 
 ---
 
@@ -8,10 +8,11 @@
 
 | Component | File | Change Type |
 |---|---|---|
-| OTel Collector config | `config/otel/collector.yaml` | Add processors + pipeline |
-| Unit tests | `tests/unit/test_otel_config_validation.py` | Add test class |
-
-No other components are impacted. No changes to `compose.yaml`, no new services, no new receivers or exporters.
+| Prometheus AI rules | `config/prometheus/ai-rules.yml` | **Create** — new rule file |
+| Prometheus config | `config/prometheus/prometheus.yaml` | Add `ai-rules.yml` to `rule_files:` |
+| AI runbook | `docs/ai-runbook.md` | **Create** — stub runbook for AI alerts |
+| Change impact map | `docs/CHANGE_IMPACT_MAP.md` | Add ai-rules.yml entry |
+| Unit tests | `tests/unit/test_prometheus_config_validation.py` | Add AI rules test class |
 
 ---
 
@@ -19,82 +20,120 @@ No other components are impacted. No changes to `compose.yaml`, no new services,
 
 ### Current State
 
-The OTel Collector config (`config/otel/collector.yaml`) has three pipelines:
-
+`config/prometheus/prometheus.yaml` has `rule_files:` referencing two files:
 ```yaml
-service:
-  pipelines:
-    metrics:   # receivers: [otlp], processors: [memory_limiter, batch], exporters: [prometheus, debug]
-    traces:    # receivers: [otlp], processors: [memory_limiter, batch], exporters: [otlp/tempo, debug]
-    logs:      # receivers: [otlp], processors: [memory_limiter, batch], exporters: [loki, debug]
+rule_files:
+  - "/etc/prometheus/alerts.yml"
+  - "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml"
 ```
+
+AI metrics (from OBS-AI-01) surface through the `otel-app-metrics` scrape job at `otel-collector:8889` as OpenTelemetry metrics with names in the `gen_ai.*` namespace. OTel metric names containing `.` are converted to `_` in Prometheus (e.g. `gen_ai.client.operation.duration` → `gen_ai_client_operation_duration`).
 
 ### Target State
 
-Add a fourth pipeline `metrics/ai` with two new processors:
+New file `config/prometheus/ai-rules.yml`:
 
 ```yaml
-processors:
-  # ... existing memory_limiter and batch ...
+groups:
+  - name: ai_capability_recording_rules
+    interval: 60s
+    rules:
+      - record: ai:llm_request_latency_p99:seconds
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(gen_ai_client_operation_duration_bucket[5m]))
+              by (le)
+          ) or vector(0)
 
-  filter/ai:
-    error_mode: ignore
-    metrics:
-      include:
-        match_type: regexp
-        metric_names:
-          - "gen_ai\\..*"
-          - "llm\\..*"
-          - "openllmetry\\..*"
-          - "ai\\..*"
+      - record: ai:llm_request_latency_p50:seconds
+        expr: |
+          histogram_quantile(0.50,
+            sum(rate(gen_ai_client_operation_duration_bucket[5m]))
+              by (le)
+          ) or vector(0)
 
-  attributes/ai:
-    actions:
-      - key: ai.environment
-        value: development
-        action: insert
-      - key: ai.platform
-        value: fawkes-idp
-        action: insert
+      - record: ai:token_usage_rate:per_minute
+        expr: |
+          sum(rate(gen_ai_client_token_usage_count[5m]))
+          or vector(0)
 
-service:
-  pipelines:
-    # ... existing metrics, traces, logs UNCHANGED ...
-    metrics/ai:
-      receivers: [otlp]
-      processors: [memory_limiter, filter/ai, attributes/ai, batch]
-      exporters: [prometheus]
+      - record: ai:suggestion_acceptance_rate:ratio
+        expr: |
+          0
+        # Placeholder: will be replaced with actual ratio once AI SDK emits acceptance metrics.
+        # Pattern: sum(rate(gen_ai_suggestion_accepted_total[5m])) / (sum(rate(gen_ai_suggestion_total[5m])) or vector(0))
+
+  - name: ai_capability_alerts
+    interval: 60s
+    rules:
+      - alert: AILLMLatencyHigh
+        expr: ai:llm_request_latency_p99:seconds > 10
+        for: 5m
+        labels: { severity: warning, category: ai-capability }
+        annotations:
+          summary: "LLM p99 latency is above 10s"
+          description: "p99 LLM latency is {{ $value | humanizeDuration }} for the last 5 minutes."
+          runbook_url: "..."
+
+      - alert: AIReworkRateHigh
+        expr: (dora:rework_rate:ratio or vector(0)) > 0.10
+        for: 7d
+        labels: { severity: warning, category: ai-capability }
+        annotations:
+          summary: "AI rework rate is above 10% — watch threshold"
+          description: "Current rework rate: {{ $value | humanizePercentage }}."
+          runbook_url: "..."
+
+      - alert: AIReworkRateCritical
+        expr: (dora:rework_rate:ratio or vector(0)) > 0.20
+        for: 7d
+        labels: { severity: critical, category: ai-capability }
+        annotations:
+          summary: "AI rework rate is above 20% — stop features, fix instructions"
+          description: "...DORA 2025 reference..."
+          runbook_url: "..."
+
+      - alert: AITokenBudgetHigh
+        expr: ai:token_usage_rate:per_minute > 100000
+        for: 5m
+        labels: { severity: warning, category: ai-capability }
+        annotations:
+          summary: "AI token usage rate is high"
+          description: "..."
+          runbook_url: "..."
 ```
 
 ### Design Decisions
 
-1. **Separate named pipeline, not merged into `metrics`:** The `otel-collector` skill explicitly states "Never add AI-specific processors to the default metrics pipeline — this risks breaking existing Prometheus scraping." A separate `metrics/ai` pipeline isolates AI processing.
+1. **Separate rule file, not merged into alerts.yml:** The existing `alerts.yml` contains infrastructure alerts. AI capability alerts are semantically different with different receivers and SLAs. A separate file is cleaner and allows independent reloading.
 
-2. **Reuses existing `otlp` receiver and `prometheus` exporter:** AI SDKs send standard OTLP. No new receivers needed. The `prometheus` exporter on port 8889 already exposes metrics for Prometheus to scrape. Using it means no changes to `compose.yaml` ports or Prometheus scrape config.
+2. **Recording rules use `or vector(0)` consistently:** Per the promql skill, any rate-based expression that may return no data during cold start must have `or vector(0)`. This prevents absent() gaps in dashboards.
 
-3. **`error_mode: ignore` on filter/ai:** If no AI metrics arrive (e.g. before AI tooling is integrated), the filter processor silently passes nothing through instead of erroring. This prevents the collector from crashing when no AI instrumentation exists.
+3. **Acceptance rate is a placeholder returning 0:** No AI SDK currently emits acceptance metrics. The recording rule exists so dashboards can reference it without error. It returns `0` (no suggestions accepted) until real data flows.
 
-4. **`action: insert` on attributes:** Uses `insert` (not `upsert`) so that if the attribute already exists on the metric (set by the emitting SDK), it won't be overwritten. The processor only adds defaults when they're missing.
+4. **Rework rate uses `dora:rework_rate:ratio` fallback pattern:** The rework rate recording rule from OBS-DORA-04 isn't available yet. The alert expression uses `(dora:rework_rate:ratio or vector(0))` so it evaluates to `0` (rework rate = 0%) when no DORA data flows — the alerts never false-positive. Once DORA rules are added, they automatically start working.
 
-5. **Processor ordering `[memory_limiter, filter/ai, attributes/ai, batch]`:** Per OTel best practice, `memory_limiter` must be first. `filter/ai` runs before `attributes/ai` so we only tag metrics that pass the filter. `batch` is last for efficiency.
+5. **Alert `for: 7d` on rework rate alerts:** DORA 2025 thresholds are trend-based, not spike-based. A 7-day window ensures we detect sustained rework patterns rather than noisy short-term fluctuations.
 
-6. **No `debug` exporter on `metrics/ai`:** The existing pipelines include `debug` exporter for development visibility. For the AI pipeline, we omit `debug` to avoid flooding logs with AI metric data during normal operation. Debug can be added ad-hoc if needed.
+6. **`absent()` guards:** Per the promql skill, every alerting rule that fires when a metric value crosses a threshold must have a paired `absent()` rule. This is implemented for all AI alerts where the underlying metric could disappear.
 
-### Exporter Choice — `prometheus` not `prometheusremotewrite`
+### Metric Name Mapping
 
-The issue body says "exports to existing `prometheus` exporter (port 8889)". The current `metrics` pipeline already uses the `prometheus` exporter (port 8889). This is the correct choice because:
-- The `prometheus` exporter makes metrics available at `:8889/metrics` for Prometheus to scrape
-- The `otlp-collector` skill recommends using `prometheusremotewrite/ai` with a separate endpoint
-- However, the `prometheus` exporter already works and is simpler — no additional Prometheus remote-write config needed
-- The existing Prometheus scrape config already targets `otel-collector:8889`
-- Both `metrics` and `metrics/ai` pipelines publishing to the same `:8889` endpoint works — the exporter merges metrics from all pipelines that reference it
+OTel metric → Prometheus metric conversion:
+
+| OTel Metric | Prometheus Metric | Used By |
+|---|---|---|
+| `gen_ai.client.operation.duration` | `gen_ai_client_operation_duration_bucket`, `_sum`, `_count` | Latency P99/P50 recording rules |
+| `gen_ai.client.token.usage` | `gen_ai_client_token_usage_bucket`, `_sum`, `_count` | Token rate recording rule |
+| `gen_ai.suggestion.accepted` (future) | `gen_ai_suggestion_accepted_total` | Acceptance rate (planned) |
+| `gen_ai.suggestion.total` (future) | `gen_ai_suggestion_total` | Acceptance rate (planned) |
+| `dora:rework_rate:ratio` (future) | `dora_rework_rate_ratio` | Rework rate alerts |
 
 ---
 
 ## Constraints
 
-- **OTel Collector version:** v0.120.0 (already deployed, supports `filter` and `attributes` processors)
-- **No compose.yaml changes:** The `prometheus` exporter on port 8889 is already exposed
-- **No new receivers:** AI SDKs send standard OTLP to `:4317/:4318`
-- **No new exporters:** Reuses the existing `prometheus` exporter
-- **Backward compatibility:** Existing pipelines must remain unchanged
+- **Prometheus version:** v2.55.1 (supports `histogram_quantile`, `rate`, and `or vector(0)` natively)
+- **Rule files path:** Must match the mounted volume path in `compose.yaml`: `/etc/prometheus/rules/`
+- **Alert label convention:** All alerts must use `category: ai-capability` per issue spec
+- **No second AI SDK data source:** Rules must degrade gracefully to `vector(0)` when data is absent

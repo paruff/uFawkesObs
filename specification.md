@@ -1,16 +1,15 @@
-# Specification — OBS-AI-01: Add AI Metrics Pipeline to OTel Collector Config
+# Specification — OBS-AI-02: Prometheus AI Recording Rules and Alerts
 
-**Source:** GitHub Issue #55 — OBS-AI-01
+**Source:** GitHub Issue #56 — OBS-AI-02
 **Priority:** P1 (Sprint 3)
 **Labels:** `sprint-3`, `ai-observability`
+**Dependency:** OBS-AI-01 must be merged first (AI metrics pipeline in OTel Collector)
 
 ---
 
 ## Problem Statement
 
-DORA 2025 identifies AI adoption as a key capability but warns it increases instability without control systems. To track AI capability maturity, uFawkesObs needs to collect AI-specific signals: LLM latency, token usage, acceptance rates, and rework rate. The OTel Collector is already running and is the correct ingestion point — it just needs an AI-specific pipeline added.
-
-This follows the OpenLLMetry semantic conventions (`gen_ai.*` attribute namespace) which are now part of the OTel specification.
+Once the AI metrics pipeline exists (OBS-AI-01), we need recording rules to compute derived metrics from `gen_ai.*` signals and alert thresholds based on DORA 2025 AI capability model thresholds. The critical metric is **rework rate** — DORA 2025's north star for AI health. Threshold: >20% = stop features, fix AI instructions.
 
 ---
 
@@ -18,39 +17,50 @@ This follows the OpenLLMetry semantic conventions (`gen_ai.*` attribute namespac
 
 ### Functional Requirements
 
-1. **FR-1:** `config/otel/collector.yaml` must contain a new pipeline `metrics/ai`
-2. **FR-2:** The `metrics/ai` pipeline uses the existing `otlp` receiver (AI SDKs send via OTLP — no new receiver needed)
-3. **FR-3:** A new `filter/ai` processor must be added that passes through metrics matching `gen_ai\..*`, `llm\..*`, `openllmetry\..*`, or `ai\..*`
-4. **FR-4:** A new `attributes/ai` processor must be added that inserts `ai.environment=development` and `ai.platform=fawkes-idp` on all AI metrics
-5. **FR-5:** The `metrics/ai` pipeline exports to the existing `prometheus` exporter (port 8889)
-6. **FR-6:** The `service.pipelines.metrics/ai` must be wired: `receivers: [otlp]`, `processors: [memory_limiter, filter/ai, attributes/ai, batch]`, `exporters: [prometheus]`
+1. **FR-1:** New rule file `config/prometheus/ai-rules.yml` created
+2. **FR-2:** Recording rules defined for:
+   - `ai:llm_request_latency_p99:seconds` — p99 LLM response time from histogram data
+   - `ai:llm_request_latency_p50:seconds` — p50 LLM response time from histogram data
+   - `ai:token_usage_rate:per_minute` — LLM tokens consumed per minute
+   - `ai:suggestion_acceptance_rate:ratio` — accepted / total suggestions (guarded with `or vector(0)`)
+3. **FR-3:** Alert rules defined:
+   - `AILLMLatencyHigh` — p99 > 10s for 5 minutes, severity: warning
+   - `AIReworkRateHigh` — rework rate > 10% for 7 days, severity: warning (watch threshold)
+   - `AIReworkRateCritical` — rework rate > 20% for 7 days, severity: critical (stop-features threshold)
+   - `AITokenBudgetHigh` — token usage rate > configurable threshold, severity: warning
+4. **FR-4:** `AIReworkRateCritical` annotation includes DORA 2025 reference
+5. **FR-5:** All alerts have `category: ai-capability` label
+6. **FR-6:** `config/prometheus/prometheus.yaml` `rule_files:` includes `ai-rules.yml`
+7. **FR-7:** Stub `docs/ai-runbook.md` created with sections for each AI alert
 
 ### Non-functional Requirements
 
-7. **NFR-1:** Existing `metrics`, `traces`, `logs` pipelines must NOT be modified
-8. **NFR-2:** `yamllint` must pass on `config/otel/collector.yaml`
-9. **NFR-3:** The `filter/ai` processor uses `error_mode: ignore` so that if no AI metrics arrive (e.g. before AI tooling is integrated), the pipeline doesn't error
-10. **NFR-4:** Unit test must be added verifying the `metrics/ai` pipeline exists in the config
+8. **NFR-1:** `promtool check rules` passes on `config/prometheus/ai-rules.yml`
+9. **NFR-2:** `yamllint` passes on all new YAML files
+10. **NFR-3:** All recording rules with arithmetic use `or vector(0)` guard per promql skill
+11. **NFR-4:** All alert rules have corresponding `absent()` guards per promql skill
+12. **NFR-5:** `docs/CHANGE_IMPACT_MAP.md` updated with ai-rules.yml entry
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `config/otel/collector.yaml` contains `metrics/ai` pipeline in `service.pipelines`
-- [ ] `filter/ai` processor defined with `error_mode: ignore` and regexp include matching `gen_ai\..*`, `llm\..*`, `openllmetry\..*`, `ai\..*`
-- [ ] `attributes/ai` processor defined with `ai.environment=development` and `ai.platform=fawkes-idp` insert actions
-- [ ] `metrics/ai` pipeline wired: `receivers: [otlp]`, `processors: [memory_limiter, filter/ai, attributes/ai, batch]`, `exporters: [prometheus]`
-- [ ] Existing `metrics`, `traces`, `logs` pipelines unchanged
-- [ ] `yamllint` passes on `config/otel/collector.yaml`
-- [ ] Unit test in `tests/unit/test_otel_config_validation.py` verifies `metrics/ai` pipeline exists
+- [ ] `config/prometheus/ai-rules.yml` exists with recording rules for latency P99, P50, token rate, acceptance rate
+- [ ] Alert rules exist for `AILLMLatencyHigh`, `AIReworkRateHigh`, `AIReworkRateCritical`, `AITokenBudgetHigh`
+- [ ] All alerts have `category: ai-capability` label
+- [ ] `AIReworkRateCritical` has DORA 2025 annotation
+- [ ] `config/prometheus/prometheus.yaml` `rule_files:` includes `ai-rules.yml`
+- [ ] `promtool check rules config/prometheus/ai-rules.yml` passes
+- [ ] `yamllint config/prometheus/ai-rules.yml` passes
+- [ ] `docs/ai-runbook.md` exists with sections for each alert
+- [ ] `docs/CHANGE_IMPACT_MAP.md` has ai-rules.yml entry
 - [ ] All existing unit tests still pass
 
 ---
 
 ## Out of Scope
 
-- Prometheus AI recording rules (OBS-AI-02, issue #56)
-- Grafana AI capabilities dashboard (OBS-AI-03, issue #57)
+- AI capability dashboard (OBS-AI-03, issue #57)
 - AI observability documentation (OBS-AI-04, issue #58)
-- DORA recording rules (requires human gate on M4-01)
-- Changes to `compose.yaml` (no service changes needed)
+- Changes to OTel Collector config
+- DORA recording rules (requires M4-01 human gate)

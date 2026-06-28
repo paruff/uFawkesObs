@@ -1,35 +1,39 @@
-# Build Report — OBS-AI-01
+# Build Report — OBS-AI-02
 
 ## Summary
 
-Added AI metrics pipeline (`metrics/ai`) to the OTel Collector config (`config/otel/collector.yaml`) with two new processors (`filter/ai` and `attributes/ai`) and corresponding unit tests.
+Added Prometheus AI recording rules and alerts (`config/prometheus/ai-rules.yml`), linked it in Prometheus config, created AI runbook docs, updated change impact map, and added unit tests.
 
 ## Files Changed
 
 | File | Change |
 |---|---|
-| `config/otel/collector.yaml` | Added `filter/ai` and `attributes/ai` processors; added `metrics/ai` pipeline |
-| `tests/unit/test_otel_config_validation.py` | Added `TestOTelAIPipeline` class with 9 test methods |
-| `specification.md` | Created for OBS-AI-01 |
-| `design.md` | Created for OBS-AI-01 |
-| `tasks.json` | Created for OBS-AI-01 |
+| `config/prometheus/ai-rules.yml` | **Created** — 4 recording rules + 8 alert rules (4 primary + 4 absent) |
+| `config/prometheus/prometheus.yaml` | Added `ai-rules.yml` to `rule_files:` |
+| `docs/ai-runbook.md` | **Created** — runbook sections for all 4 AI alerts |
+| `docs/CHANGE_IMPACT_MAP.md` | Added `ai-rules.yml` row to config/ changes table |
+| `tests/unit/test_prometheus_config_validation.py` | Added `TestPrometheusAIRules` with 11 test methods |
+| `specification.md`, `design.md`, `tasks.json` | Updated for OBS-AI-02 |
 
 ## Tasks Completed
 
 | Task | Status | Details |
 |---|---|---|
-| T1: Add filter/ai and attributes/ai processors | ✅ Done | `filter/ai` with `error_mode: ignore` and 4 regexp patterns; `attributes/ai` with `insert` for `ai.environment` and `ai.platform` |
-| T2: Add metrics/ai pipeline | ✅ Done | `receivers: [otlp]`, `processors: [memory_limiter, filter/ai, attributes/ai, batch]`, `exporters: [prometheus]` |
-| T3: Add unit tests | ✅ Done | 9 tests covering pipeline structure, processors, and existing pipeline invariance |
-| T4: Validate | ✅ Done | yamllint + 225 unit tests all pass |
+| T1: Create ai-rules.yml | ✅ Done | 4 recording rules (`or vector(0)` guarded) + 8 alert rules (with `absent()` guards, `category: ai-capability` labels) |
+| T2: Add to prometheus.yaml rule_files | ✅ Done | Third entry in list, existing refs preserved |
+| T3: Create ai-runbook.md | ✅ Done | Stub with triage steps for all 4 alerts |
+| T4: Update CHANGE_IMPACT_MAP.md | ✅ Done | New row in config/ changes table |
+| T5: Add unit tests | ✅ Done | 11 tests covering file existence, rules content, labels, annotations, prometheus config reference |
+| T6: Validate | ✅ Done | yamllint + promtool + 227 unit tests all pass |
 
 ## Validation Results
 
 | Check | Result |
 |---|---|
-| `yamllint config/otel/collector.yaml` | ✅ PASS (no output = clean) |
-| `pytest tests/unit/` | ✅ PASS — 225 passed in 2.03s |
-| Existing pipelines unchanged | ✅ Verified — `metrics`, `traces`, `logs` pipelines untouched |
+| `yamllint config/prometheus/ai-rules.yml` | ✅ PASS |
+| `promtool check rules config/prometheus/ai-rules.yml` | ✅ PASS — 12 rules found |
+| `pytest tests/unit/` | ✅ PASS — **227 passed** in 2.42s |
+| Existing tests preserved | ✅ Verified |
 
 ## Blockers
 
