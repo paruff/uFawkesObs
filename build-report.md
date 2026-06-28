@@ -1,39 +1,47 @@
-# Build Report — OBS-AI-02
+# Build Report — OBS-AI-03: Grafana AI Capabilities Dashboard
 
 ## Summary
 
-Added Prometheus AI recording rules and alerts (`config/prometheus/ai-rules.yml`), linked it in Prometheus config, created AI runbook docs, updated change impact map, and added unit tests.
+Created `dashboards/platform/ai-capabilities.json` — a Grafana dashboard for monitoring
+AI model performance with DORA 2025 threshold bands.
 
 ## Files Changed
 
-| File | Change |
-|---|---|
-| `config/prometheus/ai-rules.yml` | **Created** — 4 recording rules + 8 alert rules (4 primary + 4 absent) |
-| `config/prometheus/prometheus.yaml` | Added `ai-rules.yml` to `rule_files:` |
-| `docs/ai-runbook.md` | **Created** — runbook sections for all 4 AI alerts |
-| `docs/CHANGE_IMPACT_MAP.md` | Added `ai-rules.yml` row to config/ changes table |
-| `tests/unit/test_prometheus_config_validation.py` | Added `TestPrometheusAIRules` with 11 test methods |
-| `specification.md`, `design.md`, `tasks.json` | Updated for OBS-AI-02 |
+| File | Action | Purpose |
+|------|--------|---------|
+| `dashboards/platform/ai-capabilities.json` | **Create** | AI capabilities dashboard with 9 panels |
+
+Also updated spec/design/task lifecycle files for OBS-AI-03.
 
 ## Tasks Completed
 
-| Task | Status | Details |
-|---|---|---|
-| T1: Create ai-rules.yml | ✅ Done | 4 recording rules (`or vector(0)` guarded) + 8 alert rules (with `absent()` guards, `category: ai-capability` labels) |
-| T2: Add to prometheus.yaml rule_files | ✅ Done | Third entry in list, existing refs preserved |
-| T3: Create ai-runbook.md | ✅ Done | Stub with triage steps for all 4 alerts |
-| T4: Update CHANGE_IMPACT_MAP.md | ✅ Done | New row in config/ changes table |
-| T5: Add unit tests | ✅ Done | 11 tests covering file existence, rules content, labels, annotations, prometheus config reference |
-| T6: Validate | ✅ Done | yamllint + promtool + 227 unit tests all pass |
+| ID | Task | Status |
+|----|------|--------|
+| T1 | Create dashboard JSON with stat, timeseries, and alertlist panels | ✅ Done |
+| T2 | Validate JSON syntax, schemaVersion, datasource references | ✅ Done |
+
+## Panel Coverage
+
+- 4 stat panels: P99 Latency, Token Rate, Acceptance Rate, Rework Rate
+- 4 time-series panels: Latency P99/P50, Token Rate, Acceptance Trend, Rework Trend
+- 1 alertlist panel: AI Active Alerts (filtered to `category=ai-capability`)
 
 ## Validation Results
 
 | Check | Result |
-|---|---|
-| `yamllint config/prometheus/ai-rules.yml` | ✅ PASS |
-| `promtool check rules config/prometheus/ai-rules.yml` | ✅ PASS — 12 rules found |
-| `pytest tests/unit/` | ✅ PASS — **227 passed** in 2.42s |
-| Existing tests preserved | ✅ Verified |
+|-------|--------|
+| JSON syntax (json.tool) | ✅ PASS |
+| schemaVersion: 40 | ✅ PASS |
+| Datasource UID: "prometheus" | ✅ PASS (20 references) |
+| No numeric datasource IDs | ✅ PASS |
+| markdownlint (spec, design) | ✅ PASS |
+| Unit tests (239 total) | ✅ PASS |
+
+## DORA 2025 Thresholds Applied
+
+**Latency:** Elite < 1s, High < 5s, Medium < 10s, Low >= 10s
+**Acceptance:** Elite > 90%, High > 75%, Medium > 50%, Low <= 50%
+**Rework:** Elite < 5%, High < 10%, Medium < 20%, Low >= 20%
 
 ## Blockers
 
