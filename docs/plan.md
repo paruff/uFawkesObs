@@ -339,15 +339,15 @@
 
 ---
 
-## Milestone 4 — DORA Metrics & DevLake Integration
+## Milestone 4 — DORA Metrics & Ecosystem Integration
 
-*Theme: Formulate the DORA metrics contract, provision Apache DevLake, and render dashboards.*
+*Theme: Formulate the DORA metrics contract, wire uFawkesObs to uFawkesDORA compute plane and uFawkesRes shared PostgreSQL, and render dashboards.*
 
 **Priority: P1**
 
 ### Task M4-01: Define DORA Data Contract
 
-- **Description:** Define what counts as a deployment, incident, and restoration within uFawkesObs telemetry.
+- **Description:** Define what counts as a deployment, incident, and restoration within uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
 - **Backlog Issue:** #80
 - **Status:** 🔲 PENDING
 - **Tasks:**
@@ -355,45 +355,49 @@
 - **Acceptance Criteria:**
   - ADR-004 exists and is linked from docs.
 
-### Task M4-02: Add DevLake + MySQL to Compose Stack under DORA Profile
+### Task M4-02: Wire DORA Profile to uFawkesDORA & uFawkesRes
 
-- **Description:** Integrate Apache DevLake database and worker instances into the docker-compose orchestration.
+- **Description:** Configure uFawkesObs's `dora` compose profile to connect to uFawkesDORA's ingestion API (for event forwarding) and uFawkesRes's shared PostgreSQL (for DORA metric snapshots). No DevLake or MySQL in uFawkesObs — those now live in uFawkesDORA/uFawkesRes.
 - **Backlog Issue:** #81, #51
 - **Dependencies:** M4-01
-- **Status:** 🔲 PENDING — **scope review required (see below)**
+- **Status:** 🔲 PENDING — **re-scoped 2026-06-28**
+- **Ecosystem Review:** See `docs/reviews/M4-02-ecosystem-review.md`. DevLake moved to uFawkesDORA; MySQL replaced by uFawkesRes PostgreSQL. uFawkesObs M4 scope is now: data contract (M4-01), recording rules (M4-03), dashboard (M4-04), and cross-plane wiring (this task).
 - **Tasks:**
-  1. Define `devlake` and `mysql` services inside `compose.yaml` under the `dora` profile.
-  2. Pin exact semantic images and define volume paths for persistent storage.
-  3. Define custom healthchecks for DevLake.
-- **Ecosystem Review Note 2026-06-28:** See `docs/reviews/M4-02-ecosystem-review.md`. The creation of [uFawkesRes](https://github.com/paruff/uFawkesRes) (resource plane with shared Postgres) and [uFawkesDORA](https://github.com/paruff/ufawkesdora) (standalone DORA metrics plane) changes this task's scope. Recommendation: move DevLake to uFawkesDORA, use uFawkesRes's shared Postgres instead of MySQL, and limit uFawkesObs's M4 scope to recording rules (M4-03) and dashboard (M4-04) only.
+  1. Add `dora` profile to `compose.yaml` with environment variables for `OTEL_EXPORTER_OTLP_ENDPOINT` (uFawkesDORA ingestion API) and `DORA_POSTGRES_URL` (uFawkesRes Postgres).
+  2. Add Grafana Postgres datasource provisioning pointing to `fawkes-postgres:5432` on `fawkes-backbone-net`.
+  3. Add Alertmanager route for `dora_regression` and `leading_indicator` alerts to `DORA_SLACK_WEBHOOK_URL`.
 - **Acceptance Criteria:**
   - `docker compose --profile dora config` succeeds with zero parsing warnings.
+  - Grafana provisions Postgres datasource without errors.
+  - Alertmanager reloads with DORA routes.
 
 ### Task M4-03: Add DORA Recording Rules to Prometheus
 
-- **Description:** Configure Prometheus recording rules inside uFawkesObs for continuous calculation of DORA metrics.
+- **Description:** Configure Prometheus recording rules inside uFawkesObs for continuous calculation of DORA metrics. Rules query Prometheus metrics scraped from OTel Collector; derived metrics pushed by uFawkesDORA compute job via pushgateway.
 - **Backlog Issue:** #82, #53
 - **Dependencies:** M4-02
 - **Status:** 🔲 PENDING
 - **Notes:** Use GPT-5.1-Codex per model routing table (PromQL rules)
 - **Tasks:**
-  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, and `dora:mttr_hours:p50_30d` inside dedicated rule file.
+  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, and `dora:mttr_hours:p50_30d` inside dedicated rule file `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
 - **Acceptance Criteria:**
   - Prometheus rules load and parse cleanly.
   - All rules guarded with `or vector(0)`.
 
 ### Task M4-04: Provision Grafana DORA Metrics Dashboard
 
-- **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations.
+- **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL via Grafana Postgres datasource plugin (current snapshots).
 - **Backlog Issue:** #83, #52
 - **Dependencies:** M4-03
 - **Status:** 🔲 PENDING
 - **Tasks:**
   1. Create `config/grafana/dashboards/dora-metrics.json` containing panel models for the 4 DORA indicators.
   2. Enforce standard DORA performance bands (Elite/High/Medium/Low) using color thresholds.
+  3. Configure dashboard to use both Prometheus and Postgres datasources.
 - **Acceptance Criteria:**
   - Dashboard JSON exists and is mapped inside `config/grafana/provisioning/dashboards/`.
   - Datasource UIDs use string references (`prometheus`), not numeric IDs.
+  - Postgres datasource UID references `ufawkesres-postgres` (provisioned in M4-02).
 
 ---
 

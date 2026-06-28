@@ -44,7 +44,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 | **M1 (v1.0.0)** | Substrate Core | Core Docker Compose stack (OTel Collector, Prometheus, Alertmanager, Tempo, Loki, Alloy, Grafana) with automated local unit/integration test gates. | **Completed** |
 | **M2 (v1.1.0)** | Repo Hardening | Standardized CONTRIBUTING rules, issue templates, ARCHITECTURE mapping, KNOWN_LIMITATIONS documentation, and repo badges. | **Backlog** (M2-01 to M2-05) |
 | **M3 (v1.2.0)** | Cross-Plane Docs | Structured guides for joining uFawkesPipe, uFawkesDevX, and Backstage catalog registration. | **Backlog** (M3-01 to M3-04) |
-| **M4 (v1.3.0)** | DORA & DevLake | DevLake + MySQL profile addition, Prometheus DORA recording rules, and Grafana DORA metric dashboard. | **Backlog** (M4-01 to M4-04) |
+| **M4 (v1.3.0)** | DORA & Ecosystem | Wire uFawkesObs to uFawkesDORA compute plane and uFawkesRes shared PostgreSQL, implement Prometheus DORA recording rules, and provision Grafana DORA dashboards. | **Backlog** (M4-01 to M4-04) |
 | **M5 (v2.0.0)** | Kubernetes Deploy | Kubernetes deployment ADR, Helm charts for the core stack, k3d local simulator, and k8s-based acceptance pipelines. | **Backlog** (M5-01 to M5-04) |
 
 ---
@@ -66,12 +66,16 @@ Rather than having each repository or plane provision its own isolated, custom t
 - **OBS-F11:** Register uFawkesObs into fawkes Backstage catalog-info.yaml metadata.
 - **OBS-F12:** Provide clear guide explaining how uFawkesPipe CI pipelines can export OTLP tracing to uFawkesObs Tempo.
 
-### 4.3 Backlog — DORA & DevLake Integration (M4)
+### 4.3 Backlog — DORA & Ecosystem Integration (M4)
 
-- **OBS-F20:** Add Apache DevLake and MySQL to `compose.yaml` under a configurable `dora` Docker Compose profile.
-- **OBS-F21:** Define the schema contract mapping of what counts as a deployment, incident, and lead-time event inside uFawkesObs.
-- **OBS-F22:** Implement Prometheus recording rules inside `config/prometheus/alerts.yml` (or dedicated rules file) computing Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Mean Time to Restore (MTTR).
-- **OBS-F23:** Pre-provision a "DORA Metrics" Grafana dashboard showing historical stat panels and trendlines for all 4 DORA indicators.
+- **OBS-F20:** Define the DORA data contract mapping of what counts as a deployment, incident, and lead-time event inside uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
+- **OBS-F21:** Implement Prometheus recording rules inside `config/prometheus/rules/` computing Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Failed Deployment Recovery Time (FDRT).
+- **OBS-F22:** Pre-provision a "DORA Metrics" Grafana dashboard showing historical stat panels and trendlines for all 4 DORA indicators. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL (current snapshots via Postgres datasource plugin).
+- **OBS-F23:** Configure uFawkesObs to connect to uFawkesRes's shared PostgreSQL on `fawkes-backbone-net` for DORA metric snapshots, and to uFawkesDORA's ingestion API for event forwarding.
+
+**Out of scope for M4 (moved to uFawkesDORA/uFawkesRes):**
+- Apache DevLake — now owned by uFawkesDORA as optional complementary visualization
+- MySQL database — DevLake uses uFawkesRes's shared PostgreSQL instead
 
 ### 4.4 Backlog — Kubernetes & Helm Deployment (M5)
 
@@ -99,7 +103,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 | **Log Collection** | Pull | Docker API Socket | Harvest host container logs via Alloy daemon | Local Docker Engine |
 | **Scrape Targets** | Pull | HTTP `/metrics` | Prometheus pulls performance indicators | OTel Collector, Alloy, Node Exporter, custom apps |
 | **Alert manager API** | Inbound | HTTP 9093 | Prometheus fires alerts on breach of rules | Prometheus, custom alerting proxies |
-| **Query Engine APIs** | Inbound | HTTP `/api/v1` | External services query Prometheus/Loki/Tempo databases | Grafana, uFawkesAI/measure, DevLake |
+| **Query Engine APIs** | Inbound | HTTP `/api/v1` | External services query Prometheus/Loki/Tempo databases | Grafana, uFawkesAI/measure, uFawkesDORA |
 | **Visualization portal** | Inbound | HTTP 3000 | Developer and platform monitoring dashboard | Platform engineers, developers |
 
 ---
