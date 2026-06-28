@@ -1,6 +1,6 @@
-# Design — OBS-AI-03: Grafana AI Capabilities Dashboard
+# Design — OBS-AI-04: AI Observability Documentation
 
-**Based on:** specification.md (OBS-AI-03), dashboard-authoring skill, grafana-provisioning skill
+**Based on:** specification.md (OBS-AI-04), existing doc patterns
 
 ---
 
@@ -8,96 +8,70 @@
 
 | Component | File | Change Type |
 |---|---|---|
-| AI dashboard | `dashboards/platform/ai-capabilities.json` | **Create** — new dashboard JSON |
+| AI observability guide | `docs/ai-observability-guide.md` | **Create** — full reference doc |
+| Agent instructions | `AGENTS.md` | Update version table + AI refs |
+| OTel collector skill | `.agents/skills/otel-collector/SKILL.md` | Update AI pipeline section |
+| Change impact map | `docs/CHANGE_IMPACT_MAP.md` | Add AI entries |
 
 ---
 
 ## Technical Approach
 
-### Current State
+### 1. `docs/ai-observability-guide.md`
 
-`dashboards/platform/` contains 9 platform dashboards loaded by `new-dashboards.yaml` provider
-via volume mount `./dashboards/platform:/etc/grafana/dashboards/platform:ro`. No AI-specific
-dashboard exists.
-
-AI metrics surface through Prometheus from two sources:
-1. **OTel `metrics/ai` pipeline** (OBS-AI-01): OTel Collector at `:8889` exports `gen_ai.*` metrics
-2. **Recording rules** (OBS-AI-02): Pre-computed metrics like `ai:llm_request_latency_p99:seconds`
-
-### Target State
-
-New file `dashboards/platform/ai-capabilities.json` with 4 stat panels, 4 time-series panels,
-and 1 alert list panel.
-
-### Dashboard Layout
+Structure following existing runbook/doc conventions:
 
 ```
-Row 1: AI Performance Summary
-┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
-│ P99 Lat  │ │Token Rate│ │Acceptance│ │Rework    │
-│  (stat)  │ │  (stat)  │ │Rate(stat)│ │Rate(stat)│
-│ thresholds│ │          │ │thresholds│ │DORA bands│
-└──────────┘ └──────────┘ └──────────┘ └──────────┘
+# AI Observability Guide
 
-Row 2: LLM Performance
-┌──────────────────────────┐ ┌──────────────────────────┐
-│ LLM Latency P99/P50      │ │ Token Usage Rate         │
-│     (timeseries)         │ │     (timeseries)         │
-└──────────────────────────┘ └──────────────────────────┘
+## Overview
+Brief: what OBS-AI-01/02/03 provide together.
 
-Row 3: AI Quality
-┌──────────────────────────┐ ┌──────────────────────────┐
-│ Suggestion Acceptance    │ │ AI Rework Rate           │
-│     (timeseries)         │ │     (timeseries)         │
-└──────────────────────────┘ └──────────────────────────┘
+## Architecture
+ASCII diagram showing: App → OTel metrics/ai pipeline → Prometheus rules → Grafana dashboard
 
-Row 4: Alerts
-┌──────────────────────────────────────────────────────┐
-│ AI Active Alerts (alert list)                        │
-└──────────────────────────────────────────────────────┘
+## Metrics Reference
+Table of all gen_ai.* raw metrics and ai:* recording rules with descriptions and PromQL.
+
+## Alert Reference
+Table of all AI alert rules with thresholds, severity, and DORA band.
+
+## Grafana Dashboard
+How to find and interpret the AI capabilities dashboard.
+Screenshot description and panel-by-panel guide.
+
+## Instrumenting Your Application
+How to emit gen_ai.* telemetry from Python/Node/Go services.
+OTel SDK configuration, required attributes, exporter endpoint.
+
+## DORA 2025 Thresholds
+Reference table for Elite/High/Medium/Low bands.
 ```
 
-### Panel Queries
+### 2. `AGENTS.md` Updates
 
-| Panel | PromQL Expression | Type |
-|---|---|---|
-| P99 Latency | `ai:llm_request_latency_p99:seconds` | stat |
-| Token Rate | `ai:token_usage_rate:per_minute` | stat |
-| Acceptance Rate | `ai:suggestion_acceptance_rate:ratio * 100` | stat |
-| Rework Rate | `(1 - (ai:suggestion_acceptance_rate:ratio or vector(0))) * 100` | stat |
-| Latency P99/P50 | `ai:llm_request_latency_p99:seconds` / `ai:llm_request_latency_p50:seconds` | timeseries |
-| Token Rate | `ai:token_usage_rate:per_minute` | timeseries |
-| Acceptance Trend | `ai:suggestion_acceptance_rate:ratio * 100` | timeseries |
-| Rework Trend | `(1 - (ai:suggestion_acceptance_rate:ratio or vector(0))) * 100` | timeseries |
-| AI Alerts | (alert list datasource) | alertlist |
+- Fix version table: Alertmanager v0.27.0 → v0.28.0, Loki v2.9.10 → v3.3.2, Grafana v10.4.5 → v12.3.7
+- Add `docs/ai-observability-guide.md` to Context Files table (priority 4.5)
+- Add AI observability references in appropriate sections
 
-### DORA 2025 Performance Bands
+### 3. `.agents/skills/otel-collector/SKILL.md` Updates
 
-**Latency thresholds (P99):**
-- Elite: < 1s (green)
-- High: < 5s (yellow)
-- Medium: < 10s (orange)
-- Low: >= 10s (red)
+- Fix AI pipeline section to match actual `config/otel/collector.yaml`:
+  - Add `filter/ai` and `attributes/ai` processors
+  - Add `metrics/ai` pipeline with correct processor ordering
+  - Update exporter references (uses `prometheus` not `prometheusremotewrite`)
+  - Remove stale `prometheusremotewrite/ai` reference
 
-**Rework rate thresholds:**
-- Elite: < 5% (green)
-- High: < 10% (yellow)
-- Medium: < 20% (orange)
-- Low: >= 20% (red — "stop features" threshold)
+### 4. `docs/CHANGE_IMPACT_MAP.md` Updates
 
-**Acceptance rate thresholds:**
-- Elite: > 90% (green)
-- High: > 75% (yellow)
-- Medium: > 50% (orange)
-- Low: <= 50% (red)
+- Add rows for `config/otel/collector.yaml` AI processor changes
+- Add rows for `dashboards/platform/ai-capabilities.json`
 
 ---
 
 ## Constraints
 
-1. **Grafana version:** 12.3.7 — use `schemaVersion: 40`
-2. **Datasource UIDs:** Must use `prometheus` (string), never numeric IDs
-3. **Dashboard path:** Must be `dashboards/platform/ai-capabilities.json` for auto-provisioning
-4. **Metric availability:** AI metrics only exist when an AI SDK emits `gen_ai.*` data.
-   Dashboard must degrade gracefully to `0` or `N/A` when data is absent.
-5. **No changes to compose.yaml, provisioning YAML, or Prometheus config**
+1. All documentation must follow existing Markdown conventions (markdownlint)
+2. AGENTS.md version table must match `compose.yaml` exactly
+3. Do not modify `compose.yaml`, Prometheus config, OTel config, or dashboard JSON
+4. Do not modify existing sections of AGENTS.md that are unrelated to AI or versions

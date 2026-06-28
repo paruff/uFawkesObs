@@ -1,36 +1,32 @@
-# Review Report — OBS-AI-03: Grafana AI Capabilities Dashboard
+# Review Report — OBS-AI-04: AI Observability Documentation
 
 ## Correctness
 
 | Requirement | Status | Evidence |
 |---|---|---|
-| FR-1: `dashboards/platform/ai-capabilities.json` exists | ✅ | File created |
-| FR-2: 4 stat panels (latency, tokens, acceptance, rework) | ✅ | Panels 1-4: P99 Latency, Token Rate, Acceptance Rate, Rework Rate |
-| FR-3: 4 time-series panels (latency, tokens, acceptance, rework) | ✅ | Panels 5-8: Latency P99/P50, Token Rate, Acceptance Trend, Rework Trend |
-| FR-4: AI alert list panel | ✅ | Panel 9: AI Active Alerts, filtered to `category=ai-capability` |
-| FR-5: DORA 2025 thresholds | ✅ | Bands applied to latency (Elite <1s), acceptance (>90%), rework (<5%) |
-| FR-6: Datasource UIDs use prometheus string | ✅ | All 20 refs use `"uid": "prometheus"` |
-| NFR-1: Valid JSON | ✅ | `python3 -m json.tool` passes |
-| NFR-2: schemaVersion 40 (Grafana 12.x) | ✅ | `schemaVersion: 40` |
-| NFR-3: All panel queries use prometheus UID | ✅ | Verified via python script |
-| NFR-4: Auto-loads via provisioning | ✅ | Placed in `dashboards/platform/` which is mounted at `/etc/grafana/dashboards/platform` |
+| FR-1: `docs/ai-observability-guide.md` exists | ✅ | Architecture diagram, metrics reference table, alert reference, dashboard guide, instrumentation guide, DORA 2025 thresholds |
+| FR-2: AGENTS.md versions match compose.yaml | ✅ | Loki 2.9.10→3.3.2, Grafana 10.4.5→12.3.7, Alertmanager 0.27.0→0.28.0 |
+| FR-2: AGENTS.md references AI guide | ✅ | Added to Context Files at priority 4.5 |
+| FR-3: otel-collector skill matches actual config | ✅ | Pipeline map, exporter refs, AI processors all synced |
+| FR-4: CHANGE_IMPACT_MAP.md AI entries | ✅ | AI dashboard, OTel AI processors, metrics/ai pipeline entries added |
+| NFR-1: markdownlint | ✅ | PASS |
+| NFR-2: unit tests | ✅ | 239 PASS |
 
 ## Scope Check
 
 - No changes to compose.yaml — PASS
 - No changes to Prometheus config — PASS
-- No changes to OTel config — PASS
-- No changes to provisioning YAML — PASS
-- Only new file: `dashboards/platform/ai-capabilities.json` — PASS
+- No changes to OTel collector config — PASS
+- No changes to Grafana dashboard JSON — PASS
+- Only documentation and agent skill files changed — PASS
 
 ## Risk Assessment
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| Dashboard renders no data (all `vector(0)`) | Low | Graceful — dashboard shows 0s until AI SDK emits gen_ai.* metrics |
-| Rework rate is inverse of acceptance rate | Low | Approximation until DORA metrics provide direct rework rate |
-| schemaVersion 40 not compatible with older Grafana | None | Grafana is at 12.3.7 which supports schemaVersion 40 |
+| AGENTS.md is high-visibility; version table changes affect all agents | Low | Versions verified against compose.yaml |
+| OTel skill AI pipeline section could become stale again | Low | Added explicit pipeline config inline, referencing actual file path |
 
 ## Decision
 
-**APPROVED** — no issues found. All acceptance criteria met.
+**APPROVED** — all acceptance criteria met. Scope discipline maintained.

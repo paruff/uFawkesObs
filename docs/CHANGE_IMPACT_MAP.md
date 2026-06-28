@@ -28,6 +28,15 @@
 
 ---
 
+## dashboards/ Changes
+
+| If you change...                                                      | You must also check / update...                                                                 |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `dashboards/platform/ai-capabilities.json`                            | `config/prometheus/rules/ai-rules.yml` for matching recording rule names; `docs/ai-runbook.md` |
+| Any dashboard in `dashboards/platform/` or `dashboards/services/`     | Grafana provisioning config (`config/grafana/provisioning/dashboards/`)                         |
+
+---
+
 ## config/ Changes
 
 | If you change...                                             | You must also check / update...                                                                                        |
@@ -35,6 +44,8 @@
 | OTEL collector receiver endpoints                            | Upstream services sending to those endpoints                                                                           |
 | OTEL collector exporter endpoints                            | Must match Compose service names and ports                                                                             |
 | OTEL pipeline definitions                                    | All three: receivers, processors, exporters must be consistent                                                         |
+| OTEL `filter/ai` or `attributes/ai` processors                | `config/prometheus/rules/ai-rules.yml` recording rules that consume the processed metrics                               |
+| `metrics/ai` pipeline                                         | Prometheus scrape target at `otel-collector:8889` must be active; `config/prometheus/rules/ai-rules.yml` must exist    |
 | Prometheus scrape targets                                    | Verify target service names match Compose service names exactly                                                        |
 | Prometheus alert rules                                       | `docs/RUNBOOKS.md` — does the runbook cover this alert?                                                                |
 | Self-monitoring TSDB capacity threshold (`2147483648` bytes) | Keep `config/prometheus/rules/ufawkesobs-self-monitoring.yml` and `dashboards/platform/ufawkesobs-health.json` aligned |

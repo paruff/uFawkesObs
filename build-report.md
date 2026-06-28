@@ -1,47 +1,39 @@
-# Build Report — OBS-AI-03: Grafana AI Capabilities Dashboard
+# Build Report — OBS-AI-04: AI Observability Documentation
 
 ## Summary
 
-Created `dashboards/platform/ai-capabilities.json` — a Grafana dashboard for monitoring
-AI model performance with DORA 2025 threshold bands.
+Created AI observability documentation suite covering the end-to-end AI metrics pipeline.
+Updated AGENTS.md with correct service versions and AI references. Synced otel-collector
+skill with actual pipeline config. Added AI entries to CHANGE_IMPACT_MAP.md.
 
 ## Files Changed
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `dashboards/platform/ai-capabilities.json` | **Create** | AI capabilities dashboard with 9 panels |
+| `docs/ai-observability-guide.md` | **Create** | Full AI observability reference guide |
+| `AGENTS.md` | Update | Fixed version table (Loki 3.3.2, Grafana 12.3.7, AM 0.28.0); added AI guide to context files |
+| `.agents/skills/otel-collector/SKILL.md` | Update | Pipeline map, exporter refs, AI pipeline section synced to actual config |
+| `docs/CHANGE_IMPACT_MAP.md` | Update | Added AI dashboard and OTel AI processor entries; added dashboards/ section |
 
-Also updated spec/design/task lifecycle files for OBS-AI-03.
+Also updated specification.md, design.md, tasks.json for OBS-AI-04 lifecycle.
 
 ## Tasks Completed
 
 | ID | Task | Status |
 |----|------|--------|
-| T1 | Create dashboard JSON with stat, timeseries, and alertlist panels | ✅ Done |
-| T2 | Validate JSON syntax, schemaVersion, datasource references | ✅ Done |
-
-## Panel Coverage
-
-- 4 stat panels: P99 Latency, Token Rate, Acceptance Rate, Rework Rate
-- 4 time-series panels: Latency P99/P50, Token Rate, Acceptance Trend, Rework Trend
-- 1 alertlist panel: AI Active Alerts (filtered to `category=ai-capability`)
+| T1 | Create docs/ai-observability-guide.md | ✅ Done |
+| T2 | Update AGENTS.md version table and AI refs | ✅ Done |
+| T3 | Update otel-collector skill with actual AI pipeline config | ✅ Done |
+| T4 | Update CHANGE_IMPACT_MAP.md with AI entries | ✅ Done |
+| T5 | Validate: markdownlint and unit tests pass | ✅ Done |
 
 ## Validation Results
 
 | Check | Result |
 |-------|--------|
-| JSON syntax (json.tool) | ✅ PASS |
-| schemaVersion: 40 | ✅ PASS |
-| Datasource UID: "prometheus" | ✅ PASS (20 references) |
-| No numeric datasource IDs | ✅ PASS |
-| markdownlint (spec, design) | ✅ PASS |
-| Unit tests (239 total) | ✅ PASS |
-
-## DORA 2025 Thresholds Applied
-
-**Latency:** Elite < 1s, High < 5s, Medium < 10s, Low >= 10s
-**Acceptance:** Elite > 90%, High > 75%, Medium > 50%, Low <= 50%
-**Rework:** Elite < 5%, High < 10%, Medium < 20%, Low >= 20%
+| markdownlint | ✅ PASS |
+| yamllint | ✅ PASS (pre-existing warnings) |
+| Unit tests (239) | ✅ PASS |
 
 ## Blockers
 

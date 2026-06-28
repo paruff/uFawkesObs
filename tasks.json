@@ -2,32 +2,64 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Create dashboards/platform/ai-capabilities.json",
-      "description": "Create the Grafana AI capabilities dashboard JSON with stat panels (P99 latency, token rate, acceptance rate, rework rate), time-series panels (latency trend, token trend, acceptance trend, rework trend), and AI alert list. Apply DORA 2025 performance band thresholds. Use schemaVersion: 40 and datasource UID references.",
+      "title": "Create docs/ai-observability-guide.md",
+      "description": "Create comprehensive AI observability guide covering architecture, metrics reference, alert reference, dashboard guide, instrumentation guide, and DORA 2025 thresholds.",
       "depends_on": [],
       "acceptance_criteria": [
-        "Valid JSON syntax",
-        "schemaVersion is 40",
-        "All datasource references use uid: prometheus",
-        "Stat panels for P99 latency, token rate, acceptance rate, rework rate",
-        "Time-series panels for latency P99/P50, token rate, acceptance trend, rework trend",
-        "AI alert list panel present",
-        "DORA 2025 thresholds applied",
-        "No numeric datasource IDs"
+        "Covers architecture (OTel AI pipeline → Prometheus rules → Grafana dashboard)",
+        "Metrics reference table for gen_ai.* and ai:* metrics",
+        "Alert reference table with thresholds and severity",
+        "Dashboard guide for AI capabilities Grafana dashboard",
+        "Instrumentation guide for emitting gen_ai.* telemetry",
+        "DORA 2025 performance bands reference"
       ],
-      "files": ["dashboards/platform/ai-capabilities.json"]
+      "files": ["docs/ai-observability-guide.md"]
     },
     {
       "id": "T2",
-      "title": "Validate dashboard JSON syntax and convention compliance",
-      "description": "Run python3 -m json.tool on the dashboard file. Verify no numeric datasource IDs, all UIDs reference 'prometheus', and schemaVersion is 40.",
-      "depends_on": ["T1"],
+      "title": "Update AGENTS.md version table and add AI references",
+      "description": "Fix stale versions (Alertmanager 0.28.0, Loki 3.3.2, Grafana 12.3.7). Add ai-observability-guide.md to context files. Add AI architecture references.",
+      "depends_on": [],
       "acceptance_criteria": [
-        "python3 -m json.tool validates",
-        "No numeric IDs in datasource references",
-        "schemaVersion is 40"
+        "Version table matches compose.yaml",
+        "docs/ai-observability-guide.md listed in context files",
+        "AI pipeline mentioned in architecture rules"
       ],
-      "files": ["dashboards/platform/ai-capabilities.json"]
+      "files": ["AGENTS.md"]
+    },
+    {
+      "id": "T3",
+      "title": "Update otel-collector skill with actual AI pipeline config",
+      "description": "Fix the AI pipeline section in .agents/skills/otel-collector/SKILL.md to match actual config/otel/collector.yaml. Add filter/ai and attributes/ai processors. Update exporter references from prometheusremotewrite to prometheus.",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "AI pipeline section shows correct processors (memory_limiter, filter/ai, attributes/ai, batch)",
+        "Exporter references use prometheus not prometheusremotewrite",
+        "All pipeline names match actual config"
+      ],
+      "files": [".agents/skills/otel-collector/SKILL.md"]
+    },
+    {
+      "id": "T4",
+      "title": "Update CHANGE_IMPACT_MAP.md with AI entries",
+      "description": "Add entries for config/otel/collector.yaml AI processor changes and dashboards/platform/ai-capabilities.json.",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "AI pipeline config changes listed in config/ section",
+        "AI dashboard listed in dashboards/ section"
+      ],
+      "files": ["docs/CHANGE_IMPACT_MAP.md"]
+    },
+    {
+      "id": "T5",
+      "title": "Validate: markdownlint and unit tests pass",
+      "description": "Run markdownlint on all new and modified files. Run pytest tests/unit/ to confirm no regressions.",
+      "depends_on": ["T1", "T2", "T3", "T4"],
+      "acceptance_criteria": [
+        "markdownlint passes on all files",
+        "pytest tests/unit/ passes"
+      ],
+      "files": []
     }
   ]
 }
