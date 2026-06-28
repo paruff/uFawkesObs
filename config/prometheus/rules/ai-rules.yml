@@ -42,6 +42,7 @@ groups:
       - record: ai:suggestion_acceptance_rate:ratio
         expr: |
           0
+          or vector(0)
 
   # AI capability alerting rules
   # All alerts have category: ai-capability label
