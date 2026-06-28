@@ -2,75 +2,32 @@
   "tasks": [
     {
       "id": "T1",
-      "title": "Create config/prometheus/ai-rules.yml with recording and alert rules",
-      "description": "Create the Prometheus AI rule file with recording rules for latency P99/P50, token rate, and acceptance rate. Add alert rules for high latency, rework rate thresholds, and token budget. All recording rules use or vector(0). All alert rules have absent() guards and category: ai-capability label.",
+      "title": "Create dashboards/platform/ai-capabilities.json",
+      "description": "Create the Grafana AI capabilities dashboard JSON with stat panels (P99 latency, token rate, acceptance rate, rework rate), time-series panels (latency trend, token trend, acceptance trend, rework trend), and AI alert list. Apply DORA 2025 performance band thresholds. Use schemaVersion: 40 and datasource UID references.",
       "depends_on": [],
       "acceptance_criteria": [
-        "Recording rules: ai:llm_request_latency_p99:seconds, ai:llm_request_latency_p50:seconds, ai:token_usage_rate:per_minute, ai:suggestion_acceptance_rate:ratio",
-        "Alert rules: AILLMLatencyHigh, AIReworkRateHigh, AIReworkRateCritical, AITokenBudgetHigh",
-        "All alerts have category: ai-capability label",
-        "AIReworkRateCritical has DORA 2025 annotation",
-        "All recording rules use or vector(0) guard",
-        "All alerts have absent() guards"
+        "Valid JSON syntax",
+        "schemaVersion is 40",
+        "All datasource references use uid: prometheus",
+        "Stat panels for P99 latency, token rate, acceptance rate, rework rate",
+        "Time-series panels for latency P99/P50, token rate, acceptance trend, rework trend",
+        "AI alert list panel present",
+        "DORA 2025 thresholds applied",
+        "No numeric datasource IDs"
       ],
-      "files": ["config/prometheus/ai-rules.yml"]
+      "files": ["dashboards/platform/ai-capabilities.json"]
     },
     {
       "id": "T2",
-      "title": "Add ai-rules.yml to Prometheus rule_files",
-      "description": "Add '- \"/etc/prometheus/rules/ai-rules.yml\"' to the rule_files list in config/prometheus/prometheus.yaml, preserving existing references.",
+      "title": "Validate dashboard JSON syntax and convention compliance",
+      "description": "Run python3 -m json.tool on the dashboard file. Verify no numeric datasource IDs, all UIDs reference 'prometheus', and schemaVersion is 40.",
       "depends_on": ["T1"],
       "acceptance_criteria": [
-        "rule_files in prometheus.yaml includes /etc/prometheus/rules/ai-rules.yml",
-        "Existing rule file references are preserved"
+        "python3 -m json.tool validates",
+        "No numeric IDs in datasource references",
+        "schemaVersion is 40"
       ],
-      "files": ["config/prometheus/prometheus.yaml"]
-    },
-    {
-      "id": "T3",
-      "title": "Create stub docs/ai-runbook.md",
-      "description": "Create a stub runbook document with sections for each AI alert: AILLMLatencyHigh, AIReworkRateHigh, AIReworkRateCritical, AITokenBudgetHigh.",
-      "depends_on": ["T1"],
-      "acceptance_criteria": [
-        "docs/ai-runbook.md exists",
-        "Each AI alert has an action section"
-      ],
-      "files": ["docs/ai-runbook.md"]
-    },
-    {
-      "id": "T4",
-      "title": "Update docs/CHANGE_IMPACT_MAP.md with ai-rules.yml entry",
-      "description": "Add a row to the config/ Changes table documenting that ai-rules.yml changes affect Grafana AI dashboard panels.",
-      "depends_on": ["T1"],
-      "acceptance_criteria": [
-        "CHANGE_IMPACT_MAP.md has ai-rules.yml entry"
-      ],
-      "files": ["docs/CHANGE_IMPACT_MAP.md"]
-    },
-    {
-      "id": "T5",
-      "title": "Add unit tests for AI rules in test_prometheus_config_validation.py",
-      "description": "Add test class TestPrometheusAIRules verifying ai-rules.yml exists, rule_files includes it, recording rules exist, alert rules exist with correct labels.",
-      "depends_on": ["T2"],
-      "acceptance_criteria": [
-        "TestPrometheusAIRules class exists",
-        "Tests verify ai-rules.yml file exists",
-        "Tests verify recording rules exist",
-        "Tests verify alert rules exist with category: ai-capability"
-      ],
-      "files": ["tests/unit/test_prometheus_config_validation.py"]
-    },
-    {
-      "id": "T6",
-      "title": "Validate: yamllint, promtool check, and unit tests pass",
-      "description": "Run yamllint on new YAML files, promtool check rules on ai-rules.yml, and run full unit test suite.",
-      "depends_on": ["T5"],
-      "acceptance_criteria": [
-        "yamllint config/prometheus/ai-rules.yml passes",
-        "promtool check rules config/prometheus/ai-rules.yml passes",
-        "pytest tests/unit/ passes with all tests green"
-      ],
-      "files": []
+      "files": ["dashboards/platform/ai-capabilities.json"]
     }
   ]
 }
