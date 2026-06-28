@@ -19,6 +19,7 @@ Each ADR follows the format:
 | [ADR-002](ADR-002-docker-compose-scope.md) | Docker Compose as the Primary Deployment Runtime                            | Accepted     | 2025-06-01    |
 | [ADR-003](ADR-003-gitops-scope.md)         | GitOps at the Configuration Layer; Push-Triggered Deployment Reconciliation | Accepted     | 2025-06-01    |
 | [ADR-004](ADR-004-grafana-12x-migration.md)| Upgrade Grafana from 10.4.5 to 12.3.7                                       | Accepted     | 2026-06-28    |
+| [ADR-005](ADR-005-prometheus-v3-migration.md)| Upgrade Prometheus from 2.55.1 to 3.5.4 LTS                                  | Accepted     | 2026-06-28    |
 
 ---
 
@@ -42,6 +43,11 @@ declarative, no UI-driven changes.
 → [ADR-004](ADR-004-grafana-12x-migration.md): Grafana 10.x is EOL. The upgrade was a
 clean version bump with no provisioning changes required — uFawkesObs does not use
 Angular plugins or legacy alerting.
+
+**Why was Prometheus upgraded from 2.55.1 to 3.5.4?**
+→ [ADR-005](ADR-005-prometheus-v3-migration.md): Prometheus 2.x is EOL (since July 2025).
+The upgrade from the 2.55 bridge release to 3.5.4 LTS requires no config changes —
+uFawkesObs uses no deprecated features.
 
 ---
 

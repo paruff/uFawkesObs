@@ -27,7 +27,7 @@ COMPOSE_PATH = pathlib.Path(__file__).resolve().parents[2] / "compose.yaml"
 # ---------------------------------------------------------------------------
 EXPECTED_VERSIONS: dict[str, str] = {
     "otel-collector": "otel/opentelemetry-collector-contrib:0.120.0",
-    "prometheus": "prom/prometheus:v2.55.1",
+    "prometheus": "prom/prometheus:v3.5.4",
     "alertmanager": "prom/alertmanager:v0.28.0",
     "tempo": "grafana/tempo:2.10.5",
     "loki": "grafana/loki:3.3.2",

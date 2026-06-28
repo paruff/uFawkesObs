@@ -143,11 +143,23 @@ Grafana automatically configures datasources and preloads dashboards upon contai
 
 ## 6. Forward-Looking Feature Designs
 
-### 6.1 Milestone 4: DORA & DevLake Integration Design
+### 6.1 Milestone 4: DORA & Ecosystem Integration Design
 
-- **Architecture Additions:** Add Apache DevLake and MySQL container dependencies in `compose.yaml` under the `dora` profile.
-- **Recording Rules:** Add PromQL recording rules in `config/prometheus/alerts.yml` (e.g. `dora:deployment_frequency:rate30d`) to allow instantaneous visualization queries.
-- **DORA Dashboard:** Provision `/config/grafana/provisioning/dashboards/dora-metrics.json` presenting historical trend lines and classification bands.
+uFawkesObs is the observability substrate for DORA metrics. The DORA data pipeline spans three planes:
+
+- **uFawkesDORA (Compute Plane):** Ingestion API → Event Queue (Postgres) → Processor → Metric Compute Job. Owns DevLake as optional complementary visualization.
+- **uFawkesRes (Resource Plane):** Shared PostgreSQL 17 + TimescaleDB on `fawkes-backbone-net`. Hosts `dora_metrics` database (schemas: `event_queue`, `raw_events`, `dora_snapshots`, `archetype_history`, `wellbeing_surveys`, `vsi_stage_breakdown`).
+- **uFawkesObs (Observability Plane):** Prometheus (recording rules, alerting, time-series), Grafana (dashboards reading Prometheus + Postgres), Loki (raw event logs), OTel Collector (ingestion from uFawkesDORA).
+
+**Architecture Additions in uFawkesObs:**
+- **Recording Rules:** PromQL rules in `config/prometheus/rules/dora-metrics.yml` for continuous calculation of `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:fdrt_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:rework_rate:ratio30d`.
+- **DORA Dashboard:** Provision `config/grafana/provisioning/dashboards/dora-metrics.json` with panels reading from Prometheus (trend lines) and PostgreSQL via Postgres datasource plugin (current snapshots, archetype profile).
+- **Network Attachment:** uFawkesObs joins `fawkes-backbone-net` (external name: `ufawkes-resources_fawkes-backbone-net`) to query uFawkesRes PostgreSQL for DORA snapshots.
+- **Alertmanager Routing:** Add `dora_regression` and `leading_indicator` routes to Alertmanager config pointing to `DORA_SLACK_WEBHOOK_URL`.
+
+**What moved to other planes (no longer in uFawkesObs scope):**
+- Apache DevLake → uFawkesDORA (optional, complementary to native ingestion)
+- MySQL database → removed; DevLake uses uFawkesRes PostgreSQL
 
 ### 6.2 Milestone 5: Kubernetes & Helm Migration Design
 
