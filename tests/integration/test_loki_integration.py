@@ -7,7 +7,6 @@ import os
 import time
 import requests
 import pytest
-from typing import Dict, Any
 
 
 # Configuration
@@ -28,10 +27,7 @@ def wait_for_loki(loki_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{loki_url}/ready",
-                timeout=5
-            )
+            response = requests.get(f"{loki_url}/ready", timeout=5)
             if response.status_code == 200:
                 print(f"✅ Loki is ready after {attempt + 1} attempts")
                 return
@@ -56,10 +52,7 @@ class TestLokiHealth:
     def test_loki_status(self, wait_for_loki, loki_url: str):
         """Test that Loki status endpoint is accessible."""
         # Try different status endpoints
-        endpoints = [
-            f"{loki_url}/services",
-            f"{loki_url}/config"
-        ]
+        endpoints = [f"{loki_url}/services", f"{loki_url}/config"]
 
         accessible = False
         for endpoint in endpoints:
@@ -95,7 +88,7 @@ class TestLokiPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 3100))
+            result = sock.connect_ex(("localhost", 3100))
             assert result == 0, "Loki HTTP port 3100 should be open"
             print("✅ Loki HTTP port (3100) is open")
         finally:
@@ -109,7 +102,7 @@ class TestLokiPorts:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 9096))
+            result = sock.connect_ex(("localhost", 9096))
             assert result == 0, "Loki gRPC port 9096 should be open"
             print("✅ Loki gRPC port (9096) is open")
         finally:
@@ -134,7 +127,7 @@ class TestLokiMetrics:
         expected_metrics = [
             "loki_ingester_",
             "loki_distributor_",
-            "loki_request_duration_seconds"
+            "loki_request_duration_seconds",
         ]
 
         found_metrics = []
@@ -142,7 +135,9 @@ class TestLokiMetrics:
             if metric_prefix in metrics:
                 found_metrics.append(metric_prefix)
 
-        print(f"✅ Loki metrics endpoint is available ({len(found_metrics)} metric families found)")
+        print(
+            f"✅ Loki metrics endpoint is available ({len(found_metrics)} metric families found)"
+        )
 
 
 class TestLokiAPI:
@@ -150,14 +145,10 @@ class TestLokiAPI:
 
     def test_loki_labels_endpoint(self, wait_for_loki, loki_url: str):
         """Test that Loki labels endpoint is accessible."""
-        response = requests.get(
-            f"{loki_url}/loki/api/v1/labels",
-            timeout=10
-        )
+        response = requests.get(f"{loki_url}/loki/api/v1/labels", timeout=10)
 
         # Should return 200 even if no logs exist
-        assert response.status_code == 200, \
-            "Loki labels endpoint should be accessible"
+        assert response.status_code == 200, "Loki labels endpoint should be accessible"
 
         if response.status_code == 200:
             data = response.json()
@@ -169,19 +160,19 @@ class TestLokiAPI:
     def test_loki_label_values_endpoint(self, wait_for_loki, loki_url: str):
         """Test that Loki label values endpoint is accessible."""
         # Try to get values for 'job' label (common label)
-        response = requests.get(
-            f"{loki_url}/loki/api/v1/label/job/values",
-            timeout=10
-        )
+        response = requests.get(f"{loki_url}/loki/api/v1/label/job/values", timeout=10)
 
         # Should return 200 even if no logs exist
-        assert response.status_code == 200, \
+        assert response.status_code == 200, (
             "Loki label values endpoint should be accessible"
+        )
 
         if response.status_code == 200:
             data = response.json()
             values = data.get("data", [])
-            print(f"✅ Loki label values endpoint works ({len(values)} values for 'job' label)")
+            print(
+                f"✅ Loki label values endpoint works ({len(values)} values for 'job' label)"
+            )
         else:
             print("⚠️  Loki label values endpoint returned unexpected status")
 
@@ -200,9 +191,9 @@ class TestLokiAPI:
                 "query": '{job=~".+"}',
                 "start": str(int(five_min_ago)),
                 "end": str(int(now)),
-                "limit": "10"
+                "limit": "10",
             },
-            timeout=10
+            timeout=10,
         )
 
         # Should return 200 even if no logs found, or 400 if query is invalid
@@ -212,9 +203,13 @@ class TestLokiAPI:
             print(f"✅ Loki query endpoint works ({len(result)} streams found)")
         elif response.status_code == 400:
             # Query may be invalid or no data yet
-            print("⚠️  Loki query endpoint is accessible but returned 400 (may need valid data)")
+            print(
+                "⚠️  Loki query endpoint is accessible but returned 400 (may need valid data)"
+            )
         else:
-            pytest.fail(f"Loki query returned unexpected status: {response.status_code}")
+            pytest.fail(
+                f"Loki query returned unexpected status: {response.status_code}"
+            )
 
 
 class TestLokiPushAPI:
@@ -227,16 +222,13 @@ class TestLokiPushAPI:
 
         # Just verify the endpoint exists by checking if URL is reachable
         # We expect it to reject our empty request but still respond
-        response = requests.post(
-            f"{loki_url}/loki/api/v1/push",
-            json={},
-            timeout=10
-        )
+        response = requests.post(f"{loki_url}/loki/api/v1/push", json={}, timeout=10)
 
         # We expect 400 or 204/200 depending on validation
         # The important thing is the endpoint is reachable
-        assert response.status_code in [200, 204, 400, 415], \
+        assert response.status_code in [200, 204, 400, 415], (
             f"Loki push endpoint should be accessible (got {response.status_code})"
+        )
 
         print(f"✅ Loki push endpoint is accessible (status: {response.status_code})")
 
@@ -254,10 +246,19 @@ class TestLokiConfiguration:
             assert len(config) > 0, "Loki should return configuration"
 
             # Check for some expected configuration sections
-            expected_sections = ["server:", "distributor:", "ingester:", "schema_config:"]
-            found_sections = [section for section in expected_sections if section in config]
+            expected_sections = [
+                "server:",
+                "distributor:",
+                "ingester:",
+                "schema_config:",
+            ]
+            found_sections = [
+                section for section in expected_sections if section in config
+            ]
 
-            print(f"✅ Loki configuration is accessible ({len(found_sections)} sections found)")
+            print(
+                f"✅ Loki configuration is accessible ({len(found_sections)} sections found)"
+            )
         else:
             print("⚠️  Loki configuration endpoint not accessible (may require auth)")
 
@@ -300,7 +301,7 @@ class TestAlloyIntegration:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 12345))
+            result = sock.connect_ex(("localhost", 12345))
             assert result == 0, "Alloy HTTP port 12345 should be open"
             print("✅ Alloy is running (port 12345 is open)")
         finally:

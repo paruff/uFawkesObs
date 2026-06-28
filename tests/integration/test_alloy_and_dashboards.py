@@ -7,8 +7,6 @@ import os
 import time
 import requests
 import pytest
-from typing import Dict, Any, List
-import json
 
 
 # Configuration
@@ -35,10 +33,7 @@ def wait_for_alloy(alloy_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{alloy_url}/metrics",
-                timeout=5
-            )
+            response = requests.get(f"{alloy_url}/metrics", timeout=5)
             if response.status_code == 200:
                 print(f"✅ Alloy is ready after {attempt + 1} attempts")
                 return
@@ -67,7 +62,7 @@ class TestAlloyHealth:
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(('localhost', 12345))
+            result = sock.connect_ex(("localhost", 12345))
             assert result == 0, "Alloy HTTP port 12345 should be open"
             print("✅ Alloy HTTP port (12345) is open")
         finally:
@@ -95,13 +90,20 @@ class TestAlloyDockerSource:
         metrics = response.text
 
         # Look for docker source metrics
-        docker_metric_lines = [line for line in metrics.split('\n')
-                              if 'loki_source_docker' in line and not line.startswith('#')]
+        docker_metric_lines = [
+            line
+            for line in metrics.split("\n")
+            if "loki_source_docker" in line and not line.startswith("#")
+        ]
 
         if docker_metric_lines:
-            print(f"✅ Alloy has docker source metrics ({len(docker_metric_lines)} metric lines)")
+            print(
+                f"✅ Alloy has docker source metrics ({len(docker_metric_lines)} metric lines)"
+            )
         else:
-            print("⚠️  Alloy docker source metrics not initialized yet (containers may not have logs)")
+            print(
+                "⚠️  Alloy docker source metrics not initialized yet (containers may not have logs)"
+            )
 
 
 class TestAlloyToLokiPipeline:
@@ -114,12 +116,17 @@ class TestAlloyToLokiPipeline:
         metrics = response.text
 
         # Look for write metrics
-        write_metric_lines = [line for line in metrics.split('\n')
-                             if 'loki_write' in line and not line.startswith('#')]
+        write_metric_lines = [
+            line
+            for line in metrics.split("\n")
+            if "loki_write" in line and not line.startswith("#")
+        ]
 
         assert len(metrics) > 0, "Should have metrics indicating Alloy is running"
 
-        print(f"✅ Alloy write pipeline metrics present ({len(write_metric_lines)} lines)")
+        print(
+            f"✅ Alloy write pipeline metrics present ({len(write_metric_lines)} lines)"
+        )
 
 
 class TestDashboardMetricsData:
@@ -143,9 +150,9 @@ class TestDashboardMetricsData:
                 "query": 'up{job="otel-collector"}',
                 "start": ten_min_ago,
                 "end": now,
-                "step": "60"
+                "step": "60",
             },
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -153,9 +160,13 @@ class TestDashboardMetricsData:
             result = data.get("data", {}).get("result", [])
 
             if result:
-                print(f"✅ Prometheus has OTel Collector metrics ({len(result)} series)")
+                print(
+                    f"✅ Prometheus has OTel Collector metrics ({len(result)} series)"
+                )
             else:
-                print("⚠️  No OTel metrics found in Prometheus (may need time to collect)")
+                print(
+                    "⚠️  No OTel metrics found in Prometheus (may need time to collect)"
+                )
         else:
             print(f"⚠️  Prometheus query returned {response.status_code}")
 
@@ -163,10 +174,8 @@ class TestDashboardMetricsData:
         """Test that Prometheus scrapes Alertmanager metrics."""
         response = requests.get(
             f"{prometheus_url}/api/v1/query",
-            params={
-                "query": 'alertmanager_build_info'
-            },
-            timeout=10
+            params={"query": "alertmanager_build_info"},
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -174,7 +183,7 @@ class TestDashboardMetricsData:
             result = data.get("data", {}).get("result", [])
 
             if result:
-                print(f"✅ Prometheus has Alertmanager metrics")
+                print("✅ Prometheus has Alertmanager metrics")
             else:
                 print("⚠️  Alertmanager metrics not yet available")
 
@@ -196,9 +205,9 @@ class TestDashboardLogsData:
                 "query": '{job="docker"}',
                 "start": str(int(ten_min_ago)),
                 "end": str(int(now)),
-                "limit": "10"
+                "limit": "10",
             },
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -208,18 +217,18 @@ class TestDashboardLogsData:
             if result:
                 print(f"✅ Loki has docker container logs ({len(result)} streams)")
             else:
-                print("⚠️  No docker logs in Loki yet (Alloy may still be discovering containers)")
+                print(
+                    "⚠️  No docker logs in Loki yet (Alloy may still be discovering containers)"
+                )
         else:
             print(f"⚠️  Loki query returned {response.status_code}")
 
     def test_loki_has_compose_service_labels(self):
         """Test that logs have compose_service labels for filtering."""
-        import time as time_module
 
         # Query for logs with compose_service label
         response = requests.get(
-            f"{LOKI_URL}/loki/api/v1/labels/compose_service/values",
-            timeout=10
+            f"{LOKI_URL}/loki/api/v1/labels/compose_service/values", timeout=10
         )
 
         if response.status_code == 200:
@@ -245,9 +254,7 @@ class TestDashboardTracesData:
     def test_tempo_has_traces(self):
         """Test that Tempo has received traces."""
         response = requests.get(
-            f"{TEMPO_URL}/api/traces",
-            params={"limit": "10"},
-            timeout=10
+            f"{TEMPO_URL}/api/traces", params={"limit": "10"}, timeout=10
         )
 
         # Tempo may return 400 if no data yet, that's okay
@@ -263,9 +270,7 @@ class TestDashboardMetricsLogsTracesCorrelation:
     def test_loki_datasource_has_trace_correlation(self, grafana_auth: tuple):
         """Test that Loki datasource has trace correlation configured."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/datasources",
-            auth=grafana_auth,
-            timeout=10
+            f"{GRAFANA_URL}/api/datasources", auth=grafana_auth, timeout=10
         )
 
         datasources = response.json()
@@ -279,20 +284,22 @@ class TestDashboardMetricsLogsTracesCorrelation:
 
         if derived_fields:
             # Check for traceID field
-            trace_fields = [f for f in derived_fields if 'traceID' in f.get('name', '')]
+            trace_fields = [f for f in derived_fields if "traceID" in f.get("name", "")]
             if trace_fields:
                 print("✅ Loki datasource has traceID correlation configured")
             else:
-                print("⚠️  Loki datasource has derived fields but no traceID correlation")
+                print(
+                    "⚠️  Loki datasource has derived fields but no traceID correlation"
+                )
         else:
-            print("⚠️  Loki datasource has no derived fields configured for trace correlation")
+            print(
+                "⚠️  Loki datasource has no derived fields configured for trace correlation"
+            )
 
     def test_tempo_datasource_has_service_map(self, grafana_auth: tuple):
         """Test that Tempo datasource has service map configured."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/datasources",
-            auth=grafana_auth,
-            timeout=10
+            f"{GRAFANA_URL}/api/datasources", auth=grafana_auth, timeout=10
         )
 
         datasources = response.json()
@@ -317,7 +324,7 @@ class TestDashboardRendering:
         response = requests.get(
             f"{GRAFANA_URL}/api/dashboards/uid/infrastructure-overview",
             auth=grafana_auth,
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -329,23 +336,27 @@ class TestDashboardRendering:
             for panel in panels:
                 targets = panel.get("targets", [])
                 for target in targets:
-                    datasource_uid = target.get("datasourceUid")
+                    _datasource_uid = target.get("datasourceUid")
                     # Would be better to check actual datasource type, but UID is a proxy
                     if target.get("expr") and isinstance(target.get("expr"), str):
                         if "{" in target.get("expr"):  # LogQL pattern
                             loki_panels.append(panel.get("title", "Unknown"))
 
             if loki_panels:
-                print(f"✅ Infrastructure dashboard has log panels ({len(loki_panels)} panels with queries)")
+                print(
+                    f"✅ Infrastructure dashboard has log panels ({len(loki_panels)} panels with queries)"
+                )
             else:
-                print("⚠️  Infrastructure dashboard may not have log panels with queries")
+                print(
+                    "⚠️  Infrastructure dashboard may not have log panels with queries"
+                )
 
     def test_application_performance_dashboard_queries_valid(self, grafana_auth: tuple):
         """Test that Application Performance dashboard queries are properly formed."""
         response = requests.get(
             f"{GRAFANA_URL}/api/dashboards/uid/application-performance",
             auth=grafana_auth,
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -363,7 +374,9 @@ class TestDashboardRendering:
                             valid_queries += 1
 
             if valid_queries > 0:
-                print(f"✅ Application Performance dashboard has {valid_queries} valid queries")
+                print(
+                    f"✅ Application Performance dashboard has {valid_queries} valid queries"
+                )
             else:
                 print("⚠️  Application Performance dashboard queries may be incomplete")
 
@@ -372,7 +385,7 @@ class TestDashboardRendering:
         response = requests.get(
             f"{GRAFANA_URL}/api/dashboards/uid/observability-stack-health",
             auth=grafana_auth,
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -383,7 +396,11 @@ class TestDashboardRendering:
 
             # Check for specific panel types
             stat_panels = [p for p in panels if p.get("type") == "stat"]
-            graph_panels = [p for p in panels if p.get("type") in ["timeseries", "graph"]]
+            graph_panels = [
+                p for p in panels if p.get("type") in ["timeseries", "graph"]
+            ]
 
-            print(f"✅ Observability Stack Health has {len(panels)} panels " +
-                  f"({len(stat_panels)} stats, {len(graph_panels)} graphs)")
+            print(
+                f"✅ Observability Stack Health has {len(panels)} panels "
+                + f"({len(stat_panels)} stats, {len(graph_panels)} graphs)"
+            )

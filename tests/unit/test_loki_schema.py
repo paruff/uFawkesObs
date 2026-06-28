@@ -22,7 +22,9 @@ import yaml
 # ---------------------------------------------------------------------------
 # Path to loki.yaml relative to this file's directory
 # ---------------------------------------------------------------------------
-LOKI_CONFIG_PATH = pathlib.Path(__file__).resolve().parents[2] / "config" / "loki" / "loki.yaml"
+LOKI_CONFIG_PATH = (
+    pathlib.Path(__file__).resolve().parents[2] / "config" / "loki" / "loki.yaml"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -73,13 +75,9 @@ class TestLokiSchema3x:
     def test_schema_config_exists(self, loki_config: dict) -> None:
         """Assert schema_config.configs exists and is a non-empty list."""
         schema_config = loki_config.get("schema_config")
-        assert schema_config is not None, (
-            "loki.yaml is missing 'schema_config' key"
-        )
+        assert schema_config is not None, "loki.yaml is missing 'schema_config' key"
         configs = schema_config.get("configs")
-        assert configs is not None, (
-            "loki.yaml is missing 'schema_config.configs'"
-        )
+        assert configs is not None, "loki.yaml is missing 'schema_config.configs'"
         assert isinstance(configs, list), (
             f"schema_config.configs must be a list, got {type(configs).__name__}"
         )
@@ -105,9 +103,7 @@ class TestLokiSchema3x:
     def test_no_boltdb_shipper_in_storage_config(self, loki_config: dict) -> None:
         """Assert storage_config does not contain a boltdb_shipper key."""
         storage_config = loki_config.get("storage_config")
-        assert storage_config is not None, (
-            "loki.yaml is missing 'storage_config' key"
-        )
+        assert storage_config is not None, "loki.yaml is missing 'storage_config' key"
         assert "boltdb_shipper" not in storage_config, (
             "storage_config contains 'boltdb_shipper' key — "
             "remove it and use tsdb_shipper for Loki 3.x compatibility."
@@ -120,9 +116,7 @@ class TestLokiSchema3x:
         Missing this field causes a startup error.
         """
         compactor = loki_config.get("compactor")
-        assert compactor is not None, (
-            "loki.yaml is missing 'compactor' key"
-        )
+        assert compactor is not None, "loki.yaml is missing 'compactor' key"
         retention_enabled = compactor.get("retention_enabled", False)
         if retention_enabled:
             delete_store = compactor.get("delete_request_store")

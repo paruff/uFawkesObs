@@ -4,9 +4,6 @@ Tests that the River configuration is valid and meets requirements.
 """
 
 import os
-import pytest
-import re
-from pathlib import Path
 
 
 # Configuration
@@ -19,19 +16,21 @@ class TestAlloyConfiguration:
 
     def test_alloy_config_file_exists(self):
         """Test that alloy config file exists."""
-        assert os.path.exists(ALLOY_CONFIG_FILE), \
+        assert os.path.exists(ALLOY_CONFIG_FILE), (
             f"Alloy config file should exist at {ALLOY_CONFIG_FILE}"
+        )
         print(f"✅ Alloy config file exists: {ALLOY_CONFIG_FILE}")
 
     def test_alloy_config_is_readable(self):
         """Test that alloy config file is readable."""
-        assert os.access(ALLOY_CONFIG_FILE, os.R_OK), \
-            f"Alloy config file should be readable"
+        assert os.access(ALLOY_CONFIG_FILE, os.R_OK), (
+            "Alloy config file should be readable"
+        )
         print("✅ Alloy config file is readable")
 
     def test_alloy_config_not_empty(self):
         """Test that alloy config file is not empty."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
         assert len(content) > 0, "Alloy config should not be empty"
@@ -41,7 +40,7 @@ class TestAlloyConfiguration:
 
     def test_alloy_config_has_logging_block(self):
         """Test that config includes logging configuration."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
         assert "logging {" in content, "Config should have logging block"
@@ -53,37 +52,39 @@ class TestAlloyConfiguration:
     def test_alloy_config_has_server_block(self):
         """Test that server config is handled via CLI args (v1.12.2+)."""
         compose_file = os.path.join(PROJECT_ROOT, "compose.yaml")
-        with open(compose_file, 'r') as f:
+        with open(compose_file, "r") as f:
             content = f.read()
 
         # In v1.12.2, server is configured via CLI args, not River config
         assert "  alloy:" in content, "Compose should define alloy service"
-        assert "--server.http.listen-addr=0.0.0.0:12345" in content, \
+        assert "--server.http.listen-addr=0.0.0.0:12345" in content, (
             "Alloy should listen on port 12345 (via CLI args)"
+        )
 
         print("✅ Alloy server configured via CLI args (v1.12.2+)")
 
     def test_alloy_config_has_docker_source(self):
         """Test that config includes Docker log source."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
-        assert "loki.source.docker" in content, \
-            "Config should have Loki Docker source"
-        assert "unix:///var/run/docker.sock" in content, \
+        assert "loki.source.docker" in content, "Config should have Loki Docker source"
+        assert "unix:///var/run/docker.sock" in content, (
             "Config should reference Docker socket"
+        )
         # In v1.12.2, positions handled by storage.path CLI arg
         compose_file = os.path.join(PROJECT_ROOT, "compose.yaml")
-        with open(compose_file, 'r') as f:
+        with open(compose_file, "r") as f:
             compose = f.read()
-        assert "--storage.path=/var/lib/alloy" in compose, \
+        assert "--storage.path=/var/lib/alloy" in compose, (
             "Storage path should be configured via CLI"
+        )
 
         print("✅ Alloy config has Docker source configuration")
 
     def test_alloy_config_has_processing_pipeline(self):
         """Test that config includes log processing pipeline."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
         assert "loki.process" in content, "Config should have processing stage"
@@ -94,15 +95,15 @@ class TestAlloyConfiguration:
 
     def test_alloy_config_has_required_labels(self):
         """Test that config extracts required labels."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
         required_labels = [
-            'stream',
-            'container_name',
-            'container_id',
-            'compose_service',
-            'compose_project'
+            "stream",
+            "container_name",
+            "container_id",
+            "compose_service",
+            "compose_project",
         ]
 
         for label in required_labels:
@@ -112,14 +113,16 @@ class TestAlloyConfiguration:
 
     def test_alloy_config_has_loki_write(self):
         """Test that config includes Loki write endpoint."""
-        with open(ALLOY_CONFIG_FILE, 'r') as f:
+        with open(ALLOY_CONFIG_FILE, "r") as f:
             content = f.read()
 
         assert "loki.write" in content, "Config should have Loki write component"
-        assert "http://loki:3100" in content, \
+        assert "http://loki:3100" in content, (
             "Config should target Loki service on port 3100"
-        assert "/loki/api/v1/push" in content, \
+        )
+        assert "/loki/api/v1/push" in content, (
             "Config should use Loki push API endpoint"
+        )
 
         print("✅ Alloy config has Loki write endpoint configuration")
 
@@ -127,7 +130,7 @@ class TestAlloyConfiguration:
         """Test that Docker socket is mounted in compose.yaml."""
         compose_file = os.path.join(PROJECT_ROOT, "compose.yaml")
 
-        with open(compose_file, 'r') as f:
+        with open(compose_file, "r") as f:
             compose_content = f.read()
 
         # Check for Alloy service with docker socket mount
@@ -140,10 +143,12 @@ class TestAlloyConfiguration:
             next_service = len(compose_content)
         alloy_section = compose_content[alloy_start:next_service]
 
-        assert "/var/run/docker.sock" in alloy_section, \
+        assert "/var/run/docker.sock" in alloy_section, (
             "Alloy service should mount Docker socket"
-        assert "config/alloy/config.river" in alloy_section, \
+        )
+        assert "config/alloy/config.river" in alloy_section, (
             "Alloy service should mount River config file"
+        )
 
         print("✅ Alloy service in compose.yaml has required volume mounts")
 
@@ -151,7 +156,7 @@ class TestAlloyConfiguration:
         """Test that Alloy service depends on Loki."""
         compose_file = os.path.join(PROJECT_ROOT, "compose.yaml")
 
-        with open(compose_file, 'r') as f:
+        with open(compose_file, "r") as f:
             compose_content = f.read()
 
         # Check for Alloy service with Loki dependency
@@ -161,10 +166,8 @@ class TestAlloyConfiguration:
             next_service = len(compose_content)
         alloy_section = compose_content[alloy_start:next_service]
 
-        assert "depends_on" in alloy_section, \
-            "Alloy service should have depends_on"
-        assert "loki:" in alloy_section, \
-            "Alloy should depend on Loki service"
+        assert "depends_on" in alloy_section, "Alloy service should have depends_on"
+        assert "loki:" in alloy_section, "Alloy should depend on Loki service"
 
         print("✅ Alloy service depends on Loki")
 
@@ -175,14 +178,15 @@ class TestAlloyConfigDocumentation:
     def test_alloy_operations_doc_exists(self):
         """Test that Alloy operations documentation exists."""
         alloy_doc = os.path.join(PROJECT_ROOT, "docs", "alloy-operations.md")
-        assert os.path.exists(alloy_doc), \
+        assert os.path.exists(alloy_doc), (
             f"Alloy operations doc should exist at {alloy_doc}"
-        print(f"✅ Alloy operations documentation exists")
+        )
+        print("✅ Alloy operations documentation exists")
 
     def test_alloy_doc_has_overview(self):
         """Test that doc includes overview section."""
         alloy_doc = os.path.join(PROJECT_ROOT, "docs", "alloy-operations.md")
-        with open(alloy_doc, 'r') as f:
+        with open(alloy_doc, "r") as f:
             content = f.read()
 
         assert "## Overview" in content, "Doc should have Overview section"
@@ -194,7 +198,7 @@ class TestAlloyConfigDocumentation:
     def test_alloy_doc_has_deployment_section(self):
         """Test that doc includes deployment instructions."""
         alloy_doc = os.path.join(PROJECT_ROOT, "docs", "alloy-operations.md")
-        with open(alloy_doc, 'r') as f:
+        with open(alloy_doc, "r") as f:
             content = f.read()
 
         assert "## Deployment" in content, "Doc should have Deployment section"
@@ -205,11 +209,13 @@ class TestAlloyConfigDocumentation:
     def test_alloy_doc_has_configuration_section(self):
         """Test that doc includes configuration documentation."""
         alloy_doc = os.path.join(PROJECT_ROOT, "docs", "alloy-operations.md")
-        with open(alloy_doc, 'r') as f:
+        with open(alloy_doc, "r") as f:
             content = f.read()
 
         assert "## Configuration" in content, "Doc should have Configuration section"
-        assert "config/alloy/config.river" in content, "Doc should reference config file"
+        assert "config/alloy/config.river" in content, (
+            "Doc should reference config file"
+        )
         assert "loki.source.docker" in content, "Doc should explain Docker source"
         assert "loki.process" in content, "Doc should explain processing"
 
@@ -218,21 +224,24 @@ class TestAlloyConfigDocumentation:
     def test_alloy_doc_has_troubleshooting(self):
         """Test that doc includes troubleshooting guide."""
         alloy_doc = os.path.join(PROJECT_ROOT, "docs", "alloy-operations.md")
-        with open(alloy_doc, 'r') as f:
+        with open(alloy_doc, "r") as f:
             content = f.read()
 
-        assert "## Troubleshooting" in content, "Doc should have Troubleshooting section"
+        assert "## Troubleshooting" in content, (
+            "Doc should have Troubleshooting section"
+        )
 
         print("✅ Alloy documentation has troubleshooting section")
 
     def test_loki_doc_references_alloy(self):
         """Test that Loki doc references Alloy instead of Promtail."""
         loki_doc = os.path.join(PROJECT_ROOT, "docs", "loki-operations.md")
-        with open(loki_doc, 'r') as f:
+        with open(loki_doc, "r") as f:
             content = f.read()
 
         assert "Grafana Alloy" in content, "Loki doc should mention Alloy"
-        assert "Promtail" not in content or "deprecated" in content.lower(), \
+        assert "Promtail" not in content or "deprecated" in content.lower(), (
             "Loki doc should not reference active Promtail usage"
+        )
 
         print("✅ Loki documentation references Alloy")

@@ -34,10 +34,7 @@ def wait_for_prometheus(prometheus_base_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{prometheus_base_url}/-/healthy",
-                timeout=5
-            )
+            response = requests.get(f"{prometheus_base_url}/-/healthy", timeout=5)
             if response.status_code == 200:
                 print(f"✅ Prometheus is ready after {attempt + 1} attempts")
                 return
@@ -57,10 +54,7 @@ def wait_for_otel_collector(otel_collector_base_url: str) -> None:
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{otel_collector_base_url}/metrics",
-                timeout=5
-            )
+            response = requests.get(f"{otel_collector_base_url}/metrics", timeout=5)
             # Check for any valid metrics response (should contain metric names)
             if response.status_code == 200 and len(response.text) > 100:
                 print(f"✅ OTel Collector is ready after {attempt + 1} attempts")
@@ -96,9 +90,7 @@ def query_prometheus(prometheus_base_url: str, query: str) -> Dict[str, Any]:
         JSON response from Prometheus
     """
     response = requests.get(
-        f"{prometheus_base_url}/api/v1/query",
-        params={"query": query},
-        timeout=10
+        f"{prometheus_base_url}/api/v1/query", params={"query": query}, timeout=10
     )
     response.raise_for_status()
     return response.json()
@@ -115,16 +107,16 @@ def parse_prometheus_metrics(text: str) -> Dict[str, list]:
         Dictionary mapping metric names to lists of metric lines
     """
     metrics = {}
-    for line in text.split('\n'):
+    for line in text.split("\n"):
         line = line.strip()
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
         # Extract metric name (before '{' or ' ')
-        if '{' in line:
-            metric_name = line.split('{')[0]
-        elif ' ' in line:
-            metric_name = line.split(' ')[0]
+        if "{" in line:
+            metric_name = line.split("{")[0]
+        elif " " in line:
+            metric_name = line.split(" ")[0]
         else:
             continue
 
@@ -138,8 +130,10 @@ def parse_prometheus_metrics(text: str) -> Dict[str, list]:
 @pytest.fixture(scope="function")
 def prometheus_query(prometheus_base_url: str):
     """Fixture that provides a Prometheus query function."""
+
     def _query(query: str) -> Dict[str, Any]:
         return query_prometheus(prometheus_base_url, query)
+
     return _query
 
 

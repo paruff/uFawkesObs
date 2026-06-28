@@ -1,7 +1,7 @@
 """
 Shared fixtures for unit tests
 """
-import os
+
 import pytest
 from pathlib import Path
 

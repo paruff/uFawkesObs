@@ -26,7 +26,7 @@ DASHBOARD_FILES = [
     "observability-stack-health.json",
     "iot-devices-mqtt.json",
     "application-performance.json",
-    "infrastructure-overview.json"
+    "infrastructure-overview.json",
 ]
 
 # New platform dashboards
@@ -38,7 +38,7 @@ PLATFORM_DASHBOARD_FILES = [
     "alloy-overview.json",
     "alertmanager-overview.json",
     "storage-capacity.json",
-    "ingestion-health.json"
+    "ingestion-health.json",
 ]
 
 # New service dashboards
@@ -49,7 +49,7 @@ SERVICE_DASHBOARD_FILES = [
     "service-saturation.json",
     "service-debug.json",
     "service-slo.json",
-    "service-capacity.json"
+    "service-capacity.json",
 ]
 
 
@@ -69,15 +69,13 @@ def grafana_auth() -> tuple:
 def wait_for_grafana(grafana_base_url: str) -> None:
     """Wait for Grafana to be ready."""
     import time
+
     max_retries = 60
     retry_interval = 2
 
     for attempt in range(max_retries):
         try:
-            response = requests.get(
-                f"{grafana_base_url}/api/health",
-                timeout=5
-            )
+            response = requests.get(f"{grafana_base_url}/api/health", timeout=5)
             if response.status_code == 200:
                 print(f"✅ Grafana is ready after {attempt + 1} attempts")
                 return
@@ -101,15 +99,15 @@ def get_dashboards(grafana_base_url: str, grafana_auth: tuple) -> List[Dict[str,
         List of dashboard metadata
     """
     response = requests.get(
-        f"{grafana_base_url}/api/search?type=dash-db",
-        auth=grafana_auth,
-        timeout=10
+        f"{grafana_base_url}/api/search?type=dash-db", auth=grafana_auth, timeout=10
     )
     response.raise_for_status()
     return response.json()
 
 
-def get_dashboard_by_uid(grafana_base_url: str, grafana_auth: tuple, uid: str) -> Dict[str, Any]:
+def get_dashboard_by_uid(
+    grafana_base_url: str, grafana_auth: tuple, uid: str
+) -> Dict[str, Any]:
     """
     Get dashboard details by UID.
 
@@ -122,9 +120,7 @@ def get_dashboard_by_uid(grafana_base_url: str, grafana_auth: tuple, uid: str) -
         Dashboard details
     """
     response = requests.get(
-        f"{grafana_base_url}/api/dashboards/uid/{uid}",
-        auth=grafana_auth,
-        timeout=10
+        f"{grafana_base_url}/api/dashboards/uid/{uid}", auth=grafana_auth, timeout=10
     )
     response.raise_for_status()
     return response.json()
@@ -140,7 +136,9 @@ class TestDashboardProvisioning:
         data = response.json()
         assert data.get("database") == "ok", "Grafana database should be healthy"
 
-    def test_all_dashboards_provisioned(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_all_dashboards_provisioned(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that all 4 dashboards are provisioned."""
         dashboards = get_dashboards(grafana_base_url, grafana_auth)
 
@@ -149,7 +147,7 @@ class TestDashboardProvisioning:
             "observability-stack-health",
             "iot-devices-mqtt",
             "application-performance",
-            "infrastructure-overview"
+            "infrastructure-overview",
         ]
 
         # Get all dashboard UIDs
@@ -161,9 +159,13 @@ class TestDashboardProvisioning:
 
         print(f"✅ All {len(expected_uids)} dashboards are provisioned")
 
-    def test_observability_stack_health_dashboard(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_observability_stack_health_dashboard(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test Observability Stack Health dashboard structure."""
-        dashboard = get_dashboard_by_uid(grafana_base_url, grafana_auth, "observability-stack-health")
+        dashboard = get_dashboard_by_uid(
+            grafana_base_url, grafana_auth, "observability-stack-health"
+        )
 
         assert dashboard is not None
         assert "dashboard" in dashboard
@@ -178,14 +180,22 @@ class TestDashboardProvisioning:
 
         # Verify rows and panels exist
         panel_titles = [p.get("title", "") for p in panels]
-        assert "Prometheus Status" in panel_titles, "Should have Prometheus status panel"
-        assert "OTel Collector Status" in panel_titles, "Should have OTel Collector status panel"
+        assert "Prometheus Status" in panel_titles, (
+            "Should have Prometheus status panel"
+        )
+        assert "OTel Collector Status" in panel_titles, (
+            "Should have OTel Collector status panel"
+        )
 
         print("✅ Observability Stack Health dashboard validated")
 
-    def test_iot_devices_mqtt_dashboard(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_iot_devices_mqtt_dashboard(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test IoT Devices & MQTT dashboard structure."""
-        dashboard = get_dashboard_by_uid(grafana_base_url, grafana_auth, "iot-devices-mqtt")
+        dashboard = get_dashboard_by_uid(
+            grafana_base_url, grafana_auth, "iot-devices-mqtt"
+        )
 
         assert dashboard is not None
         assert "dashboard" in dashboard
@@ -199,8 +209,12 @@ class TestDashboardProvisioning:
         assert len(panels) > 0, "Dashboard should have panels"
 
         panel_titles = [p.get("title", "") for p in panels]
-        assert "Active Connections" in panel_titles, "Should have Active Connections panel"
-        assert "Message Rate by Topic" in panel_titles, "Should have Message Rate by Topic panel"
+        assert "Active Connections" in panel_titles, (
+            "Should have Active Connections panel"
+        )
+        assert "Message Rate by Topic" in panel_titles, (
+            "Should have Message Rate by Topic panel"
+        )
 
         # Check for variables
         templating = dash.get("templating", {})
@@ -210,9 +224,13 @@ class TestDashboardProvisioning:
 
         print("✅ IoT Devices & MQTT dashboard validated")
 
-    def test_application_performance_dashboard(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_application_performance_dashboard(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test Application Performance dashboard structure."""
-        dashboard = get_dashboard_by_uid(grafana_base_url, grafana_auth, "application-performance")
+        dashboard = get_dashboard_by_uid(
+            grafana_base_url, grafana_auth, "application-performance"
+        )
 
         assert dashboard is not None
         assert "dashboard" in dashboard
@@ -226,7 +244,9 @@ class TestDashboardProvisioning:
         assert len(panels) > 0, "Dashboard should have panels"
 
         panel_titles = [p.get("title", "") for p in panels]
-        assert "Total Request Rate" in panel_titles, "Should have Total Request Rate panel (R in RED)"
+        assert "Total Request Rate" in panel_titles, (
+            "Should have Total Request Rate panel (R in RED)"
+        )
         assert "Error Rate" in panel_titles, "Should have Error Rate panel (E in RED)"
         assert "p95 Latency" in panel_titles, "Should have p95 Latency panel (D in RED)"
 
@@ -238,9 +258,13 @@ class TestDashboardProvisioning:
 
         print("✅ Application Performance dashboard validated")
 
-    def test_infrastructure_overview_dashboard(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_infrastructure_overview_dashboard(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test Infrastructure Overview dashboard structure."""
-        dashboard = get_dashboard_by_uid(grafana_base_url, grafana_auth, "infrastructure-overview")
+        dashboard = get_dashboard_by_uid(
+            grafana_base_url, grafana_auth, "infrastructure-overview"
+        )
 
         assert dashboard is not None
         assert "dashboard" in dashboard
@@ -254,9 +278,15 @@ class TestDashboardProvisioning:
         assert len(panels) > 0, "Dashboard should have panels"
 
         panel_titles = [p.get("title", "") for p in panels]
-        assert "Running Containers" in panel_titles, "Should have Running Containers panel"
-        assert "Container CPU Usage" in panel_titles, "Should have Container CPU Usage panel"
-        assert "Container Memory Usage" in panel_titles, "Should have Container Memory Usage panel"
+        assert "Running Containers" in panel_titles, (
+            "Should have Running Containers panel"
+        )
+        assert "Container CPU Usage" in panel_titles, (
+            "Should have Container CPU Usage panel"
+        )
+        assert "Container Memory Usage" in panel_titles, (
+            "Should have Container Memory Usage panel"
+        )
 
         # Check for variables
         templating = dash.get("templating", {})
@@ -266,13 +296,15 @@ class TestDashboardProvisioning:
 
         print("✅ Infrastructure Overview dashboard validated")
 
-    def test_dashboard_auto_refresh(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_dashboard_auto_refresh(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that dashboards have auto-refresh configured."""
         expected_uids = [
             "observability-stack-health",
             "iot-devices-mqtt",
             "application-performance",
-            "infrastructure-overview"
+            "infrastructure-overview",
         ]
 
         for uid in expected_uids:
@@ -282,17 +314,21 @@ class TestDashboardProvisioning:
             # Check that refresh is configured
             refresh = dash.get("refresh", "")
             assert refresh, f"Dashboard '{uid}' should have auto-refresh configured"
-            assert refresh == "30s", f"Dashboard '{uid}' should have 30s refresh interval"
+            assert refresh == "30s", (
+                f"Dashboard '{uid}' should have 30s refresh interval"
+            )
 
         print("✅ All dashboards have auto-refresh configured")
 
-    def test_dashboard_time_range(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_dashboard_time_range(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that dashboards have appropriate time range configured."""
         expected_uids = [
             "observability-stack-health",
             "iot-devices-mqtt",
             "application-performance",
-            "infrastructure-overview"
+            "infrastructure-overview",
         ]
 
         for uid in expected_uids:
@@ -311,12 +347,12 @@ class TestDashboardProvisioning:
 class TestDashboardDataSources:
     """Test that dashboards use correct datasources."""
 
-    def test_prometheus_datasource_configured(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_prometheus_datasource_configured(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that Prometheus datasource is available."""
         response = requests.get(
-            f"{grafana_base_url}/api/datasources",
-            auth=grafana_auth,
-            timeout=10
+            f"{grafana_base_url}/api/datasources", auth=grafana_auth, timeout=10
         )
         response.raise_for_status()
         datasources = response.json()
@@ -331,12 +367,12 @@ class TestDashboardDataSources:
 
         print("✅ Prometheus datasource is configured correctly")
 
-    def test_tempo_datasource_configured(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_tempo_datasource_configured(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that Tempo datasource is available."""
         response = requests.get(
-            f"{grafana_base_url}/api/datasources",
-            auth=grafana_auth,
-            timeout=10
+            f"{grafana_base_url}/api/datasources", auth=grafana_auth, timeout=10
         )
         response.raise_for_status()
         datasources = response.json()
@@ -347,12 +383,12 @@ class TestDashboardDataSources:
 
         print("✅ Tempo datasource is configured correctly")
 
-    def test_loki_datasource_configured(self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple):
+    def test_loki_datasource_configured(
+        self, wait_for_grafana, grafana_base_url: str, grafana_auth: tuple
+    ):
         """Test that Loki datasource is available."""
         response = requests.get(
-            f"{grafana_base_url}/api/datasources",
-            auth=grafana_auth,
-            timeout=10
+            f"{grafana_base_url}/api/datasources", auth=grafana_auth, timeout=10
         )
         response.raise_for_status()
         datasources = response.json()
@@ -383,8 +419,12 @@ class TestDashboardFiles:
             with open(filepath, "r") as f:
                 try:
                     dashboard = json.load(f)
-                    assert "title" in dashboard, f"Dashboard '{filename}' should have a title"
-                    assert "panels" in dashboard, f"Dashboard '{filename}' should have panels"
+                    assert "title" in dashboard, (
+                        f"Dashboard '{filename}' should have a title"
+                    )
+                    assert "panels" in dashboard, (
+                        f"Dashboard '{filename}' should have panels"
+                    )
                 except json.JSONDecodeError as e:
                     pytest.fail(f"Dashboard '{filename}' has invalid JSON: {e}")
 
@@ -412,7 +452,9 @@ class TestNewPlatformDashboards:
         """Test that all platform dashboard JSON files exist."""
         for filename in PLATFORM_DASHBOARD_FILES:
             filepath = os.path.join(PLATFORM_DASHBOARD_DIR, filename)
-            assert os.path.exists(filepath), f"Platform dashboard file '{filename}' should exist at {filepath}"
+            assert os.path.exists(filepath), (
+                f"Platform dashboard file '{filename}' should exist at {filepath}"
+            )
 
         print(f"✅ All {len(PLATFORM_DASHBOARD_FILES)} platform dashboard files exist")
 
@@ -424,21 +466,35 @@ class TestNewPlatformDashboards:
             with open(filepath, "r") as f:
                 try:
                     dashboard = json.load(f)
-                    assert "title" in dashboard, f"Dashboard '{filename}' should have a title"
-                    assert "panels" in dashboard, f"Dashboard '{filename}' should have panels"
-                    assert "uid" in dashboard, f"Dashboard '{filename}' should have a uid"
-                    assert dashboard["uid"].startswith("platform-"), f"Dashboard '{filename}' uid should start with 'platform-'"
+                    assert "title" in dashboard, (
+                        f"Dashboard '{filename}' should have a title"
+                    )
+                    assert "panels" in dashboard, (
+                        f"Dashboard '{filename}' should have panels"
+                    )
+                    assert "uid" in dashboard, (
+                        f"Dashboard '{filename}' should have a uid"
+                    )
+                    assert dashboard["uid"].startswith("platform-"), (
+                        f"Dashboard '{filename}' uid should start with 'platform-'"
+                    )
 
                     # Check template variables
                     templating = dashboard.get("templating", {})
                     variables = templating.get("list", [])
                     var_names = [v.get("name", "") for v in variables]
-                    assert "datasource" in var_names, f"Dashboard '{filename}' should have datasource variable"
+                    assert "datasource" in var_names, (
+                        f"Dashboard '{filename}' should have datasource variable"
+                    )
 
                 except json.JSONDecodeError as e:
-                    pytest.fail(f"Platform dashboard '{filename}' has invalid JSON: {e}")
+                    pytest.fail(
+                        f"Platform dashboard '{filename}' has invalid JSON: {e}"
+                    )
 
-        print(f"✅ All {len(PLATFORM_DASHBOARD_FILES)} platform dashboard JSON files are valid")
+        print(
+            f"✅ All {len(PLATFORM_DASHBOARD_FILES)} platform dashboard JSON files are valid"
+        )
 
     def test_platform_dashboard_uids_unique(self):
         """Test that all platform dashboard UIDs are unique."""
@@ -462,7 +518,9 @@ class TestNewServiceDashboards:
         """Test that all service dashboard JSON files exist."""
         for filename in SERVICE_DASHBOARD_FILES:
             filepath = os.path.join(SERVICE_DASHBOARD_DIR, filename)
-            assert os.path.exists(filepath), f"Service dashboard file '{filename}' should exist at {filepath}"
+            assert os.path.exists(filepath), (
+                f"Service dashboard file '{filename}' should exist at {filepath}"
+            )
 
         print(f"✅ All {len(SERVICE_DASHBOARD_FILES)} service dashboard files exist")
 
@@ -474,22 +532,36 @@ class TestNewServiceDashboards:
             with open(filepath, "r") as f:
                 try:
                     dashboard = json.load(f)
-                    assert "title" in dashboard, f"Dashboard '{filename}' should have a title"
-                    assert "panels" in dashboard, f"Dashboard '{filename}' should have panels"
-                    assert "uid" in dashboard, f"Dashboard '{filename}' should have a uid"
-                    assert dashboard["uid"].startswith("ufawkesobs-service-"), f"Dashboard '{filename}' uid should start with 'ufawkesobs-service-'"
+                    assert "title" in dashboard, (
+                        f"Dashboard '{filename}' should have a title"
+                    )
+                    assert "panels" in dashboard, (
+                        f"Dashboard '{filename}' should have panels"
+                    )
+                    assert "uid" in dashboard, (
+                        f"Dashboard '{filename}' should have a uid"
+                    )
+                    assert dashboard["uid"].startswith("ufawkesobs-service-"), (
+                        f"Dashboard '{filename}' uid should start with 'ufawkesobs-service-'"
+                    )
 
                     # Check template variables - service dashboards should have service and instance
                     templating = dashboard.get("templating", {})
                     variables = templating.get("list", [])
                     var_names = [v.get("name", "") for v in variables]
-                    assert "datasource" in var_names, f"Dashboard '{filename}' should have datasource variable"
-                    assert "service" in var_names, f"Dashboard '{filename}' should have service variable"
+                    assert "datasource" in var_names, (
+                        f"Dashboard '{filename}' should have datasource variable"
+                    )
+                    assert "service" in var_names, (
+                        f"Dashboard '{filename}' should have service variable"
+                    )
 
                 except json.JSONDecodeError as e:
                     pytest.fail(f"Service dashboard '{filename}' has invalid JSON: {e}")
 
-        print(f"✅ All {len(SERVICE_DASHBOARD_FILES)} service dashboard JSON files are valid")
+        print(
+            f"✅ All {len(SERVICE_DASHBOARD_FILES)} service dashboard JSON files are valid"
+        )
 
     def test_service_dashboard_uids_unique(self):
         """Test that all service dashboard UIDs are unique."""
@@ -515,14 +587,28 @@ class TestNewServiceDashboards:
             panel_titles = [p.get("title", "").lower() for p in panels]
 
             # Check for Golden Signals
-            has_traffic = any("traffic" in title or "request" in title or "rps" in title for title in panel_titles)
-            has_latency = any("latency" in title or "duration" in title or "p99" in title or "p95" in title for title in panel_titles)
+            has_traffic = any(
+                "traffic" in title or "request" in title or "rps" in title
+                for title in panel_titles
+            )
+            has_latency = any(
+                "latency" in title
+                or "duration" in title
+                or "p99" in title
+                or "p95" in title
+                for title in panel_titles
+            )
             has_errors = any("error" in title for title in panel_titles)
-            has_saturation = any("saturation" in title or "cpu" in title or "memory" in title for title in panel_titles)
+            has_saturation = any(
+                "saturation" in title or "cpu" in title or "memory" in title
+                for title in panel_titles
+            )
 
             assert has_traffic, "Service overview should have Traffic metric panel"
             assert has_latency, "Service overview should have Latency metric panel"
             assert has_errors, "Service overview should have Errors metric panel"
-            assert has_saturation, "Service overview should have Saturation metric panel"
+            assert has_saturation, (
+                "Service overview should have Saturation metric panel"
+            )
 
         print("✅ Service overview dashboard includes Golden Signals")
