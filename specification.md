@@ -1,17 +1,17 @@
-# Specification — M2-02: GitOps Standards
+# Specification — M2-03: Publish and Verify Platform Documentation
 
-**Source:** GitHub Issue #63
+**Source:** GitHub Issue #74
 **Priority:** P0
-**Labels:** `repo-standards`
+**Labels:** `documentation`
 
 ---
 
 ## Problem Statement
 
-uFawkesObs lacks standard repository metadata and automation. Dependabot is not configured
-for Docker image updates, FUNDING.yml uses incorrect syntax, CHANGELOG.md does not exist,
-and no semantic version tag has been applied. These gaps make the repository harder to
-maintain and less discoverable.
+Platform documentation files must be verified and published. ARCHITECTURE.md,
+KNOWN_LIMITATIONS.md, and CHANGE_IMPACT_MAP.md exist but may contain stale paths,
+outdated version references, or missing cross-links. A final pass ensures these
+three core docs are accurate, complete, and pass validation gates.
 
 ---
 
@@ -19,37 +19,33 @@ maintain and less discoverable.
 
 ### Functional Requirements
 
-1. **FR-1:** `.github/dependabot.yml` configured with both Docker and GitHub Actions ecosystems,
-   weekly update schedule
-2. **FR-2:** `.github/FUNDING.yml` exists with `github: [paruff]` (array format)
-3. **FR-3:** `CHANGELOG.md` at repo root in Keep a Changelog format with initial v0.1.0 entry
-4. **FR-4:** `.github/CODEOWNERS` exists with `* @paruff`
-5. **FR-5:** Git tag `v0.1.0` applied to current main
-6. **FR-6:** `good-first-issue` label created and applied to 3–5 open issues
+1. **FR-1:** `docs/ARCHITECTURE.md` must map OTel Collector pipelines, service ports,
+   container dependencies, and all configuration file paths with current values from
+   `compose.yaml`
+2. **FR-2:** `docs/KNOWN_LIMITATIONS.md` must document storage limits, retention behaviors,
+   authentication gaps, and development setup caveats
+3. **FR-3:** `docs/CHANGE_IMPACT_MAP.md` must map cross-service and cross-plane effects
+   with correct file paths
 
 ### Non-functional Requirements
 
-7. **NFR-1:** All YAML files pass `yamllint`
-8. **NFR-2:** `CHANGELOG.md` passes `markdownlint`
-9. **NFR-3:** Tag follows semver convention (`vMAJOR.MINOR.PATCH`)
+4. **NFR-1:** All three docs pass `markdownlint`
+5. **NFR-2:** All file paths referenced in CHANGE_IMPACT_MAP.md must resolve to actual files
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `.github/dependabot.yml` includes Docker and GitHub Actions ecosystems
-- [ ] `.github/FUNDING.yml` uses `github: [paruff]` array format
-- [ ] `CHANGELOG.md` exists with v0.1.0 initial release entry
-- [ ] `.github/CODEOWNERS` exists with `* @paruff`
-- [ ] Tag `v0.1.0` applied to main
-- [ ] `good-first-issue` label exists on GitHub
-- [ ] 3–5 issues have `good-first-issue` label applied
+- [ ] `docs/ARCHITECTURE.md` exists and passes markdownlint
+- [ ] `docs/KNOWN_LIMITATIONS.md` exists and passes markdownlint
+- [ ] `docs/CHANGE_IMPACT_MAP.md` exists and passes markdownlint
+- [ ] All file paths in CHANGE_IMPACT_MAP.md are verified against actual filesystem paths
 
 ---
 
 ## Out of Scope
 
-- CONTRIBUTING.md and CODE_OF_CONDUCT.md (M2-01, issue #71)
-- Issue templates (M2-01)
-- Repository description and topics (M2-04, issue #75)
-- CI badge in README (M2-04)
+- Creating new documentation files beyond the three target docs
+- Adding new limitations or architecture changes
+- Updating README.md or GitHub metadata (M2-04)
+- Adding version badge or CI status badge (M2-04)

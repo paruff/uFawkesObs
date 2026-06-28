@@ -1,42 +1,36 @@
-# Review Report — M2-02: GitOps Standards
+# Review Report — M2-03: Publish and Verify Platform Documentation
 
 ## Correctness
 
 | Requirement | Status | Notes |
 |---|---|---|
-| FR-1: dependabot with Docker + GHA | ✅ | Both ecosystems with weekly schedule |
-| FR-2: FUNDING.yml array format | ✅ | `github: [paruff]` |
-| FR-3: CHANGELOG.md exists | ✅ | Keep a Changelog, v0.1.0 + Unreleased |
-| FR-4: CODEOWNERS exists | ✅ | Already present: `* @paruff` |
-| FR-5: v0.1.0 tag applied | ✅ | Annotated tag on main, pushed |
-| FR-6: good-first-issue label | ✅ | Applied to 5 issues (#71, #75, #84, #79, #78) |
+| FR-1: ARCHITECTURE.md maps pipelines, ports, deps | ✅ | Correct versions, ports, and config paths |
+| FR-2: KNOWN_LIMITATIONS.md covers limits + auth | ✅ | 12 limitations across 7 categories |
+| FR-3: CHANGE_IMPACT_MAP.md with correct paths | ✅ | All 24 paths verified; 3 stale paths fixed |
 
 ## Scope Check
 
 | Check | Status |
 |---|---|
-| No changes outside M2-02 scope | ✅ PASS |
-| No compose.yaml, config/, dashboards/ touched | ✅ PASS |
-| No scripts/ or tests/ modified | ✅ PASS |
+| No changes to compose.yaml, config/, scripts/ | ✅ PASS |
+| No changes to dashboards/ or tests/ | ✅ PASS |
+| Only docs/ modified | ✅ PASS |
 
 ## Maintainability
 
 | Check | Status |
 |---|---|
-| CHANGELOG follows Keep a Changelog v1.1.0 | ✅ |
-| YAML files pass yamllint | ✅ |
-| CHANGELOG passes markdownlint | ✅ |
-| Following existing patterns (no new conventions introduced) | ✅ |
+| All three docs pass markdownlint | ✅ |
+| File paths resolve to actual files/directories | ✅ |
+| Cross-references between docs (ARCHITECTURE → CHANGE_IMPACT_MAP → KNOWN_LIMITATIONS) | ✅ |
 
 ## Risk Assessment
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| FUNDING.yml syntax error | Low | `[paruff]` is standard GitHub array format — verified |
-| Tag applied to wrong commit | Low | Tagged main `014f710` which is merge of PR #127 |
-| Duplicate label application | None | `gh issue edit --add-label` is idempotent |
-| Deps outdated | None | Dependabot will now auto-create PRs for Docker images |
+| Stale file paths in docs cause confusion | Low | All 24 paths verified; 3 stale ones fixed |
+| Docs drift from compose.yaml | None | Fixed stale paths; versions already synced in M1.5 |
 
 ## Result
 
-**APPROVED** — No issues found. Ready for PR.
+**APPROVED** — All criteria met. Ready for PR.

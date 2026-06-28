@@ -166,13 +166,13 @@
 
 - **Description:** Document current platform metrics, limits, and service inter-dependencies.
 - **Backlog Issue:** #74
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #129)
 - **Tasks:**
-  1. Author `docs/ARCHITECTURE.md` mapping OTel Collector pipelines, service ports, and container dependencies. (Architecture doc already exists but needs version sync — see M1.5-02)
-  2. Document `docs/KNOWN_LIMITATIONS.md` noting storage limits, retention behaviors, and development setups.
-  3. Establish `docs/CHANGE_IMPACT_MAP.md` mapping cross-service effects.
+  1. Verified `docs/ARCHITECTURE.md` — versions, ports, config paths all match compose.yaml (synced in M1.5)
+  2. Verified `docs/KNOWN_LIMITATIONS.md` — 12 limitations across 7 categories, comprehensive
+  3. Fixed `docs/CHANGE_IMPACT_MAP.md` — corrected 3 stale file paths (RUNBOOKS.md→runbooks/, ai-rules.yml→rules/ai-rules.yml, run-acceptance-tests.sh→tests/acceptance/)
 - **Acceptance Criteria:**
-  - `docs/ARCHITECTURE.md`, `docs/KNOWN_LIMITATIONS.md`, and `docs/CHANGE_IMPACT_MAP.md` are present and valid markdown.
+  - [x] `docs/ARCHITECTURE.md`, `docs/KNOWN_LIMITATIONS.md`, and `docs/CHANGE_IMPACT_MAP.md` are present and valid markdown
 
 ### Task M2-04: Add Repository Metadata, Topics, and CI Badge
 
