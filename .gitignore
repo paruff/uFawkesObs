@@ -48,3 +48,11 @@ graphify-out
 
 # Agent memory/cache databases
 .headroom/
+
+# Feature lifecycle working files (overwritten per-feature, cause merge conflicts)
+specification.md
+design.md
+tasks.json
+build-report.md
+test-report.md
+review-report.md
