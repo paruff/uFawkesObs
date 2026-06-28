@@ -276,12 +276,13 @@
 
 - **Description:** Provide examples for developers to integrate application metrics/spans into the central OTel collector.
 - **Backlog Issue:** #77
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
-  1. Author `docs/examples/uFawkesDevX-integration.md`.
-  2. Provide code snippets (Python/Node/Go) explaining standard OpenTelemetry SDK setup pointing to uFawkesObs.
+  1. Verified `docs/examples/uFawkesDevX-integration.md` exists and is comprehensive (335 lines)
+  2. Covers: OTLP SDK setup (Go/Python/Node/Java), auto-log collection via Alloy, Prometheus scrape config, Grafana verification, troubleshooting, cross-plane impact
+  3. Passes markdownlint
 - **Acceptance Criteria:**
-  - `docs/examples/uFawkesDevX-integration.md` exists.
+  - [x] `docs/examples/uFawkesDevX-integration.md` exists.
 
 ### Task M3-03: Register uFawkesObs in Backstage Catalog
 
