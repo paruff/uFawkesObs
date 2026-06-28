@@ -265,12 +265,12 @@
 
 - **Description:** Guide developer teams on how to stream pipeline lifecycle tracing to uFawkesObs Tempo.
 - **Backlog Issue:** #76
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #131)
 - **Tasks:**
-  1. Author `docs/examples/uFawkesPipe-integration.md`.
-  2. Provide clear examples of export headers, OTLP endpoint parameters (`otel-collector:4317`), and trace visualization procedures in Grafana.
+  1. Verified `docs/examples/uFawkesPipe-integration.md` exists and is comprehensive (323 lines)
+  2. Covers: OTLP endpoint, network setup, Jenkins OTEL plugin, Prometheus scrape, Grafana verification, troubleshooting
 - **Acceptance Criteria:**
-  - `docs/examples/uFawkesPipe-integration.md` exists.
+  - [x] `docs/examples/uFawkesPipe-integration.md` exists.
 
 ### Task M3-02: Add uFawkesDevX Developer Telemetry Integration Guide
 
