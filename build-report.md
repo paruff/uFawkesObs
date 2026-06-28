@@ -1,40 +1,44 @@
-# Build Report — OBS-AI-04: AI Observability Documentation
+# Build Report — M2-02: GitOps Standards
 
 ## Summary
 
-Created AI observability documentation suite covering the end-to-end AI metrics pipeline.
-Updated AGENTS.md with correct service versions and AI references. Synced otel-collector
-skill with actual pipeline config. Added AI entries to CHANGE_IMPACT_MAP.md.
+Implemented cross-repo GitOps standards as defined in issue #63. Updated existing
+.github/ metadata files, created CHANGELOG.md, applied v0.1.0 semver tag, and
+created good-first-issue labels for newcomer-friendly issues.
 
 ## Files Changed
 
-| File | Action | Purpose |
+| File | Action | Details |
 |------|--------|---------|
-| `docs/ai-observability-guide.md` | **Create** | Full AI observability reference guide |
-| `AGENTS.md` | Update | Fixed version table (Loki 3.3.2, Grafana 12.3.7, AM 0.28.0); added AI guide to context files |
-| `.agents/skills/otel-collector/SKILL.md` | Update | Pipeline map, exporter refs, AI pipeline section synced to actual config |
-| `docs/CHANGE_IMPACT_MAP.md` | Update | Added AI dashboard and OTel AI processor entries; added dashboards/ section |
-
-Also updated specification.md, design.md, tasks.json for OBS-AI-04 lifecycle.
+| `.github/dependabot.yml` | **Update** | Added Docker ecosystem alongside existing GitHub Actions |
+| `.github/FUNDING.yml` | **Update** | Fixed syntax: `github: paruff` → `github: [paruff]` |
+| `CHANGELOG.md` | **Create** | Keep a Changelog v1.1.0 format with v0.1.0 and Unreleased sections |
+| `specification.md` | **Create** | Lifecycle input for M2-02 |
+| `design.md` | **Create** | Lifecycle input for M2-02 |
+| `tasks.json` | **Create** | Lifecycle input for M2-02 with 7 tasks |
 
 ## Tasks Completed
 
-| ID | Task | Status |
-|----|------|--------|
-| T1 | Create docs/ai-observability-guide.md | ✅ Done |
-| T2 | Update AGENTS.md version table and AI refs | ✅ Done |
-| T3 | Update otel-collector skill with actual AI pipeline config | ✅ Done |
-| T4 | Update CHANGE_IMPACT_MAP.md with AI entries | ✅ Done |
-| T5 | Validate: markdownlint and unit tests pass | ✅ Done |
+| ID | Task | Status | Notes |
+|----|------|--------|-------|
+| T1 | Update dependabot.yml with Docker ecosystem | ✅ | Added `docker` ecosystem with weekly schedule |
+| T2 | Fix FUNDING.yml syntax to array format | ✅ | Changed to `github: [paruff]` |
+| T3 | Create CHANGELOG.md | ✅ | Keep a Changelog format, v0.1.0 covers all work to date |
+| T4 | Verify CODEOWNERS exists | ✅ | Already present with `* @paruff` |
+| T5 | Apply v0.1.0 tag | ✅ | `git tag -a v0.1.0` on main & pushed to origin |
+| T6 | Create good-first-issue label and apply | ✅ | Label existed; applied to #71, #75, #84, #79, #78 |
+| T7 | Validate: yamllint, markdownlint, tests | ✅ | All pass |
 
 ## Validation Results
 
 | Check | Result |
 |-------|--------|
-| markdownlint | ✅ PASS |
-| yamllint | ✅ PASS (pre-existing warnings) |
-| Unit tests (239) | ✅ PASS |
+| `yamllint .github/dependabot.yml` | ✅ PASS |
+| `yamllint .github/FUNDING.yml` | ✅ PASS |
+| `markdownlint CHANGELOG.md` | ✅ PASS |
+| `pytest tests/unit/` (239 tests) | ✅ 239/239 PASS |
 
-## Blockers
+## Blockers or Problems
 
-None.
+None. All files already existed or were created/updated cleanly.
+Tag `v0.1.0` was applied to main HEAD (commit `014f710`).
