@@ -41,13 +41,23 @@ jobs:
           path: tests/unit/reports/
           if-no-files-found: ignore
 
-  # ─── Compose Smoke Test ──────────────────────────────────────────────────
-  compose-smoke:
-    name: Compose Smoke
+  # ─── Acceptance Smoke Tests (replaces compose-smoke) ─────────────────────
+  acceptance-smoke:
+    name: Acceptance Smoke
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/acceptance/requirements.txt
 
       - name: Build and start core
         run: |
@@ -55,14 +65,23 @@ jobs:
           chmod -R 777 data/
           docker compose --profile core up -d --build
 
-      - name: Wait for services
+      - name: Wait for services to stabilize
         run: sleep 90
 
-      - name: Verify service health
+      - name: Run acceptance smoke tests
         run: |
-          curl -f http://localhost:3100/ready
-          curl -f http://localhost:9090/-/healthy
-          curl -f http://localhost:3000/api/health
+          pytest tests/acceptance/ -m "smoke" -v --tb=short \
+            --stack-mode=existing \
+            --junit-xml=reports/acceptance-smoke.xml \
+            --evidence-dir=reports/acceptance-smoke-evidence
+
+      - name: Upload smoke test evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-smoke-evidence
+          path: reports/acceptance-smoke-evidence/
+          if-no-files-found: ignore
 
       - name: Shutdown
         if: always()
@@ -73,7 +92,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [compose-smoke]
+    needs: [acceptance-smoke]
     steps:
       - uses: actions/checkout@v7
 
@@ -163,7 +182,7 @@ jobs:
     name: Golden Path App
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [compose-smoke]
+    needs: [acceptance-smoke]
     steps:
       - uses: actions/checkout@v7
 
