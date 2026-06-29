@@ -37,6 +37,10 @@ import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
 import tests.acceptance.steps.dashboard_steps as _dashboard_steps
 import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
 import tests.acceptance.steps.slo_steps as _slo_steps
+import tests.acceptance.workloads.dora_events as _dora_events
+import tests.acceptance.workloads.web_api as _web_api
+import tests.acceptance.workloads.batch_job as _batch_job
+import tests.acceptance.workloads.log_emitter as _log_emitter
 
 for _step_mod in [
     _shared_steps,
@@ -46,6 +50,10 @@ for _step_mod in [
     _dashboard_steps,
     _multi_plane_steps,
     _slo_steps,
+    _dora_events,
+    _web_api,
+    _batch_job,
+    _log_emitter,
 ]:
     for _name in dir(_step_mod):
         if _name.startswith("pytestbdd_stepdef_") or _name.startswith(
