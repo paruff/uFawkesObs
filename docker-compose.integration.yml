@@ -1,0 +1,65 @@
+---
+# SPDX-License-Identifier: Apache-2.0
+# uFawkesObs — External Integration Compose Reference
+#
+# This file demonstrates how external uFawkes planes (uFawkesPipe, uFawkesDevX, etc.)
+# can join the observability-lab network to send telemetry to uFawkesObs.
+#
+# Usage:
+#   1. Start uFawkesObs core stack first:  docker compose --profile core up -d
+#   2. In external plane repo, reference this network as external:
+#      networks:
+#        observability:
+#          external: true
+#          name: observability-lab
+#   3. Deploy external plane services onto the same network
+#
+# For M4+ DORA integration, external planes also join the shared backbone network:
+#   networks:
+#     fawkes-backbone-net:
+#       external: true
+#       name: ufawkes-resources_fawkes-backbone-net
+#
+# This file is for REFERENCE ONLY — do not deploy this file directly.
+
+version: "3.9"
+
+services:
+  # This file is a REFERENCE TEMPLATE for external planes (uFawkesPipe, uFawkesDevX, etc.)
+  # to join the uFawkesObs observability-lab network.
+  #
+  # DO NOT DEPLOY THIS FILE DIRECTLY.
+  #
+  # Instead, copy the network configuration and adapt the example services below
+  # into your plane's own docker-compose.yml.
+  #
+  # Minimum required in external plane's compose.yaml:
+  #   networks:
+  #     observability:
+  #       external: true
+  #       name: observability-lab
+
+  # Placeholder no-op service to satisfy Docker Compose schema validation
+  # Remove this when adding real services.
+  integration-placeholder:
+    image: alpine:3.20
+    container_name: integration-placeholder
+    command: ["sleep", "infinity"]
+    profiles: ["placeholder"]
+    networks:
+      - observability
+    deploy:
+      resources:
+        limits:
+          cpus: "0.01"
+          memory: 4M
+
+networks:
+  observability:
+    external: true
+    name: observability-lab
+
+  # M4+ DORA/Ecosystem shared backbone (uFawkesRes PostgreSQL)
+  fawkes-backbone-net:
+    external: true
+    name: ufawkes-resources_fawkes-backbone-net

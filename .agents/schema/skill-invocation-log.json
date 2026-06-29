@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Skill Invocation Log",
+  "description": "Schema for logging agent invocations, skills loaded, findings, decisions, and blockers",
+  "type": "object",
+  "required": ["agent", "session_id", "skills_loaded", "findings", "decision", "blockers"],
+  "properties": {
+    "agent": {
+      "type": "string",
+      "description": "Name of the agent that produced the log entry"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique identifier for the agent session"
+    },
+    "skills_loaded": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of skills loaded during this session"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "actionable", "manual_review_needed"],
+        "properties": {
+          "description": { "type": "string" },
+          "actionable": { "type": "boolean" },
+          "manual_review_needed": { "type": "boolean" }
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "description": "Summary of the key decision made"
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Any blockers or unresolved issues"
+    }
+  }
+}
