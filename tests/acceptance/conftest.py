@@ -38,6 +38,12 @@ import tests.acceptance.steps.dashboard_steps as _dashboard_steps
 import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
 import tests.acceptance.steps.slo_steps as _slo_steps
 import tests.acceptance.steps.chaos_steps as _chaos_steps
+import tests.acceptance.steps.prometheus_rules_steps as _prometheus_rules_steps
+import tests.acceptance.steps.ai_observability_steps as _ai_observability_steps
+import tests.acceptance.steps.core_substrate_steps as _core_substrate_steps
+import tests.acceptance.steps.nonfunctional_requirements_steps as _nonfunctional_requirements_steps
+import tests.acceptance.steps.repo_hardening_steps as _repo_hardening_steps
+import tests.acceptance.steps.adr_docs_steps as _adr_docs_steps
 import tests.acceptance.workloads.dora_events as _dora_events
 import tests.acceptance.workloads.web_api as _web_api
 import tests.acceptance.workloads.batch_job as _batch_job
@@ -52,6 +58,12 @@ for _step_mod in [
     _multi_plane_steps,
     _slo_steps,
     _chaos_steps,
+    _prometheus_rules_steps,
+    _ai_observability_steps,
+    _core_substrate_steps,
+    _nonfunctional_requirements_steps,
+    _repo_hardening_steps,
+    _adr_docs_steps,
     _dora_events,
     _web_api,
     _batch_job,

@@ -10,6 +10,8 @@ import time
 
 import pytest
 import requests
+import yaml
+from pathlib import Path
 from pytest_bdd import given, then, when, parsers
 
 from tests.acceptance.runtime import ObservabilityStack
@@ -24,6 +26,16 @@ def core_stack_is_running(stack: ObservabilityStack) -> None:
     health = stack.wait_for_healthy()
     assert health.all_healthy, f"Stack not healthy:\n{health.summary()}"
     print(health.summary())
+
+
+@given(parsers.parse('the YAML file "{file_path}" is loaded'))
+def yaml_file_is_loaded(file_path: str, stack: ObservabilityStack) -> None:
+    """Load a YAML file and store it in context for later steps."""
+    path = Path(stack.compose_dir) / file_path
+    assert path.exists(), f"YAML file '{file_path}' not found at {path}"
+    content = yaml.safe_load(path.read_text())
+    pytest._step_context = {"yaml_content": content, "yaml_path": file_path}
+    print(f"✅ Loaded YAML: {file_path}")
 
 
 @given("the stack has been running for at least 30 seconds")
