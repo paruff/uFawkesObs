@@ -1,8 +1,14 @@
 """
 Step definitions for Prometheus Recording and Alert Rules (OBS-R) feature.
+
+Parses rule YAML files directly from config/prometheus/rules/ for offline testing.
 """
 
 from __future__ import annotations
+
+import yaml
+from pathlib import Path
+from typing import Dict
 
 import pytest
 from pytest_bdd import given, then, when, parsers
@@ -11,16 +17,31 @@ from tests.acceptance.runtime import ObservabilityStack
 
 
 @given('the directory "config/prometheus/rules" exists')
-def prometheus_rules_dir_exists() -> None:
+def prometheus_rules_dir_exists(stack: ObservabilityStack) -> None:
     """Assert Prometheus rules directory exists."""
-    pass  # Directory existence is implicit in YAML loading
+    rules_dir = Path(stack.compose_dir) / "config" / "prometheus" / "rules"
+    assert rules_dir.exists() and rules_dir.is_dir(), (
+        f"Rules directory not found: {rules_dir}"
+    )
+
+
+def _load_all_rules(stack: ObservabilityStack) -> Dict:
+    """Load all rule files from config/prometheus/rules/ and parse them."""
+    rules_dir = Path(stack.compose_dir) / "config" / "prometheus" / "rules"
+    all_groups = []
+
+    for rule_file in rules_dir.glob("*.yml"):
+        content = yaml.safe_load(rule_file.read_text())
+        if content and "groups" in content:
+            all_groups.extend(content["groups"])
+
+    return {"groups": all_groups}
 
 
 @when("I load all Prometheus rules")
 def load_prometheus_rules(stack: ObservabilityStack) -> None:
-    """Load all Prometheus rule files and store in context."""
-    promql = stack.promql()
-    rules = promql.rules()
+    """Load all Prometheus rule files from disk and store in context."""
+    rules = _load_all_rules(stack)
     pytest._step_context = {"rules_result": rules}
 
 
@@ -31,8 +52,6 @@ def load_prometheus_rules(stack: ObservabilityStack) -> None:
 )
 def rules_dir_contains_file(pattern: str, stack: ObservabilityStack) -> None:
     """Assert a rule file exists matching the pattern."""
-    from pathlib import Path
-
     rules_dir = Path(stack.compose_dir) / "config" / "prometheus" / "rules"
     matching = list(rules_dir.glob(pattern))
     assert len(matching) > 0, f"No files matching '{pattern}' in {rules_dir}"
@@ -77,6 +96,33 @@ def alert_rule_exists(rule_name: str) -> None:
 
     assert found, f"Alert rule '{rule_name}' not found in Prometheus rules"
     print(f"✅ Alert rule '{rule_name}' found")
+
+
+@then(
+    parsers.parse(
+        'alert rule "{rule_name}" should have label "{label}" equal to "{value}"'
+    )
+)
+def alert_rule_has_label(
+    rule_name: str, label: str, value: str, stack: ObservabilityStack
+) -> None:
+    """Assert an alert rule has a specific label value."""
+    ctx = getattr(pytest, "_step_context", {})
+    rules_data = ctx.get("rules_result", {})
+    groups = rules_data.get("groups", [])
+
+    for group in groups:
+        for rule in group.get("rules", []):
+            if rule.get("alert") == rule_name or rule.get("name") == rule_name:
+                rule_labels = rule.get("labels", {})
+                assert rule_labels.get(label) == value, (
+                    f"Alert rule '{rule_name}' has label '{label}' = '{rule_labels.get(label)}', "
+                    f"expected '{value}'"
+                )
+                print(f"✅ Alert rule '{rule_name}' has label '{label}' = '{value}'")
+                return
+
+    pytest.fail(f"Alert rule '{rule_name}' not found")
 
 
 @then("all recording rules should be guarded with or vector(0)")

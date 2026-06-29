@@ -16,6 +16,10 @@ from typing import Iterator, Optional
 import pytest
 import requests
 
+from tests.acceptance.evidence.collector import (
+    EvidenceCollector,
+    get_evidence_collector,
+)
 from tests.acceptance.runtime import (
     ObservabilityStack,
     GrafanaClient,
@@ -229,6 +233,16 @@ def evidence_dir(request) -> Optional[Path]:
     if path:
         return Path(path)
     return None
+
+
+@pytest.fixture(scope="function")
+def evidence_collector(request) -> EvidenceCollector:
+    """Get an EvidenceCollector instance for capturing test evidence.
+
+    Uses the --evidence-dir CLI option. Returns a no-op collector if
+    --evidence-dir is not specified.
+    """
+    return get_evidence_collector(request)
 
 
 # ──────────────────────────────────────────────────────────────────────
