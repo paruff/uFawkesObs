@@ -28,6 +28,22 @@ def core_stack_is_running(stack: ObservabilityStack) -> None:
     print(health.summary())
 
 
+@given(parsers.parse('the directory "{dir_path}" should exist'))
+def directory_should_exist(dir_path: str, stack: ObservabilityStack) -> None:
+    """Assert a directory exists."""
+    path = Path(stack.compose_dir) / dir_path
+    assert path.exists() and path.is_dir(), (
+        f"Directory '{dir_path}' does not exist at {path}"
+    )
+    print(f"✅ Directory exists: {dir_path}")
+
+
+@then(parsers.parse('the directory "{dir_path}" should exist'))
+def then_directory_should_exist(dir_path: str, stack: ObservabilityStack) -> None:
+    """Assert a directory exists (Then variant)."""
+    directory_should_exist(dir_path, stack)
+
+
 @given(parsers.parse('the YAML file "{file_path}" is loaded'))
 def yaml_file_is_loaded(file_path: str, stack: ObservabilityStack) -> None:
     """Load a YAML file and store it in context for later steps."""

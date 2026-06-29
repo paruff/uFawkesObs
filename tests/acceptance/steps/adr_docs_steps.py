@@ -17,10 +17,11 @@ from tests.acceptance.runtime import ObservabilityStack
 
 
 @then(parsers.parse('git tag "{tag}" should exist'))
-def then_git_tag_exists(project_root, tag: str) -> None:
+def then_git_tag_exists(stack: ObservabilityStack, tag: str) -> None:
     """Assert that a specific git tag exists in the repository."""
     if not shutil.which("git"):
         pytest.skip("git not available in this environment")
+    project_root = stack.compose_dir
     result = subprocess.run(
         ["git", "tag", "-l", tag],
         cwd=str(project_root),

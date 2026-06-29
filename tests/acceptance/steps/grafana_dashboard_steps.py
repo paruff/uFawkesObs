@@ -4,9 +4,26 @@ Step definitions for Grafana dashboard feature.
 Contains step for validating datasource UID format in the provisioning YAML.
 """
 
-from pytest_bdd import then
+from __future__ import annotations
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from pytest_bdd import then, given, parsers
 
 import yaml
+
+if TYPE_CHECKING:
+    from tests.acceptance.runtime import ObservabilityStack
+
+
+@given(parsers.parse('the directory "{dir_path}" should exist'))
+def directory_exists(dir_path: str, stack: ObservabilityStack) -> None:
+    """Assert a directory exists."""
+    path = Path(stack.compose_dir) / dir_path
+    assert path.exists() and path.is_dir(), (
+        f"Directory '{dir_path}' does not exist at {path}"
+    )
+    print(f"✅ Directory exists: {dir_path}")
 
 
 @then("each provisioned datasource should have a string uid")

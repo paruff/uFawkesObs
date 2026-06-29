@@ -5,7 +5,6 @@ Step definitions for Non-Functional Requirements (OBS-N) feature.
 from __future__ import annotations
 
 import pytest
-import yaml
 from pathlib import Path
 from pytest_bdd import given, then, when, parsers
 
@@ -90,6 +89,5 @@ def yaml_file_loaded(file_path: str) -> None:
 def yaml_has_key(key: str) -> None:
     """Assert YAML has a specific top-level key."""
     ctx = getattr(pytest, "_step_context", {})
-    content = ctx.get("file_content", "")
-    data = yaml.safe_load(content) if content else {}
-    assert key in data, f"Key '{key}' not found in YAML"
+    content = ctx.get("yaml_content", {})
+    assert key in content, f"Key '{key}' not found in YAML"

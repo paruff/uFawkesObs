@@ -7,7 +7,12 @@ from __future__ import annotations
 import pytest
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from pytest_bdd import given, then, when, parsers
+
+if TYPE_CHECKING:
+    from tests.acceptance.runtime import ObservabilityStack
 
 
 @given("the file '.github/dependabot.yml' exists")
@@ -55,15 +60,17 @@ def codeowners_exists() -> None:
     assert p.exists(), "Repository requires CODEOWNERS file"
 
 
-@given("a git tag 'v0.1.0' exists")
-def git_tag_exists(tag: str = "v0.1.0") -> None:
+@then(parsers.parse('git tag "{tag}" should exist'))
+def git_tag_exists(tag: str, stack: "ObservabilityStack") -> None:
     """Assert a specific git tag exists."""
+    project_root = stack.compose_dir if stack else Path(".")
     result = subprocess.run(
         ["git", "rev-parse", tag],
+        cwd=project_root,
         capture_output=True,
         text=True,
     )
-    assert result.returncode == 0, f"Git tag '{tag}' does not exist"
+    assert result.returncode == 0, f"Git tag '{tag}' does not exist: {result.stderr}"
 
 
 @then(parsers.parse('the file "CHANGELOG.md" should exist'))
