@@ -1,0 +1,128 @@
+name: Chaos Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # 2am daily
+  workflow_dispatch:  # Allow manual trigger for debugging
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: chaos-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chaos-tests:
+    name: Chaos Resilience Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GRAFANA_ADMIN_USER: admin
+      # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r tests/acceptance/requirements.txt
+          pip install pytest pytest-bdd requests opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+
+      - name: Create data directories
+        run: |
+          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana}
+          chmod -R 777 data/
+
+      - name: Start core stack
+        run: |
+          docker compose --profile core up -d
+          echo "Stack started, waiting for services to stabilize..."
+
+      - name: Wait for all services healthy
+        run: |
+          python -c "
+          import time, requests
+          services = [
+            ('Prometheus', 'http://localhost:9090/-/ready'),
+            ('Alertmanager', 'http://localhost:9093/-/healthy'),
+            ('Loki', 'http://localhost:3100/ready'),
+            ('Tempo', 'http://localhost:3200/ready'),
+            ('Grafana', 'http://localhost:3000/api/health'),
+            ('OTel Collector', 'http://localhost:8888/metrics'),
+            ('Alloy', 'http://localhost:12345/-/ready'),
+          ]
+          for name, url in services:
+              for i in range(60):
+                  try:
+                      r = requests.get(url, timeout=5)
+                      if r.status_code == 200:
+                          print(f'✅ {name} healthy ({url})')
+                          break
+                  except Exception as e:
+                      if i % 10 == 0:
+                          print(f'⏳ Waiting for {name}... ({e})')
+                  time.sleep(2)
+              else:
+                  print(f'❌ {name} failed to become healthy')
+          print('✅ All services checked')
+          "
+
+      - name: Allow steady state
+        run: sleep 30
+
+      - name: Run chaos tests
+        run: |
+          mkdir -p reports/chaos-evidence
+          pytest tests/acceptance/ \
+            -m "chaos" \
+            -v \
+            --stack-mode=existing \
+            --evidence-dir=reports/chaos-evidence \
+            --junit-xml=reports/chaos-results.xml \
+            -o junit_family=legacy 2>&1 | tee reports/chaos-output.log
+        continue-on-error: true
+
+      - name: Generate chaos evidence report
+        if: always()
+        run: |
+          python tests/acceptance/evidence/chaos_report.py \
+            --events reports/chaos-evidence/chaos-events.json \
+            --output reports/chaos-report.md || echo "⚠️ Could not generate report (no events file)"
+
+      - name: Upload chaos evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: chaos-evidence
+          path: |
+            reports/chaos-evidence/
+            reports/chaos-report.md
+            reports/chaos-results.xml
+          retention-days: 30
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose --profile core down -v
+
+      - name: Check test results
+        if: always()
+        run: |
+          if [ -f reports/chaos-results.xml ]; then
+            FAILURES=$(grep -o 'failures="[0-9]*"' reports/chaos-results.xml | grep -o '[0-9]*')
+            echo "Chaos test failures: $FAILURES"
+            if [ "$FAILURES" -gt 0 ]; then
+              echo "❌ Chaos tests have $FAILURES failures"
+            else
+              echo "✅ All chaos tests passed"
+            fi
+          else
+            echo "⚠️ No test results file found"
+          fi
