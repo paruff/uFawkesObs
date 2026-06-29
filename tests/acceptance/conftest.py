@@ -36,6 +36,12 @@ import tests.acceptance.steps.loki_steps as _loki_steps
 import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
 import tests.acceptance.steps.dashboard_steps as _dashboard_steps
 import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
+import tests.acceptance.steps.slo_steps as _slo_steps
+import tests.acceptance.steps.chaos_steps as _chaos_steps
+import tests.acceptance.workloads.dora_events as _dora_events
+import tests.acceptance.workloads.web_api as _web_api
+import tests.acceptance.workloads.batch_job as _batch_job
+import tests.acceptance.workloads.log_emitter as _log_emitter
 
 for _step_mod in [
     _shared_steps,
@@ -44,6 +50,12 @@ for _step_mod in [
     _alertmanager_steps,
     _dashboard_steps,
     _multi_plane_steps,
+    _slo_steps,
+    _chaos_steps,
+    _dora_events,
+    _web_api,
+    _batch_job,
+    _log_emitter,
 ]:
     for _name in dir(_step_mod):
         if _name.startswith("pytestbdd_stepdef_") or _name.startswith(
@@ -205,3 +217,30 @@ def evidence_dir(request) -> Optional[Path]:
     if path:
         return Path(path)
     return None
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Chaos test cleanup fixture
+# ──────────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture(scope="session", autouse=True)
+def chaos_cleanup() -> Iterator[None]:
+    """Cleanup fixture for chaos tests - restores any modified files.
+
+    This fixture runs automatically for all tests when the @chaos marker is active.
+    It ensures that any Grafana provisioning files modified during chaos tests
+    are restored on completion.
+    """
+    yield
+    # Restore any Grafana provisioning files that were backed up during chaos tests
+    from tests.acceptance.steps.chaos_steps import (
+        restore_grafana_datasource_provisioning,
+    )
+
+    try:
+        stack = ObservabilityStack()
+        restore_grafana_datasource_provisioning(stack)
+        print("✅ Chaos cleanup: Grafana provisioning files restored")
+    except Exception as e:
+        print(f"⚠️ Chaos cleanup note: {e}")

@@ -32,6 +32,33 @@ def stack_running_30s() -> None:
     time.sleep(30)
 
 
+@given("synthetic telemetry is being generated")
+def synthetic_telemetry_generated(stack: ObservabilityStack) -> None:
+    """Start a synthetic workload that generates telemetry continuously."""
+    from tests.acceptance.workloads import get_workload
+
+    workload = get_workload("web_api", otlp_endpoint="http://localhost:4318")
+    # Generate a few traces to ensure the pipeline is active
+    for _ in range(3):
+        workload.simulate_web_request()
+    print("✅ Synthetic telemetry generated and sent to OTel Collector")
+
+
+@given("the Grafana datasources are provisioned")
+def grafana_datasources_provisioned(stack: ObservabilityStack) -> None:
+    """Verify that Grafana has all expected datasources provisioned."""
+    grafana = stack.grafana()
+
+    expected_datasources = ["Prometheus", "Loki", "Tempo", "Alertmanager"]
+    for ds_name in expected_datasources:
+        ds = grafana.get_datasource_by_name(ds_name)
+        assert ds is not None, f"Expected datasource '{ds_name}' not found in Grafana"
+        assert ds.get("type") != "", f"Datasource '{ds_name}' has no type"
+        print(f"✅ Datasource '{ds_name}' provisioned")
+
+    print(f"✅ All {len(expected_datasources)} Grafana datasources are provisioned")
+
+
 @given(parsers.parse('the "{datasource}" datasource is configured in Grafana'))
 def datasource_configured(stack: ObservabilityStack, datasource: str) -> None:
     """Verify a specific datasource exists in Grafana."""
