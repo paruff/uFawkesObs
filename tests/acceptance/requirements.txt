@@ -1,8 +1,14 @@
-# Acceptance Testing Requirements
-# Python dependencies for Gherkin/BDD acceptance tests (pytest-bdd)
+# Acceptance Test Requirements
+# Python dependencies for uFawkesObs acceptance tests
 
-pytest>=7.4.3
-pytest-bdd>=6.1.1
-PyYAML>=6.0.1
-jsonschema>=4.20.0
+pytest>=8.0
+pytest-bdd>=7.0
 requests>=2.31.0
+python-dotenv>=1.0.0
+PyYAML>=6.0
+
+# OpenTelemetry SDK for sending test telemetry
+opentelemetry-api>=1.22.0
+opentelemetry-sdk>=1.22.0
+opentelemetry-exporter-otlp-proto-http>=1.22.0
+opentelemetry-exporter-otlp-proto-grpc>=1.22.0

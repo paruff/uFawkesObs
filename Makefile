@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps down logs status test-unit test-acceptance test pr
+.PHONY: help init check-env up up-apps down logs status test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -62,18 +62,40 @@ status:
 	@curl -sf http://localhost:8888/metrics > /dev/null && echo "  ✅ OTel Coll.  :8888" || echo "  ❌ OTel Coll.  :8888"
 	@curl -sf http://localhost:12345/-/ready > /dev/null && echo "  ✅ Alloy       :12345" || echo "  ❌ Alloy       :12345"
 
+## install-acceptance-deps: install acceptance test Python dependencies
+install-acceptance-deps:
+	pip install -q -r tests/acceptance/requirements.txt
+
 ## test-unit: run unit tests only
 test-unit:
 	pip install -q -r tests/unit/requirements.txt
 	pytest tests/unit/
 
-## test-acceptance: run acceptance tests (requires stack to be running: make up)
-test-acceptance:
-	@echo "Running acceptance tests — stack must already be up (run 'make up' first)"
-	./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
-	./tests/acceptance/observability-pipeline/test-alertmanager.sh
-	./tests/acceptance/observability-pipeline/test-dashboard-validation.sh
-	./tests/acceptance/observability-pipeline/test-loki-logs.sh
+## test-acceptance-smoke: run smoke acceptance tests via pytest-bdd (fast, pre-merge)
+##   Requires stack to be running (run 'make up' first)
+##   Use --stack-mode=existing to skip lifecycle management
+test-acceptance-smoke: install-acceptance-deps
+	@echo "========================================"
+	@echo "🟢 Acceptance Smoke Tests (pre-merge)"
+	@echo "========================================"
+	@pytest tests/acceptance/ -m "smoke" -v --tb=short --stack-mode=existing
+
+## test-acceptance-full: run full acceptance tests via pytest-bdd (comprehensive, post-merge)
+##   Requires stack to be running (run 'make up-apps' first)
+test-acceptance-full: install-acceptance-deps
+	@echo "========================================"
+	@echo "🟣 Acceptance Full Tests (post-merge)"
+	@echo "========================================"
+	@pytest tests/acceptance/ -m "full" -v --tb=short --stack-mode=existing \
+		--evidence-dir=tests/acceptance/reports/full
+
+## test-acceptance: run all acceptance tests via pytest-bdd (manual/local use)
+##   ⚠️  Legacy shell scripts are deprecated and will be removed in a future release
+test-acceptance: install-acceptance-deps
+	@echo "========================================"
+	@echo "🔵 Acceptance Test Suite (pytest-bdd)"
+	@echo "========================================"
+	@pytest tests/acceptance/ -m "smoke or full" -v --tb=short --stack-mode=existing
 
 ## test: run unit tests then acceptance tests (requires stack to be running: make up)
 test: test-unit test-acceptance
