@@ -35,6 +35,7 @@ import tests.acceptance.steps.otel_steps as _otel_steps
 import tests.acceptance.steps.loki_steps as _loki_steps
 import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
 import tests.acceptance.steps.dashboard_steps as _dashboard_steps
+import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
 
 for _step_mod in [
     _shared_steps,
@@ -42,6 +43,7 @@ for _step_mod in [
     _loki_steps,
     _alertmanager_steps,
     _dashboard_steps,
+    _multi_plane_steps,
 ]:
     for _name in dir(_step_mod):
         if _name.startswith("pytestbdd_stepdef_") or _name.startswith(
