@@ -40,9 +40,7 @@ groups:
       # Will be replaced with: sum(rate(gen_ai_suggestion_accepted_total[5m]))
       #                        / (sum(rate(gen_ai_suggestion_total[5m])) or vector(0))
       - record: ai:suggestion_acceptance_rate:ratio
-        expr: |
-          0
-          or vector(0)
+        expr: vector(0)
 
   # AI capability alerting rules
   # All alerts have category: ai-capability label
