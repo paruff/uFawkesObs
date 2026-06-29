@@ -280,8 +280,10 @@ def logs_queryable_after_restart(stack: ObservabilityStack, timeout: int) -> Non
                 elapsed = time.time() - start
                 print(f"✅ Logs queryable in Loki after {elapsed:.1f}s")
                 add_chaos_event(
-                    "recovery_end", "loki", f"Logs queryable after {elapsed:.1f}s",
-                    {"elapsed_seconds": elapsed, "stream_count": len(streams)}
+                    "recovery_end",
+                    "loki",
+                    f"Logs queryable after {elapsed:.1f}s",
+                    {"elapsed_seconds": elapsed, "stream_count": len(streams)},
                 )
                 return
         except requests.exceptions.ConnectionError as e:
