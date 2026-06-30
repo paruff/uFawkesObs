@@ -1,0 +1,134 @@
+# SPDX-License-Identifier: Apache-2.0
+name: Acceptance Smoke (Pre-Merge)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+  checks: write
+
+concurrency:
+  group: acceptance-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance-smoke:
+    name: Acceptance Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GRAFANA_ADMIN_USER: admin
+      # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r tests/acceptance/requirements.txt
+          pip install pytest pytest-bdd requests opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+
+      - name: Create data directories
+        run: |
+          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana}
+          chmod -R 777 data/
+
+      - name: Start core stack
+        run: |
+          docker compose --profile core up -d
+          echo "Stack started, waiting for services to stabilize..."
+
+      - name: Wait for all services healthy
+        run: |
+          python -c "
+          import time, requests
+          services = [
+            ('Prometheus', 'http://localhost:9090/-/ready'),
+            ('Alertmanager', 'http://localhost:9093/-/healthy'),
+            ('Loki', 'http://localhost:3100/ready'),
+            ('Tempo', 'http://localhost:3200/ready'),
+            ('Grafana', 'http://localhost:3000/api/health'),
+            ('OTel Collector', 'http://localhost:8888/metrics'),
+            ('Alloy', 'http://localhost:12345/-/ready'),
+          ]
+          for name, url in services:
+            for i in range(60):
+              try:
+                r = requests.get(url, timeout=5)
+                if r.status_code == 200:
+                  print(f'✅ {name} healthy ({url})')
+                  break
+              except Exception as e:
+                if i % 10 == 0:
+                  print(f'⏳ Waiting for {name}... ({e})')
+              time.sleep(2)
+            else:
+              print(f'❌ {name} failed to become healthy')
+          print('✅ All services checked')
+          "
+
+      - name: Allow steady state
+        run: sleep 30
+
+      - name: Run smoke tests
+        run: |
+          mkdir -p reports/acceptance-smoke-evidence
+          pytest tests/acceptance/ \
+            -m "smoke" \
+            -v \
+            --stack-mode=existing \
+            --evidence-dir=reports/acceptance-smoke-evidence \
+            --junit-xml=reports/acceptance-smoke.xml \
+            -o junit_family=legacy 2>&1 | tee reports/acceptance-smoke-output.log
+
+      - name: Generate runbook snippets (if evidence exists)
+        if: always()
+        run: |
+          python tests/acceptance/evidence/generate_runbook.py \
+            --evidence-dir reports/acceptance-smoke-evidence \
+            --output reports/runbook-snippets-smoke.md || echo "⚠️ Could not generate runbook snippets"
+
+      - name: Upload smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-smoke-evidence
+          path: |
+            reports/acceptance-smoke-evidence/
+            reports/runbook-snippets-smoke.md
+            reports/acceptance-smoke.xml
+            reports/acceptance-smoke-output.log
+          retention-days: 30
+
+      - name: Shutdown stack
+        if: always()
+        run: docker compose --profile core down -v
+
+      - name: Check test results
+        if: always()
+        run: |
+          if [ -f reports/acceptance-smoke.xml ]; then
+            FAILURES=$(grep -o 'failures="[0-9]*"' reports/acceptance-smoke.xml | grep -o '[0-9]*')
+            echo "Smoke test failures: $FAILURES"
+            if [ "$FAILURES" -gt 0 ]; then
+              echo "❌ Smoke tests have $FAILURES failures"
+              exit 1
+            else
+              echo "✅ All smoke tests passed"
+            fi
+          else
+            echo "⚠️ No test results file found"
+            exit 1
+          fi

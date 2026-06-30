@@ -9,6 +9,13 @@ on:
       - "compose.yaml"
       - ".env.example"
       - "dashboards/**"
+  # Trigger after acceptance-full workflow completes successfully on main
+  workflow_run:
+    workflows: ["Acceptance Full (Post-Merge)"]
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -17,6 +24,8 @@ concurrency:
   group: gitops-reconciliation-${{ github.ref }}
   cancel-in-progress: true
 
+# Only run deploy if acceptance-full passed (for workflow_run trigger)
+# For push trigger, always run (manual/override)
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
@@ -49,7 +58,13 @@ jobs:
   deploy-config-reload:
     name: Deploy (config reload)
     needs: detect-changes
-    if: needs.detect-changes.outputs.reload_changed == 'true' && needs.detect-changes.outputs.compose_changed != 'true' && needs.detect-changes.outputs.non_reloadable_config_changed != 'true'
+    # For workflow_run trigger, ensure acceptance-full passed
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'push')
+      needs.detect-changes.outputs.reload_changed == 'true' &&
+      needs.detect-changes.outputs.compose_changed != 'true' &&
+      needs.detect-changes.outputs.non_reloadable_config_changed != 'true'
     runs-on: ubuntu-latest
     outputs:
       deployment_mode: ${{ steps.summary.outputs.deployment_mode }}
@@ -179,7 +194,11 @@ jobs:
   deploy-compose-restart:
     name: Deploy (compose restart)
     needs: detect-changes
-    if: needs.detect-changes.outputs.compose_changed == 'true' || needs.detect-changes.outputs.non_reloadable_config_changed == 'true'
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'push')
+      needs.detect-changes.outputs.compose_changed == 'true' ||
+      needs.detect-changes.outputs.non_reloadable_config_changed == 'true'
     runs-on: ubuntu-latest
     environment: compose-restart
     outputs:
