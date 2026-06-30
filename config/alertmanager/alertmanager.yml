@@ -66,6 +66,14 @@ route:
       repeat_interval: 12h
       continue: false
 
+    # DORA regression/leading indicator alerts - dedicated Slack route
+    - match:
+        category: dora
+      receiver: "dora-slack"
+      group_wait: 30s
+      repeat_interval: 1h
+      continue: false
+
 # Inhibition rules - suppress notifications for certain alerts
 inhibit_rules:
   # Inhibit warning and info if same alertname with critical severity exists
@@ -103,13 +111,13 @@ receivers:
       - url: "http://host.docker.internal:5001/webhook/critical"
         send_resolved: true
         max_alerts: 0
-  # Uncomment for Slack integration (add under critical-alerts):
-  # slack_configs:
-  #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-  #     channel: '#alerts-critical'
-  #     title: '{{ .GroupLabels.alertname }}'
-  #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-  #     send_resolved: true
+    # Uncomment for Slack integration (add under critical-alerts):
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts-critical'
+    #     title: '{{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    #     send_resolved: true
 
   # Warning alerts receiver
   - name: "warning-alerts"
@@ -117,12 +125,12 @@ receivers:
       - url: "http://host.docker.internal:5001/webhook/warning"
         send_resolved: true
         max_alerts: 0
-  # Uncomment for email notifications (add under warning-alerts):
-  # email_configs:
-  #   - to: 'team@example.com'
-  #     headers:
-  #       Subject: 'Warning Alert: {{ .GroupLabels.alertname }}'
-  #     send_resolved: true
+    # Uncomment for email notifications (add under warning-alerts):
+    # email_configs:
+    #   - to: 'team@example.com'
+    #     headers:
+    #       Subject: 'Warning Alert: {{ .GroupLabels.alertname }}'
+    #     send_resolved: true
 
   # Info alerts receiver
   - name: "info-alerts"
@@ -138,3 +146,17 @@ receivers:
       - url: "http://host.docker.internal:5001/webhook/ufawkesobs-health"
         send_resolved: true
         max_alerts: 0
+
+  # DORA regression/leading indicator alerts - Slack webhook
+  - name: "dora-slack"
+    webhook_configs:
+      - url: "http://host.docker.internal:5001/webhook/dora"
+        send_resolved: true
+        max_alerts: 0
+    # Uncomment for Slack integration:
+    # slack_configs:
+    #   - api_url: ${DORA_SLACK_WEBHOOK_URL}
+    #     channel: '#dora-alerts'
+    #     title: '{{ .GroupLabels.alertname }}'
+    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    #     send_resolved: true

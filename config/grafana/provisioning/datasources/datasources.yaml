@@ -78,3 +78,27 @@ datasources:
 
     version: 1
     readOnly: true
+
+  # uFawkesRes PostgreSQL datasource for DORA metrics snapshots (provisioned by dora profile)
+  - name: uFawkesRes PostgreSQL
+    type: postgres
+    uid: ufawkesres-postgres
+    access: proxy
+    url: postgres://ufawkesres:${DORA_POSTGRES_PASSWORD}@fawkes-postgres:5432/ufawkesres?sslmode=disable
+    editable: false
+
+    # Connection validation
+    jsonData:
+      database: ufawkesres
+      maxOpenConns: 10
+      maxIdleConns: 5
+      connMaxLifetime: 300
+      postgresVersion: 1600
+      timescaledb: false
+      tlsMode: disable
+
+    secureJsonData:
+      password: ${DORA_POSTGRES_PASSWORD}
+
+    version: 1
+    readOnly: true

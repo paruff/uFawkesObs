@@ -491,6 +491,56 @@ services:
       - observability
     profiles: ["core"]
 
+# DORA metrics compute plane (connects to uFawkesDORA ingestion API and uFawkesRes Postgres)
+  otel-collector-dora:
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    container_name: otel-collector-dora
+    restart: unless-stopped
+    command: ["--config=/etc/otel/collector-dora.yaml"]
+    volumes:
+      - ./config/otel/collector-dora.yaml:/etc/otel/collector-dora.yaml:ro
+    environment:
+      - TZ=UTC
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${DORA_OTEL_ENDPOINT:-http://ufawkesdora-ingestion:4318}
+      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:-postgresql://ufawkesres:password@fawkes-postgres:5432/ufawkesres}
+    # NOTE: No depends_on for prometheus in dora profile - prometheus runs in core profile
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8888/metrics",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "otel-collector-dora"
+    labels:
+      - "plane=obstackd"
+      - "component=otel-collector"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
 networks:
   observability:
     name: observability-lab
