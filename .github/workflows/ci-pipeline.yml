@@ -69,11 +69,11 @@ jobs:
       enable-coverage-gate: false
 
   # ─── Stage 4: Tests ────────────────────────────────────────────────────
-  # Unit, integration, compose-smoke — runs on validated code
+  # Unit, integration, acceptance smoke — runs on validated code
   tests:
     name: Tests
     needs: [build]
-    uses: ./.github/workflows/ci-tests.yml
+    uses: ./.github/workflows/ci-acceptance-smoke.yml
 
   # ─── Gate: Pipeline Complete ────────────────────────────────────────────
   pipeline-complete:
