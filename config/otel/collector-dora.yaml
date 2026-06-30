@@ -1,0 +1,94 @@
+---
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 400
+    spike_limit_mib: 100
+
+  batch:
+    send_batch_size: 10000
+    timeout: 10s
+
+  filter/dora:
+    error_mode: ignore
+    metrics:
+      include:
+        match_type: regexp
+        metric_names:
+          - "dora\\..*"
+          - "cicd\\..*"
+          - "deployment\\..*"
+          - "incident\\..*"
+
+  attributes/dora:
+    actions:
+      - key: dora.environment
+        value: production
+        action: insert
+      - key: dora.platform
+        value: fawkes-idp
+        action: insert
+
+exporters:
+  debug:
+    verbosity: normal
+
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: "app_metrics"
+    const_labels:
+      service: "otel-collector-dora"
+    send_timestamps: true
+    metric_expiration: 5m
+
+  otlp/dora:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    tls:
+      insecure: true
+
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: "info"
+    metrics:
+      level: detailed
+      address: "0.0.0.0:8888"
+
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus, debug]
+
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp/tempo, debug]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [loki, debug]
+
+    metrics/dora:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/dora, attributes/dora, batch]
+      exporters: [prometheus, otlp/dora]

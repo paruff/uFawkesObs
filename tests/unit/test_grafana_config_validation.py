@@ -95,12 +95,24 @@ class TestGrafanaDatasourceBasics:
         with open(grafana_datasources_path, "r") as f:
             config = yaml.safe_load(f)
 
+        # Valid URL schemes per datasource type
+        valid_schemes = {
+            "prometheus": ["http://", "https://"],
+            "tempo": ["http://", "https://"],
+            "loki": ["http://", "https://"],
+            "alertmanager": ["http://", "https://"],
+            "postgres": ["postgres://", "postgresql://"],
+        }
+
         for ds in config["datasources"]:
             name = ds.get("name", "unknown")
             url = ds["url"]
-            # Should start with http:// or https://
-            assert url.startswith("http://") or url.startswith("https://"), (
-                f"Datasource '{name}' URL should start with http:// or https://"
+            ds_type = ds.get("type", "unknown")
+
+            # Get valid schemes for this datasource type
+            schemes = valid_schemes.get(ds_type, ["http://", "https://"])
+            assert any(url.startswith(scheme) for scheme in schemes), (
+                f"Datasource '{name}' (type: {ds_type}) URL should start with one of: {', '.join(schemes)}"
             )
             # Should contain a hostname
             assert len(url.split("://")[1]) > 0, (
