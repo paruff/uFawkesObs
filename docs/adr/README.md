@@ -20,6 +20,7 @@ Each ADR follows the format:
 | [ADR-003](ADR-003-gitops-scope.md)         | GitOps at the Configuration Layer; Push-Triggered Deployment Reconciliation | Accepted     | 2025-06-01    |
 | [ADR-004](ADR-004-grafana-12x-migration.md)| Upgrade Grafana from 10.4.5 to 12.3.7                                       | Accepted     | 2026-06-28    |
 | [ADR-005](ADR-005-prometheus-v3-migration.md)| Upgrade Prometheus from 2.55.1 to 3.5.4 LTS                                  | Accepted     | 2026-06-28    |
+| [ADR-006](ADR-006-dora-metric-definitions.md)| DORA Metric Definitions and Data Contract                                   | Accepted     | 2026-06-30    |
 
 ---
 
@@ -48,6 +49,12 @@ Angular plugins or legacy alerting.
 → [ADR-005](ADR-005-prometheus-v3-migration.md): Prometheus 2.x is EOL (since July 2025).
 The upgrade from the 2.55 bridge release to 3.5.4 LTS requires no config changes —
 uFawkesObs uses no deprecated features.
+
+**What are the DORA metric definitions and data contract?**
+→ [ADR-006](ADR-006-dora-metric-definitions.md): Defines what counts as a deployment,
+incident, and restoration in uFawkesObs telemetry. Specifies the four DORA recording
+rules, alert rules, OTLP attributes for CI/CD deployment spans, and the uFawkesDORA
+ingestion API contract.
 
 ---
 
