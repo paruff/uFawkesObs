@@ -151,5 +151,5 @@ curl http://localhost:12345/-/ready
 - Never use `localhost` in exporter endpoint URLs
 - Never add a receiver/exporter/processor without wiring it into `service.pipelines`
 - Never modify `compose.yaml` — if a port or service change is needed, flag it to Planning agent
-- AI pipeline changes (gen_ai.\*) require `model:gpt-5.1-codex` label per AGENTS.md model routing
+- AI pipeline changes (gen_ai.\*) require `model:gpt-5.1-codex` label per docs/MODEL_POLICY.md model routing
 - Commit format: `fix(otel): description (#N)` or `fix(alloy): description (#N)`
