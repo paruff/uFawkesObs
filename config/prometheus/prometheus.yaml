@@ -20,6 +20,7 @@ rule_files:
   - "/etc/prometheus/alerts.yml"
   - "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml"
   - "/etc/prometheus/rules/ai-rules.yml"
+  - "/etc/prometheus/rules/ufawkesobs-dora-metrics.yml"
 
 # Scrape configurations
 scrape_configs:
