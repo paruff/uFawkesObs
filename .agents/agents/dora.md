@@ -54,7 +54,7 @@ When rework rate > 10%:
 2. Are AGENTS.md §4 architecture rules specific enough? If no → add a counter-example to §4
 3. Is the context index in AGENTS.md §3 complete and accurate? If no → update file paths
 4. Is rework concentrated in one layer or type of change? If yes → that layer needs a skill file or stronger §4 rule
-5. Has the tech stack changed without updating AGENTS.md? If yes → update §2 and re-run onboarding agent
+5. Has the tech stack changed without updating AGENTS.md or docs/ARCHITECTURE.md? If yes → update `docs/ARCHITECTURE.md` and `docs/KNOWN_LIMITATIONS.md`
 
 ## Task: Team Archetype Assessment
 

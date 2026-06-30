@@ -277,4 +277,4 @@ All four components are included in the `core` profile — just `docker compose 
 - `dashboards/platform/ai-capabilities.json` — Grafana AI Capabilities dashboard
 - `docs/ai-runbook.md` — Runbook for responding to AI alerts
 - `docs/ADR-001-loki-version.md` / `docs/adr/ADR-004-grafana-12x-migration.md` — ADRs
-- `AGENTS.md` §10 — Model selection policy for AI-related tasks
+- `docs/MODEL_POLICY.md` — Model selection policy for AI-related tasks

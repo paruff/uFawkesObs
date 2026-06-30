@@ -1,69 +1,74 @@
-# Agent Instructions — uFawkesObs
+# AGENTS.md — uFawkesObs
 
-> Universal instructions for all agents: GitHub Copilot, VS Code agent mode, Claude.
-> uFawkesObs is the **Observability Plane** of the Fawkes IDP family.
-> It provides OpenTelemetry, Prometheus, Tempo, and Grafana via Docker Compose.
-> **Do not modify this file without maintainer approval.**
-
----
-
-## 1. What uFawkesObs Is
-
-uFawkesObs is a self-hosted, GitOps-first observability platform delivered as Docker Compose.
-It is a sub-plane of [Fawkes IDP](https://github.com/paruff/fawkes) and can be deployed
-standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (developer plane).
-
-### GitOps Reconciliation Model
-
-- Runtime reconciliation is CI-triggered from Git via `.github/workflows/deploy.yml`.
-- Pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**`
-  reconcile the target host over SSH.
-- Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
-- `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before
-  running `make up`.
-
-**Stack:**
-| Service | Version | Role |
-|---|---|---|---|
-| OpenTelemetry Collector | v0.120.0 | Telemetry ingestion and routing |
-| Prometheus | v2.55.1 | Metrics storage and querying |
-| Alertmanager | v0.28.0 | Alert routing and deduplication |
-| Tempo | v2.10.5 | Distributed tracing backend |
-| Loki | v3.3.2 | Log aggregation and storage |
-| Alloy | v1.12.2 | Log collection and shipping |
-| Grafana | v12.3.7 | Visualisation and dashboards |
-| Docker Compose | latest stable | Service orchestration |
-
-**Repository:** github.com/paruff/uFawkesObs
+> Shared template across all repos this harness operates on. Copy to each
+> repo's root and fill only the bracketed sections. Keep section numbers
+> 4, 6, 7 as-is — `review.md`, `test.md`, and `feature-flow.md` reference
+> them by number. Everything else may be trimmed to what this repo
+> actually needs; a repo with no Kubernetes, for instance, can delete
+> that line from §4 rather than leave it as dead weight.
+>
+> What's deliberately NOT here: model selection, token budgets, premium
+> request accounting. That's repo-specific operating cost, not shared
+> governance — keep it in a separate `docs/MODEL_POLICY.md` per repo if
+> needed, so this file stays portable across repos with very different
+> cost profiles (a docs-only repo and a high-volume PromQL repo shouldn't
+> share a model ladder). **uFawkesObs model policy lives in `docs/MODEL_POLICY.md`.**
 
 ---
 
-## 2. Directory & File Map
+## 1. Identity
 
-| Path                | Language    | What Lives Here                                                              | Do Not                                         |
-| ------------------- | ----------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
-| `compose.yaml`      | YAML        | Service definitions, networks, volumes                                       | Hardcode ports that conflict with other planes |
-| `config/`           | YAML        | Per-service configuration files (otel-collector, prometheus, tempo, grafana) | Put secrets or credentials here                |
-| `data/`             | Various     | Persistent volume mounts, seed dashboards, provisioning                      | Commit real telemetry data                     |
-| `scripts/`          | Bash        | Start/stop helpers, health checks, smoke tests                               | Put business logic here                        |
-| `tests/acceptance/` | YAML / Bash | Acceptance tests that verify the stack is healthy                            | Delete failing tests                           |
-| `docs/`             | Markdown    | Runbooks, architecture decisions, configuration reference                    |                                                |
+- **Repo:** paruff/uFawkesObs
+- **What this is:** The observability plane of the Fawkes IDP family — OpenTelemetry, Prometheus, Tempo, Loki, Grafana, and Alloy delivered as Docker Compose with GitOps reconciliation over SSH.
+- **Suite membership:** uFawkesAI
 
----
+## 2. Where the Agents Live
+
+Agents and skills are shared, not repo-local: `~/.config/opencode/agents/`
+and `~/.config/opencode/skills/`. This file does not redefine them — it
+tells the shared agents how to behave *in this repo specifically*.
+
+Standard pipeline, in order:
+
+```
+discover → spec → design → plan
+                              │
+                              ▼
+                        feature-flow
+        (branch → build → test-execution → review →
+         verification → cross-validation → delivery-prep)
+                              │
+                              ▼
+                    [push, PR, CI, human merge]
+                              │
+                  ┌───────────┴───────────┐
+                  ▼                       ▼
+            repair-flow              release → measure → learn
+         (if CI disagrees          (post-merge cadence,
+          with local test)          closes the loop)
+```
+
+`discovery-flow` routes into the top half (discovery through planning).
+`feature-flow` owns everything from a planned feature to an open PR.
+It never merges — that is always human-gated. `repair-flow` is the
+CI-failure-specific repair loop, separate from feature-flow's own local
+test gate. `measure` and `learn` run on schedule or trigger, not as
+steps another agent calls directly.
 
 ## 3. Context Files — Read Before Generating Anything
 
-| Priority | File                        | What You Learn                                                              |
-| -------- | --------------------------- | --------------------------------------------------------------------------- |
-| 1        | `AGENTS.md` (this file)     | Stack, boundaries, PM contract                                              |
-| 2        | `compose.yaml`              | Current service versions, ports, volumes, networks                          |
-| 2.5      | `docs/adr/README.md`        | Deliberate technology decisions — Loki version, Compose scope, GitOps scope |
-| 3        | `docs/ARCHITECTURE.md`      | How services connect and depend on each other                               |
-| 4        | `docs/KNOWN_LIMITATIONS.md` | Known issues — do not make these worse                                      |
-| 4.5      | `docs/ai-observability-guide.md` | AI observability: OTel AI pipeline, recording rules, dashboard, alerts  |
-| 5        | `docs/CHANGE_IMPACT_MAP.md` | What breaks when a service config changes                                   |
+| Priority | File                         | What You Learn                                                     |
+| -------- | ---------------------------- | ------------------------------------------------------------------ |
+| 1        | `AGENTS.md` (this file)      | Identity, governance, GitOps contract                              |
+| 2        | `compose.yaml`               | Service versions, ports, volumes, networks, profiles               |
+| 2.5      | `docs/adr/README.md`         | Technology decisions — Loki version, Compose scope, GitOps scope   |
+| 3        | `docs/ARCHITECTURE.md`       | How services connect and depend on each other                      |
+| 4        | `docs/KNOWN_LIMITATIONS.md`  | Known issues — do not make these worse                             |
+| 4.5      | `docs/MODEL_POLICY.md`       | Model selection, token budgets, premium request accounting         |
+| 5        | `docs/CHANGE_IMPACT_MAP.md`  | What breaks when a service config changes                          |
 
----
+If any of these don't exist for this repo, agents proceed with what's
+available and note the gap — they don't invent the missing content.
 
 ## 4. Architecture Rules — Never Violate These
 
@@ -74,6 +79,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 - All services must have `healthcheck:` defined
 - Networks must be explicitly declared — no implicit default network
 - Volumes for persistent data must be named, not anonymous
+- Profiles (`core`, `dora`) must be explicit and validated with `docker compose --profile <name> config`
 
 ### config/ files
 
@@ -82,6 +88,7 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 - Prometheus scrape targets must match actual service names in `compose.yaml`
 - Grafana datasources must reference services by Docker Compose service name, not `localhost`
 - No credentials in config files — use environment variable substitution (`${VAR_NAME}`)
+- Alloy River DSL config: use `config.alloy` naming convention
 
 ### scripts/
 
@@ -90,25 +97,36 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 - No hardcoded container names — read from `compose.yaml` or environment variables
 - Health check scripts must exit non-zero on failure
 
-### tests/acceptance/
+### tests/
 
-- Tests verify the stack is observable: metrics flowing, traces queryable, dashboards loading
-- Tests must be runnable with `docker compose up` already running
-- Every test has a clear pass/fail exit code
+- Unit tests in `tests/unit/` — validate config YAML, JSON, and conventions
+- Integration tests in `tests/integration/` — BDD-style, run against running stack
+- Acceptance tests in `tests/acceptance/` — verify the stack is observable
+- Every test must have a clear pass/fail exit code
+- Never delete failing tests to make a build pass
 
----
+### dashboards/
+
+- Grafana dashboard JSON files in `dashboards/platform/` and `dashboards/services/`
+- All datasource UIDs must be string references (e.g. `prometheus`, `tempo`, `loki`, `ufawkesres-postgres`) — never numeric IDs
+- schemaVersion must be 39 (Grafana 12.x)
+- UID convention: `ufawkesobs-<slug>`
+- Tags must include `ufawkesobs` for platform dashboards
 
 ## 5. The PM–Agent Contract
 
 ### Agents MAY Do Without Asking
 
 - Read any file
-- Edit `config/` files, `scripts/`, `docs/`, `tests/acceptance/`
-- Run: `docker compose config` (validate), `yamllint`, `shellcheck`
+- Edit code, tests, docs within the scope of an assigned task
+- Run: `docker compose config` (validate), `yamllint`, `shellcheck`, pre-commit
 - Open draft PRs
 
 ### Agents MUST Ask Before
 
+- Adding or removing dependencies (requires PM sign-off)
+- Changing public interfaces or API contracts
+- Modifying CI/CD pipeline configuration
 - Changing image versions in `compose.yaml`
 - Adding or removing services from `compose.yaml`
 - Changing exposed port numbers
@@ -120,157 +138,82 @@ standalone or integrated with `deliveryd` (CI/CD plane) and `developerd` (develo
 - Commit `.env` files, passwords, API keys, or tokens
 - Use `latest` image tags
 - Remove `healthcheck:` from any service
-- Delete acceptance tests
+- Delete tests to make a build pass
 - Push to `main` directly or merge their own PRs
 - Apply `large-pr-approved` label (humans only)
+- Mark a task complete when validation failed
 
----
+## 6. TDD Commit Order
 
-## 6. Coding Standards
+```
+1. test: add failing tests for [feature]   ← CI fails here intentionally
+2. feat: implement [feature] to pass tests
+3. refactor: clean up [feature] if needed
+```
 
-### YAML (all files)
+Never combine a failing test commit with an implementation commit.
 
-- `yamllint` must pass (config in `.yamllint.yml`)
-- 2-space indentation, no tabs
-- Quoted strings for values that could be misread as other types
+Commit message format: `feat(scope):`, `fix(scope):`, `test(scope):`,
+`docs:`, `chore:` — reference issue number: `fix(prometheus): correct scrape interval (#8)`
 
-### Bash (scripts/)
+## 7. AI-Assisted Review Block
 
-- `set -euo pipefail` at top
-- `shellcheck` must pass
-- Functions over repeated blocks
-- Descriptive variable names in UPPER_SNAKE_CASE
+Every PR opened by an agent must include this block in its description.
+`review.md` checks for this literal structure — if you change the
+headings, update `review.md`'s check to match.
 
-### Commits
+```markdown
+## AI-Assisted Review Block
 
-- `feat(compose):`, `fix(config):`, `test(acceptance):`, `docs:`, `chore:`
-- Reference issue number: `fix(prometheus): correct scrape interval (#8)`
+**What does this PR do?**
+[...]
 
----
+**What could go wrong?**
+[...]
 
-## 7. PR Requirements
+**What tests cover this change?**
+[...]
 
-Every PR must include the AI-Assisted Review Block:
+**Architecture check:**
+- What layer(s) were touched and are they correct per §4?
+- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDORA)?
 
-- What changed (one sentence per service affected)
-- Services affected and how tested (`docker compose up` + acceptance tests)
-- Any port or volume changes flagged
-- Secrets check: confirmed nothing sensitive committed
+**What I was NOT sure about:**
+[...]
+```
 
----
+## 8. GitOps / Trunk-Based Delivery Contract
 
-## 8. Instability Safeguards
+- Development happens on feature branches off `main`; never commit directly to trunk.
+- Branch naming: `feat/<short-slug>` for features, `fix/<short-slug>` for fixes.
+- GitOps reconciliation: pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**` reconcile the target host over SSH.
+- Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
+- `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before `make up`.
+- CI runs on push and on PR. `feature-flow`'s local test-execution and CI are separate events — if CI fails after local tests passed, `repair-flow` handles it.
+- PR size > 400 changed lines → CI blocks. Override requires a human-applied `large-pr-approved` label — agents never apply it themselves.
+- Merge to trunk requires: green CI, review APPROVED, verification PASS, cross-validation PASS, and human approval.
+- Image version bumps require old and new version in PR description.
+- Any change to Prometheus scrape config requires a note on which metrics will be affected.
+- Rework rate > 10% (PRs requiring `repair-flow` or more than one review cycle): stop adding features, fix instructions or gates.
 
-- PR size > 400 lines → CI blocks. `large-pr-approved` label to override (humans only).
-- Image version bumps require the old and new version in the PR description
-- Any change to Prometheus scrape config requires a note on which metrics will be affected
-- Rework rate > 10%: stop adding features, fix instructions
+## 9. Known Limitations
 
----
+See `docs/KNOWN_LIMITATIONS.md` — known issues across storage, networking, profiles, and cross-plane integration. Do not make these worse.
 
-## 9. Integration with Other Planes
+## 10. Suite Integration
 
-uFawkesObs is designed to be consumed by:
+uFawkesObs is part of the **uFawkesAI** suite and the **Fawkes IDP** ecosystem.
 
-- **deliveryd** — Jenkins metrics and pipeline traces flow into uFawkesObs
-- **developerd** — Developer environment telemetry flows into uFawkesObs
+**Depends on:**
+- **uFawkesRes** — Shared PostgreSQL for DORA metric snapshots (`datasources.yaml` UID: `ufawkesres-postgres`)
+- **uFawkesDORA** — DORA compute engine consuming OTel spans via `otel-collector-dora` profile
+
+**Depended on by:**
+- **uFawkesPipe** — Pipeline lifecycle telemetry flows into uFawkesObs Tempo
+- **uFawkesDevX** — Developer environment metrics flow into uFawkesObs
 - **fawkes** — Full IDP deployment uses uFawkesObs as its observability layer
 
 When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
-
----
-
-## 10. Model Selection Policy
-
-uFawkesObs is a Docker Compose observability stack: Prometheus, Grafana, Loki, Tempo,
-and OpenTelemetry Collector (Alloy). All configuration is YAML, River (Alloy DSL),
-and JSON (Grafana dashboards).
-
-> **Budget context:** Shared Copilot Pro budget (300 premium requests/month across all
-> repos). GPT-4.1 multiplier is 0 — completely free — and is the default for all tasks.
-> The coding agent uses exactly 1 premium request per session × the model multiplier.
-
-### Model Ladder
-
-| Level                     | Model                | Multiplier | Rule                                                                                              |
-| ------------------------- | -------------------- | ---------- | ------------------------------------------------------------------------------------------------- |
-| L0 — Free default         | GPT-4.1              | 0          | Use for ALL tasks unless explicitly listed otherwise below                                        |
-| L0 — Free lightweight     | GPT-5 mini           | 0          | Single-file YAML edits: version bumps, label changes, one-line additions                          |
-| L1 — Trial (Grafana only) | Gemini 3 Flash       | 0.33       | Trial ONLY for Grafana dashboard JSON — see note below before using                               |
-| L2 — Justified premium    | GPT-5.1-Codex        | 1          | PromQL rules and Grafana JSON if Gemini 3 Flash trial fails; requires label `model:gpt-5.1-codex` |
-| PROHIBITED                | Claude Opus 4.6 fast | 30         | Never — 30× multiplier. Blocked without explicit written budget approval                          |
-| AVOID                     | Claude Opus / Sonnet | 1–3        | No uFawkesObs task type justifies these models                                                    |
-
-### Task → Model Routing Table
-
-| Task type                                    | Model            | Cost | Notes                                                                                         |
-| -------------------------------------------- | ---------------- | ---- | --------------------------------------------------------------------------------------------- |
-| Single YAML edit (version bump, label, port) | GPT-5 mini       | 0    |                                                                                               |
-| Docker Compose multi-service edit            | GPT-4.1          | 0    |                                                                                               |
-| Alloy River syntax (cAdvisor, node-exporter) | GPT-4.1          | 0    | Specify River config syntax explicitly — not Prometheus config syntax                         |
-| Prometheus scrape config addition            | GPT-5 mini       | 0    | Simple YAML block addition; provide existing scrape config as reference                       |
-| DevLake Docker Compose integration           | GPT-4.1          | 0    | Large block but known pattern; provide DevLake docs link in issue                             |
-| OTEL Collector standard pipeline edit        | GPT-4.1          | 0    | Standard receiver/processor/exporter changes only — see AI pipeline note below                |
-| OTEL Collector AI/LLM pipeline (gen_ai.\*)   | GPT-5.1-Codex    | 1    | Adding new AI exporters risks breaking existing pipelines; free models miss guard clauses     |
-| Version upgrade (Prometheus / Loki / Tempo)  | GPT-5 mini       | 0    | Single version string in compose.yaml; must include breaking change notes in issue body       |
-| Version upgrade (Grafana)                    | GPT-4.1          | 0    | Grafana upgrades sometimes require dashboard JSON migration; GPT-4.1 handles this             |
-| PromQL recording rules                       | GPT-5.1-Codex    | 1    | Free models produce vector() arithmetic errors and missing or vector(0) guards                |
-| PromQL alerting rules (DORA)                 | GPT-5.1-Codex    | 1    | Same — vector arithmetic and threshold logic requires Codex                                   |
-| Grafana dashboard JSON — DORA panels         | Gemini 3 Flash   | 0.33 | Trial: measure PR revision count over first 3 uses before committing — see note               |
-| Grafana dashboard JSON — AI/LLM panels       | GPT-5.1-Codex    | 1    | AI dashboard JSON is more complex than DORA; start with Codex not Gemini                      |
-| Cross-plane documentation (Markdown)         | GPT-5 mini       | 0    |                                                                                               |
-| Observability runbooks                       | GPT-5 mini       | 0    | Must include exact LogQL queries, kubectl commands, and Grafana dashboard links in issue body |
-| Interactive IDE chat (VS Code)               | Claude Haiku 4.5 | 0.33 | Chat only — do not assign agent tasks to Haiku                                                |
-| Manual PR comment invocation                 | GPT-4.1          | 0    | Use `@copilot` with no `+model` suffix — omitting the selector defaults to GPT-4.1 free       |
-
-### Gemini 3 Flash trial note (Grafana dashboard JSON)
-
-Gemini 3 Flash scores 63.8% on SWE-bench vs GPT-5.1-Codex at a higher level, but costs
-0.33x vs 1x. For Grafana dashboard JSON specifically, the structured output quality may
-be sufficient at lower cost. Before committing to Gemini 3 Flash for all dashboard work:
-
-1. Assign the first 3 Grafana JSON issues to Gemini 3 Flash
-2. Record PR revision count for each (target: ≤1 revision per PR)
-3. If revision count is ≤1 across all 3: adopt Gemini 3 Flash for DORA dashboards
-4. If revision count exceeds 1 on any PR: switch to GPT-5.1-Codex and update this table
-
-Until the trial is complete, GPT-5.1-Codex remains the safe default for all Grafana JSON.
-
-### Required issue body format
-
-Every issue assigned to the Copilot coding agent must include this block:
-
-```
-**Suggested model:** [GPT-4.1 / GPT-5 mini / Gemini 3 Flash / GPT-5.1-Codex]
-**Task type:** [YAML edit / Docker Compose / PromQL / Grafana JSON / OTEL / docs]
-**Files to edit:** [explicit list — agent must not create new files unless listed here]
-**Reference file:** [path to existing config to use as pattern]
-**Do not touch:** [files or services outside the scope of this issue]
-**Breaking changes to check:** [version-specific migration notes if applicable]
-**Acceptance criteria:**
-- [ ] [measurable criterion 1]
-- [ ] [measurable criterion 2]
-```
-
-### Escalation rule
-
-If rework rate for a task type exceeds 20% after 5 completed PRs with the recommended model:
-
-1. First improve the issue body — add file targets, reference configs, breaking change notes
-2. If rework rate is still above 20% after improving the issue body, escalate to the next model tier
-3. Document the decision in this section with the date and evidence
-
-### Budget guardrails
-
-- Never use `@copilot +modelname` in PR comments unless GPT-4.1 has already failed on the same task
-- The expected premium spend for uFawkesObs is ~8 requests/month at 20 issues/week:
-  - PromQL rules: ~4 sessions at 1x = 4 requests
-  - Grafana AI dashboard JSON: ~2 sessions at 1x = 2 requests
-  - Grafana DORA JSON (Gemini trial): ~3 sessions at 0.33x = ~1 request
-  - IDE chat: ~220 messages/month at 0.33x = ~73 requests (shared with other repos)
-- If Gemini 3 Flash trial succeeds, uFawkesObs premium agent spend drops to ~3 requests/month
-
----
 
 ## 11. See Also
 
@@ -278,3 +221,4 @@ If rework rate for a task type exceeds 20% after 5 completed PRs with the recomm
 - `.github/instructions/` — path-scoped instruction files
 - `docs/PROMPT_LIBRARY.md` — tested prompt templates
 - `docs/CHANGE_IMPACT_MAP.md` — cross-service and cross-plane impact
+- `docs/MODEL_POLICY.md` — model selection, routing, and budget guardrails
