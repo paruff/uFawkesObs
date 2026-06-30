@@ -68,7 +68,11 @@ def recording_rule_exists(rule_name: str) -> None:
     found = False
     for group in groups:
         for rule in group.get("rules", []):
-            if rule.get("name") == rule_name:
+            # Recording rules use "record" field, alerting rules use "name"/"alert"
+            rule_name_field = (
+                rule.get("record") or rule.get("name") or rule.get("alert")
+            )
+            if rule_name_field == rule_name:
                 found = True
                 break
         if found:
@@ -88,7 +92,8 @@ def alert_rule_exists(rule_name: str) -> None:
     found = False
     for group in groups:
         for rule in group.get("rules", []):
-            if rule.get("alert") == rule_name or rule.get("name") == rule_name:
+            # Alert rules use "alert" field
+            if rule.get("alert") == rule_name:
                 found = True
                 break
         if found:
@@ -134,12 +139,18 @@ def all_recording_rules_guarded() -> None:
 
     for group in groups:
         for rule in group.get("rules", []):
-            expr = rule.get("expr", "")
-            # Check if expression contains vector(0) guard pattern
-            has_guard = "vector(0)" in expr or "or instant_vector(0)" in expr.replace(
-                " ", ""
-            )
-            assert has_guard or rule.get("type") == "alerting", (
-                f"Recording rule '{rule.get('name')}' missing vector(0) guard: {expr}"
-            )
+            # Recording rules have "record" field, alerting rules have "alert" field
+            is_recording = "record" in rule
+
+            # Only check recording rules for vector(0) guards
+            if is_recording:
+                expr = rule.get("expr", "")
+                # Check if expression contains vector(0) guard pattern
+                has_guard = (
+                    "vector(0)" in expr
+                    or "or instant_vector(0)" in expr.replace(" ", "")
+                )
+                assert has_guard, (
+                    f"Recording rule '{rule.get('record')}' missing vector(0) guard: {expr}"
+                )
     print("✅ All recording rules have appropriate guards")
