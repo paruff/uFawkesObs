@@ -60,7 +60,7 @@ jobs:
             ('Grafana', 'http://localhost:3000/api/health'),
             ('OTel Collector', 'http://localhost:8888/metrics'),
             ('Alloy', 'http://localhost:12345/-/ready'),
-            ('Telemetry Generator', 'http://localhost:5001/health'),
+            ('Telemetry Generator', 'http://localhost:5001/'),
           ]
           for name, url in services:
             for i in range(60):
