@@ -418,7 +418,7 @@
 - **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL via Grafana Postgres datasource plugin (current snapshots). Metrics: Deployment Frequency, Lead Time, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate.
 - **Backlog Issue:** #83, #52
 - **Dependencies:** M4-03
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE
 - **Tasks:**
   1. Create `config/grafana/dashboards/dora-metrics.json` containing panel models for the 5 DORA indicators.
   2. Enforce standard DORA performance bands (Elite/High/Medium/Low) using color thresholds.
