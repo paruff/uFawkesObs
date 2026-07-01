@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-# DORA 2025 Metrics Recording Rules
-# Computed from uFawkesObs telemetry (deployment spans, incident alerts)
-# Consumed by uFawkesDORA for DORA 2025 dashboard and alerting
+# DORA 2025/2026 Metrics Recording Rules
+# Computed from uFawkesObs telemetry (deployment spans, incident alerts, AI SDK)
+# Consumed by uFawkesDORA for DORA dashboard and alerting
 #
 # Metric naming: Uses "dora:" namespace per ADR-006.
 # Source metrics from OTel Collector dora pipeline:
@@ -12,6 +12,16 @@
 #   - dora.incident.opened (counter)
 #   - dora.incident.resolved (counter)
 #   - dora.incident.duration_hours (histogram)
+# Source metrics from AI SDK:
+#   - gen_ai.suggestion.accepted (counter)
+#   - gen_ai.suggestion.total (counter)
+#
+# DORA 2025/2026 Five Key Metrics:
+# 1. Deployment Frequency
+# 2. Lead Time for Changes
+# 3. Change Failure Rate
+# 4. Mean Time to Restore (MTTR)
+# 5. Rework Rate — fraction of AI output requiring rework (DORA 2026)
 
 groups:
   # DORA recording rules
@@ -54,6 +64,18 @@ groups:
           histogram_quantile(0.50,
             sum(rate(dora_incident_duration_hours_bucket[30d]))
               by (le)
+          )
+          or vector(0)
+
+      # Rework Rate: fraction of AI output requiring rework (5th DORA metric, DORA 2026)
+      # Derived from AI suggestion acceptance rate: rework = 1 - acceptance_rate
+      # ai:suggestion_acceptance_rate:ratio is defined in config/prometheus/rules/ai-rules.yml
+      # DORA 2026 thresholds: Elite < 5%, High < 10%, Medium < 20%, Low >= 20%
+      - record: dora:rework_rate:ratio
+        expr: |
+          clamp_min(
+            1 - (ai:suggestion_acceptance_rate:ratio or vector(0)),
+            0
           )
           or vector(0)
 
@@ -196,3 +218,49 @@ groups:
             MTTR metric is absent. Incident duration metrics may not be flowing.
             Check Alertmanager alerts are firing and resolving with duration_hours attribute.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#mttr-absent"
+
+      # Rework Rate High
+      - alert: DORAReworkRateHigh
+        expr: |
+          dora:rework_rate:ratio > 0.10
+        for: 7d
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "AI rework rate exceeds 10% — watch threshold"
+          description: |
+            Rework rate has exceeded 10% over the last 30 days.
+            DORA 2026: Elite < 5%, High < 10%, Medium < 20%, Low >= 20%.
+            Rising rework above 10% signals AI instructions may need attention.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-high"
+
+      - alert: DORAReworkRateCritical
+        expr: |
+          dora:rework_rate:ratio > 0.20
+        for: 7d
+        labels:
+          severity: critical
+          category: dora
+        annotations:
+          summary: "AI rework rate exceeds 20% — stop features, fix instructions"
+          description: |
+            Rework rate has exceeded 20% over the last 30 days.
+            DORA 2026: Low performance band. AI-generated code is creating more
+            problems than it solves. Review AGENTS.md and PROMPT_LIBRARY.md
+            before adding new features.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-critical"
+
+      - alert: DORAReworkRateHighAbsent
+        expr: |
+          absent(dora:rework_rate:ratio)
+        for: 7d
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Rework rate metrics are missing"
+          description: |
+            AI rework rate metric is absent. AI SDK suggestion telemetry may not be
+            flowing or ai-rules.yml recording rules may not be configured.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-absent"

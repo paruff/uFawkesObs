@@ -388,13 +388,30 @@
 - **Description:** Configure Prometheus recording rules inside uFawkesObs for continuous calculation of DORA metrics. Rules query Prometheus metrics scraped from OTel Collector; derived metrics pushed by uFawkesDORA compute job via pushgateway.
 - **Backlog Issue:** #82, #53
 - **Dependencies:** M4-02
-- **Status:** 🔲 PENDING
-- **Notes:** Use GPT-5.1-Codex per model routing table (PromQL rules)
+- **Status:** ✅ DONE (commit 3ad1661, extended with rework rate in this branch)
+- **Notes:** DORA 2026 now defines 5 key metrics — the classic 4 plus rework rate from the AI Capabilities Model.
+- **Details:**
+   - Created `config/prometheus/rules/ufawkesobs-dora-metrics.yml` with 5 DORA recording rules:
+     - `dora:deployment_frequency:rate30d` — successful production deployments per 30 days
+     - `dora:lead_time_hours:p50_30d` — median lead time from commit to production
+     - `dora:change_failure_rate:ratio30d` — failed / total deployments (30d)
+     - `dora:mttr_hours:p50_30d` — median time to restore (hours, 30d)
+     - `dora:rework_rate:ratio` — fraction of AI output requiring rework (1 - acceptance rate)
+   - All 5 rules guarded with `or vector(0)`
+   - 7 DORA alert rules with paired absent() guards:
+     - DORADeploymentFrequencyLow / Absent
+     - DORALeadTimeHigh / Absent
+     - DORAChangeFailureRateHigh / Critical / Absent
+     - DORAMTTRHigh / Absent
+     - DORAReworkRateHigh / Critical / Absent
+   - Prometheus config updated to load the rules file
+   - 3 paired rework rate alerts in `ai-rules.yml` (AI-specific context, category: ai-capability)
 - **Tasks:**
-  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, and `dora:mttr_hours:p50_30d` inside dedicated rule file `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
+  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:mttr_hours:p50_30d`, and `dora:rework_rate:ratio` inside dedicated rule file `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
 - **Acceptance Criteria:**
-  - Prometheus rules load and parse cleanly.
-  - All rules guarded with `or vector(0)`.
+  - [x] Prometheus rules load and parse cleanly.
+  - [x] All rules guarded with `or vector(0)`.
+  - [x] 5th DORA metric (rework rate) added for DORA 2026 alignment.
 
 ### Task M4-04: Provision Grafana DORA Metrics Dashboard
 
@@ -403,7 +420,7 @@
 - **Dependencies:** M4-03
 - **Status:** 🔲 PENDING
 - **Tasks:**
-  1. Create `config/grafana/dashboards/dora-metrics.json` containing panel models for the 4 DORA indicators.
+  1. Create `config/grafana/dashboards/dora-metrics.json` containing panel models for the 5 DORA indicators.
   2. Enforce standard DORA performance bands (Elite/High/Medium/Low) using color thresholds.
   3. Configure dashboard to use both Prometheus and Postgres datasources.
 - **Acceptance Criteria:**
