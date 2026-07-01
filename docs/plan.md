@@ -349,27 +349,39 @@
 
 - **Description:** Define what counts as a deployment, incident, and restoration within uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
 - **Backlog Issue:** #80
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE (PR #147 merged)
+- **Details:**
+   - Created `docs/adr/ADR-006-dora-metric-definitions.md` (note: ADR-006, not ADR-004 — ADR-004 is the Grafana 12 migration)
+   - Defines deployment/incident spans, 4 DORA metrics, metric naming conventions
+   - Links to alert rules and Prometheus recording rule patterns
+   - Passes markdownlint
 - **Tasks:**
-  1. Create `docs/adr/ADR-004-dora-metric-definitions.md` detailing metric mappings and semantics.
+   1. Created `docs/adr/ADR-006-dora-metric-definitions.md` detailing metric mappings and semantics.
 - **Acceptance Criteria:**
-  - ADR-004 exists and is linked from docs.
+   - [x] ADR-006 exists and is linked from docs.
 
 ### Task M4-02: Wire DORA Profile to uFawkesDORA & uFawkesRes
 
 - **Description:** Configure uFawkesObs's `dora` compose profile to connect to uFawkesDORA's ingestion API (for event forwarding) and uFawkesRes's shared PostgreSQL (for DORA metric snapshots). No DevLake or MySQL in uFawkesObs — those now live in uFawkesDORA/uFawkesRes.
 - **Backlog Issue:** #81, #51
 - **Dependencies:** M4-01
-- **Status:** 🔲 PENDING — **re-scoped 2026-06-28**
+- **Status:** ✅ DONE (PR #148 merged)
 - **Ecosystem Review:** See `docs/reviews/M4-02-ecosystem-review.md`. DevLake moved to uFawkesDORA; MySQL replaced by uFawkesRes PostgreSQL. uFawkesObs M4 scope is now: data contract (M4-01), recording rules (M4-03), dashboard (M4-04), and cross-plane wiring (this task).
+- **Details:**
+   - Added `dora` profile to `compose.yaml` with `otel-collector-dora` service forwarding DORA metrics to uFawkesDORA
+   - Added Grafana PostgreSQL datasource provisioning (`ufawkesres-postgres` UID) pointing to `fawkes-postgres:5432` on `fawkes-backbone-net`
+   - Updated Alertmanager config with DORA alert route (`category=dora` → `receiver=dora-slack`)
+   - Created `config/otel/collector-dora.yaml` with DORA pipeline (filter, attributes, OTLP exporter)
+   - CI unit test fixed: `test_datasource_urls_valid_format` updated to accept `postgres://` URL scheme
+   - All 242 unit tests pass
 - **Tasks:**
-  1. Add `dora` profile to `compose.yaml` with environment variables for `OTEL_EXPORTER_OTLP_ENDPOINT` (uFawkesDORA ingestion API) and `DORA_POSTGRES_URL` (uFawkesRes Postgres).
-  2. Add Grafana Postgres datasource provisioning pointing to `fawkes-postgres:5432` on `fawkes-backbone-net`.
-  3. Add Alertmanager route for `dora_regression` and `leading_indicator` alerts to `DORA_SLACK_WEBHOOK_URL`.
+   1. Add `dora` profile to `compose.yaml` with environment variables for `OTEL_EXPORTER_OTLP_ENDPOINT` (uFawkesDORA ingestion API) and `DORA_POSTGRES_URL` (uFawkesRes Postgres).
+   2. Add Grafana Postgres datasource provisioning pointing to `fawkes-postgres:5432` on `fawkes-backbone-net`.
+   3. Add Alertmanager route for `dora_regression` and `leading_indicator` alerts to `DORA_SLACK_WEBHOOK_URL`.
 - **Acceptance Criteria:**
-  - `docker compose --profile dora config` succeeds with zero parsing warnings.
-  - Grafana provisions Postgres datasource without errors.
-  - Alertmanager reloads with DORA routes.
+   - [x] `docker compose --profile dora config` succeeds with zero parsing warnings.
+   - [x] Grafana provisions Postgres datasource without errors.
+   - [x] Alertmanager reloads with DORA routes.
 
 ### Task M4-03: Add DORA Recording Rules to Prometheus
 
