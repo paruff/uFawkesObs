@@ -395,19 +395,19 @@
      - `dora:deployment_frequency:rate30d` — successful production deployments per 30 days
      - `dora:lead_time_hours:p50_30d` — median lead time from commit to production
      - `dora:change_failure_rate:ratio30d` — failed / total deployments (30d)
-     - `dora:mttr_hours:p50_30d` — median time to restore (hours, 30d)
+     - `dora:fdrt_hours:p50_30d` — median failed deployment recovery time (hours, 30d)
      - `dora:rework_rate:ratio` — fraction of AI output requiring rework (1 - acceptance rate)
    - All 5 rules guarded with `or vector(0)`
    - 7 DORA alert rules with paired absent() guards:
      - DORADeploymentFrequencyLow / Absent
      - DORALeadTimeHigh / Absent
      - DORAChangeFailureRateHigh / Critical / Absent
-     - DORAMTTRHigh / Absent
+     - DORAFDRTHigh / Absent
      - DORAReworkRateHigh / Critical / Absent
    - Prometheus config updated to load the rules file
    - 3 paired rework rate alerts in `ai-rules.yml` (AI-specific context, category: ai-capability)
 - **Tasks:**
-  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:mttr_hours:p50_30d`, and `dora:rework_rate:ratio` inside dedicated rule file `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
+  1. Formulate recording rules for `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:fdrt_hours:p50_30d`, and `dora:rework_rate:ratio` inside dedicated rule file `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
 - **Acceptance Criteria:**
   - [x] Prometheus rules load and parse cleanly.
   - [x] All rules guarded with `or vector(0)`.
@@ -415,7 +415,7 @@
 
 ### Task M4-04: Provision Grafana DORA Metrics Dashboard
 
-- **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL via Grafana Postgres datasource plugin (current snapshots).
+- **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL via Grafana Postgres datasource plugin (current snapshots). Metrics: Deployment Frequency, Lead Time, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate.
 - **Backlog Issue:** #83, #52
 - **Dependencies:** M4-03
 - **Status:** 🔲 PENDING

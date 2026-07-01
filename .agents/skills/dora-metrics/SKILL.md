@@ -41,7 +41,7 @@ sum(rate(deployment_failed_total{environment="prod"}[7d]))
 sum(rate(deployment_completed_total{environment="prod"}[7d])) * 100
 ```
 
-### Failed Deployment Recovery Time (FDRT / MTTR)
+### Failed Deployment Recovery Time (FDRT)
 
 ```promql
 # Average recovery duration in seconds

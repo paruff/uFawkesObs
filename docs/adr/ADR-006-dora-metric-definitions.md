@@ -14,7 +14,7 @@ uFawkesObs is the observability plane of the Fawkes IDP platform. It provides th
 1. **Deployment Frequency** — How often code is deployed to production
 2. **Lead Time for Changes** — Time from commit to production
 3. **Change Failure Rate** — Percentage of deployments causing failures
-4. **Mean Time to Restore (MTTR)** — Time to recover from a failure
+4. **Failed Deployment Recovery Time (FDRT)** — Time to recover from a failed deployment
 5. **Rework Rate** — Fraction of AI-generated code requiring rework (DORA 2026)
 
 uFawkesObs does not compute these metrics directly; it provides the raw telemetry (metrics, logs, traces) and derived recording rules that uFawkesDORA's ingestion API consumes. This ADR defines the data contract: what counts as a deployment, incident, and restoration within uFawkesObs telemetry, and the metric mappings uFawkesDORA expects.
@@ -69,7 +69,7 @@ An **incident** is identified by an **Alertmanager alert** that fires and maps t
 - An incident **closes** when the alert resolves (stops firing) and the `resolved` notification is received
 - Incident duration = `resolved_at` - `fired_at`
 
-**uFawkesDORA computes Change Failure Rate and MTTR** from incidents that:
+**uFawkesDORA computes Change Failure Rate and FDRT** from incidents that:
 - Have `environment="production"`
 - Have `severity` in `["critical", "warning"]`
 - Are linked to a deployment (via time correlation: incident opened within 24h of a deployment)
@@ -83,7 +83,7 @@ A **restoration** is the resolution of an incident, identified by the alert reso
 **Restoration event semantics:**
 - Triggered by Alertmanager `resolved` notification for a previously firing alert
 - Restoration time = alert resolution timestamp
-- MTTR = `restoration_time` - `incident_start_time`
+- FDRT = `restoration_time` - `incident_start_time`
 
 ---
 
@@ -96,7 +96,7 @@ uFawkesObs provides the following Prometheus recording rules that uFawkesDORA co
 | `dora:deployment_frequency:rate30d` | Gauge | Successful production deployments per 30 days | Deployment spans |
 | `dora:lead_time_hours:p50_30d` | Gauge | Median lead time (commit → production) over 30d | Deployment spans + commit timestamps |
 | `dora:change_failure_rate:ratio30d` | Gauge | Failed deployments / total deployments (30d) | Deployment spans + incidents |
-| `dora:mttr_hours:p50_30d` | Gauge | Median time to restore (hours) over 30d | Incident open/close times |
+| `dora:fdrt_hours:p50_30d` | Gauge | Median failed deployment recovery time (hours) over 30d | Incident open/close times |
 | `dora:rework_rate:ratio` | Gauge | Fraction of AI output requiring rework (30d) | AI SDK suggestion telemetry |
 
 **Rule file location:** `config/prometheus/rules/ufawkesobs-dora-metrics.yml`
@@ -141,7 +141,7 @@ uFawkesObs provides the following DORA-specific alert rules in `config/prometheu
 | `DORALeadTimeHigh` | warning | `dora:lead_time_hours:p50_30d > 24` | Median lead time > 24h |
 | `DORAChangeFailureRateHigh` | warning | `dora:change_failure_rate:ratio30d > 0.15` | Change failure rate > 15% |
 | `DORAChangeFailureRateCritical` | critical | `dora:change_failure_rate:ratio30d > 0.30` | Change failure rate > 30% |
-| `DORAMTTRHigh` | warning | `dora:mttr_hours:p50_30d > 4` | Median MTTR > 4 hours |
+| `DORAFDRTHigh` | warning | `dora:fdrt_hours:p50_30d > 4` | Median FDRT > 4 hours |
 | `DORAReworkRateHigh` | warning | `dora:rework_rate:ratio > 0.10` | Rework rate > 10% (watch threshold) |
 | `DORAReworkRateCritical` | critical | `dora:rework_rate:ratio > 0.20` | Rework rate > 20% (stop features) |
 

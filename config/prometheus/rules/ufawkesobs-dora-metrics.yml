@@ -20,7 +20,7 @@
 # 1. Deployment Frequency
 # 2. Lead Time for Changes
 # 3. Change Failure Rate
-# 4. Mean Time to Restore (MTTR)
+# 4. Failed Deployment Recovery Time (FDRT)
 # 5. Rework Rate — fraction of AI output requiring rework (DORA 2026)
 
 groups:
@@ -57,9 +57,9 @@ groups:
           )
           or vector(0)
 
-      # Mean Time to Restore (MTTR): median hours to resolve incidents (30d)
+      # Failed Deployment Recovery Time (FDRT): median hours to resolve incidents (30d)
       # Uses dora_incident_duration_hours histogram from incident resolved events
-      - record: dora:mttr_hours:p50_30d
+      - record: dora:fdrt_hours:p50_30d
         expr: |
           histogram_quantile(0.50,
             sum(rate(dora_incident_duration_hours_bucket[30d]))
@@ -189,35 +189,36 @@ groups:
             Check CI/CD pipeline is emitting deployment status.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#change-failure-rate-absent"
 
-      # MTTR High
-      - alert: DORAMTTRHigh
+      # FDRT High
+      - alert: DORAFDRTHigh
         expr: |
-          dora:mttr_hours:p50_30d > 4
+          dora:fdrt_hours:p50_30d > 4
         for: 7d
         labels:
           severity: warning
           category: dora
         annotations:
-          summary: "Mean time to restore exceeds 4 hours"
+          summary: "Failed deployment recovery time exceeds 4 hours"
           description: |
             Median time to restore service after incidents exceeds 4 hours.
             DORA 2025: Elite < 1h, High < 4h, Medium < 1d, Low > 1w.
             Review incident response procedures and on-call runbooks.
-          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#mttr-high"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-high"
 
-      - alert: DORAMTTRHighAbsent
+      - alert: DORAFDRTHighAbsent
         expr: |
-          absent(dora:mttr_hours:p50_30d)
+          absent(dora:fdrt_hours:p50_30d)
         for: 7d
         labels:
           severity: warning
           category: dora
         annotations:
-          summary: "MTTR metrics are missing"
+          summary: "FDRT metrics are missing"
           description: |
-            MTTR metric is absent. Incident duration metrics may not be flowing.
-            Check Alertmanager alerts are firing and resolving with duration_hours attribute.
-          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#mttr-absent"
+            Failed deployment recovery time metric is absent. Incident duration
+            metrics may not be flowing. Check Alertmanager alerts are firing
+            and resolving with duration_hours attribute.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-absent"
 
       # Rework Rate High
       - alert: DORAReworkRateHigh
