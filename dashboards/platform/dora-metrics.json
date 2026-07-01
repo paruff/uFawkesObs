@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "DORA 2025 metrics dashboard — Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Mean Time to Restore with performance band thresholds (Elite/High/Medium/Low). Data from Prometheus recording rules and uFawkesRes PostgreSQL snapshots.",
+  "description": "DORA 2025 metrics dashboard — Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Failed Deployment Recovery Time (FDRT) with performance band thresholds (Elite/High/Medium/Low). Data from Prometheus recording rules and uFawkesRes PostgreSQL snapshots.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -216,13 +216,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "dora:mttr_hours:p50_30d",
+          "expr": "dora:fdrt_hours:p50_30d",
           "instant": true,
-          "legendFormat": "P50 MTTR (30d)",
+          "legendFormat": "P50 FDRT (30d)",
           "refId": "A"
         }
       ],
-      "title": "Mean Time to Restore",
+      "title": "Failed Deployment Recovery Time",
       "type": "stat"
     },
     {
@@ -462,12 +462,12 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "dora:mttr_hours:p50_30d",
-          "legendFormat": "P50 MTTR",
+          "expr": "dora:fdrt_hours:p50_30d",
+          "legendFormat": "P50 FDRT",
           "refId": "A"
         }
       ],
-      "title": "Mean Time to Restore Trend",
+      "title": "Failed Deployment Recovery Time Trend",
       "type": "timeseries"
     },
     {
@@ -610,7 +610,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "MTTR performance band: Elite (< 1h), High (< 4h), Medium (< 24h), Low (>= 168h)",
+      "description": "FDRT performance band: Elite (< 1h), High (< 4h), Medium (< 24h), Low (>= 168h)",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -642,13 +642,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "dora:mttr_hours:p50_30d",
+          "expr": "dora:fdrt_hours:p50_30d",
           "instant": true,
-          "legendFormat": "MTTR",
+          "legendFormat": "FDRT",
           "refId": "A"
         }
       ],
-      "title": "MTTR Band",
+      "title": "FDRT Band",
       "type": "stat"
     },
     {
@@ -756,9 +756,9 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "count(dora:mttr_hours:p50_30d) or vector(0)",
+          "expr": "count(dora:fdrt_hours:p50_30d) or vector(0)",
           "instant": true,
-          "legendFormat": "MTTR",
+          "legendFormat": "FDRT",
           "refId": "D"
         }
       ],

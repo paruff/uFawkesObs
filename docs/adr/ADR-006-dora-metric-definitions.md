@@ -9,12 +9,13 @@
 
 ## Context
 
-uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the four DORA 2025 key metrics:
+uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the five DORA 2025/2026 key metrics:
 
 1. **Deployment Frequency** — How often code is deployed to production
 2. **Lead Time for Changes** — Time from commit to production
 3. **Change Failure Rate** — Percentage of deployments causing failures
-4. **Mean Time to Restore (MTTR)** — Time to recover from a failure
+4. **Failed Deployment Recovery Time (FDRT)** — Time to recover from a failed deployment
+5. **Rework Rate** — Fraction of AI-generated code requiring rework (DORA 2026)
 
 uFawkesObs does not compute these metrics directly; it provides the raw telemetry (metrics, logs, traces) and derived recording rules that uFawkesDORA's ingestion API consumes. This ADR defines the data contract: what counts as a deployment, incident, and restoration within uFawkesObs telemetry, and the metric mappings uFawkesDORA expects.
 
@@ -68,7 +69,7 @@ An **incident** is identified by an **Alertmanager alert** that fires and maps t
 - An incident **closes** when the alert resolves (stops firing) and the `resolved` notification is received
 - Incident duration = `resolved_at` - `fired_at`
 
-**uFawkesDORA computes Change Failure Rate and MTTR** from incidents that:
+**uFawkesDORA computes Change Failure Rate and FDRT** from incidents that:
 - Have `environment="production"`
 - Have `severity` in `["critical", "warning"]`
 - Are linked to a deployment (via time correlation: incident opened within 24h of a deployment)
@@ -82,7 +83,7 @@ A **restoration** is the resolution of an incident, identified by the alert reso
 **Restoration event semantics:**
 - Triggered by Alertmanager `resolved` notification for a previously firing alert
 - Restoration time = alert resolution timestamp
-- MTTR = `restoration_time` - `incident_start_time`
+- FDRT = `restoration_time` - `incident_start_time`
 
 ---
 
@@ -91,11 +92,12 @@ A **restoration** is the resolution of an incident, identified by the alert reso
 uFawkesObs provides the following Prometheus recording rules that uFawkesDORA consumes:
 
 | Recording Rule | Type | Description | Source |
-|---|---|---|---|
+|---|---|---|---|---|
 | `dora:deployment_frequency:rate30d` | Gauge | Successful production deployments per 30 days | Deployment spans |
 | `dora:lead_time_hours:p50_30d` | Gauge | Median lead time (commit → production) over 30d | Deployment spans + commit timestamps |
 | `dora:change_failure_rate:ratio30d` | Gauge | Failed deployments / total deployments (30d) | Deployment spans + incidents |
-| `dora:mttr_hours:p50_30d` | Gauge | Median time to restore (hours) over 30d | Incident open/close times |
+| `dora:fdrt_hours:p50_30d` | Gauge | Median failed deployment recovery time (hours) over 30d | Incident open/close times |
+| `dora:rework_rate:ratio` | Gauge | Fraction of AI output requiring rework (30d) | AI SDK suggestion telemetry |
 
 **Rule file location:** `config/prometheus/rules/ufawkesobs-dora-metrics.yml`
 
@@ -134,12 +136,14 @@ uFawkesObs forwards telemetry to uFawkesDORA via OTLP HTTP to the ingestion endp
 uFawkesObs provides the following DORA-specific alert rules in `config/prometheus/rules/ufawkesobs-dora-alerts.yml`:
 
 | Alert | Severity | Threshold | Description |
-|---|---|---|---|
+|---|---|---|---|---|
 | `DORADeploymentFrequencyLow` | warning | `dora:deployment_frequency:rate30d < 1` | Deployments per 30d below 1 |
 | `DORALeadTimeHigh` | warning | `dora:lead_time_hours:p50_30d > 24` | Median lead time > 24h |
 | `DORAChangeFailureRateHigh` | warning | `dora:change_failure_rate:ratio30d > 0.15` | Change failure rate > 15% |
 | `DORAChangeFailureRateCritical` | critical | `dora:change_failure_rate:ratio30d > 0.30` | Change failure rate > 30% |
-| `DORAMTTRHigh` | warning | `dora:mttr_hours:p50_30d > 4` | Median MTTR > 4 hours |
+| `DORAFDRTHigh` | warning | `dora:fdrt_hours:p50_30d > 4` | Median FDRT > 4 hours |
+| `DORAReworkRateHigh` | warning | `dora:rework_rate:ratio > 0.10` | Rework rate > 10% (watch threshold) |
+| `DORAReworkRateCritical` | critical | `dora:rework_rate:ratio > 0.20` | Rework rate > 20% (stop features) |
 
 All alerts carry `category: dora` label for routing.
 
@@ -152,7 +156,7 @@ The DORA metrics dashboard is provisioned at:
 - Grafana folder: `Platform`
 - Datasources: `Prometheus` (UID: `prometheus`), `PostgreSQL` (UID: `ufawkesres-postgres`)
 
-The dashboard shows the four DORA indicators with DORA 2025 performance bands (Elite/High/Medium/Low).
+The dashboard shows the five DORA indicators with DORA 2025/2026 performance bands (Elite/High/Medium/Low).
 
 ---
 
@@ -162,7 +166,7 @@ The dashboard shows the four DORA indicators with DORA 2025 performance bands (E
 
 2. **Contract enables cross-plane integration** — uFawkesDORA's ingestion API can rely on a stable schema. Changes to this contract require an ADR update.
 
-3. **DORA 2025 alignment** — The four metrics and their recording rules follow the DORA 2025 report definitions, with performance bands (Elite/High/Medium/Low) matching industry benchmarks.
+3. **DORA 2025/2026 alignment** — The five key metrics and their recording rules follow the DORA 2025 report and DORA 2026 AI Capabilities Model definitions, with performance bands (Elite/High/Medium/Low) matching industry benchmarks.
 
 4. **Separation of concerns** — uFawkesObs provides telemetry and recording rules; uFawkesDORA computes final metrics. This ADR defines the interface between them.
 
@@ -196,6 +200,8 @@ The dashboard shows the four DORA indicators with DORA 2025 performance bands (E
 ## References
 
 - DORA 2025 Report: <https://dora.dev/reports/2025/>
+- DORA 2025 AI Capabilities Model: <https://services.google.com/fh/files/misc/2025_dora_ai_capabilities_model.pdf>
+- DORA 2026 ROI of AI-Assisted Development: <https://services.google.com/fh/files/misc/dora-roi-of-ai-assisted-software-development-2026.pdf>
 - OTel Semantic Conventions for CI/CD: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/ci-cd/README.md>
 - OTel Semantic Conventions for Alerts: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/alert/README.md>
 - uFawkesDORA Ingestion API spec: `docs/specification.md` (M4 section)
@@ -205,13 +211,14 @@ The dashboard shows the four DORA indicators with DORA 2025 performance bands (E
 
 ## Implementation Tasks
 
-1. [ ] Create `docs/adr/ADR-006-dora-metric-definitions.md` (this file)
-2. [ ] Add row to `docs/adr/README.md` index
-3. [ ] Create `config/prometheus/rules/ufawkesobs-dora-metrics.yml` (recording rules)
-4. [ ] Create `config/prometheus/rules/ufawkesobs-dora-alerts.yml` (alert rules)
-5. [ ] Add `dora` profile to `compose.yaml` with OTel Collector exporter to uFawkesDORA
-6. [ ] Create `config/otel/collector-dora.yaml` for DORA profile
-7. [ ] Add Grafana Postgres datasource provisioning (`ufawkesres-postgres`)
+1. [x] Create `docs/adr/ADR-006-dora-metric-definitions.md` (this file)
+2. [x] Add row to `docs/adr/README.md` index
+3. [x] Create `config/prometheus/rules/ufawkesobs-dora-metrics.yml` (recording rules + alert rules)
+4. [ ] Create `config/prometheus/rules/ufawkesobs-dora-alerts.yml` (alert rules — consolidated into recording rules file)
+5. [x] Add `dora` profile to `compose.yaml` with OTel Collector exporter to uFawkesDORA
+6. [x] Create `config/otel/collector-dora.yaml` for DORA profile
+7. [x] Add Grafana Postgres datasource provisioning (`ufawkesres-postgres`)
 8. [ ] Create `dashboards/platform/dora-metrics.json`
-9. [ ] Update `docs/adr/README.md` index
-10. [ ] Add Alertmanager route for `category: dora` alerts
+9. [x] Update `docs/adr/README.md` index
+10. [x] Add Alertmanager route for `category: dora` alerts
+11. [x] Add `dora:rework_rate:ratio` recording rule for 5th DORA metric (DORA 2026)
