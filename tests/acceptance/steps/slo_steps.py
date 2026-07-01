@@ -169,7 +169,7 @@ def _assert_slo(
 # ──────────────────────────────────────────────────────────────────────
 
 
-@when("I emit a counter metric 'slo_ingest_latency' with a unique value")
+@when('I emit a counter metric "slo_ingest_latency" with a unique value')
 def emit_counter_for_slo(stack: ObservabilityStack) -> None:
     """Emit a counter metric with a unique timestamp value for SLO measurement."""
     emit_time_ms = int(time.time() * 1000)
@@ -563,6 +563,41 @@ def all_datasources_reachable(stack: ObservabilityStack) -> None:
 # ──────────────────────────────────────────────────────────────────────
 
 
+def _resolve_template_datasource_uid(
+    ds_uid: str,
+    templating: dict[str, Any],
+    grafana_datasources: list[dict[str, Any]],
+) -> str:
+    """Resolve Grafana template variable datasource references to actual UIDs.
+
+    Handles patterns like ``$datasource`` and ``${datasource}`` by looking
+    up the variable definition in the dashboard's templating section and
+    resolving it against datasources available in Grafana.
+    """
+    if not ds_uid or not (ds_uid.startswith("$") or ds_uid.startswith("${")):
+        return ds_uid
+
+    # Extract variable name from $var or ${var} syntax
+    var_name = ds_uid.strip("${}")
+
+    # Look up the variable in the dashboard's templating list
+    templating_list = templating.get("list", [])
+    for var_def in templating_list:
+        if var_def.get("name") != var_name:
+            continue
+        var_type = var_def.get("type", "")
+        if var_type == "datasource":
+            ds_query = var_def.get("query", "")
+            # Find the first datasource matching the query type/name
+            for ds in grafana_datasources:
+                ds_type = ds.get("type", "").lower()
+                ds_name = ds.get("name", "").lower()
+                if ds_type == ds_query.lower() or ds_name == ds_query.lower():
+                    resolved = ds.get("uid", ds_uid)
+                    return resolved
+    return ds_uid
+
+
 @when("I query each provisioned Grafana dashboard for panel data")
 def query_dashboard_panels(stack: ObservabilityStack) -> None:
     """Fetch all Grafana dashboards and query their panels for data.
@@ -574,6 +609,10 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
     grafana = stack.grafana()
     dashboards = grafana.dashboards()
     print(f"📋 Found {len(dashboards)} dashboards in Grafana")
+
+    # Fetch all datasources once for template variable resolution
+    all_datasources = grafana.datasources()
+    print(f"📋 Found {len(all_datasources)} datasources in Grafana")
 
     dashboard_data: list[dict[str, Any]] = []
 
@@ -595,8 +634,9 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
                 print(f"  ❌ {title}: Dashboard unreachable")
                 continue
 
-            # Extract panels from dashboard JSON
+            # Extract panels and templating from dashboard JSON
             dash_data = dashboard.get("dashboard", {})
+            templating = dash_data.get("templating", {})
             panels = dash_data.get("panels", [])
             total_panels = len(panels)
             panels_with_data = 0
@@ -607,12 +647,17 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
                 panel_id = panel.get("id", 0)
                 datasource = panel.get("datasource", {})
 
+                # Resolve template variable references in datasource UID
+                ds_type = datasource.get("type", "")
+                ds_uid = datasource.get("uid", "")
+                ds_uid = _resolve_template_datasource_uid(
+                    ds_uid, templating, all_datasources
+                )
+
                 # Try to query the panel's datasource for its target expression
                 targets = panel.get("targets", [])
                 has_data = False
                 if targets and datasource:
-                    ds_type = datasource.get("type", "")
-                    ds_uid = datasource.get("uid", "")
                     if ds_type == "prometheus" and ds_uid:
                         for target in targets:
                             expr = target.get("expr", "")
