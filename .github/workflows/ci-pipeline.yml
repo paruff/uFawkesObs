@@ -12,6 +12,8 @@ permissions:
   pull-requests: write
   issues: write
   security-events: write
+  actions: write
+  checks: write
 
 concurrency:
   group: pipeline-${{ github.ref }}
