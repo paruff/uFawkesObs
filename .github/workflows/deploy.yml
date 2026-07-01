@@ -60,8 +60,10 @@ jobs:
     needs: detect-changes
     # For workflow_run trigger, ensure acceptance-full passed
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'push')
+      (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+        (github.event_name == 'push')
+      ) &&
       needs.detect-changes.outputs.reload_changed == 'true' &&
       needs.detect-changes.outputs.compose_changed != 'true' &&
       needs.detect-changes.outputs.non_reloadable_config_changed != 'true'
@@ -195,10 +197,14 @@ jobs:
     name: Deploy (compose restart)
     needs: detect-changes
     if: |
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'push')
-      needs.detect-changes.outputs.compose_changed == 'true' ||
-      needs.detect-changes.outputs.non_reloadable_config_changed == 'true'
+      (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+        (github.event_name == 'push')
+      ) &&
+      (
+        needs.detect-changes.outputs.compose_changed == 'true' ||
+        needs.detect-changes.outputs.non_reloadable_config_changed == 'true'
+      )
     runs-on: ubuntu-latest
     environment: compose-restart
     outputs:
