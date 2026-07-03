@@ -61,7 +61,7 @@ jobs:
   build:
     name: Build & Validate
     needs: [security, dependency-review]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@v1.1.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@v1.1.1
     with:
       validate-prometheus: true
       validate-otel: true
