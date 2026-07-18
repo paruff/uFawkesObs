@@ -128,51 +128,6 @@ services:
         reservations:
           cpus: "0.5"
           memory: 512M
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3100/ready",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        tag: "loki"
-    labels:
-      - "plane=obstackd"
-      - "component=logging"
-      - "managed-by=fawkes"
-    networks:
-      - observability
-    profiles: ["core"]
-
-  alloy:
-    image: grafana/alloy:v1.12.2
-    container_name: alloy
-    restart: unless-stopped
-    command:
-      - "run"
-      - "--server.http.listen-addr=0.0.0.0:12345"
-      - "--storage.path=/var/lib/alloy"
-      - "/etc/alloy/config.river"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./config/alloy/config.river:/etc/alloy/config.river:ro
-      - ./data/alloy:/var/lib/alloy
-    ports:
-      - "12345:12345" # Alloy HTTP/metrics
-    environment:
-      - TZ=UTC
     depends_on:
       loki:
         condition: service_healthy
