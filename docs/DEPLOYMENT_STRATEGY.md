@@ -66,6 +66,7 @@ Before implementing the target model:
 ## Rollback Procedure
 
 ### Automated (Current)
+
 When `post-deploy-verify` fails in `deploy.yml`, the `rollback` job:
 1. SSHs into the target host
 2. Runs `git revert HEAD --no-edit`
@@ -73,6 +74,7 @@ When `post-deploy-verify` fails in `deploy.yml`, the `rollback` job:
 4. Runs `make up` to restart the previous stack
 
 ### Manual (Fallback)
+
 ```bash
 # SSH into target host
 ssh user@host

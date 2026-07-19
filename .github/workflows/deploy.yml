@@ -35,7 +35,7 @@ jobs:
       non_reloadable_config_changed: ${{ steps.filter.outputs.non_reloadable_config }}
     steps:
       - name: "job-start"
-        run: echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - uses: actions/checkout@v7
         with:
@@ -60,7 +60,7 @@ jobs:
 
       - name: "job-finish"
         if: always()
-        run: echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   deploy-config-reload:
     name: Deploy (config reload)
@@ -81,7 +81,7 @@ jobs:
       health_result: ${{ steps.summary.outputs.health_result }}
     steps:
       - name: "job-start"
-        run: echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Validate deploy secrets
         env:
@@ -205,7 +205,7 @@ jobs:
 
       - name: "job-finish"
         if: always()
-        run: echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   deploy-compose-restart:
     name: Deploy (compose restart)
@@ -227,7 +227,7 @@ jobs:
       health_result: ${{ steps.summary.outputs.health_result }}
     steps:
       - name: "job-start"
-        run: echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Validate deploy secrets
         env:
@@ -343,7 +343,7 @@ jobs:
 
       - name: "job-finish"
         if: always()
-        run: echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   # ─── Post-Deployment Verification ──────────────────────────────────────────
   post-deploy-verify:
@@ -363,7 +363,7 @@ jobs:
       health_result: ${{ steps.verify.outputs.health_result }}
     steps:
       - name: "job-start"
-        run: echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Validate deploy secrets
         env:
@@ -433,7 +433,7 @@ jobs:
 
       - name: "job-finish"
         if: always()
-        run: echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   # ─── Rollback on Verification Failure ──────────────────────────────────────
   rollback:
@@ -462,7 +462,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "job-start"
-        run: echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Comment on triggering commit
         uses: actions/github-script@v9
@@ -497,4 +497,4 @@ jobs:
 
       - name: "job-finish"
         if: always()
-        run: echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
