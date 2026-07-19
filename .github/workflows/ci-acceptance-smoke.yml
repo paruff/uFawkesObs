@@ -2,8 +2,10 @@
 name: Acceptance Smoke (Pre-Merge)
 
 on:
-  pull_request:
-    branches: [main]
+  # NOTE: pull_request trigger removed — ci-pipeline.yml calls this
+  # workflow via workflow_call. The direct pull_request trigger caused
+  # a concurrency collision (two runs in the same group cancelling
+  # each other) because ci-pipeline.yml also triggers on pull_request.
   push:
     branches: [main]
   workflow_dispatch:

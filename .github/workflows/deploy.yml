@@ -34,6 +34,9 @@ jobs:
       reload_changed: ${{ steps.filter.outputs.reload }}
       non_reloadable_config_changed: ${{ steps.filter.outputs.non_reloadable_config }}
     steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -55,6 +58,10 @@ jobs:
               - '!config/prometheus/**'
               - '!config/alloy/**'
 
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
   deploy-config-reload:
     name: Deploy (config reload)
     needs: detect-changes
@@ -73,6 +80,9 @@ jobs:
       services_action: ${{ steps.summary.outputs.services_action }}
       health_result: ${{ steps.summary.outputs.health_result }}
     steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
       - name: Validate deploy secrets
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -193,6 +203,10 @@ jobs:
           echo "services_action=Prometheus reloaded via /-/reload; Alloy reloaded with SIGHUP" >> "$GITHUB_OUTPUT"
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
 
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
   deploy-compose-restart:
     name: Deploy (compose restart)
     needs: detect-changes
@@ -212,6 +226,9 @@ jobs:
       services_action: ${{ steps.summary.outputs.services_action }}
       health_result: ${{ steps.summary.outputs.health_result }}
     steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
       - name: Validate deploy secrets
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -324,30 +341,148 @@ jobs:
           echo "services_action=Ran make up (check-env + docker compose up -d)" >> "$GITHUB_OUTPUT"
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
 
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+  # ─── Post-Deployment Verification ──────────────────────────────────────────
+  post-deploy-verify:
+    name: "🧪 Post-Deploy Verification"
+    needs:
+      - detect-changes
+      - deploy-config-reload
+      - deploy-compose-restart
+    if: |
+      always() && (
+        needs.deploy-config-reload.result == 'success' ||
+        needs.deploy-compose-restart.result == 'success'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      health_result: ${{ steps.verify.outputs.health_result }}
+    steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${DEPLOY_HOST}" ]; then echo "::error::Missing DEPLOY_HOST"; missing=1; fi
+          if [ -z "${DEPLOY_USER}" ]; then echo "::error::Missing DEPLOY_USER"; missing=1; fi
+          if [ -z "${DEPLOY_KEY}" ]; then echo "::error::Missing DEPLOY_KEY"; missing=1; fi
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Add deploy host to known_hosts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          if [ -n "${DEPLOY_HOST_KEY}" ]; then
+            printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
+          else
+            ssh-keyscan -T 10 -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          fi
+
+      - name: Verify services healthy on target host
+        id: verify
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+            set -euo pipefail
+            REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
+            if [ -x "${REPO_DIR}/scripts/wait-healthy.sh" ]; then
+              cd "${REPO_DIR}"
+              ./scripts/wait-healthy.sh
+            else
+              # Fallback: basic endpoint checks
+              for ep in \
+                "http://localhost:9090/-/ready" \
+                "http://localhost:3000/api/health" \
+                "http://localhost:3200/ready" \
+                "http://localhost:3100/ready" \
+                "http://localhost:8888/metrics"; do
+                curl -sf --connect-timeout 5 --max-time 10 "$ep" > /dev/null 2>&1 || {
+                  echo "❌ Health check failed: $ep"
+                  exit 1
+                }
+                echo "✅ $(echo $ep | sed 's|http://localhost:[0-9]*/||')"
+              done
+            fi
+          REMOTE
+          echo "health_result=passed" >> "$GITHUB_OUTPUT"
+          echo "✅ Post-deployment verification passed"
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+  # ─── Rollback on Verification Failure ──────────────────────────────────────
+  rollback:
+    name: "🔄 Rollback"
+    needs: post-deploy-verify
+    if: failure() && needs.post-deploy-verify.result == 'failure'
+    uses: paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.2.0
+    with:
+      deploy-path: ${{ vars.DEPLOY_PATH }}
+      restart-command: "cd ${DEPLOY_PATH:-$HOME/${GITHUB_REPOSITORY##*/}} && make up"
+    secrets:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+
   comment-summary:
     name: Post deployment summary
     needs:
       - detect-changes
       - deploy-config-reload
       - deploy-compose-restart
+      - post-deploy-verify
+      - rollback
     if: always() && (needs.deploy-config-reload.result != 'skipped' || needs.deploy-compose-restart.result != 'skipped')
     runs-on: ubuntu-latest
     steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
       - name: Comment on triggering commit
         uses: actions/github-script@v9
         with:
           script: |
             const mode = `${{ needs.deploy-compose-restart.outputs.deployment_mode || needs.deploy-config-reload.outputs.deployment_mode || 'unknown' }}`;
             const services = `${{ needs.deploy-compose-restart.outputs.services_action || needs.deploy-config-reload.outputs.services_action || 'n/a' }}`;
-            const health = `${{ needs.deploy-compose-restart.outputs.health_result || needs.deploy-config-reload.outputs.health_result || 'failed' }}`;
+            const health = `${{ needs.post-deploy-verify.outputs.health_result || needs.deploy-compose-restart.outputs.health_result || needs.deploy-config-reload.outputs.health_result || 'failed' }}`;
             const composeResult = `${{ needs.deploy-compose-restart.result }}`;
             const configResult = `${{ needs.deploy-config-reload.result }}`;
+            const verifyResult = `${{ needs.post-deploy-verify.result }}`;
+            const rollbackResult = `${{ needs.rollback.result }}`;
 
             const body = [
               '## GitOps Reconciliation Summary',
               `- Mode: ${mode}`,
               `- Services: ${services}`,
               `- Health check: ${health}`,
+              `- Post-deploy verify: ${verifyResult}`,
+              `- Rollback: ${rollbackResult}`,
               `- compose-restart job: ${composeResult}`,
               `- config-reload job: ${configResult}`,
               `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
@@ -359,3 +494,7 @@ jobs:
               commit_sha: context.sha,
               body
             });
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'

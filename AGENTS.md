@@ -208,7 +208,7 @@ headings, update `review.md`'s check to match.
 
 ### Deployment Lifecycle Gates
 
-- **Main CI must be green before any PR merges.** If the latest run of `CI Pipeline` (or `ci.yml`) on `main` is not `success`, all PRs are blocked until it is fixed. This is enforced by a `main-ci-guard.yml` workflow — see prei's implementation for reference.
+- **Main CI must be green before any PR merges.** If the latest run of `CI Pipeline` on `main` is not `success`, all PRs are blocked until it is fixed. Enforced by `main-ci-guard.yml` which calls `paruff/ufawkespipe/.github/workflows/reusable-main-ci-guard.yml@v1.2.0`.
 - **Every push to `main` that changes config, compose, or dashboards triggers a deploy.** The deploy must include:
   1. The deploy operation itself (SSH pull + reload/restart).
   2. **Post-deployment verification** — smoke tests against the live deployed instance (health endpoints, data flow checks), not just against the CI build. This runs as a separate job after the deploy.
@@ -242,3 +242,6 @@ When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
 - `docs/PROMPT_LIBRARY.md` — tested prompt templates
 - `docs/CHANGE_IMPACT_MAP.md` — cross-service and cross-plane impact
 - `docs/MODEL_POLICY.md` — model selection, routing, and budget guardrails
+- `docs/DEPLOYMENT_STRATEGY.md` — progressive delivery plan
+- `docs/PR_STANDARD.md` — PR title and body format rules
+- `paruff/ufawkespipe` reusable workflows — `reusable-main-ci-guard.yml`, `reusable-rollback.yml` (`@v1.2.0`)
