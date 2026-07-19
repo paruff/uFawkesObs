@@ -66,6 +66,8 @@ steps another agent calls directly.
 | 4        | `docs/KNOWN_LIMITATIONS.md`  | Known issues — do not make these worse                             |
 | 4.5      | `docs/MODEL_POLICY.md`       | Model selection, token budgets, premium request accounting         |
 | 5        | `docs/CHANGE_IMPACT_MAP.md`  | What breaks when a service config changes                          |
+| 5.5      | `docs/DEPLOYMENT_STRATEGY.md` | Progressive delivery model — must exist before production traffic  |
+| 5.6      | `docs/PR_STANDARD.md`        | PR title and body format rules                                     |
 
 If any of these don't exist for this repo, agents proceed with what's
 available and note the gap — they don't invent the missing content.
@@ -137,7 +139,10 @@ available and note the gap — they don't invent the missing content.
 
 - Commit `.env` files, passwords, API keys, or tokens
 - Use `latest` image tags
-- Remove `healthcheck:` from any service
+- Remove `healthcheck:` from any service **except**:
+  - The image is **distroless** (no shell, no curl, no wget, no python), **AND**
+  - The image binary itself provides no health-query subcommand (`validate`, `status`, etc.).
+  - When removing, document in the PR description: the image name, why it's distroless, and the alternative approach used (`condition: service_started`, metrics endpoint, etc.).
 - Delete tests to make a build pass
 - Push to `main` directly or merge their own PRs
 - Apply `large-pr-approved` label (humans only)
@@ -184,17 +189,32 @@ headings, update `review.md`'s check to match.
 
 ## 8. GitOps / Trunk-Based Delivery Contract
 
+### Branch & PR Discipline
+
 - Development happens on feature branches off `main`; never commit directly to trunk.
 - Branch naming: `feat/<short-slug>` for features, `fix/<short-slug>` for fixes.
-- GitOps reconciliation: pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**` reconcile the target host over SSH.
-- Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
-- `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before `make up`.
 - CI runs on push and on PR. `feature-flow`'s local test-execution and CI are separate events — if CI fails after local tests passed, `repair-flow` handles it.
 - PR size > 400 changed lines → CI blocks. Override requires a human-applied `large-pr-approved` label — agents never apply it themselves.
 - Merge to trunk requires: green CI, review APPROVED, verification PASS, cross-validation PASS, and human approval.
 - Image version bumps require old and new version in PR description.
 - Any change to Prometheus scrape config requires a note on which metrics will be affected.
 - Rework rate > 10% (PRs requiring `repair-flow` or more than one review cycle): stop adding features, fix instructions or gates.
+
+### GitOps Reconciliation
+
+- GitOps reconciliation: pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**` reconcile the target host over SSH.
+- Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
+- `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before `make up`.
+
+### Deployment Lifecycle Gates
+
+- **Main CI must be green before any PR merges.** If the latest run of `CI Pipeline` (or `ci.yml`) on `main` is not `success`, all PRs are blocked until it is fixed. This is enforced by a `main-ci-guard.yml` workflow — see prei's implementation for reference.
+- **Every push to `main` that changes config, compose, or dashboards triggers a deploy.** The deploy must include:
+  1. The deploy operation itself (SSH pull + reload/restart).
+  2. **Post-deployment verification** — smoke tests against the live deployed instance (health endpoints, data flow checks), not just against the CI build. This runs as a separate job after the deploy.
+  3. **Rollback on failure** — if post-deployment verification fails, the deploy must automatically revert the GitOps repo (`git revert`) and optionally restart the previous stack.
+- **Observability is built-in.** Every CI job logs `job-start` / `job-finish` timestamps. Build times, test results, deploy status, and rollback events are all traceable in uFawkesObs.
+- **Progressive delivery is aspirational.** The current model is SSH push with `make up`. A staged model (canary → staging → production) should be designed before uFawkesObs serves production traffic. See `docs/DEPLOYMENT_STRATEGY.md` (proposed) for the target.
 
 ## 9. Known Limitations
 
