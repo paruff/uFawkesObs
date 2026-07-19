@@ -190,6 +190,7 @@ headings, update `review.md`'s check to match.
 ## 8. GitOps / Trunk-Based Delivery Contract
 
 ### Branch & PR Discipline
+
 - Development happens on feature branches off `main`; never commit directly to trunk.
 - Branch naming: `feat/<short-slug>` for features, `fix/<short-slug>` for fixes.
 - CI runs on push and on PR. `feature-flow`'s local test-execution and CI are separate events — if CI fails after local tests passed, `repair-flow` handles it.
@@ -200,11 +201,13 @@ headings, update `review.md`'s check to match.
 - Rework rate > 10% (PRs requiring `repair-flow` or more than one review cycle): stop adding features, fix instructions or gates.
 
 ### GitOps Reconciliation
+
 - GitOps reconciliation: pushes to `main` for `config/**`, `compose.yaml`, `.env.example`, and `dashboards/**` reconcile the target host over SSH.
 - Config-only changes use service reloads (Prometheus `/-/reload`, Alloy `SIGHUP`).
 - `compose.yaml` changes require GitHub Environment approval (`compose-restart`) before `make up`.
 
 ### Deployment Lifecycle Gates
+
 - **Main CI must be green before any PR merges.** If the latest run of `CI Pipeline` (or `ci.yml`) on `main` is not `success`, all PRs are blocked until it is fixed. This is enforced by a `main-ci-guard.yml` workflow — see prei's implementation for reference.
 - **Every push to `main` that changes config, compose, or dashboards triggers a deploy.** The deploy must include:
   1. The deploy operation itself (SSH pull + reload/restart).
