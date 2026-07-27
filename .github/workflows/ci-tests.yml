@@ -11,6 +11,13 @@ on:
 permissions:
   contents: read
 
+env:
+  # Satisfies compose.yaml's required-var interpolation for the `dora`-profiled
+  # otel-collector-dora service, which Docker Compose evaluates even when only
+  # --profile core is requested. Never actually used: the dora profile is not
+  # activated by any job in this file. See docs/IMPLEMENTATION_PLAN.md finding D1.
+  DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
+
 jobs:
   # ─── Unit Tests ───────────────────────────────────────────────────────────
   unit-tests:
