@@ -1,10 +1,11 @@
 # uFawkesObs — Specification
 
-**Version:** 1.0.0
-**Date:** 2026-06-28
+**Version:** 1.1.0
+**Date:** 2026-07-27
 **Repo:** paruff/uFawkesObs
 **Plane:** Observability
 **Status:** Approved
+**Discovery:** [`docs/product/discovery-draft.md`](discovery-draft.md)
 
 ---
 
@@ -42,9 +43,9 @@ Rather than having each repository or plane provision its own isolated, custom t
 | Milestone | Theme | Scope | Status |
 |---|---|---|---|
 | **M1 (v1.0.0)** | Substrate Core | Core Docker Compose stack (OTel Collector, Prometheus, Alertmanager, Tempo, Loki, Alloy, Grafana) with automated local unit/integration test gates. | **Completed** |
-| **M2 (v1.1.0)** | Repo Hardening | Standardized CONTRIBUTING rules, issue templates, ARCHITECTURE mapping, KNOWN_LIMITATIONS documentation, and repo badges. | **Backlog** (M2-01 to M2-05) |
-| **M3 (v1.2.0)** | Cross-Plane Docs | Structured guides for joining uFawkesPipe, uFawkesDevX, and Backstage catalog registration. | **Backlog** (M3-01 to M3-04) |
-| **M4 (v1.3.0)** | DORA & Ecosystem | Wire uFawkesObs to uFawkesDORA compute plane and uFawkesRes shared PostgreSQL, implement Prometheus DORA recording rules, and provision Grafana DORA dashboards. | **Backlog** (M4-01 to M4-04) |
+| **M2 (v1.1.0)** | Repo Hardening | Standardized CONTRIBUTING rules, issue templates, ARCHITECTURE mapping, KNOWN_LIMITATIONS documentation, and repo badges. | **Completed** (M2-01 to M2-04) |
+| **M3 (v1.2.0)** | Cross-Plane Docs | Structured guides for joining uFawkesPipe, uFawkesDevX, and Backstage catalog registration. | **Completed** (M3-01 to M3-04; M3-05 shipped under a narrowed scope, PR #138) |
+| **M4 (v1.3.0)** | DORA & Ecosystem | Wire uFawkesObs to uFawkesDORA compute plane and uFawkesRes shared PostgreSQL, implement Prometheus DORA recording rules, and provision Grafana DORA dashboards. | **Completed** (M4-01 to M4-04) |
 | **M5 (v2.0.0)** | Kubernetes Deploy | Kubernetes deployment ADR, Helm charts for the core stack, k3d local simulator, and k8s-based acceptance pipelines. | **Backlog** (M5-01 to M5-04) |
 
 ---
@@ -60,13 +61,13 @@ Rather than having each repository or plane provision its own isolated, custom t
 - **OBS-F05:** Pre-load system performance dashboards for host system, container logs, and telemetry flow metrics.
 - **OBS-F06:** Run automated health checking of all stack services via Docker Compose healthchecks and local test automation.
 
-### 4.2 Backlog — Repository Hardening & Cross-Plane (M2 & M3)
+### 4.2 Completed — Repository Hardening & Cross-Plane (M2 & M3)
 
 - **OBS-F10:** Document the precise network join patterns in `multi-stack-integration.md` to allow other planes (e.g., developerd, deliveryd) to join the `observability-lab` Docker bridge network.
 - **OBS-F11:** Register uFawkesObs into fawkes Backstage catalog-info.yaml metadata.
 - **OBS-F12:** Provide clear guide explaining how uFawkesPipe CI pipelines can export OTLP tracing to uFawkesObs Tempo.
 
-### 4.3 Backlog — DORA & Ecosystem Integration (M4)
+### 4.3 Completed — DORA & Ecosystem Integration (M4)
 
 - **OBS-F20:** Define the DORA data contract mapping of what counts as a deployment, incident, and lead-time event inside uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
 - **OBS-F21:** Implement Prometheus recording rules inside `config/prometheus/rules/` computing Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Failed Deployment Recovery Time (FDRT).
@@ -113,10 +114,12 @@ Rather than having each repository or plane provision its own isolated, custom t
 | Component | Version | Role | Mount / Vol Data | Configuration File |
 |---|---|---|---|---|
 | **OpenTelemetry Collector** | `0.120.0` | Telemetry processing and fanout | None | `config/otel/collector.yaml` |
-| **Prometheus** | `v2.55.1` | Metrics TSDB & scrape engine | `./data/prometheus` | `config/prometheus/prometheus.yaml` |
-| **Alertmanager** | `v0.27.0` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
+| **OpenTelemetry Collector (DORA)** | `0.120.0` | Second collector instance, `dora` profile only, forwards to uFawkesDORA ingestion | None | `config/otel/collector-dora.yaml` |
+| **Prometheus** | `v3.5.4` | Metrics TSDB & scrape engine | `./data/prometheus` | `config/prometheus/prometheus.yaml` |
+| **Alertmanager** | `v0.28.0` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
 | **Tempo** | `2.10.5` | Distributed trace database | `./data/tempo` | `config/tempo/tempo.yaml` |
-| **Loki** | `2.9.10` | Log indexer & backend | `./data/loki` | `config/loki/loki.yaml` |
+| **Loki** | `3.3.2` | Log indexer & backend | `./data/loki` | `config/loki/loki.yaml` |
 | **Alloy** | `v1.12.2` | Container log discovery & forwarding | `./data/alloy` | `config/alloy/config.river` |
-| **Grafana** | `10.4.5` | Metrics, logs, & trace dashboard UI | `./data/grafana` | `config/grafana/grafana.ini` |
+| **Grafana** | `12.3.7` | Metrics, logs, & trace dashboard UI | `./data/grafana` | `config/grafana/grafana.ini` |
 | **Node Exporter** | `v1.8.1` | Host system exporter | Host read mounts | None |
+| **telemetry-generator** | n/a (in-repo Go app) | Demo instrumented app; emits OTLP metrics/logs/traces for stack verification | None | `apps/telemetry-generator/` |
