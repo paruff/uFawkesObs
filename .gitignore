@@ -50,9 +50,15 @@ graphify-out
 .headroom/
 
 # Feature lifecycle working files (overwritten per-feature, cause merge conflicts)
-specification.md
-design.md
-tasks.json
-build-report.md
-test-report.md
-review-report.md
+# Root-anchored: only the transient root-level copies, not docs/product/ or docs/features/
+/specification.md
+/design.md
+/tasks.json
+*-report.md
+/ci-diagnosis.md
+
+# Lighthouse artifacts
+.unlighthouse/
+
+# Backup files
+*.bak

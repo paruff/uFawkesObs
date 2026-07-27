@@ -72,7 +72,7 @@ uFawkesObs Stack:
 Grafana → Explore → Loki
 
 Quick Filters:
-  {compose_service="media-refinery"}     → App logs
+  {compose_service="telemetry-generator"} → App logs
   {compose_service="prometheus"}         → Prometheus logs
   {stream="stderr"}                      → Error logs only
   {compose_project="ufawkesobs"} → uFawkesObs stack
@@ -86,7 +86,7 @@ Quick Filters:
 
 **To Enable:**
 
-1. Add OpenTelemetry SDK to Media-Refinery Go code
+1. Add OpenTelemetry SDK to telemetry-generator Go code
 2. Initialize in main()
 3. Wrap operations with `tracer.Start()`
 4. Rebuild and redeploy
@@ -202,8 +202,8 @@ alertmanager_alerts
 ### Loki Queries (LogQL)
 
 ```
-# All logs from media-refinery
-{compose_service="media-refinery"}
+# All logs from telemetry-generator
+{compose_service="telemetry-generator"}
 
 # Error logs only
 {stream="stderr"}
@@ -212,7 +212,7 @@ alertmanager_alerts
 {compose_service="prometheus"}
 
 # Recent logs (pattern matching)
-{compose_service="media-refinery"} | grep "ERROR"
+{compose_service="telemetry-generator"} | grep "ERROR"
 ```
 
 ---
@@ -242,7 +242,7 @@ alertmanager_alerts
 
 **"I don't see logs"**
 → Check: `curl http://localhost:3100/loki/api/v1/label/compose_service/values`
-→ Should list all services including "media-refinery"
+→ Should list all services including "telemetry-generator"
 
 **"Prometheus shows no targets"**
 → Check: `curl http://localhost:9090/api/v1/targets | grep health`
@@ -265,7 +265,7 @@ alertmanager_alerts
 
 ### This Week
 
-1. ⚠️ (Optional) Add OpenTelemetry SDK to Media-Refinery for traces
+1. ⚠️ (Optional) Add OpenTelemetry SDK to telemetry-generator for traces
 2. ⚠️ (Optional) Create custom dashboards for app-specific metrics
 3. ⚠️ (Optional) Configure alert notifications via webhooks
 

@@ -1,5 +1,11 @@
 # Implementation Plan — uFawkesObs
 
+> **ARCHIVED (2026-07-27).** Superseded by [`docs/plan.md`](../../docs/plan.md), the
+> actively maintained roadmap tracked against real GitHub issue numbers and merged
+> PRs. This file's Phase/N-numbering scheme is stale (last updated 2026-06-11) and
+> no longer matches issue tracking. Kept for historical reference only — do not
+> treat as current, do not update further.
+
 > Generated from platform audit (June 2026). Integrates existing GitHub issues (#64, #71, #74-87) with 16 new findings from codebase review. Updated as issues are completed.
 > **Phase 5 revised 2026-06-09** against DORA 2025 State of AI, 2025 AI Capabilities Model, and 2026 ROI reports.
 >

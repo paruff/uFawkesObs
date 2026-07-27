@@ -1,0 +1,165 @@
+{
+  "tasks": [
+    {
+      "id": "chaos-001",
+      "title": "Implement Loki restart chaos scenario (OBS-CHAOS-001)",
+      "description": "Complete the step implementations for log pipeline surviving Loki restart with Alloy buffering",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "stop_service step works for loki",
+        "alloy_buffering_logs verifies Alloy still running",
+        "logs_queryable_after_restart polls Loki until logs return",
+        "log_count_matches_within_tolerance compares pre/post counts within 5%"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["pytest-bdd", "docker-compose", "loki-client"]
+    },
+    {
+      "id": "chaos-002",
+      "title": "Implement Prometheus restart chaos scenario (OBS-CHAOS-002)",
+      "description": "Complete the step implementations for metrics pipeline surviving Prometheus restart",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "cached_metrics_queryable_via_grafana verifies metrics accessible",
+        "prometheus_resumes_scraping polls until all targets UP",
+        "metric_gaps_within_limit verifies scrape gaps <= 90s"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["pytest-bdd", "docker-compose", "promql-client"]
+    },
+    {
+      "id": "chaos-003",
+      "title": "Implement OTel Collector restart chaos scenario (OBS-CHAOS-003)",
+      "description": "Complete the step implementations for OTel Collector restart transparency",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "trace_pipeline_resumes_within_timeout polls Tempo ready",
+        "new_traces_queryable_in_tempo generates trace and verifies in Tempo",
+        "Workload generator integration works during restart"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["pytest-bdd", "docker-compose", "tempo-client", "otel-workload"]
+    },
+    {
+      "id": "chaos-004",
+      "title": "Implement network partition chaos scenario (OBS-CHAOS-004)",
+      "description": "Complete the step implementations for network partition self-healing",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "disconnect_from_network removes otel-collector from observability-lab",
+        "otel_collector_logs_connection_errors verifies errors not crash",
+        "reconnect_to_network_after_delay restores connectivity",
+        "all_telemetry_pipelines_resume verifies all three pipelines"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["pytest-bdd", "docker-network", "docker-compose"]
+    },
+    {
+      "id": "chaos-005",
+      "title": "Implement Grafana datasource removal chaos scenario (OBS-CHAOS-005)",
+      "description": "Complete the step implementations for Grafana datasource removal graceful failure",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "remove_grafana_datasource_provisioning removes actual provisioning file",
+        "grafana_serves_cached_dashboards verifies dashboards still load",
+        "new_queries_fail_gracefully verifies appropriate error on query"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "S",
+      "skill_requirements": ["pytest-bdd", "grafana-client", "docker-compose"]
+    },
+    {
+      "id": "chaos-006",
+      "title": "Integrate Phase 4 synthetic workload generator",
+      "description": "Ensure synthetic workload runs continuously during chaos tests",
+      "dependencies": ["chaos-001", "chaos-002", "chaos-003", "chaos-004", "chaos-005"],
+      "acceptance_criteria": [
+        "Workload generator started before chaos scenarios in conftest.py",
+        "web_api workload generates traces at configurable rate",
+        "log_emitter workload generates logs for Loki buffering test",
+        "Workload cleanly stopped after all chaos scenarios"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/conftest.py",
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["pytest-bdd", "otel-workload", "conftest"]
+    },
+    {
+      "id": "chaos-007",
+      "title": "Enhance chaos evidence reporting",
+      "description": "Extend ChaosReportGenerator to capture detailed metrics and generate comprehensive reports",
+      "dependencies": ["chaos-001", "chaos-002", "chaos-003", "chaos-004", "chaos-005"],
+      "acceptance_criteria": [
+        "Events captured for each chaos scenario (failure_start, failure_end, recovery_start, recovery_end, metric)",
+        "Mermaid sequence diagram generated per scenario",
+        "Data loss metrics calculated and reported",
+        "Markdown report generated at reports/chaos-report.md",
+        "JSON evidence saved at reports/chaos-evidence/chaos-events.json"
+      ],
+      "files_to_modify": [
+        "tests/acceptance/evidence/chaos_report.py",
+        "tests/acceptance/steps/chaos_steps.py"
+      ],
+      "estimated_effort": "M",
+      "skill_requirements": ["mermaid", "dataclass", "evidence-generation"]
+    },
+    {
+      "id": "chaos-008",
+      "title": "Create nightly CI workflow for chaos tests",
+      "description": "Add GitHub Actions workflow to run chaos tests on schedule",
+      "dependencies": ["chaos-001", "chaos-002", "chaos-003", "chaos-004", "chaos-005", "chaos-006", "chaos-007"],
+      "acceptance_criteria": [
+        ".github/workflows/ci-chaos-nightly.yml exists",
+        "Runs on cron schedule (2am daily)",
+        "Uses @chaos pytest marker",
+        "Uploads chaos evidence as artifact",
+        "Cleans up stack on completion (if: always())"
+      ],
+      "files_to_modify": [
+        ".github/workflows/ci-chaos-nightly.yml"
+      ],
+      "estimated_effort": "S",
+      "skill_requirements": ["github-actions", "docker-compose", "ci-cd"]
+    },
+    {
+      "id": "chaos-009",
+      "title": "Validate all chaos scenarios pass",
+      "description": "Run full chaos test suite and verify all acceptance criteria",
+      "dependencies": ["chaos-001", "chaos-002", "chaos-003", "chaos-004", "chaos-005", "chaos-006", "chaos-007", "chaos-008"],
+      "acceptance_criteria": [
+        "pytest tests/acceptance/ -m chaos -v passes all 5 scenarios",
+        "Recovery timelines captured as Mermaid diagrams",
+        "Data loss reported for each scenario",
+        "Reports generated in reports/chaos-evidence/"
+      ],
+      "files_to_modify": [],
+      "estimated_effort": "L",
+      "skill_requirements": ["test-execution", "docker-compose", "validation"]
+    }
+  ],
+  "metadata": {
+    "phase": "5",
+    "title": "Chaos & Failure Injection",
+    "total_tasks": 9,
+    "estimated_total_effort": "L",
+    "parallelizable_groups": [
+      ["chaos-001", "chaos-002", "chaos-003", "chaos-004", "chaos-005"]
+    ]
+  }
+}

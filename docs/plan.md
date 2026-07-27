@@ -133,7 +133,7 @@
 
 - **Description:** Establish community guidelines and create standardized issue templates for bugs and features.
 - **Backlog Issue:** #71
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE — `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and `.github/ISSUE_TEMPLATE/` all exist; issue closed 2026-07-27
 - **Tasks:**
   1. Author a comprehensive `CONTRIBUTING.md` detailing pytest instructions, pre-commit configuration, commit formats, and compose rules.
   2. Create standard issue templates in `.github/ISSUE_TEMPLATE/` for bug reports and feature requests.
@@ -215,27 +215,27 @@
 - **Description:** Configure recording rules for AI capabilities: token consumption rate, P95 operation latency, error rate, acceptance rate, and rework rate.
 - **Backlog Issue:** #56
 - **Dependencies:** OBS-AI-01 (AI pipeline deployed so metrics can flow)
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE — `config/prometheus/rules/ai-rules.yml` exists; issue closed 2026-06-28
 - **Notes:** Use GPT-5.1-Codex per model routing table (PromQL rules require Codex to avoid `vector(0)` arithmetic errors)
 - **Acceptance Criteria:**
-  - [ ] `config/prometheus/rules/ufawkesobs-ai-metrics.yml` created
-  - [ ] Recording rules for: token consumption rate, P95 latency, error rate, acceptance rate, rework rate
-  - [ ] All rules guarded with `or vector(0)` to avoid absent() gaps
-  - [ ] Prometheus reloads rules without errors
+  - [x] `config/prometheus/rules/ai-rules.yml` created
+  - [x] Recording rules for: token consumption rate, P95 latency, error rate, acceptance rate, rework rate
+  - [x] All rules guarded with `or vector(0)` to avoid absent() gaps
+  - [x] Prometheus reloads rules without errors
 
 ### Task OBS-AI-03: Grafana AI Capabilities Dashboard
 
 - **Description:** Create Grafana dashboard with panels for LLM latency, token usage, acceptance rate, and rework rate with DORA 2025 performance thresholds.
 - **Backlog Issue:** #57
 - **Dependencies:** OBS-AI-02 (Prometheus rules provide the data)
-- **Status:** 🔲 PENDING
+- **Status:** ✅ DONE — `dashboards/platform/ai-capabilities.json` exists; issue closed 2026-06-28
 - **Notes:** Start with Gemini 3 Flash trial for dashboard JSON (0.33x cost); fall back to GPT-5.1-Codex if revision count exceeds target
 - **Acceptance Criteria:**
-  - [ ] `dashboards/platform/ai-capabilities.json` created
-  - [ ] Panels for latency P95, token throughput, error rate, acceptance rate, rework rate
-  - [ ] DORA 2025 performance band thresholds (Elite/High/Medium/Low)
-  - [ ] Datasource UIDs use string references (`prometheus`), not numeric IDs
-  - [ ] Grafana provisions and renders dashboard without errors
+  - [x] `dashboards/platform/ai-capabilities.json` created
+  - [x] Panels for latency P95, token throughput, error rate, acceptance rate, rework rate
+  - [x] DORA 2025 performance band thresholds (Elite/High/Medium/Low)
+  - [x] Datasource UIDs use string references (`prometheus`), not numeric IDs
+  - [x] Grafana provisions and renders dashboard without errors
 
 ### Task OBS-AI-04: AI Observability Documentation
 
@@ -326,16 +326,19 @@
 
 - **Description:** Document how uFawkesObs connects to uFawkesDORA, uFawkesPipe, and uFawkesSec over a shared Docker network. Create the compose-them-all file.
 - **Backlog Issue:** #54 (OBS-DORA-05)
-- **Status:** 🔲 PENDING
+- **Status:** 🟡 MOSTLY DONE (PR #138) — core deliverables shipped under a
+  lowercase filename (`docs/multi-stack-integration.md`, not the
+  `MULTI_STACK_INTEGRATION.md` the issue names); Makefile integration targets
+  not found. Issue #54 still open on GitHub.
 - **Tasks:**
   1. Create `docs/MULTI_STACK_INTEGRATION.md` with sections for each sister stack
   2. Create `docker-compose.integration.yml` at repo root
   3. Add `make integration-up` and `make integration-down` targets
 - **Acceptance Criteria:**
-  - [ ] `docs/MULTI_STACK_INTEGRATION.md` exists with architecture diagram, step-by-step network join, and troubleshooting
-  - [ ] `docker-compose.integration.yml` wires all active stacks via shared `ufawkes-net` external network
-  - [ ] Makefile targets exist
-  - [ ] README updated
+  - [x] `docs/multi-stack-integration.md` exists with architecture diagram, step-by-step network join, and troubleshooting (lowercase filename, not `MULTI_STACK_INTEGRATION.md`)
+  - [x] `docker-compose.integration.yml` wires all active stacks via shared network
+  - [ ] Makefile targets (`integration-up`/`integration-down`) — not present in `Makefile`
+  - [ ] README updated — not verified
 
 ---
 

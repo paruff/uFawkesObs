@@ -204,7 +204,7 @@ The dashboard shows the five DORA indicators with DORA 2025/2026 performance ban
 - DORA 2026 ROI of AI-Assisted Development: <https://services.google.com/fh/files/misc/dora-roi-of-ai-assisted-software-development-2026.pdf>
 - OTel Semantic Conventions for CI/CD: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/ci-cd/README.md>
 - OTel Semantic Conventions for Alerts: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/alert/README.md>
-- uFawkesDORA Ingestion API spec: `docs/specification.md` (M4 section)
+- uFawkesDORA Ingestion API spec: `docs/product/spec.md` (M4 section)
 - Related ADRs: ADR-002 (Docker Compose scope), ADR-003 (GitOps scope), ADR-006 (this)
 
 ---
