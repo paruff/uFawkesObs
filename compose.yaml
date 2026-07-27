@@ -490,7 +490,7 @@ services:
     environment:
       - TZ=UTC
       - OTEL_EXPORTER_OTLP_ENDPOINT=${DORA_OTEL_ENDPOINT:-http://ufawkesdora-ingestion:4318}
-      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:-postgresql://ufawkesres:password@fawkes-postgres:5432/ufawkesres}
+      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
     # NOTE: No depends_on for prometheus in dora profile - prometheus runs in core profile
     deploy:
       resources:

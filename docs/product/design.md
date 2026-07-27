@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Date:** 2026-06-28
-**Depends on:** docs/specification.md v1.0.0
+**Depends on:** docs/product/spec.md v1.0.0
 **Repo:** paruff/uFawkesObs
 
 ---

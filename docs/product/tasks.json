@@ -1,0 +1,5 @@
+{
+  "status": "not_populated",
+  "note": "No product-level task backlog existed as a separate artifact as of 2026-07-27. Product/milestone-level task tracking currently lives in docs/plan.md (tracked against real GitHub issue numbers and merged PRs) — do not duplicate it here. This file is reserved for a future product-level plan-phase output if the discover/spec/design/plan pipeline (AGENTS.md §2) produces one distinct from docs/plan.md. Feature-level tasks.json files belong in docs/features/<feature-slug>/tasks.json.",
+  "tasks": []
+}

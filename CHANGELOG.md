@@ -11,10 +11,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `good-first-issue` label and GitHub metadata standards (M2-02)
 - `.github/dependabot.yml` Docker ecosystem for `compose.yaml` image scanning
+- **CONTRIBUTING.md, CODE_OF_CONDUCT.md, GitHub issue templates** (M2-01, issue #71)
+- **Cross-plane integration guides** (Milestone 3): uFawkesPipe and uFawkesDevX
+  telemetry integration guides, Backstage catalog registration
+  (`catalog-info.yaml`), expanded multi-stack integration guide with
+  Kubernetes integration section and minimal-startup patterns, and
+  `docker-compose.integration.yml` for joining sister-plane stacks
+  (issues #76-79, #54; PR #131, #133, #134, #135, #136, #138)
+- **DORA metrics & ecosystem integration** (Milestone 4): `docs/adr/ADR-006-dora-metric-definitions.md`
+  data contract, `dora` compose profile wiring `otel-collector-dora` to
+  uFawkesDORA's ingestion API and uFawkesRes's shared PostgreSQL, 5 Prometheus
+  DORA recording rules (deployment frequency, lead time, change failure rate,
+  FDRT, and DORA-2026's 5th metric — rework rate) with paired alert rules, and
+  a provisioned Grafana DORA metrics dashboard (issues #80-83, #51-53; PR #147,
+  #148, #154, #149/#155)
+- **Acceptance test suite**: BDD-style acceptance tests across 7 phases (SLOs,
+  synthetic workload generators, chaos/failure-injection scenarios, evidence
+  capture, CI integration) plus a nightly chaos test workflow
+  (`.github/workflows/ci-chaos-nightly.yml`)
+- **GitOps lifecycle gates**: post-deployment verification and automatic
+  rollback on failed smoke tests (PR #166)
+- `AGENTS.md` template guidance for reuse across repos (PR #150)
+- `docs/product/` and `docs/features/` directories separating product-level
+  discovery/spec/design docs from per-feature pipeline output (repo hygiene)
 
 ### Changed
 
 - `.github/FUNDING.yml` syntax to GitHub array format
+- **Prometheus upgraded** from v2.55.1 → v3.5.4 (PR #136)
+- DORA scope narrowed per `docs/reviews/M4-02-ecosystem-review.md`: DevLake +
+  MySQL moved to uFawkesDORA's own stack; uFawkesObs's DORA responsibility is
+  now limited to the data contract, recording rules, and dashboard
+- `compose.yaml`'s `otel-collector-dora.DORA_POSTGRES_URL` no longer has a
+  hardcoded credential fallback — now a required `.env` value, documented in
+  `.env.example`
+
+### Fixed
+
+- Stale `media-refinery` app references in `docs/OBSERVABILITY_STATUS.md`
+  corrected to `telemetry-generator` (the actual demo app)
+- Reconciled `docs/plan.md` status column against real GitHub issue state
+  (multiple tasks were done but still shown pending)
 
 ## [0.1.0] — 2026-06-28
 
