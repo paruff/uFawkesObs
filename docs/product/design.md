@@ -1,8 +1,8 @@
 # uFawkesObs — Design
 
-**Version:** 1.0.0
-**Date:** 2026-06-28
-**Depends on:** docs/product/spec.md v1.0.0
+**Version:** 1.1.0
+**Date:** 2026-07-27
+**Depends on:** docs/product/spec.md v1.1.0
 **Repo:** paruff/uFawkesObs
 
 ---
@@ -40,13 +40,16 @@ uFawkesObs/
 │   ├── loki/
 │   │   └── loki.yaml                 # Index, schema, and retention rules
 │   ├── otel/
-│   │   └── collector.yaml            # Ingestion pipelines (metrics, traces, logs)
+│   │   ├── collector.yaml            # Core ingestion pipeline (metrics, traces, logs)
+│   │   └── collector-dora.yaml       # DORA-profile collector, forwards to uFawkesDORA ingestion
 │   ├── prometheus/
 │   │   ├── alerts.yml                # Alert thresholds
-│   │   └── prometheus.yaml           # Global configuration and scrapers
+│   │   ├── prometheus.yaml           # Global configuration and scrapers
+│   │   └── rules/                    # Recording/alerting rules (AI capability, DORA, self-monitoring)
 │   └── tempo/
 │       └── tempo.yaml                # Trace ingestion ports and storage configs
 ├── dashboards/                       # Provisioned dashboard JSON configurations
+│   └── platform/                     # DORA, AI-capability, and per-component health dashboards
 ├── data/                             # Host directory mounts for persistent volumes (gitignored)
 ├── apps/
 │   └── telemetry-generator/          # Demo application mimicking standard OTLP workloads
@@ -54,10 +57,24 @@ uFawkesObs/
 ├── tests/
 │   ├── unit/                         # Local config syntax, version, and model validators
 │   ├── integration/                  # Active container test cases (Prometheus, Grafana, Loki, Tempo)
-│   └── acceptance/                   # In-pipeline E2E observability checks
+│   └── acceptance/                   # In-pipeline E2E observability checks, incl. chaos_report.py
+│       ├── features/                 # Gherkin features (e.g. chaos_resilience.feature)
+│       └── steps/                    # Step implementations (e.g. chaos_steps.py)
+├── reports/
+│   └── chaos-evidence/               # Generated evidence artifacts from chaos test runs
+├── docs/
+│   ├── product/                      # Whole-repo product artifacts: discovery-draft.md, spec.md,
+│   │                                 #   design.md, tasks.json (this document lives here)
+│   └── features/                     # Per-feature discovery/spec/design/tasks, kept after ship
+│       └── chaos-failure-injection/  # Example: chaos/failure-injection feature's pipeline output
 └── .github/
     └── workflows/
-        └── ci-pipeline.yml           # Unified pipeline running preflight, lint, security, build, tests
+        ├── ci-pipeline.yml           # Unified pipeline running preflight, lint, security, build, tests
+        ├── ci-acceptance-smoke.yml   # Fast acceptance gate on PRs
+        ├── ci-acceptance-full.yml    # Full acceptance suite
+        ├── ci-chaos-nightly.yml      # Scheduled chaos/failure-injection gate
+        ├── main-ci-guard.yml         # Branch-protection guard for main
+        └── deploy.yml                # GitOps reconciliation (SSH-triggered) to target environments
 ```
 
 ---
@@ -141,27 +158,29 @@ Grafana automatically configures datasources and preloads dashboards upon contai
 
 ---
 
-## 6. Forward-Looking Feature Designs
+## 6. Milestone Designs
 
-### 6.1 Milestone 4: DORA & Ecosystem Integration Design
+### 6.1 Milestone 4: DORA & Ecosystem Integration Design (Implemented)
 
-uFawkesObs is the observability substrate for DORA metrics. The DORA data pipeline spans three planes:
+uFawkesObs is the observability substrate for DORA metrics. This section previously described a forward-looking design; M4-01 through M4-04 shipped (PRs #147, #148, plus recording-rule and dashboard work) and the design below reflects what is actually running, not a plan. The DORA data pipeline spans three planes:
 
 - **uFawkesDORA (Compute Plane):** Ingestion API → Event Queue (Postgres) → Processor → Metric Compute Job. Owns DevLake as optional complementary visualization.
 - **uFawkesRes (Resource Plane):** Shared PostgreSQL 17 + TimescaleDB on `fawkes-backbone-net`. Hosts `dora_metrics` database (schemas: `event_queue`, `raw_events`, `dora_snapshots`, `archetype_history`, `wellbeing_surveys`, `vsi_stage_breakdown`).
-- **uFawkesObs (Observability Plane):** Prometheus (recording rules, alerting, time-series), Grafana (dashboards reading Prometheus + Postgres), Loki (raw event logs), OTel Collector (ingestion from uFawkesDORA).
+- **uFawkesObs (Observability Plane):** Prometheus (recording rules, alerting, time-series), Grafana (dashboards reading Prometheus + Postgres), Loki (raw event logs), a dedicated `otel-collector-dora` instance (ingestion from/to uFawkesDORA).
 
-**Architecture Additions in uFawkesObs:**
-- **Recording Rules:** PromQL rules in `config/prometheus/rules/dora-metrics.yml` for continuous calculation of `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:fdrt_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:rework_rate:ratio30d`.
-- **DORA Dashboard:** Provision `config/grafana/provisioning/dashboards/dora-metrics.json` with panels reading from Prometheus (trend lines) and PostgreSQL via Postgres datasource plugin (current snapshots, archetype profile).
-- **Network Attachment:** uFawkesObs joins `fawkes-backbone-net` (external name: `ufawkes-resources_fawkes-backbone-net`) to query uFawkesRes PostgreSQL for DORA snapshots.
-- **Alertmanager Routing:** Add `dora_regression` and `leading_indicator` routes to Alertmanager config pointing to `DORA_SLACK_WEBHOOK_URL`.
+**Architecture in uFawkesObs (as built):**
+- **Second OTel Collector:** `otel-collector-dora` compose service, gated behind the `dora` profile, configured via `config/otel/collector-dora.yaml`, connecting to `${DORA_OTEL_ENDPOINT:-http://ufawkesdora-ingestion:4318}`.
+- **Recording Rules:** PromQL rules in `config/prometheus/rules/ufawkesobs-dora-metrics.yml` computing `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:fdrt_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:rework_rate:ratio30d`.
+- **DORA Dashboard:** Provisioned at `dashboards/platform/dora-metrics.json`, documented in `docs/adr/ADR-006-dora-metric-definitions.md`, with panels reading from Prometheus (trend lines) and PostgreSQL via the Postgres datasource plugin (current snapshots, archetype profile).
+- **Network Attachment:** uFawkesObs joins `fawkes-backbone-net` (external name: `ufawkes-resources_fawkes-backbone-net`) to query uFawkesRes PostgreSQL for DORA snapshots. The `otel-collector-dora` service requires `DORA_POSTGRES_URL` as a fail-closed environment variable (no hardcoded fallback) — see §5.
+- **Alertmanager Routing:** `dora_regression` and `leading_indicator` routes point to `DORA_SLACK_WEBHOOK_URL`.
+- **Runtime-deployed status:** Deployed and running under the `dora` compose profile; exercised by the acceptance suite's DORA-dashboard checks (not yet by a dedicated live-system AC in the product discovery brief — see [`discovery-draft.md`](discovery-draft.md), whose current acceptance criterion covers the `core` profile only).
 
 **What moved to other planes (no longer in uFawkesObs scope):**
 - Apache DevLake → uFawkesDORA (optional, complementary to native ingestion)
 - MySQL database → removed; DevLake uses uFawkesRes PostgreSQL
 
-### 6.2 Milestone 5: Kubernetes & Helm Migration Design
+### 6.2 Milestone 5: Kubernetes & Helm Migration Design (Forward-Looking, Backlog)
 
 - **Helm chart structure:** An umbrella Helm chart `helm/ufawkes-obs` containing separate sub-charts:
   - `prometheus-community/prometheus`
