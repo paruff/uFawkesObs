@@ -82,7 +82,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -95,7 +97,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(alertmanager_alerts{cluster=~\"$cluster\",namespace=~\"$namespace\",state=\"active\"})",
+          "expr": "sum(alertmanager_alerts{state=\"active\"})",
           "refId": "A"
         }
       ],
@@ -140,7 +142,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -153,7 +157,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(alertmanager_alerts{cluster=~\"$cluster\",namespace=~\"$namespace\",state=\"suppressed\"})",
+          "expr": "sum(alertmanager_alerts{state=\"suppressed\"})",
           "refId": "A"
         }
       ],
@@ -206,7 +210,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -219,7 +225,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(alertmanager_silences{cluster=~\"$cluster\",namespace=~\"$namespace\",state=\"active\"})",
+          "expr": "sum(alertmanager_silences{state=\"active\"})",
           "refId": "A"
         }
       ],
@@ -264,7 +270,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -277,7 +285,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(alertmanager_alert_groups{cluster=~\"$cluster\",namespace=~\"$namespace\"})",
+          "expr": "sum(alertmanager_alert_groups)",
           "refId": "A"
         }
       ],
@@ -363,7 +371,9 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -380,7 +390,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(alertmanager_alerts_received_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (pod)",
+          "expr": "sum(rate(alertmanager_alerts_received_total[5m])) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -454,7 +464,9 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -471,7 +483,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(alertmanager_alerts_invalid_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (pod)",
+          "expr": "sum(rate(alertmanager_alerts_invalid_total[5m])) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -558,7 +570,9 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -575,7 +589,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(alertmanager_notifications_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (integration)",
+          "expr": "sum(rate(alertmanager_notifications_total[5m])) by (integration)",
           "legendFormat": "{{integration}}",
           "refId": "A"
         }
@@ -649,7 +663,9 @@
       "id": 8,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -666,7 +682,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(alertmanager_notifications_failed_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (integration)",
+          "expr": "sum(rate(alertmanager_notifications_failed_total[5m])) by (integration)",
           "legendFormat": "{{integration}}",
           "refId": "A"
         }
@@ -753,7 +769,9 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -770,7 +788,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(alertmanager_notification_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le, integration))",
+          "expr": "histogram_quantile(0.99, sum(rate(alertmanager_notification_latency_seconds_bucket[5m])) by (le, integration))",
           "legendFormat": "{{integration}} p99",
           "refId": "A"
         },
@@ -779,7 +797,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(alertmanager_notification_latency_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le, integration))",
+          "expr": "histogram_quantile(0.50, sum(rate(alertmanager_notification_latency_seconds_bucket[5m])) by (le, integration))",
           "legendFormat": "{{integration}} p50",
           "refId": "B"
         }
@@ -853,7 +871,9 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -870,7 +890,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(alertmanager_nflog_query_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(alertmanager_nflog_query_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "A"
         },
@@ -879,7 +899,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(alertmanager_nflog_query_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(alertmanager_nflog_query_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "B"
         }
@@ -890,7 +910,11 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["platform", "alertmanager", "alerts"],
+  "tags": [
+    "platform",
+    "alertmanager",
+    "alerts"
+  ],
   "templating": {
     "list": [
       {
@@ -910,81 +934,6 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up, cluster)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Cluster",
-        "multi": false,
-        "name": "cluster",
-        "options": [],
-        "query": "label_values(up, cluster)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up{cluster=~\"$cluster\"}, namespace)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Namespace",
-        "multi": false,
-        "name": "namespace",
-        "options": [],
-        "query": "label_values(up{cluster=~\"$cluster\"}, namespace)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up{cluster=~\"$cluster\",namespace=~\"$namespace\"}, environment)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Environment",
-        "multi": false,
-        "name": "environment",
-        "options": [],
-        "query": "label_values(up{cluster=~\"$cluster\",namespace=~\"$namespace\"}, environment)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
       }
     ]
   },
