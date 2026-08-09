@@ -9,6 +9,8 @@
 
 ## Guide to Using This Plan
 
+- For the cross-cutting maturity gate (not a feature milestone), see
+  [`docs/PATH_TO_LATE_BETA.md`](PATH_TO_LATE_BETA.md).
 - This implementation plan guides the development of the uFawkesObs platform.
 - Tasks are derived from the actual open issues backlog in `gh issue list`.
 - Do not start any task until all its **Dependencies** are fully completed.
