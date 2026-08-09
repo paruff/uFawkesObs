@@ -426,7 +426,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Number of running containers",
       "fieldConfig": {
@@ -469,7 +469,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "count(count_over_time({job=\"docker\"}[5m]) by (compose_service))",
+          "expr": "count(count_over_time({compose_service=~\".+\"}[5m]) by (compose_service))",
           "refId": "A"
         }
       ],
@@ -479,7 +479,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Container activity (log-based)",
       "fieldConfig": {
@@ -527,7 +527,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "sum(rate({job=\"docker\", compose_service=~\"$container\"}[5m])) by (compose_service)",
+          "expr": "sum(rate({compose_service=~\"$container\"}[5m])) by (compose_service)",
           "legendFormat": "{{compose_service}}",
           "refId": "A"
         }
@@ -538,7 +538,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Container memory activity (log-based)",
       "fieldConfig": {
@@ -586,7 +586,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"docker\", compose_service=~\"$container\"}[5m])) by (compose_service)",
+          "expr": "sum(count_over_time({compose_service=~\"$container\"}[5m])) by (compose_service)",
           "legendFormat": "{{compose_service}}",
           "refId": "A"
         }
@@ -977,7 +977,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "Log volume by compose service",
       "fieldConfig": {
@@ -1025,7 +1025,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "sum(rate({job=\"docker\"}[5m])) by (compose_service)",
+          "expr": "sum(rate({compose_service=~\".+\"}[5m])) by (compose_service)",
           "legendFormat": "{{compose_service}}",
           "refId": "A"
         }
@@ -1036,7 +1036,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "description": "stderr volume by compose service",
       "fieldConfig": {
@@ -1084,7 +1084,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "sum(rate({job=\"docker\", stream=\"stderr\"}[5m])) by (compose_service)",
+          "expr": "sum(rate({stream=\"stderr\"}[5m])) by (compose_service)",
           "legendFormat": "{{compose_service}}",
           "refId": "A"
         }
@@ -1095,7 +1095,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki"
       },
       "fieldConfig": {
         "defaults": {
@@ -1126,7 +1126,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "{job=\"docker\"}",
+          "expr": "{compose_service=~\".+\"}",
           "refId": "A"
         }
       ],
@@ -1148,15 +1148,15 @@
         },
         "datasource": {
           "type": "loki",
-          "uid": "P8E80F9AEF21F6940"
+          "uid": "loki"
         },
-        "definition": "label_values({job=\"docker\"}, compose_service)",
+        "definition": "label_values({compose_service=~\".+\"}, compose_service)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "container",
         "options": [],
-        "query": "label_values({job=\"docker\"}, compose_service)",
+        "query": "label_values({compose_service=~\".+\"}, compose_service)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
