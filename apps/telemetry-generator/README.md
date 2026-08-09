@@ -29,34 +29,43 @@ Simple Flask application that generates OpenTelemetry metrics, logs, and traces 
 - `requests_total` (counter): Total requests by endpoint and status
 - `processing_duration_seconds` (histogram): Request processing time
 
+The OTel collector's Prometheus exporter applies a `namespace: "app_metrics"` prefix
+(see `config/otel/collector.yaml`) to avoid name collisions across instrumented apps.
+In Prometheus/Grafana these show up as `app_metrics_requests_total` and
+`app_metrics_processing_duration_seconds`.
+
 ## Usage
 
-Start the stack:
+Start the stack (requires the `core` profile too — `apps` alone has no backend to send to):
 
 ```bash
-docker compose --profile apps up -d
+make up-apps
+# equivalent to: docker compose --profile core --profile apps up -d
 ```
+
+The app is published on host port **5001** (container port 5000, see `compose.yaml`).
 
 Generate telemetry:
 
 ```bash
 # Normal request
-curl http://localhost:5000/generate
+curl http://localhost:5001/generate
 
 # Generate errors
-curl http://localhost:5000/error
+curl http://localhost:5001/error
 
 # Generate slow traces
-curl http://localhost:5000/slow
+curl http://localhost:5001/slow
 
 # Generate load
-for i in {1..10}; do curl http://localhost:5000/generate; done
+for i in {1..10}; do curl http://localhost:5001/generate; done
 ```
 
 ## Verification
 
-View in Grafana:
+View in Grafana (http://localhost:3000, default login `admin` / value of `GRAFANA_ADMIN_PASSWORD` in `.env`):
 
-- Traces: http://localhost:3000/explore → Tempo
-- Logs: http://localhost:3000/explore → Loki → {compose_service="telemetry-generator"}
-- Metrics: http://localhost:3000/explore → Prometheus → requests_total
+- **Traces:** Explore → Tempo → search `service.name=telemetry-generator`
+- **Logs (trace-correlated, from the OTel SDK):** Explore → Loki → `{job="telemetry-generator"}`
+- **Logs (raw container stdout, from Alloy):** Explore → Loki → `{compose_service="telemetry-generator"}`
+- **Metrics:** Explore → Prometheus → `app_metrics_requests_total`

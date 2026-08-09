@@ -48,6 +48,12 @@ Method 2: Query Directly
   Try: up, otelcol_exporter_queue_size, otelcol_http_server_duration_count
 ```
 
+**Example app metrics (telemetry-generator, `apps` profile):** the OTel collector's
+Prometheus exporter adds an `app_metrics` namespace prefix (see
+`config/otel/collector.yaml`), so app-emitted metrics land as
+`app_metrics_requests_total` and `app_metrics_processing_duration_seconds`, not
+their raw SDK names. See `apps/telemetry-generator/README.md`.
+
 ### 2. LOGS ✅
 
 **Source:** Docker containers via Grafana Alloy (v1.12.2)
@@ -72,26 +78,31 @@ uFawkesObs Stack:
 Grafana → Explore → Loki
 
 Quick Filters:
-  {compose_service="telemetry-generator"} → App logs
+  {job="telemetry-generator"}            → App logs, trace-correlated (via OTel SDK → collector → Loki)
+  {compose_service="telemetry-generator"} → Raw container stdout (via Alloy) — startup lines only
   {compose_service="prometheus"}         → Prometheus logs
   {stream="stderr"}                      → Error logs only
   {compose_project="ufawkesobs"} → uFawkesObs stack
 ```
 
-### 3. TRACES ⚠️
+The `apps` profile telemetry-generator emits structured, trace-correlated logs through
+the OTel SDK (not just stdout) — query `{job="telemetry-generator"}` to get log lines
+with `traceid`/`spanid` fields for correlating with Tempo traces.
 
-**Source:** Tempo (waiting for instrumentation)
-**Status:** Ready but empty
-**Requirement:** Code must emit OpenTelemetry spans
+### 3. TRACES ✅
 
-**To Enable:**
+**Source:** Tempo
+**Status:** Active — the `apps` profile telemetry-generator (Python/Flask) is fully
+instrumented with the OpenTelemetry SDK and exports spans via OTLP to the collector.
 
-1. Add OpenTelemetry SDK to telemetry-generator Go code
-2. Initialize in main()
-3. Wrap operations with `tracer.Start()`
-4. Rebuild and redeploy
+**How to View:**
 
-See: [Instrumentation Guide](examples/media-refinery-integration.md)
+```
+Grafana → Explore → Tempo → Search → service.name=telemetry-generator
+```
+
+To instrument your own app instead of the demo one, see:
+[Instrumentation Guide](examples/media-refinery-integration.md)
 
 ### 4. ALERTS ✅
 
@@ -153,6 +164,7 @@ Config is at `config/alloy/config.river` instead of `config/promtail/promtail.ya
 | Alertmanager   | 9093      | Alert UI             |
 | OTel Collector | 4317/4318 | OTLP gRPC/HTTP       |
 | Alloy          | 12345     | Metrics/health check |
+| Telemetry Generator (`apps` profile) | 5001 (→ container 5000) | Demo app: `/generate`, `/error`, `/slow` |
 
 ---
 
@@ -223,7 +235,7 @@ alertmanager_alerts
 | ------------------ | ----------------- | ------------------------------------------------ |
 | Metrics collection | ✅ Active         | View in Grafana dashboards                       |
 | Log shipping       | ✅ Active (FIXED) | Query in Loki explorer                           |
-| Trace collection   | ⚠️ Ready/Empty    | Add OTel SDK to code                             |
+| Trace collection   | ✅ Active         | View in Tempo (demo app fully instrumented)      |
 | Alert rules        | ✅ Configured     | Check in Alerting section                        |
 | Multi-app support  | ✅ Ready          | Connect more stacks to observability-lab network |
 
@@ -265,7 +277,7 @@ alertmanager_alerts
 
 ### This Week
 
-1. ⚠️ (Optional) Add OpenTelemetry SDK to telemetry-generator for traces
+1. ⚠️ (Optional) Instrument your own app with the OTel SDK (see `apps/telemetry-generator/app.py` as a reference) instead of relying on the demo app
 2. ⚠️ (Optional) Create custom dashboards for app-specific metrics
 3. ⚠️ (Optional) Configure alert notifications via webhooks
 

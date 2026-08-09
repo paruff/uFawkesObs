@@ -175,15 +175,9 @@ services:
           cpus: "0.1"
           memory: 128M
     healthcheck:
+      # grafana/alloy image has no wget/curl; /dev/tcp is a bash builtin, not sh, so invoke bash explicitly.
       test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:12345/-/ready",
-        ]
+        ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/12345 && exec 3<&-"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -400,14 +394,13 @@ services:
           cpus: "0.1"
           memory: 64M
     healthcheck:
+      # python:3.11-slim has no wget/curl; use the stdlib instead.
       test:
         [
           "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:5000/",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=5)",
         ]
       interval: 30s
       timeout: 10s
@@ -500,20 +493,8 @@ services:
         reservations:
           cpus: "0.1"
           memory: 128M
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8888/metrics",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+    # NOTE: healthcheck removed — same distroless image as otel-collector above,
+    # which has no wget/curl/sh. See that service's NOTE for details.
     logging:
       driver: json-file
       options:
