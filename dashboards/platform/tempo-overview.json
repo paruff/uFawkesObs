@@ -82,7 +82,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -95,7 +97,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(tempo_distributor_spans_received_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum(rate(tempo_distributor_spans_received_total[5m]))",
           "refId": "A"
         }
       ],
@@ -148,7 +150,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -161,7 +165,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(tempo_distributor_bytes_received_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum(rate(tempo_distributor_bytes_received_total[5m]))",
           "refId": "A"
         }
       ],
@@ -214,7 +218,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -227,7 +233,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(tempo_ingester_live_traces{cluster=~\"$cluster\",namespace=~\"$namespace\"})",
+          "expr": "sum(tempo_ingester_live_traces)",
           "refId": "A"
         }
       ],
@@ -280,7 +286,9 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -293,7 +301,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(tempo_compactor_compaction_objects_total{cluster=~\"$cluster\",namespace=~\"$namespace\"})",
+          "expr": "sum(tempo_compactor_compaction_objects_total)",
           "refId": "A"
         }
       ],
@@ -379,7 +387,9 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -396,7 +406,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(tempo_query_frontend_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(tempo_query_frontend_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "A"
         },
@@ -405,7 +415,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(tempo_query_frontend_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p95",
           "refId": "B"
         },
@@ -414,7 +424,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "C"
         }
@@ -488,7 +498,9 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -505,7 +517,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(tempo_query_frontend_search_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.99, sum(rate(tempo_query_frontend_search_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p99",
           "refId": "A"
         },
@@ -514,7 +526,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_search_duration_seconds_bucket{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(tempo_query_frontend_search_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "p50",
           "refId": "B"
         }
@@ -601,7 +613,9 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -618,7 +632,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(tempo_distributor_spans_received_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (pod)",
+          "expr": "sum(rate(tempo_distributor_spans_received_total[5m])) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -692,7 +706,9 @@
       "id": 8,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -709,7 +725,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(tempo_distributor_push_requests_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (pod)",
+          "expr": "sum(rate(tempo_distributor_push_requests_total[5m])) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -796,7 +812,9 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -813,7 +831,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(tempo_ingester_flush_total{cluster=~\"$cluster\",namespace=~\"$namespace\"}[5m])) by (pod)",
+          "expr": "sum(rate(tempo_ingester_flush_total[5m])) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -887,7 +905,9 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -904,7 +924,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(tempo_ingester_blocks_per_tenant{cluster=~\"$cluster\",namespace=~\"$namespace\"}) by (pod)",
+          "expr": "sum(tempo_ingester_blocks_per_tenant) by (pod)",
           "legendFormat": "{{pod}}",
           "refId": "A"
         }
@@ -915,7 +935,11 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["platform", "tempo", "traces"],
+  "tags": [
+    "platform",
+    "tempo",
+    "traces"
+  ],
   "templating": {
     "list": [
       {
@@ -935,81 +959,6 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "datasource"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up, cluster)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Cluster",
-        "multi": false,
-        "name": "cluster",
-        "options": [],
-        "query": "label_values(up, cluster)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up{cluster=~\"$cluster\"}, namespace)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Namespace",
-        "multi": false,
-        "name": "namespace",
-        "options": [],
-        "query": "label_values(up{cluster=~\"$cluster\"}, namespace)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
-      },
-      {
-        "allValue": ".*",
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "definition": "label_values(up{cluster=~\"$cluster\",namespace=~\"$namespace\"}, environment)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Environment",
-        "multi": false,
-        "name": "environment",
-        "options": [],
-        "query": "label_values(up{cluster=~\"$cluster\",namespace=~\"$namespace\"}, environment)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "type": "query"
       }
     ]
   },
