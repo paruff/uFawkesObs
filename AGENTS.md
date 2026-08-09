@@ -68,6 +68,7 @@ steps another agent calls directly.
 | 5        | `docs/CHANGE_IMPACT_MAP.md`  | What breaks when a service config changes                          |
 | 5.5      | `docs/DEPLOYMENT_STRATEGY.md` | Progressive delivery model — must exist before production traffic  |
 | 5.6      | `docs/PR_STANDARD.md`        | PR title and body format rules                                     |
+| 5.7      | `docs/PATH_TO_LATE_BETA.md`  | Beta readiness bar and open gaps — do not close as "beta ready" until these clear |
 
 If any of these don't exist for this repo, agents proceed with what's
 available and note the gap — they don't invent the missing content.
