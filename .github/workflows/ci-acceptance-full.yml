@@ -23,6 +23,11 @@ jobs:
     env:
       GRAFANA_ADMIN_USER: admin
       # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
+      # Satisfies compose.yaml's required-var interpolation for the
+      # dora-profiled otel-collector-dora service (Compose evaluates it even
+      # under --profile core/--profile apps). Never actually used here. See
+      # docs/IMPLEMENTATION_PLAN.md finding D1.
+      DORA_POSTGRES_URL: postgres://localhost:5432/ci-unused  # pragma: allowlist secret
 
     steps:
       - name: Checkout repository
