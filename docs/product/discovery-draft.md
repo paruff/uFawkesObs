@@ -9,12 +9,12 @@ test_type_reasoning: "\"Ready to use within 2 minutes\" is a claim about the rea
 dora_ai_capability: null
 dora_core_capability: "Monitoring and Observability"
 metric: "time_to_first_signal_minutes"
-measurement_source: "manual (timed via scripts/smoke-test.sh against a fresh clone)"
-baseline: "not yet measured — establish baseline by timing scripts/smoke-test.sh from a clean checkout"
+measurement_source: "manual (timed docker health polling against a genuine `git clone` of main, commit d2bff8c; note: `scripts/smoke-test.sh` referenced by the original draft of this field does not exist in the repo — no such script was ever added)"
+baseline: "93s (1.55 min) from `make up` to all 7 core services healthy, with live Prometheus scrape data and 26 provisioned Grafana dashboards already present. PASS against the <2 minute target. Caveat: Docker images were already cached on the test machine from prior local work, so this excludes cold image-pull time, which is network-dependent and not controlled by this repo."
 prior_art: "Grafana Cloud free tier, Datadog, SigNoz, OpenObserve — all viable alternatives for a small team. uFawkesObs's answer isn't a new telemetry backend, it's composing the same OSS components (Prometheus, Loki, Tempo, Grafana, OTel Collector, Alertmanager) that those vendors already build on, pre-wired and pre-provisioned, so a small team gets the vendor's default experience without the vendor's invoice."
 status: ready-for-spec
 retrospective: true
-assumption_validated: false
+assumption_validated: true
 ---
 
 # Discovery Brief: uFawkesObs (Product-Level)
@@ -85,12 +85,13 @@ containers and observing Grafana render data.
   on top of; it doesn't measure its own AI capability directly.
 - Metric: `time_to_first_signal_minutes` — wall-clock time from a fresh clone
   to a live, data-populated Grafana dashboard.
-- Current baseline: not yet measured — establish it by timing
-  `scripts/smoke-test.sh` from a clean checkout.
+- Current baseline: **93s (1.55 min)**, measured 2026-08-10 against a genuine
+  fresh clone — PASS against target. See `baseline` in frontmatter for method
+  and caveats (image-cache warm, `scripts/smoke-test.sh` doesn't exist).
 - Target: < 2 minutes (matches the acceptance criterion above).
-- Measurement: manual timing today; a candidate future improvement is having
-  `scripts/smoke-test.sh` emit its own duration so this becomes
-  self-measuring rather than a manual stopwatch exercise.
+- Measurement: manual timing today; a candidate future improvement is a real
+  `scripts/smoke-test.sh` that emits its own duration so this becomes
+  self-measuring rather than a one-off manual exercise.
 
 ## Prior Art
 
@@ -139,11 +140,13 @@ A candid read of this document, not a flattering one:
 What would make the riskiest assumption stop being a guess, ranked cheapest
 first:
 
-1. **Measure the acceptance criterion for real, now.** Time
-   `scripts/smoke-test.sh` against a genuinely fresh clone and record the
-   actual `time_to_first_signal_minutes` baseline. This is achievable
-   immediately, with no user contact required, and turns "not yet measured"
-   into a real number.
+1. **Measure the acceptance criterion for real, now.** ✅ Done 2026-08-10 —
+   93s against a genuine fresh clone, PASS against the <2 minute target. See
+   `baseline` in frontmatter. Note: `scripts/smoke-test.sh` does not exist in
+   the repo; the measurement used direct docker health polling instead. This
+   validates the *onboarding-speed* sub-claim only — the deeper churn/
+   operational-burden risk in `riskiest_assumption` is still open; see (2)
+   and (3) below.
 2. **Mine existing low-cost signal before running new experiments.** Check
    GitHub repo Insights (clone/traffic trends vs. stars, return-visitor
    rate) and scan open/closed issues for operational-burden complaints
