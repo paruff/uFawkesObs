@@ -53,7 +53,7 @@ Concretely, late beta requires:
 
 | ID | Task | Issue | Status |
 |----|------|-------|--------|
-| LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | 🔲 PENDING |
+| LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | ✅ DONE (93s, PASS) |
 | LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | 🔲 PENDING |
 | LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) | 🔲 PENDING |
 | LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING |
