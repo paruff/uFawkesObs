@@ -63,7 +63,7 @@ services:
       - ./config/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - ./data/tempo:/var/tempo
     ports:
-      - "3200:3200" # Tempo HTTP
+      - "127.0.0.1:3200:3200" # Tempo HTTP (localhost-only by default)
       - "9095:9095" # Tempo gRPC
       - "14250:14250" # Jaeger gRPC
       - "14268:14268" # Jaeger HTTP
@@ -104,7 +104,7 @@ services:
       - ./config/loki/loki.yaml:/etc/loki/loki.yaml:ro
       - ./data/loki:/loki
     ports:
-      - "3100:3100" # Loki HTTP
+      - "127.0.0.1:3100:3100" # Loki HTTP (localhost-only by default)
       - "9096:9096" # Loki gRPC
     environment:
       - TZ=UTC
@@ -218,7 +218,7 @@ services:
       - ./config/prometheus/rules:/etc/prometheus/rules:ro
       - ./data/prometheus:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     environment:
       - TZ=UTC
     depends_on:
@@ -274,7 +274,7 @@ services:
       - ./config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./data/alertmanager:/alertmanager
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     environment:
       - TZ=UTC
     deploy:

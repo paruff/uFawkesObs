@@ -19,14 +19,47 @@ in `config/otel/collector.yaml`, `config/alloy/config.river`, and Grafana dataso
 
 ---
 
-### No Authentication on Loki, Tempo, Prometheus
+### No Authentication on Loki, Tempo, Prometheus, Alertmanager
 
-**Limitation:** All backend services accept unauthenticated requests on their exposed ports.
+**Limitation:** These backends still accept unauthenticated requests.
+By default, `compose.yaml` now binds their HTTP ports to localhost only:
 
-**Impact:** Anyone with network access can read or write telemetry data.
+- Tempo: `127.0.0.1:3200:3200`
+- Loki: `127.0.0.1:3100:3100`
+- Prometheus: `127.0.0.1:9090:9090`
+- Alertmanager: `127.0.0.1:9093:9093`
 
-**Workaround:** Restrict access at the network/firewall level. Enable `auth_enabled: true` in
-`config/loki/loki.yaml` for multi-tenant setups.
+**Impact:** Default localhost-only bindings reduce accidental exposure on shared/cloud hosts.
+If you re-expose these ports to `0.0.0.0`, anyone with network access can read or write
+telemetry/alerting data unless you add access controls.
+
+**Workaround / Opt-out path:** Only re-expose when intentionally needed, and place a reverse
+proxy with authentication in front (for example OAuth2/OIDC, basic auth, or mTLS). Prefer a
+Compose override file instead of editing the default:
+
+```yaml
+# compose.remote-access.override.yaml
+services:
+  tempo:
+    ports:
+      - "0.0.0.0:3200:3200"
+  loki:
+    ports:
+      - "0.0.0.0:3100:3100"
+  prometheus:
+    ports:
+      - "0.0.0.0:9090:9090"
+  alertmanager:
+    ports:
+      - "0.0.0.0:9093:9093"
+```
+
+```bash
+docker compose -f compose.yaml -f compose.remote-access.override.yaml --profile core up -d
+```
+
+Also enable service-level auth where available (for example `auth_enabled: true` in
+`config/loki/loki.yaml` for multi-tenant Loki setups).
 
 ---
 
