@@ -185,6 +185,7 @@ The system uses Docker Compose profiles to control which services run:
 | ------- | --------------------------------------------------------------------- | ------------------------ |
 | `core`  | otel-collector, tempo, loki, alloy, alertmanager, prometheus, grafana | Base observability stack |
 | `apps`  | telemetry-generator                                                   | Demo telemetry generator |
+| `notifications` | alertmanager-discord                                          | Slack/Discord notification bridge (needs `DISCORD_WEBHOOK_URL` in `.env`) |
 
 **To start with a specific profile:**
 
@@ -193,6 +194,9 @@ make up
 
 # To also run the demo telemetry generator:
 make up-apps
+
+# To also run the Discord notification bridge:
+docker compose --profile core --profile notifications up -d
 ```
 
 ---

@@ -23,6 +23,8 @@
 | Network name                                                | All services that reference it, `scripts/` that use `docker network inspect`                                  |
 | Environment variable names                                  | `.env.example`, `docs/`, CI workflows that set them                                                           |
 | Adding a new service                                        | Add healthcheck, add to acceptance tests, add Grafana datasource if applicable, update `docs/ARCHITECTURE.md` |
+| `alertmanager-discord` bridge (notifications profile)       | `.env` `DISCORD_WEBHOOK_URL`, the `discord-notifications` receiver in `config/alertmanager/alertmanager.yml`, `docs/alertmanager-operations.md` |
+| Notification webhook env vars (`SLACK_WEBHOOK_URL`/`DISCORD_WEBHOOK_URL`) | `config/alertmanager/alertmanager.yml` receivers, `docs/alertmanager-operations.md`, `docs/KNOWN_LIMITATIONS.md` |
 | Removing a service                                          | Check all `depends_on:` references, remove from acceptance tests, update `docs/`                              |
 | Telemetry generator (apps profile)                          | Update acceptance tests that rely on it, update `README.md`                                                   |
 

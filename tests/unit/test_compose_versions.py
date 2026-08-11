@@ -33,6 +33,7 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "loki": "grafana/loki:3.3.2",
     "alloy": "grafana/alloy:v1.12.2",
     "grafana": "grafana/grafana:12.3.7",
+    "alertmanager-discord": "rogerrum/alertmanager-discord:1.0.7",
 }
 
 EXPECTED_LOCALHOST_BINDINGS: dict[str, str] = {

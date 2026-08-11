@@ -74,6 +74,18 @@ route:
       repeat_interval: 1h
       continue: false
 
+    # ── [RECIPE] Notification channel catch-alls ─────────────────────────────
+    # Uncomment to send every alert that isn't matched above to Slack and/or
+    # Discord. Wire these together with the `slack-notifications` and
+    # `discord-notifications` receivers below (also commented out).
+    # See docs/alertmanager-operations.md → "Slack Notifications" /
+    # "Discord Notifications" for the full tested walkthrough.
+    #
+    # - receiver: "slack-notifications"
+    #   continue: false
+    # - receiver: "discord-notifications"
+    #   continue: false
+
 # Inhibition rules - suppress notifications for certain alerts
 inhibit_rules:
   # Inhibit warning and info if same alertname with critical severity exists
@@ -112,12 +124,13 @@ receivers:
         send_resolved: true
         max_alerts: 0
     # Uncomment for Slack integration (add under critical-alerts):
-    # slack_configs:
-    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
-    #     channel: '#alerts-critical'
-    #     title: '{{ .GroupLabels.alertname }}'
-    #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
-    #     send_resolved: true
+    #   Requires SLACK_WEBHOOK_URL in .env — never hardcode a webhook URL.
+    #   slack_configs:
+    #     - api_url: "${SLACK_WEBHOOK_URL}"
+    #       channel: "#alerts-critical"
+    #       title: '{{ .GroupLabels.alertname }}'
+    #       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+    #       send_resolved: true
 
   # Warning alerts receiver
   - name: "warning-alerts"
@@ -153,10 +166,50 @@ receivers:
       - url: "http://host.docker.internal:5001/webhook/dora"
         send_resolved: true
         max_alerts: 0
-    # Uncomment for Slack integration:
+    # Uncomment for Slack integration (uses the same SLACK_WEBHOOK_URL as the
+    # recipe below — no hardcoded secret):
     # slack_configs:
-    #   - api_url: ${DORA_SLACK_WEBHOOK_URL}
+    #   - api_url: ${SLACK_WEBHOOK_URL}
     #     channel: '#dora-alerts'
     #     title: '{{ .GroupLabels.alertname }}'
     #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
     #     send_resolved: true
+
+  # ── [RECIPE] Slack notifications — TESTED ─────────────────────────────────
+  # Send every alert to a Slack channel via a Slack incoming webhook.
+  #
+  # Enable in 3 steps:
+  #   1. Create an incoming webhook for your Slack workspace/channel and set it
+  #      in .env:  SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T0000000/B0000000/XXXX
+  #   2. Uncomment this receiver AND its catch-all route in `route:` above.
+  #   3. Reload Alertmanager:  curl -X POST http://localhost:9093/-/reload
+  #
+  # Walkthrough with a live test: docs/alertmanager-operations.md
+  # - name: "slack-notifications"
+  #   slack_configs:
+  #     - api_url: "${SLACK_WEBHOOK_URL}"
+  #       channel: "#alerts"
+  #       title: '{{ .GroupLabels.alertname }}'
+  #       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+  #       send_resolved: true
+  #       icon_emoji: ":rotating_light:"
+
+  # ── [RECIPE] Discord notifications — TESTED ───────────────────────────────
+  # Alertmanager has no native Discord integration. This receiver posts to the
+  # `alertmanager-discord` bridge container (compose service, `notifications`
+  # profile) which translates Alertmanager webhooks into Discord embeds.
+  #
+  # Enable in 4 steps:
+  #   1. Create a Discord channel webhook (Channel Settings → Integrations →
+  #      Webhooks) and set it in .env:
+  #      DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/<ID>/<TOKEN>
+  #   2. Start the bridge:  docker compose --profile core --profile notifications up -d
+  #   3. Uncomment this receiver AND its catch-all route in `route:` above.
+  #   4. Reload Alertmanager:  curl -X POST http://localhost:9093/-/reload
+  #
+  # Walkthrough with a live test: docs/alertmanager-operations.md
+  # - name: "discord-notifications"
+  #   webhook_configs:
+  #     - url: "http://alertmanager-discord:9094"
+  #       send_resolved: true
+  #       max_alerts: 0

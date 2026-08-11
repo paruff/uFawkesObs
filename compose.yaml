@@ -277,6 +277,10 @@ services:
       - "127.0.0.1:9093:9093"
     environment:
       - TZ=UTC
+      # Passed into the container so Alertmanager can expand ${SLACK_WEBHOOK_URL}
+      # in the (commented-out) Slack receiver. Empty by default — the stack runs
+      # without it. See .env.example and docs/alertmanager-operations.md.
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
     deploy:
       resources:
         limits:
@@ -312,6 +316,55 @@ services:
     networks:
       - observability
     profiles: ["core"]
+
+  # Alertmanager → Discord bridge.
+  #
+  # Alertmanager has no native Discord integration, so `discord-notifications`
+  # in config/alertmanager/alertmanager.yml posts to this tiny Go bridge, which
+  # translates Alertmanager webhooks into Discord embeds.
+  #
+  # The bridge fatals on startup when DISCORD_WEBHOOK is empty, so it lives in
+  # its own `notifications` profile: the default `core` stack is unchanged.
+  # Enable with:  docker compose --profile core --profile notifications up -d
+  # (requires DISCORD_WEBHOOK_URL in .env — see .env.example).
+  #
+  # NOTE: healthcheck intentionally omitted — the image is `scratch`-based
+  # (distroless: no shell/wget/curl/python) and the binary exposes no health
+  # subcommand, so there is nothing to run. Container health is observable via
+  # `docker compose ps` (status) and the bridge's own startup/send logs.
+  alertmanager-discord:
+    image: rogerrum/alertmanager-discord:1.0.7
+    container_name: alertmanager-discord
+    restart: unless-stopped
+    environment:
+      - DISCORD_WEBHOOK=${DISCORD_WEBHOOK_URL:-}
+      - DISCORD_USERNAME=ufawkesobs-alerts
+      - LISTEN_ADDRESS=0.0.0.0:9094
+      - VERBOSE=OFF
+    # No host ports published — Alertmanager reaches it on the internal
+    # observability network only (consistent with the localhost-bind posture).
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "alertmanager-discord"
+    labels:
+      - "plane=obstackd"
+      - "component=alerting"
+      - "managed-by=fawkes"
+      - "profile=notifications"
+    networks:
+      - observability
+    profiles: ["notifications"]
 
   grafana:
     image: grafana/grafana:12.3.7

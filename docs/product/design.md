@@ -173,7 +173,7 @@ uFawkesObs is the observability substrate for DORA metrics. This section previou
 - **Recording Rules:** PromQL rules in `config/prometheus/rules/ufawkesobs-dora-metrics.yml` computing `dora:deployment_frequency:rate30d`, `dora:lead_time_hours:p50_30d`, `dora:fdrt_hours:p50_30d`, `dora:change_failure_rate:ratio30d`, `dora:rework_rate:ratio30d`.
 - **DORA Dashboard:** Provisioned at `dashboards/platform/dora-metrics.json`, documented in `docs/adr/ADR-006-dora-metric-definitions.md`, with panels reading from Prometheus (trend lines) and PostgreSQL via the Postgres datasource plugin (current snapshots, archetype profile).
 - **Network Attachment:** uFawkesObs joins `fawkes-backbone-net` (external name: `ufawkes-resources_fawkes-backbone-net`) to query uFawkesRes PostgreSQL for DORA snapshots. The `otel-collector-dora` service requires `DORA_POSTGRES_URL` as a fail-closed environment variable (no hardcoded fallback) — see §5.
-- **Alertmanager Routing:** `dora_regression` and `leading_indicator` routes point to `DORA_SLACK_WEBHOOK_URL`.
+- **Alertmanager Routing:** `dora_regression` and `leading_indicator` routes point to `SLACK_WEBHOOK_URL`.
 - **Runtime-deployed status:** Deployed and running under the `dora` compose profile; exercised by the acceptance suite's DORA-dashboard checks (not yet by a dedicated live-system AC in the product discovery brief — see [`discovery-draft.md`](discovery-draft.md), whose current acceptance criterion covers the `core` profile only).
 
 **What moved to other planes (no longer in uFawkesObs scope):**

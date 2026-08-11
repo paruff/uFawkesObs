@@ -98,6 +98,133 @@ docker compose logs -f alertmanager
 docker compose logs alertmanager --timestamps
 ```
 
+## Notification Channels (Slack & Discord)
+
+Out of the box Alertmanager sends notifications to the local webhook test sink
+only (`http://host.docker.internal:5001/webhook`). To make alerts reach a human,
+enable the **tested** Slack or Discord recipes below. Both are commented out in
+`config/alertmanager/alertmanager.yml` by default and use webhook URLs from
+`.env` — never hardcode a webhook URL in the config.
+
+The webhook variables live in `.env` (see `.env.example`):
+
+```bash
+SLACK_WEBHOOK_URL=REPLACE_ME
+DISCORD_WEBHOOK_URL=REPLACE_ME
+```
+
+### Slack Notifications
+
+Alertmanager supports Slack natively via `slack_configs`. The `slack-notifications`
+receiver in `config/alertmanager/alertmanager.yml` is the tested recipe.
+
+**Setup steps:**
+
+1. **Create an incoming webhook** for your Slack workspace and channel:
+   `https://api.slack.com/messaging/webhooks` → *Create an Incoming Webhook* →
+   choose the channel (e.g. `#alerts`).
+2. **Set the webhook URL** in `.env`:
+
+   ```bash
+   SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T0000000/B0000000/XXXX
+   ```
+
+3. **Uncomment** the `slack-notifications` receiver and its catch-all route in
+   `config/alertmanager/alertmanager.yml` (search for `[RECIPE] Slack notifications`).
+4. **Restart Alertmanager** so it picks up the new environment variable, then
+   reload the config:
+
+   ```bash
+   docker compose up -d --force-recreate alertmanager
+   curl -X POST http://localhost:9093/-/reload
+   ```
+
+5. **Verify** (see [Sending a Test Alert](#sending-a-test-alert) below): fire a
+   test alert and confirm the message lands in the Slack channel.
+
+### Discord Notifications
+
+Alertmanager has **no native Discord integration**, so the `discord-notifications`
+receiver posts to the `alertmanager-discord` bridge container
+(`rogerrum/alertmanager-discord:1.0.7`), which translates Alertmanager webhooks
+into Discord embeds. The bridge lives in its own `notifications` profile — the
+default `core` stack is unchanged.
+
+**Setup steps:**
+
+1. **Create a Discord channel webhook**: open the target channel → *Channel
+   Settings* → *Integrations* → *Webhooks* → *New Webhook*, then copy the
+   webhook URL.
+2. **Set the webhook URL** in `.env`:
+
+   ```bash
+   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/<ID>/<TOKEN>
+   ```
+
+3. **Start the bridge** (adds `alertmanager-discord` alongside the core stack):
+
+   ```bash
+   docker compose --profile core --profile notifications up -d
+   ```
+
+   > The bridge intentionally fails to start when `DISCORD_WEBHOOK_URL` is
+   > empty — set step 2 first.
+4. **Uncomment** the `discord-notifications` receiver and its catch-all route in
+   `config/alertmanager/alertmanager.yml` (search for `[RECIPE] Discord notifications`).
+5. **Reload Alertmanager**:
+
+   ```bash
+   curl -X POST http://localhost:9093/-/reload
+   ```
+
+6. **Verify** (see below): fire a test alert and confirm the Discord embed
+   arrives in the channel. The bridge logs its delivery attempts:
+
+   ```bash
+   docker compose logs alertmanager-discord --tail=20
+   ```
+
+   A delivered message shows the successful Discord API response; failures log
+   the Discord error body.
+
+### Sending a Test Alert
+
+Fire a single firing alert directly into Alertmanager and watch it route to your
+enabled channel:
+
+```bash
+curl -s -X POST http://localhost:9093/api/v2/alerts \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "labels": {
+        "alertname": "Lb03TestAlert",
+        "severity": "warning",
+        "service": "ufawkesobs"
+      },
+      "annotations": {
+        "summary": "LB-03 Slack/Discord test alert",
+        "description": "This alert verifies that notifications reach a human. Value: 42"
+      },
+      "startsAt": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+      "endsAt": "'"$(date -u -d '+5 minutes' +%Y-%m-%dT%H:%M:%SZ)"'"
+    }
+  ]'
+```
+
+Then confirm the alert was received and routed:
+
+```bash
+# Alert is active in Alertmanager
+curl -s http://localhost:9093/api/v2/alerts | jq '.[] | select(.labels.alertname=="Lb03TestAlert")'
+
+# Slack: check the #alerts channel (or your chosen channel)
+# Discord: check the channel — embed titled "[FIRING:1] LB-03 Slack/Discord test alert"
+
+# Discord bridge delivery log
+docker compose logs alertmanager-discord --tail=20
+```
+
 ## Alert Runbooks
 
 ### ServiceDown
