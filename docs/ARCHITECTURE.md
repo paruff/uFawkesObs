@@ -123,6 +123,7 @@ alloy         → depends_on: loki (healthy)
 | ------- | ------------------------------------------------------------------------------------ |
 | `core`  | otel-collector, tempo, loki, alloy, prometheus, alertmanager, grafana, node-exporter |
 | `apps`  | telemetry-generator                                                                  |
+| `notifications` | alertmanager-discord (Alertmanager → Discord bridge)                    |
 
 Start the full stack:
 
@@ -134,6 +135,12 @@ Start with demo app:
 
 ```bash
 docker compose --profile core --profile apps up -d
+```
+
+Start with Discord notifications enabled (requires `DISCORD_WEBHOOK_URL` in `.env`):
+
+```bash
+docker compose --profile core --profile notifications up -d
 ```
 
 ---

@@ -382,7 +382,7 @@
 - **Tasks:**
    1. Add `dora` profile to `compose.yaml` with environment variables for `OTEL_EXPORTER_OTLP_ENDPOINT` (uFawkesDORA ingestion API) and `DORA_POSTGRES_URL` (uFawkesRes Postgres).
    2. Add Grafana Postgres datasource provisioning pointing to `fawkes-postgres:5432` on `fawkes-backbone-net`.
-   3. Add Alertmanager route for `dora_regression` and `leading_indicator` alerts to `DORA_SLACK_WEBHOOK_URL`.
+   3. Add Alertmanager route for `dora_regression` and `leading_indicator` alerts to `SLACK_WEBHOOK_URL`.
 - **Acceptance Criteria:**
    - [x] `docker compose --profile dora config` succeeds with zero parsing warnings.
    - [x] Grafana provisions Postgres datasource without errors.

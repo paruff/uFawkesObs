@@ -217,6 +217,7 @@ Always use these UIDs in dashboard JSON:
 | ------- | ------------------------------------------------------------------------------------ |
 | `core`  | otel-collector, tempo, loki, alloy, prometheus, alertmanager, grafana, node-exporter |
 | `apps`  | telemetry-generator                                                                  |
+| `notifications` | alertmanager-discord (Alertmanager → Discord bridge)                    |
 
 ## Related Skills
 
