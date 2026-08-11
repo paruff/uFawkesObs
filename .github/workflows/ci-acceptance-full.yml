@@ -27,7 +27,7 @@ jobs:
       # dora-profiled otel-collector-dora service (Compose evaluates it even
       # under --profile core/--profile apps). Never actually used here. See
       # docs/IMPLEMENTATION_PLAN.md finding D1.
-      DORA_POSTGRES_URL: postgres://localhost:5432/ci-unused  # pragma: allowlist secret
+      DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
 
     steps:
       - name: Checkout repository
