@@ -19,7 +19,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-ALERTMANAGER_CFG = Path(__file__).resolve().parents[2] / "config" / "alertmanager" / "alertmanager.yml"
+ALERTMANAGER_CFG = (
+    Path(__file__).resolve().parents[2] / "config" / "alertmanager" / "alertmanager.yml"
+)
 COMPOSE_PATH = Path(__file__).resolve().parents[2] / "compose.yaml"
 ENV_EXAMPLE_PATH = Path(__file__).resolve().parents[2] / ".env.example"
 
@@ -175,7 +177,9 @@ class TestEnvExample:
     ) -> None:
         for ln in env_example.splitlines():
             if ln.startswith(f"{var}="):
-                assert placeholder in ln, f"{var} must use a placeholder in .env.example"
+                assert placeholder in ln, (
+                    f"{var} must use a placeholder in .env.example"
+                )
                 return
         pytest.fail(f"{var} is missing from .env.example")
 
