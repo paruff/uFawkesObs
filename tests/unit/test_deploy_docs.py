@@ -74,6 +74,34 @@ class TestRollbackDrillRunbook:
         )
 
 
+class TestRollbackDrillStaticVerification:
+    """Verify the runbook records the LB-04 enablement static review (#182)."""
+
+    def test_runbook_records_static_verdict_on_gap(
+        self, rollback_drill_text: str
+    ) -> None:
+        assert "refutes" in rollback_drill_text, (
+            "Runbook must record the static-review verdict that issue #193's "
+            "runner-token reasoning is refuted"
+        )
+
+    def test_runbook_contrasts_host_and_runner_execution(
+        self, rollback_drill_text: str
+    ) -> None:
+        assert "not on the runner" in rollback_drill_text, (
+            "Runbook must document that the revert+push runs on the target "
+            "host, not on the runner"
+        )
+
+    def test_runbook_names_remaining_live_unknowns(
+        self, rollback_drill_text: str
+    ) -> None:
+        assert "push credential" in rollback_drill_text, (
+            "Runbook must name the remaining live-drill unknowns (target host "
+            "push credential, main branch protection)"
+        )
+
+
 class TestDeploymentStrategyRollbackSection:
     """Verify the deployment strategy links the drill and does not overclaim."""
 

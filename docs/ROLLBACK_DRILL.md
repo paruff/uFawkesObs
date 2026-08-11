@@ -54,9 +54,13 @@ docker compose ps           # all services running
 The drill pushes a deliberately-bad commit to `main`, and the automated
 rollback pushes a revert to `main`. Both must be permitted:
 
-- Check branch protection on `main` (Settings → Branches). If direct pushes or
-  GITHUB_TOKEN pushes are blocked, the drill **cannot run as automated** — use
-  the manual fallback in [Safety & Cleanup](#safety--cleanup) and file a
+- The rollback's `git push origin main` executes **on the target host over
+  SSH** — the host pushes with its own cloned `origin` credential, not a runner
+  token. The host must therefore already hold a working **push credential**
+  for `origin` (verify with `git fetch origin main` from the host).
+- Check branch protection on `main` (Settings → Branches). If it rejects the
+  host's push or a direct push path, the drill **cannot run as automated** —
+  use the manual fallback in [Safety & Cleanup](#safety--cleanup) and file a
   follow-up issue.
 
 ### 4. Environment approval ready
@@ -258,17 +262,31 @@ line.
 - Every gap issue must reference this drill's run URL and the failing evidence
   row(s).
 
-**Known suspected gap (identified by static review, to be confirmed by the
-drill):**
+### Static review of the suspected gap — 2026-08-11 (LB-04 enablement)
 
-- [ ] Rollback cannot push the revert to `main` —
-  `reusable-rollback.yml` declares `permissions: {}` and job-level
-  `contents: read`, and the job has no `actions/checkout` step, so its
-  `GITHUB_TOKEN` cannot write `contents` and the fresh runner has no git
-  credentials. The `git push origin main` step is therefore expected to fail
-  (403 / "could not read Username"), which under `set -euo pipefail` aborts the
-  script **before** `make up` — leaving the host broken and `main` unreverted.
-  Tracked in [issue #193](https://github.com/paruff/uFawkesObs/issues/193).
+The suspected gap below was re-checked statically during LB-04 enablement
+(`tests/unit/test_deploy_pipeline.py` and `tests/unit/test_deploy_docs.py`).
+
+**Verdict: issue #193's two stated reasons are refuted.** The rollback job's
+`git revert` + `git push origin main` execute **on the target host over SSH,
+not on the runner** — the git commands are shipped through an `ssh … bash -s`
+heredoc in `reusable-rollback.yml@v1.2.0`. Consequences:
+
+- The runner's `GITHUB_TOKEN` (downgraded to `contents: read`) is **not** the
+  credential that pushes; the host pushes with its own `origin` credential, so
+  the token-permission concern does **not** gate the drill.
+- The missing `actions/checkout` on the runner is irrelevant to the push for
+  the same reason; the steps that need `DEPLOY_KEY` read it directly from the
+  `secrets:` pass-through, which read-only permissions do not block.
+
+**Remaining live-drill unknowns (only the live run can clear these):**
+
+- [ ] The target host holds a working **push credential** for `origin`.
+- [ ] `main` branch protection lets the host's revert push land.
+
+Evidence rows 6–9 in the Evidence Log exist to record these against the run.
+Tracked in [issue #193](https://github.com/paruff/uFawkesObs/issues/193) —
+the live drill confirms or refutes the remaining unknowns.
 
 ---
 
