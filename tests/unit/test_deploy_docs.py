@@ -69,7 +69,7 @@ class TestRollbackDrillRunbook:
     def test_runbook_provides_evidence_template(self, rollback_drill_text: str) -> None:
         """Assert the runbook gives a concrete evidence log template."""
         assert "Evidence" in rollback_drill_text
-        assert "github.com" in rollback_drill_text, (
+        assert "Workflow run: https://" in rollback_drill_text, (
             "Evidence template must reference the GitHub workflow run URL to record"
         )
 
