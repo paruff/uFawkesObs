@@ -25,6 +25,8 @@ jobs:
   preflight:
     name: Pre-flight
     uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@v1.2.0
+    with:
+      commit-format: ${{ startsWith(github.head_ref, 'copilot/') && 'none' || 'conventional' }}
 
   # ─── Stage 1: Static Analysis (Lint) ────────────────────────────────────
   # Catch code quality issues BEFORE security scan or build

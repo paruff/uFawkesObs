@@ -35,6 +35,13 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "grafana": "grafana/grafana:12.3.7",
 }
 
+EXPECTED_LOCALHOST_BINDINGS: dict[str, str] = {
+    "tempo": "127.0.0.1:3200:3200",
+    "loki": "127.0.0.1:3100:3100",
+    "prometheus": "127.0.0.1:9090:9090",
+    "alertmanager": "127.0.0.1:9093:9093",
+}
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -120,4 +127,32 @@ class TestComposeImageVersions:
         tag = actual_image.split(":")[-1]
         assert tag != "", (
             f"Service '{service}' image has an empty tag — expected '{expected_image}'"
+        )
+
+
+class TestComposeLocalhostBindings:
+    """Verify sensitive backend HTTP ports are localhost-only by default."""
+
+    @pytest.mark.parametrize(
+        "service,expected_port_binding",
+        list(EXPECTED_LOCALHOST_BINDINGS.items()),
+        ids=list(EXPECTED_LOCALHOST_BINDINGS.keys()),
+    )
+    def test_backend_http_port_is_localhost_only(
+        self, compose_data: dict, service: str, expected_port_binding: str
+    ) -> None:
+        """Assert the expected localhost-only host binding is present."""
+        services = compose_data.get("services", {})
+        assert service in services, (
+            f"Service '{service}' is missing from compose.yaml — "
+            "cannot verify localhost-only binding"
+        )
+
+        ports = services[service].get("ports")
+        assert isinstance(ports, list), (
+            f"Service '{service}' has no valid 'ports' list in compose.yaml"
+        )
+        assert expected_port_binding in ports, (
+            f"Service '{service}' must include localhost-only binding "
+            f"'{expected_port_binding}', found: {ports}"
         )
