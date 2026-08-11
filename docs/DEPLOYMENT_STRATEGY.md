@@ -90,6 +90,14 @@ automatically, and confirms the host returns to a healthy previous state.
 Status: **PENDING** — runbook ready, live drill not yet executed against a real
 target host ([issue #182](https://github.com/paruff/uFawkesObs/issues/182)).
 
+2026-08-11: static enablement review (guard tests + wiring verification)
+confirmed the drill's fault-injection path (`config/otel/**` →
+`deploy-compose-restart` → `post-deploy-verify` → `rollback`) is wired in
+`deploy.yml`, and cleared the suspected runner-token blocker in
+[issue #193](https://github.com/paruff/uFawkesObs/issues/193) (the revert+push
+runs on the target host, not the runner). The live drill still must prove host
+push credentials and `main` branch protection permit the revert.
+
 | Drill date | Host | Pre-drill SHA | Time to rollback | Recovered? | Gaps |
 |---|---|---|---|---|---|
 | _pending_ | — | — | — | — | — |
