@@ -67,11 +67,35 @@ Before implementing the target model:
 
 ### Automated (Current)
 
-When `post-deploy-verify` fails in `deploy.yml`, the `rollback` job:
+When `post-deploy-verify` fails in `deploy.yml`, the `rollback` job
+(`paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.2.0`):
 1. SSHs into the target host
 2. Runs `git revert HEAD --no-edit`
 3. Pushes the revert to `origin main`
 4. Runs `make up` to restart the previous stack
+
+> **Not yet proven.** This path is documented and wired in CI but has never
+> been exercised end-to-end against a real host. It is **unproven** until a
+> live rollback drill records successful results (LB-04). See
+> [Rollback Drill (LB-04)](#rollback-drill-lb-04) below.
+
+### Rollback Drill (LB-04)
+
+The end-to-end drill is defined in
+[`docs/ROLLBACK_DRILL.md`](ROLLBACK_DRILL.md) — an executable procedure that
+pushes a deliberately-bad commit to a non-prod host, confirms
+`post-deploy-verify` catches it, confirms the `rollback` job fires
+automatically, and confirms the host returns to a healthy previous state.
+
+Status: **PENDING** — runbook ready, live drill not yet executed against a real
+target host ([issue #182](https://github.com/paruff/uFawkesObs/issues/182)).
+
+| Drill date | Host | Pre-drill SHA | Time to rollback | Recovered? | Gaps |
+|---|---|---|---|---|---|
+| _pending_ | — | — | — | — | — |
+
+Any gap found during the drill gets its own follow-up issue; results and
+corrections land back in `docs/ROLLBACK_DRILL.md`.
 
 ### Manual (Fallback)
 

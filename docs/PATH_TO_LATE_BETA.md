@@ -56,13 +56,19 @@ Concretely, late beta requires:
 | LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | ✅ DONE (93s, PASS) |
 | LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | 🔲 PENDING |
 | LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) | 🔲 PENDING |
-| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING |
+| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING (runbook ready) |
 | LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) | 🔲 PENDING |
 | LB-06 | Add a beta feedback channel | [#184](https://github.com/paruff/uFawkesObs/issues/184) | 🔲 PENDING |
 | LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185) | 🔲 PENDING |
 
 All issues are labeled `late-beta` for tracking:
 <https://github.com/paruff/uFawkesObs/issues?q=is%3Aissue+is%3Aopen+label%3Alate-beta>
+
+> LB-04: the executable drill is in `docs/ROLLBACK_DRILL.md` and linked from
+> `docs/DEPLOYMENT_STRATEGY.md`. The live run against a non-prod host is still
+> PENDING. A suspected rollback-push gap (reusable-rollback `GITHUB_TOKEN`
+> permissions / missing checkout) is tracked as a follow-up issue — the drill
+> will confirm or refute it.
 
 ## Already Done (not re-tracked here)
 
