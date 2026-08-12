@@ -1,0 +1,66 @@
+# ============================================================================
+# OpenCode Agent CI — Dispatches agent sessions from GitHub Actions
+# ============================================================================
+# Reference: https://github.com/opencode-ai/opencode
+#
+# This workflow is triggered by:
+#   - Issues labeled with `opencode` + sizing labels
+#   - Issue comments containing `/opencode` (from maintainers only)
+#   - Manual workflow_dispatch with issue number
+#
+# Convention: create issues with model labels + `ready-for-dev` to dispatch
+# agent sessions via CI. Supported models:
+#   - model:deepseek-v4-flash (free, opencode-zen) — default
+#   - model:gpt-4.1 (free)
+#   - model:gpt-5-mini (free)
+#   - model:gpt-5.1-codex (1× premium)
+#   - model:gemini-3-flash (0.33× trial)
+# ============================================================================
+
+name: OpenCode Agent
+
+on:
+  issues:
+    types: [labeled, opened]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to process"
+        required: true
+      model:
+        description: "Model override (default: deepseek-chat-v4-flash)"
+        required: false
+        default: "deepseek-chat-v4-flash"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  opencode-agent:
+    if: |
+      github.repository == 'paruff/uFawkesObs' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'issues' &&
+        contains(github.event.issue.labels.*.name, 'opencode') &&
+        (contains(github.event.issue.labels.*.name, 'ready-for-dev') ||
+         contains(github.event.issue.labels.*.name, 'good-first-issue') ||
+         contains(github.event.issue.labels.*.name, 'feature') ||
+         contains(github.event.issue.labels.*.name, 'bug'))) ||
+       (github.event_name == 'issue_comment' &&
+        github.event.comment.body == '/opencode' &&
+        (github.event.comment.author_association == 'OWNER' ||
+         github.event.comment.author_association == 'MEMBER' ||
+         github.event.comment.author_association == 'COLLABORATOR')
+       ))
+    uses: opencode-ai/opencode/.github/workflows/opencode.yml@v1
+    with:
+      model: "${{ inputs.model || 'deepseek-chat-v4-flash' }}"
+      provider: "opencode-zen"
+    secrets:
+      opencode_api_key: ${{ secrets.OPENCODE_API_KEY }}
+      github_token: ${{ secrets.GITHUB_TOKEN }}

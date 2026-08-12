@@ -21,6 +21,7 @@ Each ADR follows the format:
 | [ADR-004](ADR-004-grafana-12x-migration.md)| Upgrade Grafana from 10.4.5 to 12.3.7                                       | Accepted     | 2026-06-28    |
 | [ADR-005](ADR-005-prometheus-v3-migration.md)| Upgrade Prometheus from 2.55.1 to 3.5.4 LTS                                  | Accepted     | 2026-06-28    |
 | [ADR-006](ADR-006-dora-metric-definitions.md)| DORA Metric Definitions and Data Contract                                   | Accepted     | 2026-06-30    |
+| [ADR-007](ADR-007-dora-consolidation.md)     | Merge uFawkesDORA Compute Plane into uFawkesObs                             | Accepted     | 2026-08-12    |
 
 ---
 
