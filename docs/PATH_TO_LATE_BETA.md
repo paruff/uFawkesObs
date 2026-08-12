@@ -59,7 +59,7 @@ Concretely, late beta requires:
 | LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING (runbook ready) |
 | LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) | 🔲 PENDING |
 | LB-06 | Add a beta feedback channel | [#184](https://github.com/paruff/uFawkesObs/issues/184) | 🔲 PENDING |
-| LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185) | 🔲 PENDING |
+| LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185) | 🟡 IN PROGRESS (plan.md reconciled 2026-08-12; superseded issues #51–#54, #80–#83 closed) |
 
 All issues are labeled `late-beta` for tracking:
 <https://github.com/paruff/uFawkesObs/issues?q=is%3Aissue+is%3Aopen+label%3Alate-beta>

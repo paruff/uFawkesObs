@@ -126,8 +126,9 @@ is `apps/telemetry-generator`. Fix: replace the `media-refinery` references with
 
 1. **A1** — done (2026-07-27).
 2. **A2** — done (2026-07-27): statuses reconciled, issue #71 closed.
-   **A3** — pending: closing #51–#54 as superseded requires confirmation
-   before a bulk close (see PM note below).
+   **A3** — done (2026-08-12): #51–#54 closed as superseded (LB-07 #185),
+   linking `docs/reviews/M4-02-ecosystem-review.md`. M4 tracking issues
+   #80–#83 closed as superseded in the same pass.
 3. **B1, B2** — done (2026-07-27): `docs/product/` and `docs/features/`
    introduced, see above.
 4. **C1, C2** — root cleanup.

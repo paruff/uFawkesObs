@@ -52,6 +52,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   corrected to `telemetry-generator` (the actual demo app)
 - Reconciled `docs/plan.md` status column against real GitHub issue state
   (multiple tasks were done but still shown pending)
+- **Closed superseded/duplicate backlog issues as part of LB-07 (#185):** #51–#54
+  (OBS-DORA DevLake design) and M4 tracking issues #80–#83 closed as superseded
+  by the M4 rework, linking `docs/reviews/M4-02-ecosystem-review.md`; #71 closure
+  verified and documented. `docs/plan.md` status column now matches
+  `gh issue list --state all` as of 2026-08-12.
 
 ## [0.1.0] — 2026-06-28
 
