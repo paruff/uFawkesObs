@@ -1,0 +1,216 @@
+# OpenCode workflow — triggered by issue comments containing /opencode or /oc
+#
+# Providers (in fallback order):
+#   1. NVIDIA NIM — free models via nim-proxy (rate-limit pacing, multi-key LB)
+#   2. Google Gemini — gemini-2.5-flash via GEMINI_API_KEY
+#   3. OpenCode Zen — deepseek-v4-flash-free via OPENCODE_API_KEY
+#
+# Required repository secrets:
+#   NVIDIA_API_KEY   — single key, OR
+#   NVIDIA_API_KEYS  — comma-separated list for load-balancing across keys
+#   GEMINI_API_KEY
+#   OPENCODE_API_KEY
+#
+# nim-proxy (https://github.com/paruff/nim-proxy or compatible) runs as a
+# Docker container that listens on localhost:8000, paces requests to ≤40 RPM,
+# and distributes load across all provided keys.  OpenCode is pointed at the
+# proxy so all NVIDIA requests go through it.
+
+name: OpenCode
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  opencode:
+    # Only run when the comment body starts with /opencode or /oc
+    if: |
+      github.event.issue.pull_request == null &&
+      (startsWith(github.event.comment.body, '/opencode') ||
+       startsWith(github.event.comment.body, '/oc'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Start nim-proxy ───────────────────────────────────────────────────
+      # nim-proxy paces NVIDIA NIM requests to stay under the free-tier 40 RPM
+      # limit and optionally load-balances across multiple API keys.
+      #
+      # If neither NVIDIA_API_KEY nor NVIDIA_API_KEYS is set the proxy step
+      # is skipped and PROVIDER_ORDER is updated so NVIDIA is tried last (or
+      # the fallback runs directly to Gemini / OpenCode Zen).
+      - name: Start nim-proxy (NVIDIA NIM rate-limit proxy)
+        id: nim_proxy
+        continue-on-error: true  # workflow continues even if proxy fails
+        env:
+          # Accept either a single key or a comma-separated list of keys
+          NIM_API_KEYS: ${{ secrets.NVIDIA_API_KEYS || secrets.NVIDIA_API_KEY }}
+        run: |
+          if [ -z "${NIM_API_KEYS}" ]; then
+            echo "::warning::No NVIDIA API key found — nim-proxy will NOT start. Falling back to Gemini/OpenCode Zen."
+            echo "nim_available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          docker run -d \
+            --name nim-proxy \
+            --network host \
+            -e NIM_API_KEYS="${NIM_API_KEYS}" \
+            -e LISTEN_ADDR="0.0.0.0:8000" \
+            -e RATE_LIMIT_RPM="40" \
+            ghcr.io/paruff/nim-proxy:0.2.0
+
+          # Wait up to 20 s for the proxy to become healthy
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8000/healthz > /dev/null 2>&1; then
+              echo "nim-proxy is healthy after ${i}s"
+              echo "nim_available=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "::warning::nim-proxy did not become healthy in 20 s — falling back to Gemini/OpenCode Zen."
+          docker logs nim-proxy || true
+          echo "nim_available=false" >> "$GITHUB_OUTPUT"
+          # Non-zero exit would skip the step but continue-on-error=true keeps the job alive
+
+      # ── 3. Write opencode.json ───────────────────────────────────────────────
+      # Dynamically writes the model config so that:
+      #   - If nim-proxy is up  → primary = NVIDIA via proxy, then Gemini, then Zen
+      #   - If nim-proxy is down → primary = Gemini, then OpenCode Zen
+      # The file is written to the workspace root where OpenCode picks it up.
+      - name: Write opencode.json
+        env:
+          NIM_AVAILABLE: ${{ steps.nim_proxy.outputs.nim_available }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: |
+          # Build model list depending on proxy availability
+          if [ "${NIM_AVAILABLE}" = "true" ]; then
+            # NVIDIA models via nim-proxy on localhost:8000
+            MODELS=$(cat <<'EOF'
+          [
+            {
+              "name": "nvidia-primary",
+              "provider": "openai",
+              "model": "nvidia/qwen3-coder-480b-a35b-instruct",
+              "baseURL": "http://localhost:8000/v1",
+              "apiKey": "not-used-proxy-handles-auth"
+            },
+            {
+              "name": "nvidia-secondary",
+              "provider": "openai",
+              "model": "nvidia/nemotron-3-ultra-550b-a55b",
+              "baseURL": "http://localhost:8000/v1",
+              "apiKey": "not-used-proxy-handles-auth"
+            },
+            {
+              "name": "gemini-fallback",
+              "provider": "google",
+              "model": "google/gemini-2.5-flash"
+            },
+            {
+              "name": "opencode-zen-fallback",
+              "provider": "openai",
+              "model": "opencode-zen/deepseek-v4-flash-free",
+              "baseURL": "https://api.opencode.ai/v1"
+            }
+          ]
+          EOF
+          )
+          else
+            # No proxy — go straight to Gemini then OpenCode Zen
+            MODELS=$(cat <<'EOF'
+          [
+            {
+              "name": "gemini-primary",
+              "provider": "google",
+              "model": "google/gemini-2.5-flash"
+            },
+            {
+              "name": "opencode-zen-fallback",
+              "provider": "openai",
+              "model": "opencode-zen/deepseek-v4-flash-free",
+              "baseURL": "https://api.opencode.ai/v1"
+            }
+          ]
+          EOF
+          )
+          fi
+
+          # Write the full opencode.json
+          cat > opencode.json <<JSONEOF
+          {
+            "\$schema": "https://opencode.ai/config.json",
+            "models": ${MODELS},
+            "fallback": {
+              "enabled": true,
+              "on": ["rate_limit", "timeout", "server_error"],
+              "order": ["nvidia-primary", "nvidia-secondary", "gemini-fallback", "opencode-zen-fallback"]
+            },
+            "log": {
+              "level": "info"
+            }
+          }
+          JSONEOF
+
+          echo "opencode.json written:"
+          cat opencode.json
+
+      # ── 4. Install OpenCode ───────────────────────────────────────────────────
+      - name: Install OpenCode CLI
+        run: |
+          curl -fsSL https://opencode.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # ── 5. (Optional) Install agent skills ───────────────────────────────────
+      # Uncomment to install shared agent skills before running OpenCode.
+      # - name: Install agent skills
+      #   run: |
+      #     mkdir -p ~/.config/opencode/agents
+      #     cp -r .agents/* ~/.config/opencode/agents/ 2>/dev/null || true
+
+      # ── 6. Run OpenCode ───────────────────────────────────────────────────────
+      # Extracts the user's prompt from the comment (everything after the slash
+      # command) and passes it to opencode run.
+      - name: Run OpenCode
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # Strip the trigger command (/opencode or /oc) to get the prompt
+          COMMENT="${{ github.event.comment.body }}"
+          PROMPT="${COMMENT#/opencode}"
+          PROMPT="${PROMPT#/oc}"
+          PROMPT="$(echo "${PROMPT}" | sed 's/^[[:space:]]*//')"
+
+          if [ -z "${PROMPT}" ]; then
+            echo "::error::No prompt found after trigger command. Usage: /opencode <your request>"
+            exit 1
+          fi
+
+          echo "Prompt: ${PROMPT}"
+
+          opencode run \
+            --config opencode.json \
+            --issue "${{ github.event.issue.number }}" \
+            -- "${PROMPT}"
+
+      # ── 7. Tear down nim-proxy ────────────────────────────────────────────────
+      - name: Stop nim-proxy
+        if: always()
+        run: docker rm -f nim-proxy 2>/dev/null || true
