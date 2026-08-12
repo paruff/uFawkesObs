@@ -2,6 +2,7 @@
 
 **Version:** 1.1.0
 **Date:** 2026-06-28
+**Last reconciled:** 2026-08-12 (LB-07, #185) — status column refreshed against `gh issue list --state all`
 **Repo:** paruff/uFawkesObs
 **Status:** Active
 
@@ -331,7 +332,7 @@
 - **Status:** 🟡 MOSTLY DONE (PR #138) — core deliverables shipped under a
   lowercase filename (`docs/multi-stack-integration.md`, not the
   `MULTI_STACK_INTEGRATION.md` the issue names); Makefile integration targets
-  not found. Issue #54 still open on GitHub.
+  not found. Issue #54 closed 2026-08-10 as superseded (M4 rework, LB-07 #185).
 - **Tasks:**
   1. Create `docs/MULTI_STACK_INTEGRATION.md` with sections for each sister stack
   2. Create `docker-compose.integration.yml` at repo root
@@ -354,7 +355,7 @@
 
 - **Description:** Define what counts as a deployment, incident, and restoration within uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
 - **Backlog Issue:** #80
-- **Status:** ✅ DONE (PR #147 merged)
+- **Status:** ✅ DONE (PR #147 merged); issue #80 closed 2026-08-12 as superseded (LB-07 #185)
 - **Details:**
    - Created `docs/adr/ADR-006-dora-metric-definitions.md` (note: ADR-006, not ADR-004 — ADR-004 is the Grafana 12 migration)
    - Defines deployment/incident spans, 4 DORA metrics, metric naming conventions
@@ -370,7 +371,7 @@
 - **Description:** Configure uFawkesObs's `dora` compose profile to connect to uFawkesDORA's ingestion API (for event forwarding) and uFawkesRes's shared PostgreSQL (for DORA metric snapshots). No DevLake or MySQL in uFawkesObs — those now live in uFawkesDORA/uFawkesRes.
 - **Backlog Issue:** #81, #51
 - **Dependencies:** M4-01
-- **Status:** ✅ DONE (PR #148 merged)
+- **Status:** ✅ DONE (PR #148 merged); issues #81 and #51 closed 2026-08-10/12 as superseded (LB-07 #185)
 - **Ecosystem Review:** See `docs/reviews/M4-02-ecosystem-review.md`. DevLake moved to uFawkesDORA; MySQL replaced by uFawkesRes PostgreSQL. uFawkesObs M4 scope is now: data contract (M4-01), recording rules (M4-03), dashboard (M4-04), and cross-plane wiring (this task).
 - **Details:**
    - Added `dora` profile to `compose.yaml` with `otel-collector-dora` service forwarding DORA metrics to uFawkesDORA
@@ -393,7 +394,7 @@
 - **Description:** Configure Prometheus recording rules inside uFawkesObs for continuous calculation of DORA metrics. Rules query Prometheus metrics scraped from OTel Collector; derived metrics pushed by uFawkesDORA compute job via pushgateway.
 - **Backlog Issue:** #82, #53
 - **Dependencies:** M4-02
-- **Status:** ✅ DONE (commit 3ad1661, extended with rework rate in this branch)
+- **Status:** ✅ DONE (commit 3ad1661, extended with rework rate in this branch); issues #82 and #53 closed 2026-08-10/12 as superseded (LB-07 #185)
 - **Notes:** DORA 2026 now defines 5 key metrics — the classic 4 plus rework rate from the AI Capabilities Model.
 - **Details:**
    - Created `config/prometheus/rules/ufawkesobs-dora-metrics.yml` with 5 DORA recording rules:
@@ -423,9 +424,9 @@
 - **Description:** Pre-provision a dedicated DORA dashboard in Grafana showing real-time calculations. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL via Grafana Postgres datasource plugin (current snapshots). Metrics: Deployment Frequency, Lead Time, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate.
 - **Backlog Issue:** #83, #52
 - **Dependencies:** M4-03
-- **Status:** ✅ DONE
+- **Status:** ✅ DONE; issues #83 and #52 closed 2026-08-10/12 as superseded (LB-07 #185)
 - **Tasks:**
-  1. Create `config/grafana/dashboards/dora-metrics.json` containing panel models for the 5 DORA indicators.
+  1. Create `dashboards/platform/dora-metrics.json` (mounted via `./dashboards/platform` in `compose.yaml`) containing panel models for the 5 DORA indicators.
   2. Enforce standard DORA performance bands (Elite/High/Medium/Low) using color thresholds.
   3. Configure dashboard to use both Prometheus and Postgres datasources.
 - **Acceptance Criteria:**
