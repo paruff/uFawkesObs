@@ -15,7 +15,12 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from ingestion.api.queue import close_pool, enqueue_event, enqueue_events, get_queue_depth
+from ingestion.api.queue import (
+    close_pool,
+    enqueue_event,
+    enqueue_events,
+    get_queue_depth,
+)
 from ingestion.api.validator import validate_payload, validate_payloads
 
 # ── Lifecycle ──────────────────────────────────────────────────────────────────
@@ -72,7 +77,9 @@ async def post_event(payload: dict[str, Any]):
     """
     result = validate_payload(payload)
     if not result.valid:
-        raise HTTPException(status_code=422, detail=result.to_error_response()["detail"])
+        raise HTTPException(
+            status_code=422, detail=result.to_error_response()["detail"]
+        )
 
     event_id = await enqueue_event(payload)
     return {"queued": True, "id": event_id}

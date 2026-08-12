@@ -146,7 +146,9 @@ class MetricsDB:
             rows = await conn.fetch(query)
             return [dict(r) for r in rows]
 
-    async def lead_time(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def lead_time(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Lead Time for Changes: P50 and P95 in hours.
 
         Uses ``metadata->>'first_commit_at'`` as the code committed timestamp.
@@ -297,7 +299,9 @@ class MetricsDB:
             rows = await conn.fetch(query)
             return [dict(r) for r in rows]
 
-    async def change_failure_rate(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def change_failure_rate(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Change Failure Rate: % of deployments that fail or rollback."""
         team_clause = f"AND source = '{team}'" if team and team != "all" else ""
         query = f"""
@@ -316,7 +320,9 @@ class MetricsDB:
             rows = await conn.fetch(query)
             return [dict(r) for r in rows]
 
-    async def rework_rate(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def rework_rate(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Rework Rate: user-visible rework events / total deployments.
 
         Only counts rework events where ``user_visible`` is true — hotfixes
@@ -374,7 +380,9 @@ async def compute_all_metrics(
     else:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    logger.info("Computing DORA metrics (window=%d days, team=%s)", window_days, team or "all")
+    logger.info(
+        "Computing DORA metrics (window=%d days, team=%s)", window_days, team or "all"
+    )
 
     async with MetricsDB() as db:
         # Run all metric queries in parallel
@@ -400,7 +408,9 @@ async def compute_all_metrics(
     return results
 
 
-def _ensure_team_entry(teams: dict[str, dict], team_id: str, proxy: bool = False) -> dict:
+def _ensure_team_entry(
+    teams: dict[str, dict], team_id: str, proxy: bool = False
+) -> dict:
     """Get or create a team entry, initializing all metric keys to None."""
     all_metric_keys = [
         "deployment_frequency",
@@ -437,8 +447,12 @@ def _merge_team_results(
     for row in lt:
         tid = row["team_id"]
         entry = _ensure_team_entry(teams, tid, proxy=row.get("proxy_used", False))
-        entry["lead_time_p50_hours"] = float(row["p50"]) if row["p50"] is not None else None
-        entry["lead_time_p95_hours"] = float(row["p95"]) if row["p95"] is not None else None
+        entry["lead_time_p50_hours"] = (
+            float(row["p50"]) if row["p50"] is not None else None
+        )
+        entry["lead_time_p95_hours"] = (
+            float(row["p95"]) if row["p95"] is not None else None
+        )
         if row.get("proxy_used"):
             entry["proxy_metrics"] = True
 
@@ -452,7 +466,9 @@ def _merge_team_results(
     for row in cfr:
         tid = row["team_id"]
         entry = _ensure_team_entry(teams, tid)
-        entry["change_failure_rate"] = float(row["cfr"]) if row["cfr"] is not None else None
+        entry["change_failure_rate"] = (
+            float(row["cfr"]) if row["cfr"] is not None else None
+        )
 
     for row in rr:
         tid = row["team_id"]
@@ -466,10 +482,14 @@ def _merge_team_results(
         entry["dora_tier_deployment_frequency"] = classify_tier(
             "deployment_frequency", entry.get("deployment_frequency")
         )
-        entry["dora_tier_lead_time"] = classify_tier("lead_time", entry.get("lead_time_p50_hours"))
+        entry["dora_tier_lead_time"] = classify_tier(
+            "lead_time", entry.get("lead_time_p50_hours")
+        )
         entry["dora_tier_fdrt"] = classify_tier("fdrt", entry.get("fdrt_p50_hours"))
         entry["dora_tier_cfr"] = classify_tier("cfr", entry.get("change_failure_rate"))
-        entry["dora_tier_rework_rate"] = classify_tier("rework_rate", entry.get("rework_rate_pct"))
+        entry["dora_tier_rework_rate"] = classify_tier(
+            "rework_rate", entry.get("rework_rate_pct")
+        )
 
     return list(teams.values())
 
@@ -540,15 +560,27 @@ async def _push_metrics(
             _lines.append(f"# TYPE {name} gauge")
             _lines.append(f"{name}{{{labels}}} {value}")
 
-        gauge("dora_deployment_frequency_per_week", record.get("deployment_frequency"), tier)
+        gauge(
+            "dora_deployment_frequency_per_week",
+            record.get("deployment_frequency"),
+            tier,
+        )
         gauge(
             "dora_lead_time_p50_hours",
             record.get("lead_time_p50_hours"),
             record.get("dora_tier_lead_time"),
         )
         gauge("dora_lead_time_p95_hours", record.get("lead_time_p95_hours"))
-        gauge("dora_fdrt_p50_hours", record.get("fdrt_p50_hours"), record.get("dora_tier_fdrt"))
-        gauge("dora_cfr_pct", record.get("change_failure_rate"), record.get("dora_tier_cfr"))
+        gauge(
+            "dora_fdrt_p50_hours",
+            record.get("fdrt_p50_hours"),
+            record.get("dora_tier_fdrt"),
+        )
+        gauge(
+            "dora_cfr_pct",
+            record.get("change_failure_rate"),
+            record.get("dora_tier_cfr"),
+        )
         gauge(
             "dora_rework_rate_pct",
             record.get("rework_rate_pct"),
@@ -563,7 +595,9 @@ async def _push_metrics(
                 url = f"{pushgateway_url.rstrip('/')}/metrics/job/{job_name}"
                 async with session.put(url, data=payload) as resp:
                     if resp.status not in (200, 202):
-                        logger.warning("Pushgateway returned %d for %s", resp.status, job_name)
+                        logger.warning(
+                            "Pushgateway returned %d for %s", resp.status, job_name
+                        )
                     else:
                         logger.debug("Pushed metrics for %s", tid)
         except Exception as e:
@@ -653,7 +687,11 @@ def _print_table(results: list[dict]):
             if r.get("lead_time_p95_hours") is not None
             else "N/A"
         )
-        fdrt = f"{r.get('fdrt_p50_hours', 0):.1f}" if r.get("fdrt_p50_hours") is not None else "N/A"
+        fdrt = (
+            f"{r.get('fdrt_p50_hours', 0):.1f}"
+            if r.get("fdrt_p50_hours") is not None
+            else "N/A"
+        )
         cfr = (
             f"{r.get('change_failure_rate', 0) * 100:.1f}"
             if r.get("change_failure_rate") is not None

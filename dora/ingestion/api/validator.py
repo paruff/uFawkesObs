@@ -78,7 +78,9 @@ class ValidationDetail:
 class ValidationResult:
     """Result of validating an event payload against its schema."""
 
-    def __init__(self, valid: bool = False, errors: list[ValidationDetail] | None = None):
+    def __init__(
+        self, valid: bool = False, errors: list[ValidationDetail] | None = None
+    ):
         self.valid = valid
         self.errors = errors or []
 

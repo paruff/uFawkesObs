@@ -13,7 +13,9 @@ import asyncpg
 _pool: asyncpg.Pool | None = None
 
 
-async def get_pool(dsn: str | None = None, min_size: int = 2, max_size: int = 10) -> asyncpg.Pool:
+async def get_pool(
+    dsn: str | None = None, min_size: int = 2, max_size: int = 10
+) -> asyncpg.Pool:
     """Get or create the asyncpg connection pool.
 
     If ``dsn`` is ``None``, uses the ``DATABASE_URL`` environment variable.

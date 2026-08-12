@@ -191,7 +191,9 @@ class TestComposeDoraApi:
     def test_database_url_from_dora_postgres_url(self, dora_api: dict) -> None:
         env = dora_api.get("environment", [])
         assert any(
-            isinstance(e, str) and e.startswith("DATABASE_URL=") and "DORA_POSTGRES_URL" in e
+            isinstance(e, str)
+            and e.startswith("DATABASE_URL=")
+            and "DORA_POSTGRES_URL" in e
             for e in env
         ), "dora-api must derive DATABASE_URL from DORA_POSTGRES_URL"
 

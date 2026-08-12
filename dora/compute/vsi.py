@@ -70,7 +70,9 @@ class VSIDB:
 
     # ── Query methods ─────────────────────────────────────────────────────────
 
-    async def get_merged_prs(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def get_merged_prs(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Get all merged PR events with their metadata within the window.
 
         Returns PR merge events with their paired open event data,
@@ -120,7 +122,9 @@ class VSIDB:
             rows = await conn.fetch(query)
             return [dict(r) for r in rows]
 
-    async def get_deployments(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def get_deployments(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Get successful deployment events within the window."""
         team_clause = f"AND source = '{team}'" if team and team != "all" else ""
 
@@ -172,7 +176,9 @@ class VSIDB:
                 )
         return len(records)
 
-    async def get_stage_summary(self, window_days: int, team: str | None) -> list[dict[str, Any]]:
+    async def get_stage_summary(
+        self, window_days: int, team: str | None
+    ) -> list[dict[str, Any]]:
         """Get aggregate stage statistics from vsi_stage_breakdown."""
         team_clause = ""
         if team and team != "all":
@@ -564,7 +570,9 @@ async def _push_vsm_metrics(
 
     # Bottleneck label
     bottleneck = vsm_metrics.get("primary_bottleneck", "unknown")
-    lines.append(f'vsm_primary_bottleneck{{team_id="{team_id}",stage="{bottleneck}"}} 1')
+    lines.append(
+        f'vsm_primary_bottleneck{{team_id="{team_id}",stage="{bottleneck}"}} 1'
+    )
 
     payload = "\n".join(lines)
     job_name = "ufawkesdora/vsm"
@@ -627,7 +635,9 @@ def print_vsm_table(vsm_metrics: dict[str, Any]):
     print("  VALUE STREAM INDICATORS")
     print(f"{'═' * 60}")
     print(f"  Total journeys:     {vsm_metrics.get('total_journeys', 0)}")
-    print(f"  Overall efficiency: {vsm_metrics.get('overall_vsm_efficiency_pct', 0):.1f}%")
+    print(
+        f"  Overall efficiency: {vsm_metrics.get('overall_vsm_efficiency_pct', 0):.1f}%"
+    )
     print(f"  Primary bottleneck: {vsm_metrics.get('primary_bottleneck', 'unknown')}")
     print(f"{'─' * 60}")
 
@@ -647,9 +657,15 @@ def print_vsm_table(vsm_metrics: dict[str, Any]):
 
     # Timing summary
     print(f"\n  {'─' * 40}")
-    print(f"  Value-add time: {format_duration(vsm_metrics.get('overall_value_add_seconds', 0))}")
-    print(f"  Wait time:      {format_duration(vsm_metrics.get('overall_wait_seconds', 0))}")
-    print(f"  Total time:     {format_duration(vsm_metrics.get('overall_total_seconds', 0))}")
+    print(
+        f"  Value-add time: {format_duration(vsm_metrics.get('overall_value_add_seconds', 0))}"
+    )
+    print(
+        f"  Wait time:      {format_duration(vsm_metrics.get('overall_wait_seconds', 0))}"
+    )
+    print(
+        f"  Total time:     {format_duration(vsm_metrics.get('overall_total_seconds', 0))}"
+    )
     print(f"{'═' * 60}\n")
 
 

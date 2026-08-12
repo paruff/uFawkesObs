@@ -301,13 +301,17 @@ def build_team_vector(
     rr_raw = snapshot.get("rework_rate_pct")
 
     vector = {
-        "deployment_frequency": normalise_metric(df_raw, METRIC_THRESHOLDS["deployment_frequency"]),
+        "deployment_frequency": normalise_metric(
+            df_raw, METRIC_THRESHOLDS["deployment_frequency"]
+        ),
         "lead_time": normalise_lower_is_better(lt_raw, METRIC_THRESHOLDS["lead_time"]),
         "fdrt": normalise_lower_is_better(fdrt_raw, METRIC_THRESHOLDS["fdrt"]),
         "change_failure_rate": normalise_lower_is_better(
             cfr_raw, METRIC_THRESHOLDS["change_failure_rate"]
         ),
-        "rework_rate": normalise_lower_is_better(rr_raw, METRIC_THRESHOLDS["rework_rate"]),
+        "rework_rate": normalise_lower_is_better(
+            rr_raw, METRIC_THRESHOLDS["rework_rate"]
+        ),
         "wellbeing": wellbeing_score if wellbeing_score is not None else 0.5,
     }
     return vector
@@ -370,7 +374,13 @@ def identify_bottleneck(
     centroid = ARCHETYPE_DEFINITIONS[archetype_name]["centroid"]
 
     gaps: dict[str, float] = {}
-    for dim in ("deployment_frequency", "lead_time", "fdrt", "change_failure_rate", "rework_rate"):
+    for dim in (
+        "deployment_frequency",
+        "lead_time",
+        "fdrt",
+        "change_failure_rate",
+        "rework_rate",
+    ):
         gap = centroid[dim] - team_vector[dim]
         gaps[dim] = max(0.0, gap)
 
@@ -594,7 +604,9 @@ async def classify_team(
         current_month = now.month
         q = (current_month - 1) // 3 + 1
         q_start = datetime(now.year, (q - 1) * 3 + 1, 1, tzinfo=UTC)
-        q_end = datetime(now.year + 1 if q == 4 else now.year, (q % 4) * 3 + 1, 1, tzinfo=UTC)
+        q_end = datetime(
+            now.year + 1 if q == 4 else now.year, (q % 4) * 3 + 1, 1, tzinfo=UTC
+        )
 
     async with ArchetypeDB() as db:
         # Fetch the latest dora_snapshot
@@ -623,7 +635,9 @@ async def classify_team(
         has_wellbeing = len(wellbeing_scores) > 0
 
         # Normalise wellbeing
-        wellbeing_normalised = normalise_wellbeing(wellbeing_scores) if has_wellbeing else None
+        wellbeing_normalised = (
+            normalise_wellbeing(wellbeing_scores) if has_wellbeing else None
+        )
 
         logger.debug(
             "Snapshot found for %s: DF=%.2f, LT=%.1f, FDRT=%.1f, CFR=%.3f, RR=%.3f",
@@ -652,11 +666,15 @@ async def classify_team(
 
         # Write to archetype_history
         try:
-            await db.write_classification(team_id, archetype_name, confidence, snapshot_id)
+            await db.write_classification(
+                team_id, archetype_name, confidence, snapshot_id
+            )
             logger.info("Classification written to archetype_history for %s", team_id)
         except Exception as e:
             logger.warning("Failed to write classification: %s", e)
-            logger.warning("  (This may be due to the archetype CHECK constraint — see Issue #6)")
+            logger.warning(
+                "  (This may be due to the archetype CHECK constraint — see Issue #6)"
+            )
 
         result = {
             "archetype": archetype_name,
