@@ -29,9 +29,16 @@ permissions:
 
 jobs:
   opencode:
-    # Only run when the comment body starts with /opencode or /oc
+    # Only run for trusted actors when the comment body starts with
+    # /opencode or /oc. The comment body is untrusted input (any user can
+    # comment on an issue), so it must never be evaluated as shell code —
+    # it is passed to the Run OpenCode step via an env var, not interpolated
+    # into the run: script.
     if: |
       github.event.issue.pull_request == null &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR') &&
       (startsWith(github.event.comment.body, '/opencode') ||
        startsWith(github.event.comment.body, '/oc'))
     runs-on: ubuntu-latest
@@ -191,9 +198,12 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
+          # Untrusted input: passed via env var, never interpolated into the
+          # run: script, so shell metacharacters in a comment body cannot
+          # execute on the runner.
+          COMMENT: ${{ github.event.comment.body }}
         run: |
           # Strip the trigger command (/opencode or /oc) to get the prompt
-          COMMENT="${{ github.event.comment.body }}"
           PROMPT="${COMMENT#/opencode}"
           PROMPT="${PROMPT#/oc}"
           PROMPT="$(echo "${PROMPT}" | sed 's/^[[:space:]]*//')"
