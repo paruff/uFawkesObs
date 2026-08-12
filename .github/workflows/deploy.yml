@@ -1,15 +1,11 @@
 name: GitOps Reconciliation Deploy
 
+# Deploy is acceptance-gated only (LB-05, #183): every merge to main runs
+# "Acceptance Full (Post-Merge)", and this workflow reconciles once that
+# workflow completes. The previous `push` trigger was removed — 100% of its
+# runs failed with empty deploy secrets, so it only produced red runs while a
+# redundant acceptance-gated run did the real deploy.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "config/**"
-      - "compose.yaml"
-      - ".env.example"
-      - "dashboards/**"
-  # Trigger after acceptance-full workflow completes successfully on main
   workflow_run:
     workflows: ["Acceptance Full (Post-Merge)"]
     types:
@@ -24,8 +20,7 @@ concurrency:
   group: gitops-reconciliation-${{ github.ref }}
   cancel-in-progress: true
 
-# Only run deploy if acceptance-full passed (for workflow_run trigger)
-# For push trigger, always run (manual/override)
+# Deploy only when the triggering acceptance-full workflow passed
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
@@ -65,12 +60,9 @@ jobs:
   deploy-config-reload:
     name: Deploy (config reload)
     needs: detect-changes
-    # For workflow_run trigger, ensure acceptance-full passed
+    # Ensure the triggering acceptance-full workflow passed
     if: |
-      (
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-        (github.event_name == 'push')
-      ) &&
+      github.event.workflow_run.conclusion == 'success' &&
       needs.detect-changes.outputs.reload_changed == 'true' &&
       needs.detect-changes.outputs.compose_changed != 'true' &&
       needs.detect-changes.outputs.non_reloadable_config_changed != 'true'
@@ -211,10 +203,7 @@ jobs:
     name: Deploy (compose restart)
     needs: detect-changes
     if: |
-      (
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-        (github.event_name == 'push')
-      ) &&
+      github.event.workflow_run.conclusion == 'success' &&
       (
         needs.detect-changes.outputs.compose_changed == 'true' ||
         needs.detect-changes.outputs.non_reloadable_config_changed == 'true'

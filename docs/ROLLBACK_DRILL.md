@@ -151,9 +151,11 @@ ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "${DEPLOY_PATH:-$HOME/uFawkesObs}/scripts/wa
 git push origin drill/lb04-bad-deploy:main
 ```
 
-> Expected: a new run of **GitOps Reconciliation Deploy** starts on the bad
-> SHA. `detect-changes` → `deploy-compose-restart` waits on the
-> `compose-restart` environment approval.
+> Expected: **Acceptance Full (Post-Merge)** starts on the bad SHA (deploy.yml
+> has been acceptance-gated since LB-05/#183 — it no longer triggers directly
+> on `push`). When that workflow completes, a run of **GitOps Reconciliation
+> Deploy** starts on the bad SHA; `detect-changes` →
+> `deploy-compose-restart` waits on the `compose-restart` environment approval.
 
 ### Step 3 — Approve the compose-restart environment
 

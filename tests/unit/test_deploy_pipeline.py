@@ -120,19 +120,27 @@ def path_filters(
 
 
 class TestDeployTrigger:
-    """The drill pushes to main; the push trigger must fire on it."""
+    """Deploy must be driven solely by the post-merge acceptance gate (LB-05).
 
-    def test_deploy_runs_on_main_push(self, deploy_workflow: dict[str, Any]) -> None:
-        trigger = deploy_workflow["on"]
-        assert "push" in trigger, "deploy.yml must trigger on push"
-        assert "main" in trigger["push"]["branches"]
+    The former `push` trigger dispatched runs whose deploy secrets were always
+    unavailable (see #183), so it only produced red runs. The authoritative
+    deploy now fires from the `workflow_run` event of the Acceptance Full
+    (Post-Merge) workflow.
+    """
 
-    def test_deploy_paths_cover_drill_inputs(
+    def test_deploy_has_no_push_trigger(self, deploy_workflow: dict[str, Any]) -> None:
+        assert "push" not in deploy_workflow["on"], (
+            "deploy.yml must not trigger on push — push-triggered runs always "
+            "failed with empty deploy secrets (#183)"
+        )
+
+    def test_deploy_is_gated_on_acceptance_full(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
-        paths = deploy_workflow["on"]["push"]["paths"]
-        for expected in ("config/**", "compose.yaml", ".env.example", "dashboards/**"):
-            assert expected in paths, f"deploy trigger missing path {expected}"
+        run = deploy_workflow["on"]["workflow_run"]
+        assert "Acceptance Full (Post-Merge)" in run["workflows"]
+        assert "completed" in run["types"]
+        assert "main" in run["branches"]
 
 
 class TestRollbackWiring:
