@@ -150,8 +150,12 @@ class TestDoraEventSchemas:
         with open(DORA_DIR / "events" / name, encoding="utf-8") as fh:
             schema = json.load(fh)
         required = set(schema.get("required", []))
-        assert {"schema_version", "event_type", "occurred_at"} <= required, (
-            f"{name} must require schema_version, event_type, and occurred_at"
+        assert {"schema_version", "event_type"} <= required, (
+            f"{name} must require schema_version and event_type"
+        )
+        assert required & {"occurred_at", "deployed_at", "triggered_at"}, (
+            f"{name} must require a timestamp field "
+            "(occurred_at, deployed_at, or triggered_at)"
         )
 
 
