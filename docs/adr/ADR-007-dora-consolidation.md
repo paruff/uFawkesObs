@@ -2,9 +2,27 @@
 
 **Status:** Accepted
 **Date:** 2026-08-12
-**Companion issues:** #201–#208 (DORA-CONSOLIDATION-01 through 08, created 2026-08-12)
+**Companion issues:** #200, #202–#208 (DORA-CONSOLIDATION-01 through 08, created 2026-08-12).
+Note: #201 was an accidental duplicate of #200 and was closed without action.
+Issue #200 itself was completed via PR #210.
 **Scope:** Moves all uFawkesDORA code, configs, dashboards, alerts, tests, and docs
 into uFawkesObs; archives the standalone uFawkesDORA repo.
+
+> **Amendment (2026-08-13):** Two assumptions below don't hold and need
+> correcting before the remaining steps execute:
+> - **No local `postgres` compose service exists.** `dora-api` already
+>   connects to an *external* Postgres via `DORA_POSTGRES_URL` (uFawkesRes's
+>   shared instance — see AGENTS.md §10). There is no container here to
+>   mount `docker-entrypoint-initdb.d` into, so step 02's "restructure
+>   postgres init volume" needs a different mechanism (e.g. a one-shot init
+>   job service that runs the SQL against `DORA_POSTGRES_URL`), not a
+>   compose-native init-volume mount.
+> - **No root `pyproject.toml` exists in this repo**, and no service in it
+>   uses `console_scripts` entry points. Every Python service (see
+>   `dora/ingestion/Dockerfile`) ships its own `requirements-*.txt` and a
+>   direct `CMD`. `dora-compute` should follow that same convention — its
+>   own Dockerfile + requirements file — not the `pyproject.toml`/entry-point
+>   plan in step 05 below.
 
 ---
 
