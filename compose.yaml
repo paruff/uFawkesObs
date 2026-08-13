@@ -525,6 +525,35 @@ services:
       - observability
     profiles: ["core"]
 
+# DORA database migration — one-shot job that applies dora/database/*.sql
+# against the existing DORA_POSTGRES_URL database (owned by uFawkesRes; see
+# AGENTS.md §10). Does not create databases/roles — that's the shared
+# Postgres server's own provisioning. Runs and exits on every `up`; every SQL
+# file is idempotent so re-running is safe.
+  dora-db-init:
+    image: postgres:17.2-alpine
+    container_name: ufawkesdora-db-init
+    restart: "no"
+    environment:
+      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+    volumes:
+      - ./dora/database:/migrations:ro
+    entrypoint: ["/bin/sh", "/migrations/migrate.sh"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "dora-db-init"
+    labels:
+      - "plane=obstackd"
+      - "component=dora-db-init"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
 # DORA event ingestion API — accepts events from CI/CD systems, validates against
 # the dora/events schemas, and enqueues to uFawkesRes Postgres (dora profile)
   dora-api:
@@ -533,6 +562,9 @@ services:
       dockerfile: dora/ingestion/Dockerfile
     container_name: ufawkesdora-ingestion
     restart: unless-stopped
+    depends_on:
+      dora-db-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8088:8088"
     environment:
