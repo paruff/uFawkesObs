@@ -525,6 +525,58 @@ services:
       - observability
     profiles: ["core"]
 
+# DORA event ingestion API — accepts events from CI/CD systems, validates against
+# the dora/events schemas, and enqueues to uFawkesRes Postgres (dora profile)
+  dora-api:
+    build:
+      context: .
+      dockerfile: dora/ingestion/Dockerfile
+    container_name: ufawkesdora-ingestion
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8088:8088"
+    environment:
+      - TZ=UTC
+      - DATABASE_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+    volumes:
+      - ./dora/ingestion:/app/ingestion:ro
+      - ./dora/events:/app/events:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      # python:3.13-slim has no wget/curl; use the stdlib instead.
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8088/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "dora-api"
+    labels:
+      - "plane=obstackd"
+      - "component=dora-api"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
 # DORA metrics compute plane (connects to uFawkesDORA ingestion API and uFawkesRes Postgres)
   otel-collector-dora:
     image: otel/opentelemetry-collector-contrib:0.120.0
