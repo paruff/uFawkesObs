@@ -210,6 +210,206 @@ class TestComposeDoraApi:
 
 
 # ---------------------------------------------------------------------------
+# compose.yaml dora-db-init service (issue #202)
+# ---------------------------------------------------------------------------
+class TestComposeDoraDbInit:
+    """The dora-db-init one-shot job must apply dora/database/*.sql against
+    the existing DORA_POSTGRES_URL database — no local postgres service
+    exists to mount docker-entrypoint-initdb.d into (see ADR-007 amendment).
+    """
+
+    def test_service_present(self, compose_data: dict) -> None:
+        assert "dora-db-init" in compose_data.get("services", {}), (
+            "compose.yaml missing dora-db-init service"
+        )
+
+    def test_mounts_dora_database(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-db-init"]
+        assert "./dora/database:/migrations:ro" in svc.get("volumes", []), (
+            "dora-db-init must mount ./dora/database into /migrations"
+        )
+
+    def test_dora_profile(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-db-init"]
+        assert "dora" in svc.get("profiles", []), (
+            "dora-db-init must be gated behind the dora profile"
+        )
+
+    def test_runs_once_not_restarted(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-db-init"]
+        assert svc.get("restart") == "no", (
+            "dora-db-init is a one-shot job — restart must be 'no'"
+        )
+
+    def test_database_url_from_dora_postgres_url(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-db-init"]
+        env = svc.get("environment", [])
+        assert any(
+            isinstance(e, str) and e.startswith("DORA_POSTGRES_URL=") for e in env
+        ), "dora-db-init must derive its connection string from DORA_POSTGRES_URL"
+
+    def test_dora_api_waits_for_migration(self, dora_api: dict) -> None:
+        depends_on = dora_api.get("depends_on", {})
+        assert depends_on.get("dora-db-init", {}).get("condition") == (
+            "service_completed_successfully"
+        ), "dora-api must wait for dora-db-init to complete before starting"
+
+
+class TestDoraDatabaseFiles:
+    """DB init/migration/hypertable SQL moved from uFawkesDORA (issue #202)."""
+
+    EXPECTED_FILES = [
+        "init/01-dora-schema.sql",
+        "migrations/001-initial-schema.sql",
+        "migrations/002-add-attempts-to-event-queue.sql",
+        "migrations/003-extend-dora-snapshots.sql",
+        "timescaledb/hypertables.sql",
+        "migrate.sh",
+    ]
+
+    @pytest.mark.parametrize("rel", EXPECTED_FILES)
+    def test_file_present(self, rel: str) -> None:
+        assert (DORA_DIR / "database" / rel).is_file(), (
+            f"expected dora/database/{rel} — migration did not land"
+        )
+
+    @pytest.mark.parametrize(
+        "rel",
+        ["init/01-dora-schema.sql", "timescaledb/hypertables.sql"],
+    )
+    def test_sql_does_not_switch_database(self, rel: str) -> None:
+        """`\\c dora_metrics` would reconnect away from DORA_POSTGRES_URL's
+        actual target database — must be stripped (see ADR-007 amendment)."""
+        sql = (DORA_DIR / "database" / rel).read_text(encoding="utf-8")
+        assert "\\c dora_metrics" not in sql, (
+            f"{rel} still has a \\c dora_metrics database-switch command"
+        )
+
+    def test_no_out_of_scope_role_provisioning(self) -> None:
+        """Database/role creation is the shared Postgres server's own
+        provisioning (uFawkesRes) — out of scope for uFawkesObs."""
+        init_dir = DORA_DIR / "database" / "init"
+        leftover = {p.name for p in init_dir.glob("*")} - {"01-dora-schema.sql"}
+        assert not leftover, (
+            f"unexpected files in dora/database/init/: {leftover} — "
+            "00-create-databases.sh and 02-dora-roles.sql are intentionally excluded"
+        )
+
+
+# ---------------------------------------------------------------------------
+# compose.yaml dora-compute + pushgateway services (issue #205)
+# ---------------------------------------------------------------------------
+class TestComposeDoraCompute:
+    """dora-compute is a periodic batch job (own Dockerfile, no
+    pyproject.toml) pushing metrics to pushgateway — see ADR-007 amendment.
+    """
+
+    def test_service_present(self, compose_data: dict) -> None:
+        assert "dora-compute" in compose_data.get("services", {}), (
+            "compose.yaml missing dora-compute service"
+        )
+
+    def test_own_dockerfile(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        assert svc.get("build", {}).get("dockerfile") == "dora/compute/Dockerfile", (
+            "dora-compute must build from its own Dockerfile, not share dora-api's"
+        )
+
+    def test_dora_profile(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        assert "dora" in svc.get("profiles", []), (
+            "dora-compute must be gated behind the dora profile"
+        )
+
+    def test_healthcheck_defined(self, compose_data: dict) -> None:
+        assert "healthcheck" in compose_data["services"]["dora-compute"], (
+            "every service must define a healthcheck (AGENTS.md §4)"
+        )
+
+    def test_database_url_from_dora_postgres_url(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        env = svc.get("environment", [])
+        assert any(
+            isinstance(e, str)
+            and e.startswith("DATABASE_URL=")
+            and "DORA_POSTGRES_URL" in e
+            for e in env
+        ), "dora-compute must derive DATABASE_URL from DORA_POSTGRES_URL"
+
+    def test_pushgateway_url_points_at_pushgateway_service(
+        self, compose_data: dict
+    ) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        env = svc.get("environment", [])
+        assert "PUSHGATEWAY_URL=http://pushgateway:9091" in env, (
+            "dora-compute must push to the pushgateway compose service by name"
+        )
+
+    def test_waits_for_pushgateway_healthy(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        depends_on = svc.get("depends_on", {})
+        assert depends_on.get("pushgateway", {}).get("condition") == (
+            "service_healthy"
+        ), "dora-compute must wait for pushgateway to be healthy before starting"
+
+
+class TestComposePushgateway:
+    """The pushgateway service receives dora-compute's batch-pushed metrics."""
+
+    def test_service_present(self, compose_data: dict) -> None:
+        assert "pushgateway" in compose_data.get("services", {}), (
+            "compose.yaml missing pushgateway service"
+        )
+
+    def test_dora_profile(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["pushgateway"]
+        assert "dora" in svc.get("profiles", []), (
+            "pushgateway must be gated behind the dora profile"
+        )
+
+    def test_healthcheck_defined(self, compose_data: dict) -> None:
+        assert "healthcheck" in compose_data["services"]["pushgateway"], (
+            "every service must define a healthcheck (AGENTS.md §4)"
+        )
+
+    def test_pinned_image(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["pushgateway"]
+        image = svc.get("image", "")
+        assert image and ":latest" not in image, (
+            "pushgateway image must be pinned — no latest tags (AGENTS.md §4)"
+        )
+
+
+class TestDoraComputeFiles:
+    """dora-compute build inputs moved/added for issue #205."""
+
+    EXPECTED_FILES = ["Dockerfile", "run.sh"]
+
+    @pytest.mark.parametrize("rel", EXPECTED_FILES)
+    def test_file_present(self, rel: str) -> None:
+        assert (DORA_DIR / "compute" / rel).is_file(), (
+            f"expected dora/compute/{rel} — issue #205 did not land"
+        )
+
+
+# ---------------------------------------------------------------------------
+# dora-api background worker fold-in (issue #205)
+# ---------------------------------------------------------------------------
+class TestIngestionWorkerFoldIn:
+    """The event_queue worker runs as a background task inside dora-api's
+    FastAPI lifespan, not a separate container (see ADR-007 amendment)."""
+
+    def test_lifespan_starts_worker_loop(self) -> None:
+        src = (DORA_DIR / "ingestion" / "api" / "main.py").read_text(encoding="utf-8")
+        assert "from ingestion.processor.worker import run_worker_loop" in src
+        assert "run_worker_loop(shutdown_event=shutdown_event)" in src
+
+    def test_lifespan_stops_worker_on_shutdown(self) -> None:
+        src = (DORA_DIR / "ingestion" / "api" / "main.py").read_text(encoding="utf-8")
+        assert "shutdown_event.set()" in src
+
+
+# ---------------------------------------------------------------------------
 # Container import contract
 # ---------------------------------------------------------------------------
 class TestIngestionImportContract:

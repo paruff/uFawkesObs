@@ -525,6 +525,35 @@ services:
       - observability
     profiles: ["core"]
 
+# DORA database migration — one-shot job that applies dora/database/*.sql
+# against the existing DORA_POSTGRES_URL database (owned by uFawkesRes; see
+# AGENTS.md §10). Does not create databases/roles — that's the shared
+# Postgres server's own provisioning. Runs and exits on every `up`; every SQL
+# file is idempotent so re-running is safe.
+  dora-db-init:
+    image: postgres:17.2-alpine
+    container_name: ufawkesdora-db-init
+    restart: "no"
+    environment:
+      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+    volumes:
+      - ./dora/database:/migrations:ro
+    entrypoint: ["/bin/sh", "/migrations/migrate.sh"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "dora-db-init"
+    labels:
+      - "plane=obstackd"
+      - "component=dora-db-init"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
 # DORA event ingestion API — accepts events from CI/CD systems, validates against
 # the dora/events schemas, and enqueues to uFawkesRes Postgres (dora profile)
   dora-api:
@@ -533,6 +562,9 @@ services:
       dockerfile: dora/ingestion/Dockerfile
     container_name: ufawkesdora-ingestion
     restart: unless-stopped
+    depends_on:
+      dora-db-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8088:8088"
     environment:
@@ -571,6 +603,109 @@ services:
     labels:
       - "plane=obstackd"
       - "component=dora-api"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
+# Prometheus pushgateway — receives batch-pushed DORA metrics from
+# dora-compute, since it's a periodic job rather than a scrape target
+# (see ADR-007 amendment; issue #205).
+  pushgateway:
+    image: prom/pushgateway:v1.11.0
+    container_name: dora-pushgateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9091:9091"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9091/-/healthy",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "pushgateway"
+    labels:
+      - "plane=obstackd"
+      - "component=pushgateway"
+      - "managed-by=fawkes"
+      - "profile=dora"
+    networks:
+      - observability
+    profiles: ["dora"]
+
+# DORA metrics compute — periodic batch job computing DORA metrics from
+# DORA_POSTGRES_URL and pushing them to pushgateway (issue #205; metrics.py
+# is a one-shot CLI, so run.sh loops it — see ADR-007 amendment).
+  dora-compute:
+    build:
+      context: .
+      dockerfile: dora/compute/Dockerfile
+    container_name: ufawkesdora-compute
+    restart: unless-stopped
+    depends_on:
+      dora-db-init:
+        condition: service_completed_successfully
+      pushgateway:
+        condition: service_healthy
+    environment:
+      - TZ=UTC
+      - DATABASE_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+      - PUSHGATEWAY_URL=http://pushgateway:9091
+      - DORA_COMPUTE_WINDOW_DAYS=${DORA_COMPUTE_WINDOW_DAYS:-30}
+      - DORA_COMPUTE_INTERVAL_SECONDS=${DORA_COMPUTE_INTERVAL_SECONDS:-3600}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      # No HTTP endpoint — run.sh writes a heartbeat file after each
+      # successful compute cycle; see dora/compute/Dockerfile.
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import os,sys,time; p='/tmp/dora-compute-heartbeat'; stale=int(os.environ.get('DORA_COMPUTE_INTERVAL_SECONDS','3600'))*2; sys.exit(0 if os.path.exists(p) and time.time()-os.path.getmtime(p)<stale else 1)",
+        ]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 2m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: "dora-compute"
+    labels:
+      - "plane=obstackd"
+      - "component=dora-compute"
       - "managed-by=fawkes"
       - "profile=dora"
     networks:
