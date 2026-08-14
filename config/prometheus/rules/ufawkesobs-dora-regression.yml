@@ -1,0 +1,175 @@
+# SPDX-License-Identifier: Apache-2.0
+# DORA Regression Alerts — trend-based alerts on the pushed metrics from
+# dora-compute (issue #205), routed through pushgateway. Distinct from the
+# scrape-based recording rules in ufawkesobs-dora-metrics.yml: these fire on
+# short-window vs. long-window drift within the same metric, rather than on
+# an absolute threshold.
+#
+# Source metrics (pushed by dora/compute/metrics.py via pushgateway,
+# labeled by team_id):
+#   - dora_deployment_frequency_per_week (gauge)
+#   - dora_lead_time_p50_hours / dora_lead_time_p95_hours (gauge)
+#   - dora_fdrt_p50_hours (gauge)
+#   - dora_cfr_pct (gauge)
+#   - dora_rework_rate_pct (gauge)
+#
+# Merged from uFawkesDORA's alerts/dora-regression.yaml (issue #204).
+#
+# NOT merged: uFawkesDORA's alerts/leading-indicator.yaml. Its two alerts
+# reference dora_pr_cycle_time_seconds_bucket and dora_pr_size_lines_added,
+# and nothing in this repo emits either metric yet — there's no PR-cycle or
+# PR-size collector (that's issue #208's "collector patterns" scope).
+# Merging it now would ship alerts that can never fire. Revisit once #208
+# lands.
+
+groups:
+  - name: ufawkesobs_dora_regression
+    interval: 60s
+    rules:
+      - alert: DORARegressionDeploymentFrequencyDrop
+        expr: |
+          (
+            avg_over_time(dora_deployment_frequency_per_week[7d])
+            /
+            avg_over_time(dora_deployment_frequency_per_week[30d])
+          ) < 0.70
+        for: 24h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Deployment frequency dropped >30% vs 30-day average"
+          description: |
+            {{ $labels.team_id }} deploying {{ $value | humanize }}x/wk vs its
+            30-day average. Check for blocked PRs or an in-progress migration.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-drop"
+
+      - alert: DORARegressionDeploymentFrequencyDropAbsent
+        expr: |
+          absent(dora_deployment_frequency_per_week)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Deployment frequency metric missing"
+          description: |
+            dora_deployment_frequency_per_week is absent. dora-compute may not
+            be pushing to pushgateway — check the dora-compute container.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-drop-absent"
+
+      - alert: DORARegressionLeadTimeIncrease
+        expr: |
+          (
+            avg_over_time(dora_lead_time_p50_hours[7d])
+            /
+            avg_over_time(dora_lead_time_p50_hours[30d])
+          ) > 1.5
+        for: 48h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Lead time increased >50% vs 30-day average"
+          description: |
+            {{ $labels.team_id }} lead time at {{ $value }}hrs vs its 30-day
+            average. Check for growing PR size or review bottlenecks.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#lead-time-increase"
+
+      - alert: DORARegressionLeadTimeIncreaseAbsent
+        expr: |
+          absent(dora_lead_time_p50_hours)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Lead time metric missing"
+          description: |
+            dora_lead_time_p50_hours is absent. dora-compute may not be
+            pushing to pushgateway — check the dora-compute container.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#lead-time-increase-absent"
+
+      - alert: DORARegressionFDRTSpike
+        expr: |
+          dora_fdrt_p50_hours > (avg_over_time(dora_fdrt_p50_hours[30d]) * 2)
+        for: 6h
+        labels:
+          severity: critical
+          category: dora
+        annotations:
+          summary: "FDRT doubled vs 30-day average — throughput at risk"
+          description: |
+            Recovery taking {{ $value }}hrs vs the 30-day average. FDRT is a
+            Throughput metric (DORA 2025) — this blocks re-deployment.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-spike"
+
+      - alert: DORARegressionFDRTSpikeAbsent
+        expr: |
+          absent(dora_fdrt_p50_hours)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "FDRT metric missing"
+          description: |
+            dora_fdrt_p50_hours is absent. dora-compute may not be pushing to
+            pushgateway — check the dora-compute container.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-spike-absent"
+
+      - alert: DORARegressionCFRSpike
+        expr: |
+          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 5)
+        for: 24h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Change Failure Rate +5 points above 30-day average"
+          description: |
+            {{ $labels.team_id }} CFR at {{ $value }}% vs its 30-day average.
+            Check recent deployments for quality issues.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-spike"
+
+      - alert: DORARegressionCFRSpikeAbsent
+        expr: |
+          absent(dora_cfr_pct)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "CFR metric missing"
+          description: |
+            dora_cfr_pct is absent. dora-compute may not be pushing to
+            pushgateway — check the dora-compute container.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-spike-absent"
+
+      - alert: DORARegressionReworkRateClimb
+        expr: |
+          dora_rework_rate_pct > (avg_over_time(dora_rework_rate_pct[30d]) + 3)
+        for: 48h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Rework Rate climbing — possible AI over-generation effect"
+          description: |
+            Rework Rate at {{ $value }}% vs its 30-day average. Per DORA 2025,
+            Rework Rate is the primary AI quality signal. Check PR size trend.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-climb"
+
+      - alert: DORARegressionReworkRateClimbAbsent
+        expr: |
+          absent(dora_rework_rate_pct)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "Rework Rate metric missing"
+          description: |
+            dora_rework_rate_pct is absent. dora-compute may not be pushing to
+            pushgateway — check the dora-compute container.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-climb-absent"
