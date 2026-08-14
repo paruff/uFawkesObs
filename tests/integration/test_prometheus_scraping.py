@@ -231,7 +231,9 @@ class TestPrometheusAllTargets:
         # Core services that must be up
         _core_services = ["prometheus", "otel-collector", "alertmanager"]
         # Optional services that may not be scheduled
-        optional_services = []
+        # pushgateway is dora-profile-only; CI's Integration Tests job runs
+        # `--profile core`, so it's never started there.
+        optional_services = ["pushgateway"]
 
         down_core_targets = []
         down_optional_targets = []
@@ -272,7 +274,8 @@ class TestPrometheusAllTargets:
 
         # Optional services that may not be running
         # otel-app-metrics only has samples when applications send OTLP telemetry
-        optional_services = ["otel-app-metrics"]
+        # pushgateway is dora-profile-only; not started in CI's `--profile core` run
+        optional_services = ["otel-app-metrics", "pushgateway"]
 
         if len(results) > 0:
             core_zero_sample_targets = []
@@ -387,7 +390,8 @@ class TestPrometheusTargetDetails:
         assert len(targets) > 0, "Should have at least one active target"
 
         # Optional services that may not be running
-        optional_services = []
+        # pushgateway is dora-profile-only; not started in CI's `--profile core` run
+        optional_services = ["pushgateway"]
 
         print(f"\n📊 Active Targets ({len(targets)}):")
         down_core_targets = []
