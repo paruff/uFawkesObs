@@ -9,6 +9,7 @@ Endpoints:
     GET  /health      — Health check with queue depth.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -22,16 +23,28 @@ from ingestion.api.queue import (
     get_queue_depth,
 )
 from ingestion.api.validator import validate_payload, validate_payloads
+from ingestion.processor.worker import run_worker_loop
 
 # ── Lifecycle ──────────────────────────────────────────────────────────────────
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup / shutdown lifecycle."""
-    # Startup: pool is lazy-initialized on first use
+    """Startup / shutdown lifecycle.
+
+    Runs the event_queue worker loop as a background task rather than a
+    separate container (issue #205) — the connection pool is shared and
+    lazy-initialized on first use by either the API or the worker.
+    """
+    shutdown_event = asyncio.Event()
+    worker_task = asyncio.create_task(run_worker_loop(shutdown_event=shutdown_event))
     yield
-    # Shutdown: close the connection pool
+    # Shutdown: signal the worker loop to stop, then close the pool
+    shutdown_event.set()
+    try:
+        await asyncio.wait_for(worker_task, timeout=5)
+    except (TimeoutError, asyncio.CancelledError):
+        worker_task.cancel()
     await close_pool()
 
 
