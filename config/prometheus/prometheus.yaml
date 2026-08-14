@@ -21,6 +21,7 @@ rule_files:
   - "/etc/prometheus/rules/ufawkesobs-self-monitoring.yml"
   - "/etc/prometheus/rules/ai-rules.yml"
   - "/etc/prometheus/rules/ufawkesobs-dora-metrics.yml"
+  - "/etc/prometheus/rules/ufawkesobs-dora-regression.yml"
 
 # Scrape configurations
 scrape_configs:
@@ -143,5 +144,18 @@ scrape_configs:
           plane: "obstackd"
           component: "node-exporter"
     scrape_interval: 15s
+    metrics_path: "/metrics"
+
+  # Pushgateway — scraped for batch-pushed DORA metrics from dora-compute
+  # (dora profile only; issue #204). honor_labels keeps the job/instance
+  # labels dora-compute pushed rather than overwriting them with this job's.
+  - job_name: "pushgateway"
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]
+        labels:
+          plane: "obstackd"
+          component: "pushgateway"
+    scrape_interval: 60s
     metrics_path: "/metrics"
     scheme: "http"
