@@ -8,11 +8,19 @@ Tests cover:
 """
 
 import asyncio
+import sys
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from dora.ingestion.processor.worker import (
+# worker.py imports its sibling modules via the bare `ingestion.*` namespace,
+# matching the layout the Dockerfile COPYs into the container (see
+# dora/ingestion/Dockerfile). That namespace doesn't exist outside the
+# container, so dora/ needs to be on sys.path for this import to resolve.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "dora"))
+
+from dora.ingestion.processor.worker import (  # noqa: E402
     MAX_ATTEMPTS,
     _extract_outcome,
     process_event,
