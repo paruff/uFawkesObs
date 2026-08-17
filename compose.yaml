@@ -538,7 +538,7 @@ services:
     container_name: ufawkesdora-db-init
     restart: "no"
     environment:
-      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:-}
     volumes:
       - ./dora/database:/migrations:ro
     entrypoint: ["/bin/sh", "/migrations/migrate.sh"]

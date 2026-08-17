@@ -259,6 +259,39 @@ class TestComposeDoraDbInit:
             "— only compose.resource-plan.override.yaml adds that dependency"
         )
 
+    def test_database_url_not_required_at_compose_parse_time(
+        self, compose_data: dict
+    ) -> None:
+        """Regression test for the 2026-08-17 Chaos Nightly outage: Docker
+        Compose evaluates ``${VAR:?...}`` required-variable interpolation for
+        every service in the file at parse time, regardless of which
+        --profile flags are active. dora-db-init previously hard-required
+        DORA_POSTGRES_URL this way, which broke `--profile core`-only
+        invocations even though dora-db-init never runs outside the
+        resource-plane profile. The required-var check belongs in
+        dora/database/migrate.sh (see test_migrate_sh_still_requires_url
+        below), which only executes when the container actually starts.
+        """
+        svc = compose_data["services"]["dora-db-init"]
+        env = svc.get("environment", [])
+        entry = next(e for e in env if e.startswith("DORA_POSTGRES_URL="))
+        assert ":?" not in entry, (
+            "dora-db-init's DORA_POSTGRES_URL must use a soft default (:-), "
+            "not required (:?) interpolation — see docstring for why"
+        )
+
+    def test_migrate_sh_still_requires_url(self) -> None:
+        """dora-db-init's compose.yaml env var is a soft default (see test
+        above) precisely because dora/database/migrate.sh enforces the
+        actual requirement at container-start time — this test guards that
+        the fail-closed check doesn't silently disappear from both places.
+        """
+        migrate_sh = (DORA_DIR / "database" / "migrate.sh").read_text()
+        assert "DORA_POSTGRES_URL:?" in migrate_sh, (
+            "migrate.sh must still hard-require DORA_POSTGRES_URL at "
+            "container start, now that compose.yaml no longer does"
+        )
+
 
 # ---------------------------------------------------------------------------
 # compose.resource-plan.override.yaml — Postgres backend for the dora profile
