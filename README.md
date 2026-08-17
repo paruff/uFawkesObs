@@ -187,7 +187,7 @@ The system uses Docker Compose profiles to control which services run:
 | `apps`  | telemetry-generator                                                   | Demo telemetry generator |
 | `notifications` | alertmanager-discord                                          | Slack/Discord notification bridge (needs `DISCORD_WEBHOOK_URL` in `.env`) |
 | `dora` | dora-api, dora-compute, pushgateway, otel-collector-dora | DORA metrics — self-contained, SQLite-backed by default |
-| `resource-plan` | dora-db-init | Swaps the `dora` profile's SQLite backend for shared uFawkesRes Postgres |
+| `resource-plane` | dora-db-init | Swaps the `dora` profile's SQLite backend for shared uFawkesRes Postgres |
 
 **To start with a specific profile:**
 
@@ -205,7 +205,7 @@ make up-dora
 
 # Same, but backed by the shared uFawkesRes Postgres instance instead of
 # SQLite — requires DORA_POSTGRES_URL in .env (see .env.example):
-make up-dora-resource-plan
+make up-dora-resource-plane
 ```
 
 ---

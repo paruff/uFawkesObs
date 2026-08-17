@@ -182,7 +182,7 @@ headings, update `review.md`'s check to match.
 
 **Architecture check:**
 - What layer(s) were touched and are they correct per §4?
-- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDORA)?
+- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDevX)?
 
 **What I was NOT sure about:**
 [...]
@@ -226,8 +226,9 @@ See `docs/KNOWN_LIMITATIONS.md` — known issues across storage, networking, pro
 uFawkesObs is part of the **uFawkesAI** suite and the **Fawkes IDP** ecosystem.
 
 **Depends on:**
-- **uFawkesRes** — Shared PostgreSQL for DORA metric snapshots (`datasources.yaml` UID: `ufawkesres-postgres`)
-- **uFawkesDORA** — DORA compute engine consuming OTel spans via `otel-collector-dora` profile
+- **uFawkesRes** — Shared PostgreSQL for DORA metric snapshots (`datasources.yaml` UID: `ufawkesres-postgres`), used only when the `resource-plane` profile is active; the `dora` profile is self-contained (SQLite) by default
+
+Note: uFawkesDORA (the standalone repo) is archived — its collector patterns, spec, and design docs were merged into this repo's `dora/` directory (see `feat/dora-consolidation-*` history). DORA compute and ingestion now live in uFawkesObs itself, not as an external dependency.
 
 **Depended on by:**
 - **uFawkesPipe** — Pipeline lifecycle telemetry flows into uFawkesObs Tempo
