@@ -525,11 +525,14 @@ services:
       - observability
     profiles: ["core"]
 
-# DORA database migration — one-shot job that applies dora/database/*.sql
-# against the existing DORA_POSTGRES_URL database (owned by uFawkesRes; see
-# AGENTS.md §10). Does not create databases/roles — that's the shared
-# Postgres server's own provisioning. Runs and exits on every `up`; every SQL
-# file is idempotent so re-running is safe.
+# DORA database migration (resource-plan profile only) — one-shot job that
+# applies dora/database/*.sql against the existing DORA_POSTGRES_URL database
+# (owned by uFawkesRes; see AGENTS.md §10). Not needed for the base `dora`
+# profile, which is self-contained SQLite by default — see
+# dora/compute/metrics_db_sqlite.py and dora/ingestion/api/queue_sqlite.py.
+# Does not create databases/roles — that's the shared Postgres server's own
+# provisioning. Runs and exits on every `up`; every SQL file is idempotent so
+# re-running is safe.
   dora-db-init:
     image: postgres:17.2-alpine
     container_name: ufawkesdora-db-init
@@ -552,27 +555,27 @@ services:
       - "profile=dora"
     networks:
       - observability
-    profiles: ["dora"]
+    profiles: ["resource-plan"]
 
 # DORA event ingestion API — accepts events from CI/CD systems, validates against
-# the dora/events schemas, and enqueues to uFawkesRes Postgres (dora profile)
+# the dora/events schemas, and enqueues to SQLite by default (dora profile,
+# self-contained) or uFawkesRes Postgres when DATABASE_URL is overridden
+# (resource-plan profile — see compose.resource-plan.yaml)
   dora-api:
     build:
       context: .
       dockerfile: dora/ingestion/Dockerfile
     container_name: ufawkesdora-ingestion
     restart: unless-stopped
-    depends_on:
-      dora-db-init:
-        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8088:8088"
     environment:
       - TZ=UTC
-      - DATABASE_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}
     volumes:
       - ./dora/ingestion:/app/ingestion:ro
       - ./dora/events:/app/events:ro
+      - ./data/dora:/data/dora
     deploy:
       resources:
         limits:
@@ -656,8 +659,9 @@ services:
     profiles: ["dora"]
 
 # DORA metrics compute — periodic batch job computing DORA metrics from
-# DORA_POSTGRES_URL and pushing them to pushgateway (issue #205; metrics.py
-# is a one-shot CLI, so run.sh loops it — see ADR-007 amendment).
+# SQLite by default (dora profile) or DORA_POSTGRES_URL (resource-plan
+# profile), pushing results to pushgateway (issue #205; metrics.py is a
+# one-shot CLI, so run.sh loops it — see ADR-007 amendment).
   dora-compute:
     build:
       context: .
@@ -665,16 +669,16 @@ services:
     container_name: ufawkesdora-compute
     restart: unless-stopped
     depends_on:
-      dora-db-init:
-        condition: service_completed_successfully
       pushgateway:
         condition: service_healthy
     environment:
       - TZ=UTC
-      - DATABASE_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}
       - PUSHGATEWAY_URL=http://pushgateway:9091
       - DORA_COMPUTE_WINDOW_DAYS=${DORA_COMPUTE_WINDOW_DAYS:-30}
       - DORA_COMPUTE_INTERVAL_SECONDS=${DORA_COMPUTE_INTERVAL_SECONDS:-3600}
+    volumes:
+      - ./data/dora:/data/dora
     deploy:
       resources:
         limits:
@@ -712,7 +716,7 @@ services:
       - observability
     profiles: ["dora"]
 
-# DORA metrics compute plane (connects to uFawkesDORA ingestion API and uFawkesRes Postgres)
+# DORA metrics compute plane (connects to uFawkesDORA ingestion API)
   otel-collector-dora:
     image: otel/opentelemetry-collector-contrib:0.120.0
     container_name: otel-collector-dora
@@ -723,7 +727,6 @@ services:
     environment:
       - TZ=UTC
       - OTEL_EXPORTER_OTLP_ENDPOINT=${DORA_OTEL_ENDPOINT:-http://ufawkesdora-ingestion:4318}
-      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:?Set DORA_POSTGRES_URL in .env (see .env.example) — no credential default is provided in compose.yaml}
     # NOTE: No depends_on for prometheus in dora profile - prometheus runs in core profile
     deploy:
       resources:

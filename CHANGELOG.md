@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   FDRT, and DORA-2026's 5th metric — rework rate) with paired alert rules, and
   a provisioned Grafana DORA metrics dashboard (issues #80-83, #51-53; PR #147,
   #148, #154, #149/#155)
+- **`dora` profile is now self-contained by default (SQLite-backed)**: `dora-api` and `dora-compute` store events in a local SQLite file under `./data/dora` with no external database required, matching the same metric math as the Postgres backend. A new `resource-plan` profile plus `compose.resource-plan.override.yaml` swaps in the shared uFawkesRes Postgres instance instead (`make up-dora-resource-plan`), gated behind `DORA_POSTGRES_URL`. See AGENTS.md §10.
 - **Acceptance test suite**: BDD-style acceptance tests across 7 phases (SLOs,
   synthetic workload generators, chaos/failure-injection scenarios, evidence
   capture, CI integration) plus a nightly chaos test workflow
