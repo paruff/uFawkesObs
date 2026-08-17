@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import pytest_asyncio
 
 sys.path.insert(0, str(Path(__file__).parents[2] / "dora" / "ingestion"))
 
@@ -19,7 +20,7 @@ from api import queue_sqlite as queue  # noqa: E402
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def _reset_pool():
     await queue.close_pool()
     yield

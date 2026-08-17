@@ -1,4 +1,4 @@
-"""Unit tests for ingestion/api/queue.py.
+"""Unit tests for ingestion/api/queue_postgres.py.
 
 All tests use MagicMock to mock asyncpg — no real database required.
 Covers the entire public API: pool management, enqueue, dequeue, status updates.
@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from dora.ingestion.api.queue import (
+from dora.ingestion.api.queue_postgres import (
     close_pool,
     dequeue_next,
     enqueue_event,
@@ -24,7 +24,7 @@ from dora.ingestion.api.queue import (
 @pytest.fixture(autouse=True)
 def reset_pool():
     """Reset the module-level _pool between tests."""
-    import dora.ingestion.api.queue as q
+    import dora.ingestion.api.queue_postgres as q
 
     q._pool = None
     yield
@@ -52,7 +52,7 @@ class TestGetPool:
         mock_pool.is_closing.return_value = False
 
         with patch(
-            "dora.ingestion.api.queue.asyncpg.create_pool",
+            "dora.ingestion.api.queue_postgres.asyncpg.create_pool",
             AsyncMock(return_value=mock_pool),
         ) as mock_create:
             pool = await get_pool(dsn="postgresql://localhost/test")
@@ -70,11 +70,13 @@ class TestGetPool:
         mock_pool = MagicMock()
         mock_pool.is_closing.return_value = False
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
-        with patch("dora.ingestion.api.queue.asyncpg.create_pool") as mock_create:
+        with patch(
+            "dora.ingestion.api.queue_postgres.asyncpg.create_pool"
+        ) as mock_create:
             pool = await get_pool()
 
         assert pool is mock_pool
@@ -89,12 +91,12 @@ class TestGetPool:
         new_pool = MagicMock()
         new_pool.is_closing.return_value = False
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = old_pool
 
         with patch(
-            "dora.ingestion.api.queue.asyncpg.create_pool",
+            "dora.ingestion.api.queue_postgres.asyncpg.create_pool",
             AsyncMock(return_value=new_pool),
         ) as mock_create:
             pool = await get_pool(dsn="postgresql://localhost/test")
@@ -110,7 +112,7 @@ class TestGetPool:
 
         with (
             patch(
-                "dora.ingestion.api.queue.asyncpg.create_pool",
+                "dora.ingestion.api.queue_postgres.asyncpg.create_pool",
                 AsyncMock(return_value=mock_pool),
             ),
             patch.dict("os.environ", {"DATABASE_URL": "postgresql://env/test"}),
@@ -130,7 +132,7 @@ class TestClosePool:
         mock_pool.is_closing.return_value = False
         mock_pool.close = AsyncMock()
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -161,7 +163,7 @@ class TestEnqueueEvent:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -190,7 +192,7 @@ class TestEnqueueEvents:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -220,7 +222,7 @@ class TestGetQueueDepth:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -252,7 +254,7 @@ class TestDequeueNext:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -276,7 +278,7 @@ class TestDequeueNext:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -301,7 +303,7 @@ class TestMarkDone:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -323,7 +325,7 @@ class TestMarkFailed:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
@@ -345,7 +347,7 @@ class TestWriteRawEvent:
         mock_pool.is_closing.return_value = False
         mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
 
-        import dora.ingestion.api.queue as q
+        import dora.ingestion.api.queue_postgres as q
 
         q._pool = mock_pool
 
