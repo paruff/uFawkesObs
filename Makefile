@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps down logs status test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
+.PHONY: help init check-env up up-apps up-dora up-dora-resource-plan down logs status test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -20,6 +20,10 @@ init:
 	install -d -m 755 data/loki
 	install -d -m 755 data/tempo
 	install -d -m 755 data/alloy
+	# ponytail: dora-api/dora-compute run as a system-assigned (non-fixed)
+	# UID, so 777 avoids a per-build UID lookup for one local SQLite file;
+	# tighten with a documented UID if this ever needs to be more locked down.
+	install -d -m 777 data/dora
 	@echo ""
 	@echo "⚠️  On Linux, if containers cannot write to data/ directories, run:"
 	@echo "   sudo chown -R $(GRAFANA_UID) data/grafana         # Grafana UID"
@@ -40,6 +44,15 @@ up: check-env
 ## up-apps: start the core stack plus demo telemetry generator
 up-apps: check-env
 	docker compose --profile core --profile apps up -d
+
+## up-dora: start the core stack plus DORA metrics (self-contained, SQLite-backed)
+up-dora: check-env
+	docker compose --profile core --profile dora up -d
+
+## up-dora-resource-plan: start core + DORA metrics backed by shared uFawkesRes Postgres
+up-dora-resource-plan: check-env
+	docker compose --profile core --profile dora --profile resource-plan \
+		-f compose.yaml -f compose.resource-plan.override.yaml up -d
 
 ## down: stop all services
 down:

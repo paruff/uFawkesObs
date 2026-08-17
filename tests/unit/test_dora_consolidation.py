@@ -188,14 +188,16 @@ class TestComposeDoraApi:
             "every service must define a healthcheck (AGENTS.md §4)"
         )
 
-    def test_database_url_from_dora_postgres_url(self, dora_api: dict) -> None:
+    def test_database_url_defaults_to_sqlite(self, dora_api: dict) -> None:
         env = dora_api.get("environment", [])
-        assert any(
-            isinstance(e, str)
-            and e.startswith("DATABASE_URL=")
-            and "DORA_POSTGRES_URL" in e
-            for e in env
-        ), "dora-api must derive DATABASE_URL from DORA_POSTGRES_URL"
+        assert "DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}" in env, (
+            "dora-api must default DATABASE_URL to the self-contained SQLite path"
+        )
+
+    def test_sqlite_volume_mount(self, dora_api: dict) -> None:
+        assert "./data/dora:/data/dora" in dora_api.get("volumes", []), (
+            "dora-api must mount ./data/dora for the SQLite database file"
+        )
 
     def test_observability_network(self, dora_api: dict) -> None:
         assert "observability" in dora_api.get("networks", {}), (
@@ -229,10 +231,13 @@ class TestComposeDoraDbInit:
             "dora-db-init must mount ./dora/database into /migrations"
         )
 
-    def test_dora_profile(self, compose_data: dict) -> None:
+    def test_resource_plan_profile(self, compose_data: dict) -> None:
         svc = compose_data["services"]["dora-db-init"]
-        assert "dora" in svc.get("profiles", []), (
-            "dora-db-init must be gated behind the dora profile"
+        assert "resource-plan" in svc.get("profiles", []), (
+            "dora-db-init must be gated behind the resource-plan profile"
+        )
+        assert "dora" not in svc.get("profiles", []), (
+            "dora-db-init must not run in the base dora profile (SQLite-only)"
         )
 
     def test_runs_once_not_restarted(self, compose_data: dict) -> None:
@@ -248,11 +253,46 @@ class TestComposeDoraDbInit:
             isinstance(e, str) and e.startswith("DORA_POSTGRES_URL=") for e in env
         ), "dora-db-init must derive its connection string from DORA_POSTGRES_URL"
 
-    def test_dora_api_waits_for_migration(self, dora_api: dict) -> None:
-        depends_on = dora_api.get("depends_on", {})
+    def test_dora_api_no_migration_dependency_by_default(self, dora_api: dict) -> None:
+        assert "dora-db-init" not in dora_api.get("depends_on", {}), (
+            "dora-api must not depend on dora-db-init in the base dora profile "
+            "— only compose.resource-plan.override.yaml adds that dependency"
+        )
+
+
+# ---------------------------------------------------------------------------
+# compose.resource-plan.override.yaml — Postgres backend for the dora profile
+# ---------------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def override_data() -> dict:
+    """Return the parsed compose.resource-plan.override.yaml document."""
+    path = REPO_ROOT / "compose.resource-plan.override.yaml"
+    assert path.exists(), "compose.resource-plan.override.yaml not found"
+    with open(path, encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
+
+
+class TestComposeResourcePlanOverride:
+    """Overlay that swaps the dora profile SQLite default for uFawkesRes Postgres."""
+
+    @pytest.mark.parametrize("service", ["dora-api", "dora-compute"])
+    def test_database_url_from_dora_postgres_url(
+        self, override_data: dict, service: str
+    ) -> None:
+        env = override_data["services"][service].get("environment", [])
+        assert any(
+            isinstance(e, str)
+            and e.startswith("DATABASE_URL=")
+            and "DORA_POSTGRES_URL" in e
+            for e in env
+        ), f"{service} override must derive DATABASE_URL from DORA_POSTGRES_URL"
+
+    @pytest.mark.parametrize("service", ["dora-api", "dora-compute"])
+    def test_waits_for_migration(self, override_data: dict, service: str) -> None:
+        depends_on = override_data["services"][service].get("depends_on", {})
         assert depends_on.get("dora-db-init", {}).get("condition") == (
             "service_completed_successfully"
-        ), "dora-api must wait for dora-db-init to complete before starting"
+        ), f"{service} override must wait for dora-db-init to complete"
 
 
 class TestDoraDatabaseFiles:
@@ -326,15 +366,25 @@ class TestComposeDoraCompute:
             "every service must define a healthcheck (AGENTS.md §4)"
         )
 
-    def test_database_url_from_dora_postgres_url(self, compose_data: dict) -> None:
+    def test_database_url_defaults_to_sqlite(self, compose_data: dict) -> None:
         svc = compose_data["services"]["dora-compute"]
         env = svc.get("environment", [])
-        assert any(
-            isinstance(e, str)
-            and e.startswith("DATABASE_URL=")
-            and "DORA_POSTGRES_URL" in e
-            for e in env
-        ), "dora-compute must derive DATABASE_URL from DORA_POSTGRES_URL"
+        assert "DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}" in env, (
+            "dora-compute must default DATABASE_URL to the self-contained SQLite path"
+        )
+
+    def test_sqlite_volume_mount(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        assert "./data/dora:/data/dora" in svc.get("volumes", []), (
+            "dora-compute must mount ./data/dora for the SQLite database file"
+        )
+
+    def test_no_migration_dependency_by_default(self, compose_data: dict) -> None:
+        svc = compose_data["services"]["dora-compute"]
+        assert "dora-db-init" not in svc.get("depends_on", {}), (
+            "dora-compute must not depend on dora-db-init in the base dora "
+            "profile — only compose.resource-plan.override.yaml adds that"
+        )
 
     def test_pushgateway_url_points_at_pushgateway_service(
         self, compose_data: dict

@@ -11,6 +11,8 @@ data/alertmanager/*
 !data/alertmanager/.gitkeep
 data/alloy/*
 !data/alloy/.gitkeep
+data/dora/*
+!data/dora/.gitkeep
 
 # Secrets
 .grafana-secrets.env
@@ -65,3 +67,6 @@ graphify-out/
 
 # Backup files
 *.bak
+
+# Serena MCP local cache/config
+.serena/

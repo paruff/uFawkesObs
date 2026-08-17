@@ -186,6 +186,8 @@ The system uses Docker Compose profiles to control which services run:
 | `core`  | otel-collector, tempo, loki, alloy, alertmanager, prometheus, grafana | Base observability stack |
 | `apps`  | telemetry-generator                                                   | Demo telemetry generator |
 | `notifications` | alertmanager-discord                                          | Slack/Discord notification bridge (needs `DISCORD_WEBHOOK_URL` in `.env`) |
+| `dora` | dora-api, dora-compute, pushgateway, otel-collector-dora | DORA metrics — self-contained, SQLite-backed by default |
+| `resource-plan` | dora-db-init | Swaps the `dora` profile's SQLite backend for shared uFawkesRes Postgres |
 
 **To start with a specific profile:**
 
@@ -197,6 +199,13 @@ make up-apps
 
 # To also run the Discord notification bridge:
 docker compose --profile core --profile notifications up -d
+
+# To also compute DORA metrics (self-contained, no external DB required):
+make up-dora
+
+# Same, but backed by the shared uFawkesRes Postgres instance instead of
+# SQLite — requires DORA_POSTGRES_URL in .env (see .env.example):
+make up-dora-resource-plan
 ```
 
 ---
