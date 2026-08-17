@@ -1,7 +1,7 @@
 """Unit tests for compute/metrics_db_postgres.py.
 
 Covers the Postgres/asyncpg-backed MetricsDB implementation used when
-DATABASE_URL points at Postgres (resource-plan / suite mode). See
+DATABASE_URL points at Postgres (resource-plane / suite mode). See
 test_dora_metrics.py for the backend-agnostic orchestration tests and
 test_dora_metrics_sqlite.py for the SQLite backend.
 """

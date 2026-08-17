@@ -5,7 +5,7 @@ dependencies. Selected via queue.py when DATABASE_URL is unset or points at
 SQLite. Runs as a single shared connection since the worker loop executes
 in-process inside dora-api (see main.py's lifespan), so there is no
 multi-writer contention to guard against with row locking. See
-queue_postgres.py for the resource-plan / suite-mode backend.
+queue_postgres.py for the resource-plane / suite-mode backend.
 """
 
 import json
