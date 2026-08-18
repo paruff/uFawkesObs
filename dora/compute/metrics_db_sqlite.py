@@ -5,7 +5,7 @@ dependencies. Selected via metrics.py when DATABASE_URL is unset or points at
 SQLite. Postgres computes percentiles and gaps in SQL (percentile_cont,
 LEAD() OVER); SQLite has neither, so this module fetches the raw rows and
 reimplements the same math in Python, returning identical result shapes.
-See metrics_db_postgres.py for the resource-plan / suite-mode backend.
+See metrics_db_postgres.py for the resource-plane / suite-mode backend.
 """
 
 import json

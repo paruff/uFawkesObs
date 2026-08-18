@@ -1,7 +1,7 @@
 """Backend-selecting facade for event_queue operations.
 
 SQLite is the default (self-contained ``dora`` profile). Set DATABASE_URL to
-a postgresql:// DSN to use the resource-plan / suite-mode Postgres backend
+a postgresql:// DSN to use the resource-plane / suite-mode Postgres backend
 instead. main.py and worker.py import from here so they need no changes
 regardless of backend.
 """

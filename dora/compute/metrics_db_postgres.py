@@ -1,7 +1,7 @@
 """Postgres/TimescaleDB-backed metric queries (asyncpg).
 
 Selected via metrics.py when DATABASE_URL points at Postgres
-(resource-plan / suite mode). See metrics_db_sqlite.py for the default
+(resource-plane / suite mode). See metrics_db_sqlite.py for the default
 self-contained local backend.
 """
 

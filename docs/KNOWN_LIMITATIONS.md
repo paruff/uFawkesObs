@@ -166,6 +166,32 @@ file is gitignored and will not be committed.
 
 ---
 
+### Duplicate Dashboard Provisioning Path (Legacy Provider)
+
+**Limitation:** Two Grafana dashboard provisioning mechanisms run side by side:
+`config/grafana/provisioning/dashboards/new-dashboards.yaml` provisions
+`dashboards/platform/` and `dashboards/services/` (the structure AGENTS.md §4
+mandates), while `config/grafana/provisioning/dashboards/dashboards.yaml` — a
+provider literally named `"legacy"` — separately provisions 8 JSON files from
+`config/grafana/dashboards/` into an "Application" folder. The legacy
+provisioner was deliberately restored after an earlier attempt to remove it
+(commit `9df6428`), so it is live, not dead code — but it means dashboard
+JSON lives in two directories under two different conventions (UID naming,
+`dashboards/` layout) instead of one.
+
+**Impact:** Contributors adding a dashboard must know which of the two
+mechanisms applies; the "Application" folder's dashboards don't follow the
+`ufawkesobs-<slug>` UID convention AGENTS.md §4 requires for platform
+dashboards.
+
+**Workaround:** None yet. Consolidating `config/grafana/dashboards/*.json`
+into `dashboards/platform/` or `dashboards/services/` (renaming UIDs to the
+`ufawkesobs-<slug>` convention and updating any cross-dashboard links) and
+removing the legacy provisioner is tracked as follow-up work, not yet
+scheduled.
+
+---
+
 ### Dashboard UIDs Must Be Stable
 
 **Limitation:** Cross-dashboard links use UIDs. If a dashboard is re-imported with a

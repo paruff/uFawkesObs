@@ -231,10 +231,10 @@ class TestComposeDoraDbInit:
             "dora-db-init must mount ./dora/database into /migrations"
         )
 
-    def test_resource_plan_profile(self, compose_data: dict) -> None:
+    def test_resource_plane_profile(self, compose_data: dict) -> None:
         svc = compose_data["services"]["dora-db-init"]
-        assert "resource-plan" in svc.get("profiles", []), (
-            "dora-db-init must be gated behind the resource-plan profile"
+        assert "resource-plane" in svc.get("profiles", []), (
+            "dora-db-init must be gated behind the resource-plane profile"
         )
         assert "dora" not in svc.get("profiles", []), (
             "dora-db-init must not run in the base dora profile (SQLite-only)"
@@ -256,7 +256,7 @@ class TestComposeDoraDbInit:
     def test_dora_api_no_migration_dependency_by_default(self, dora_api: dict) -> None:
         assert "dora-db-init" not in dora_api.get("depends_on", {}), (
             "dora-api must not depend on dora-db-init in the base dora profile "
-            "— only compose.resource-plan.override.yaml adds that dependency"
+            "— only compose.resource-plane.override.yaml adds that dependency"
         )
 
     def test_database_url_not_required_at_compose_parse_time(
@@ -294,13 +294,13 @@ class TestComposeDoraDbInit:
 
 
 # ---------------------------------------------------------------------------
-# compose.resource-plan.override.yaml — Postgres backend for the dora profile
+# compose.resource-plane.override.yaml — Postgres backend for the dora profile
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="module")
 def override_data() -> dict:
-    """Return the parsed compose.resource-plan.override.yaml document."""
-    path = REPO_ROOT / "compose.resource-plan.override.yaml"
-    assert path.exists(), "compose.resource-plan.override.yaml not found"
+    """Return the parsed compose.resource-plane.override.yaml document."""
+    path = REPO_ROOT / "compose.resource-plane.override.yaml"
+    assert path.exists(), "compose.resource-plane.override.yaml not found"
     with open(path, encoding="utf-8") as fh:
         return yaml.safe_load(fh)
 
@@ -416,7 +416,7 @@ class TestComposeDoraCompute:
         svc = compose_data["services"]["dora-compute"]
         assert "dora-db-init" not in svc.get("depends_on", {}), (
             "dora-compute must not depend on dora-db-init in the base dora "
-            "profile — only compose.resource-plan.override.yaml adds that"
+            "profile — only compose.resource-plane.override.yaml adds that"
         )
 
     def test_pushgateway_url_points_at_pushgateway_service(

@@ -525,7 +525,7 @@ services:
       - observability
     profiles: ["core"]
 
-# DORA database migration (resource-plan profile only) — one-shot job that
+# DORA database migration (resource-plane profile only) — one-shot job that
 # applies dora/database/*.sql against the existing DORA_POSTGRES_URL database
 # (owned by uFawkesRes; see AGENTS.md §10). Not needed for the base `dora`
 # profile, which is self-contained SQLite by default — see
@@ -555,12 +555,12 @@ services:
       - "profile=dora"
     networks:
       - observability
-    profiles: ["resource-plan"]
+    profiles: ["resource-plane"]
 
 # DORA event ingestion API — accepts events from CI/CD systems, validates against
 # the dora/events schemas, and enqueues to SQLite by default (dora profile,
 # self-contained) or uFawkesRes Postgres when DATABASE_URL is overridden
-# (resource-plan profile — see compose.resource-plan.yaml)
+# (resource-plane profile — see compose.resource-plane.override.yaml)
   dora-api:
     build:
       context: .
@@ -659,7 +659,7 @@ services:
     profiles: ["dora"]
 
 # DORA metrics compute — periodic batch job computing DORA metrics from
-# SQLite by default (dora profile) or DORA_POSTGRES_URL (resource-plan
+# SQLite by default (dora profile) or DORA_POSTGRES_URL (resource-plane
 # profile), pushing results to pushgateway (issue #205; metrics.py is a
 # one-shot CLI, so run.sh loops it — see ADR-007 amendment).
   dora-compute:

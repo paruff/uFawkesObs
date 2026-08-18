@@ -2,7 +2,7 @@
 
 Uses asyncpg for connection pooling and the SKIP LOCKED pattern for
 worker-safe dequeueing. Selected via queue.py when DATABASE_URL points at
-Postgres (resource-plan / suite mode). See queue_sqlite.py for the default
+Postgres (resource-plane / suite mode). See queue_sqlite.py for the default
 self-contained local backend.
 """
 

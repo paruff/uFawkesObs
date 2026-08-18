@@ -1,8 +1,8 @@
-# compose.resource-plan.override.yaml
+# compose.resource-plane.override.yaml
 #
 # Switches the `dora` profile from its default self-contained SQLite backend
 # to the shared uFawkesRes Postgres instance (AGENTS.md §10). Requires
-# DORA_POSTGRES_URL in .env (see .env.example) and the `resource-plan`
+# DORA_POSTGRES_URL in .env (see .env.example) and the `resource-plane`
 # profile activated alongside `dora`, so dora-db-init's migration job runs
 # before dora-api/dora-compute start.
 #
@@ -12,8 +12,8 @@
 # inherited unchanged from compose.yaml.
 #
 # Usage:
-#   docker compose --profile core --profile dora --profile resource-plan \
-#     -f compose.yaml -f compose.resource-plan.override.yaml up -d
+#   docker compose --profile core --profile dora --profile resource-plane \
+#     -f compose.yaml -f compose.resource-plane.override.yaml up -d
 
 services:
   dora-api:
