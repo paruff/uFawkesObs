@@ -41,14 +41,31 @@ SERVICE_TEMPLATING = {
         {
             "name": "service",
             "type": "query",
-            "allValue": ".*",
+            "allValue": ".+",
             "query": "label_values(up, job)",
         },
         {
             "name": "instance",
             "type": "query",
-            "allValue": ".*",
+            "allValue": ".+",
             "query": 'label_values(up{job=~"$service"}, instance)',
+        },
+    ]
+}
+
+NO_ALLVALUE_TEMPLATING = {
+    "list": [
+        {"name": "service", "type": "query", "query": "label_values(up, job)"},
+    ]
+}
+
+WINDOW_TEMPLATING = {
+    "list": [
+        {
+            "name": "window",
+            "type": "interval",
+            "query": "7d,30d,90d",
+            "current": {"text": "30d", "value": "30d"},
         },
     ]
 }
@@ -59,7 +76,7 @@ class TestResolveQueryTemplateVars:
         expr = 'sum(rate(http_requests_total{job=~"${service}"}[5m]))'
         resolved = resolve_query_template_vars(expr, SERVICE_TEMPLATING)
         assert "${service}" not in resolved
-        assert 'job=~".*"' in resolved
+        assert 'job=~".+"' in resolved
 
     def test_substitutes_dollar_bare_form(self) -> None:
         expr = (
@@ -68,8 +85,30 @@ class TestResolveQueryTemplateVars:
         resolved = resolve_query_template_vars(expr, SERVICE_TEMPLATING)
         assert "$service" not in resolved
         assert "$instance" not in resolved
-        assert 'job=~".*"' in resolved
-        assert 'instance=~".*"' in resolved
+        assert 'job=~".+"' in resolved
+        assert 'instance=~".+"' in resolved
+
+    def test_defaults_to_dot_plus_not_dot_star_when_no_allvalue(self) -> None:
+        """Regression test: Loki rejects a stream selector whose only
+        matcher is equivalent to matching everything including empty
+        (e.g. {compose_service=~".*"}) with 400 "queries require at
+        least one regexp or equality matcher that does not match empty".
+        ".+" (at least one char) satisfies both Prometheus and Loki;
+        ".*" only satisfies Prometheus. Confirmed live 2026-08-18."""
+        expr = 'sum(rate({compose_service=~"$service"}[5m]))'
+        resolved = resolve_query_template_vars(expr, NO_ALLVALUE_TEMPLATING)
+        assert 'compose_service=~".+"' in resolved
+        assert ".*" not in resolved
+
+    def test_substitutes_interval_type_variable_in_range_vector(self) -> None:
+        """Regression test: DORA Overview's Deployment Frequency panel uses
+        an interval-type $window variable inside a range vector duration
+        (last_over_time(...[$window])) -- the query-type-only substitution
+        left "[$window]" as a literal, invalid PromQL duration, causing a
+        400. Confirmed live 2026-08-18."""
+        expr = "last_over_time(dora_deployment_frequency_per_week[$window])"
+        resolved = resolve_query_template_vars(expr, WINDOW_TEMPLATING)
+        assert resolved == "last_over_time(dora_deployment_frequency_per_week[30d])"
 
     def test_leaves_unrelated_dollar_text_alone(self) -> None:
         expr = 'up{job="$servicewithsuffix"}'

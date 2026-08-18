@@ -157,3 +157,77 @@ class TestGrafanaDashboardConventions:
         # This test always passes — it documents the graceful-skip behavior.
         # The parametrized tests above will have 0 items if no files exist.
         assert count >= 0, "Sanity check: count cannot be negative"
+
+
+# ---------------------------------------------------------------------------
+# Orphaned datasource UID check — also scans config/grafana/dashboards/
+# ---------------------------------------------------------------------------
+# Separate from TestGrafanaDashboardConventions above: that class's UID-prefix
+# and schemaVersion checks are Platform/Services-only conventions (AGENTS.md
+# §4 scopes them to dashboards/platform and dashboards/services). An orphaned
+# datasource UID is a correctness bug regardless of which folder it's in --
+# found live 2026-08-18: two legacy dashboards (application-performance-logs,
+# observability-stack-health) hardcoded Grafana-internal numeric-style
+# datasource UIDs (e.g. "PBFA97CFB590B2093") that don't exist in this
+# instance -- a different failure mode than the deprecated {"id": N} pattern
+# test_no_numeric_datasource_id checks for, and one that only surfaced once
+# query_dashboard_panels stopped swallowing the resulting 404 silently.
+LEGACY_DASHBOARDS_DIR = (
+    pathlib.Path(__file__).resolve().parents[2] / "config" / "grafana" / "dashboards"
+)
+KNOWN_DATASOURCE_UIDS = {
+    "prometheus",
+    "loki",
+    "tempo",
+    "alertmanager",
+    "ufawkesres-postgres",
+    "grafana",  # Grafana's built-in datasource, used by default annotation queries
+    "-- Grafana --",  # older-schema equivalent of the "grafana" built-in UID
+}
+
+
+def _all_dashboard_files() -> list[pathlib.Path]:
+    files = list(_dashboard_files)
+    if LEGACY_DASHBOARDS_DIR.is_dir():
+        files += sorted(LEGACY_DASHBOARDS_DIR.rglob("*.json"))
+    return files
+
+
+def _find_orphaned_datasource_uids(obj: object, path: str = "") -> list[str]:
+    """Find panel-level datasource UIDs that aren't a known real UID or a
+    ${template-variable} reference."""
+    hits: list[str] = []
+    if isinstance(obj, dict):
+        if "datasource" in obj:
+            ds = obj["datasource"]
+            if isinstance(ds, dict):
+                uid = ds.get("uid")
+                if (
+                    isinstance(uid, str)
+                    and uid
+                    and not uid.startswith("$")
+                    and uid not in KNOWN_DATASOURCE_UIDS
+                ):
+                    hits.append(f"{path}.datasource.uid={uid}")
+        for k, v in obj.items():
+            hits.extend(_find_orphaned_datasource_uids(v, f"{path}.{k}"))
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            hits.extend(_find_orphaned_datasource_uids(item, f"{path}[{i}]"))
+    return hits
+
+
+@pytest.mark.parametrize(
+    "path", _all_dashboard_files(), ids=lambda p: p.name if p else "none"
+)
+def test_no_orphaned_datasource_uid(path: pathlib.Path) -> None:
+    """Every panel-level datasource UID must be a real, configured
+    datasource or a template variable -- not a stale/imported reference
+    that doesn't exist in this Grafana instance."""
+    data = _load_dashboard(path)
+    hits = _find_orphaned_datasource_uids(data)
+    assert not hits, (
+        f"{path.name} references {len(hits)} datasource UID(s) not in "
+        f"{sorted(KNOWN_DATASOURCE_UIDS)} and not a template variable: "
+        f"{', '.join(hits[:5])}"
+    )
