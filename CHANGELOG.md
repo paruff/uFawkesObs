@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-08-18
+
 ### Added
 
 - `good-first-issue` label and GitHub metadata standards (M2-02)
@@ -49,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `dora-api`, `dora-compute`, and `dora-db-init` now join
+  `fawkes-backbone-net` (where uFawkesRes's shared Postgres actually lives),
+  fixing a structural network gap that prevented the `resource-plane`
+  profile from reaching its database despite valid credentials (PR #237)
 - Stale `media-refinery` app references in `docs/OBSERVABILITY_STATUS.md`
   corrected to `telemetry-generator` (the actual demo app)
 - Reconciled `docs/plan.md` status column against real GitHub issue state
@@ -123,5 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   0.9.0→0.10.0, `aquasecurity/trivy-action` 0.35.0→0.36.0, `dorny/paths-filter` 3→4,
   `actions/dependency-review-action` 4→5
 
-[Unreleased]: https://github.com/paruff/uFawkesObs/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/paruff/uFawkesObs/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/paruff/uFawkesObs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/paruff/uFawkesObs/releases/tag/v0.1.0
