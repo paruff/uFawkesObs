@@ -327,6 +327,33 @@ class TestComposeResourcePlanOverride:
             "service_completed_successfully"
         ), f"{service} override must wait for dora-db-init to complete"
 
+    @pytest.mark.parametrize("service", ["dora-api", "dora-compute", "dora-db-init"])
+    def test_joins_fawkes_backbone_net(self, override_data: dict, service: str) -> None:
+        """Regression test: found live 2026-08-18 -- none of these services
+        were ever attached to fawkes-backbone-net (the external network
+        uFawkesRes's Postgres actually runs on, per docs/product/design.md
+        §5), so DATABASE_URL pointing at DORA_POSTGRES_URL would still fail
+        to connect even with correct credentials -- the network path
+        literally didn't exist."""
+        networks = override_data["services"][service].get("networks", [])
+        assert "fawkes-backbone-net" in networks, (
+            f"{service} must join fawkes-backbone-net to reach uFawkesRes's "
+            f"fawkes-postgres -- resource-plane mode is unreachable without it"
+        )
+
+    def test_declares_fawkes_backbone_net_as_external(
+        self, override_data: dict
+    ) -> None:
+        net = override_data.get("networks", {}).get("fawkes-backbone-net", {})
+        assert net.get("external") is True, (
+            "fawkes-backbone-net must be declared external -- it's created by "
+            "uFawkesRes's own compose stack, not by uFawkesObs"
+        )
+        assert net.get("name") == "ufawkes-resources_fawkes-backbone-net", (
+            "external network name must match uFawkesRes's actual compose "
+            "project name (name: ufawkes-resources in its compose.yaml)"
+        )
+
 
 class TestDoraDatabaseFiles:
     """DB init/migration/hypertable SQL moved from uFawkesDORA (issue #202)."""
