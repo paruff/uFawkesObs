@@ -25,8 +25,7 @@ jobs:
       # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
       # Satisfies compose.yaml's required-var interpolation for the
       # dora-profiled otel-collector-dora service (Compose evaluates it even
-      # under --profile core/--profile apps). Never actually used here. See
-      # docs/IMPLEMENTATION_PLAN.md finding D1.
+      # under --profile core/--profile apps). Never actually used here.
       DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
       # Short recompute interval so dora-compute picks up the deployment
       # event OBS-SLI-006 seeds within the existing steady-state window,

@@ -51,7 +51,7 @@ Grafana → Explore → Prometheus → Query: up
 
 ```
 Grafana → Explore → Loki → Log Browser
-Filter: compose_service = "media-refinery"
+Filter: compose_service = "telemetry-generator"
 ```
 
 **For Alerts:**

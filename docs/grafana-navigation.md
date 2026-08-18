@@ -91,15 +91,15 @@ All container logs from the uFawkesObs core stack:
 1. Select **Loki** datasource (top dropdown)
 2. Click **Log browser** (left panel)
 3. Select label filters:
-   - **compose_service** = "media-refinery" (to see app logs)
-   - **compose_project** = "media-refinery\_" or "observability-lab"
+   - **compose_service** = "telemetry-generator" (to see app logs)
+   - **compose_project** = "telemetry-generator\_" or "observability-lab"
    - **stream** = "stdout" or "stderr"
 
 ### Log Query Examples
 
 ```
-# All logs from media-refinery
-{compose_service="media-refinery"}
+# All logs from telemetry-generator
+{compose_service="telemetry-generator"}
 
 # All error logs
 {stream="stderr"}
@@ -108,14 +108,14 @@ All container logs from the uFawkesObs core stack:
 {container="otel-collector"}
 
 # By compose project
-{compose_project="media-refinery_"}
+{compose_project="telemetry-generator_"}
 ```
 
 ### Available Log Labels
 
 From the log browser, you can filter by:
 
-- `compose_service` - Service name (media-refinery, prometheus, etc.)
+- `compose_service` - Service name (telemetry-generator, prometheus, etc.)
 - `compose_project` - Which docker-compose project
 - `stream` - stdout or stderr
 - `container` - Container name
@@ -129,7 +129,7 @@ From the log browser, you can filter by:
 
 Tempo is running but **has no traces** because:
 
-- Media-Refinery code doesn't emit OpenTelemetry traces
+- telemetry-generator code doesn't emit OpenTelemetry traces
 - Environment variables alone don't generate traces
 - Requires code instrumentation
 
@@ -143,11 +143,11 @@ Tempo is running but **has no traces** because:
 
 ### How to Enable Traces
 
-See [Media-Refinery Integration Guide](../examples/media-refinery-integration.md#enabling-traces) for adding OpenTelemetry SDK to Go code.
+See [`apps/telemetry-generator/README.md`](../../apps/telemetry-generator/README.md) for how the demo app emits traces, or [Multi-Stack Integration](multi-stack-integration.md) for instrumenting your own app.
 
 ---
 
-## STEP-BY-STEP: View Media-Refinery Logs
+## STEP-BY-STEP: View telemetry-generator Logs
 
 ### 1. Go to Grafana
 
@@ -176,13 +176,13 @@ Left sidebar expands to show labels
 ### 5. Select filters
 
 ```
-compose_service = "media-refinery"
+compose_service = "telemetry-generator"
 ```
 
 ### 6. Click "Show logs"
 
 ```
-You'll see media-refinery logs in the center panel
+You'll see telemetry-generator logs in the center panel
 ```
 
 ### 7. (Optional) Filter by time
@@ -280,7 +280,7 @@ up{job="otel-collector"}
    curl 'http://localhost:3100/loki/api/v1/label/compose_service/values'
    ```
 
-   Should show: ["alertmanager", "media-refinery", "prometheus", ...]
+   Should show: ["alertmanager", "telemetry-generator", "prometheus", ...]
 
 2. If empty, check Alloy status:
 
@@ -296,27 +296,27 @@ up{job="otel-collector"}
    docker compose restart alloy
    ```
 
-### "I don't see Media-Refinery logs specifically"
+### "I don't see telemetry-generator logs specifically"
 
 **Solution:**
 
-1. Make sure Media-Refinery is running:
+1. Make sure telemetry-generator is running:
 
    ```bash
-   docker ps | grep media-refinery
+   docker ps | grep telemetry-generator
    ```
 
 2. Check it's on observability-lab network:
 
    ```bash
-   docker inspect media-refinery | grep observability-lab
+   docker inspect telemetry-generator | grep observability-lab
    ```
 
 3. In Grafana Explore, try this query:
    ```
    {job="docker"}
    ```
-   This shows ALL logs. Look for media-refinery entries.
+   This shows ALL logs. Look for telemetry-generator entries.
 
 ### "Prometheus shows no targets"
 
@@ -386,6 +386,6 @@ up{job="otel-collector"}
 
 ## Next: Enable Traces
 
-To see traces from Media-Refinery, follow: [Instrumentation Guide](../examples/media-refinery-integration.md#enabling-traces)
+To see traces from telemetry-generator, see [`apps/telemetry-generator/README.md`](../../apps/telemetry-generator/README.md).
 
-Key requirement: Media-Refinery code needs OpenTelemetry SDK added and initialized.
+Key requirement: telemetry-generator code needs OpenTelemetry SDK added and initialized.
