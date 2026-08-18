@@ -311,8 +311,8 @@ async def _push_metrics(
             record.get("dora_tier_rework_rate"),
         )
 
-        payload = "\n".join(lines)
-        job_name = f"ufawkesdora/{tid.replace('/', '_')}"
+        payload = "\n".join(lines) + "\n"
+        job_name = f"ufawkesdora_{tid.replace('/', '_')}"
 
         try:
             async with aiohttp.ClientSession() as session:
