@@ -25,6 +25,7 @@ import pytest
 from pytest_bdd import then, when
 
 from tests.acceptance.runtime import ObservabilityStack
+from tests.acceptance.steps.query_template_vars import resolve_query_template_vars
 from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
 from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
 from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
@@ -662,6 +663,7 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
                         for target in targets:
                             expr = target.get("expr", "")
                             if expr:
+                                expr = resolve_query_template_vars(expr, templating)
                                 try:
                                     result = grafana.ds_query(ds_uid, expr)
                                     frames = (
