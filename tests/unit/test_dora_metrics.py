@@ -287,6 +287,41 @@ class TestPushMetrics:
             mock_session.put.assert_called()
 
     @pytest.mark.asyncio
+    async def test_push_metrics_job_name_has_no_slash_in_url(self):
+        """Regression test: job_name previously included a literal '/'
+        (f"ufawkesdora/{tid}") embedded directly in the pushgateway URL
+        path (.../metrics/job/{job_name}). Pushgateway parses path segments
+        after /job/<name> as alternating grouping-key label/value pairs, so
+        an embedded '/' produces a dangling unpaired segment and a 400
+        Bad Request -- confirmed live against a running pushgateway
+        (2026-08-18). The job name segment of the URL must not contain '/'.
+        """
+        record = {
+            "team_id": "paruff/uFawkesObs",
+            "deployment_frequency": 1.0,
+            "proxy_metrics": False,
+        }
+
+        with patch("aiohttp.ClientSession") as mock_client_session:
+            mock_session = MagicMock()
+            mock_client_session.return_value.__aenter__.return_value = mock_session
+
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_session.put.return_value.__aenter__.return_value = mock_resp
+
+            await _push_metrics([record], "http://localhost:9091")
+
+            called_url = (
+                mock_session.put.call_args.kwargs.get("url")
+                or mock_session.put.call_args.args[0]
+            )
+            job_segment = called_url.split("/metrics/job/", 1)[1]
+            assert "/" not in job_segment, (
+                f"pushgateway job name segment must not contain '/': {called_url!r}"
+            )
+
+    @pytest.mark.asyncio
     async def test_push_metrics_handles_pushgateway_error(self):
         """Pushgateway failure should log warning, not crash."""
         record = {
