@@ -182,6 +182,49 @@ class TestRollbackWiring:
             value = secrets.get(name, "")
             assert name in value, f"rollback job missing secret {name}"
 
+    def test_rollback_does_not_add_job_level_contents_write(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        """The rollback job must not add job-level permissions: contents: write.
+
+        The reusable-rollback.yml executes git revert + git push via an
+        ``ssh … bash -s`` heredoc on the target host — the runner's
+        GITHUB_TOKEN is not in the git-push credential path (#193 static
+        review verdict).  Adding contents: write at the job level would be
+        both unnecessary and a wider-than-needed token scope.
+        """
+        job = deploy_workflow["jobs"]["rollback"]
+        job_perms = job.get("permissions", {})
+        # Guard both the shorthand string forms and the mapping form.
+        assert job_perms != "write-all", (
+            "rollback job must not use permissions: write-all — git ops run "
+            "on the SSH host, not the runner (issue #193)"
+        )
+        if isinstance(job_perms, dict):
+            assert job_perms.get("contents") != "write", (
+                "rollback job must not grant contents: write — git ops run "
+                "on the SSH host, not the runner (issue #193)"
+            )
+
+    def test_rollback_has_no_local_checkout_step(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        """The rollback job must not contain an actions/checkout step.
+
+        Because it calls a reusable workflow via ``uses:``, it cannot have
+        a ``steps:`` block; the git credentials it needs are provided through
+        ``secrets:`` pass-through (DEPLOY_KEY) and used on the SSH host, not
+        on the runner.  This test guards against a future refactor that
+        converts the job to an inline job and accidentally adds checkout.
+        """
+        job = deploy_workflow["jobs"]["rollback"]
+        # A reusable-workflow call job has no steps key; if that ever changes
+        # we want to be alerted so the git-credential approach is re-reviewed.
+        assert "steps" not in job, (
+            "rollback job must not have a steps block — it should remain a "
+            "reusable-workflow call (uses:) so git ops stay on the SSH host"
+        )
+
     def test_rollback_restarts_with_make_up(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
