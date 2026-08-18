@@ -659,13 +659,15 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
                 targets = panel.get("targets", [])
                 has_data = False
                 if targets and datasource:
-                    if ds_type == "prometheus" and ds_uid:
+                    if ds_type in ("prometheus", "loki") and ds_uid:
                         for target in targets:
                             expr = target.get("expr", "")
                             if expr:
                                 expr = resolve_query_template_vars(expr, templating)
                                 try:
-                                    result = grafana.ds_query(ds_uid, expr)
+                                    result = grafana.ds_query(
+                                        ds_uid, expr, ds_type=ds_type
+                                    )
                                     frames = (
                                         result.get("results", {})
                                         .get("A", {})
