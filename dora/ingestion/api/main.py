@@ -13,9 +13,10 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from ingestion.api.auth import require_api_key
 from ingestion.api.queue import (
     close_pool,
     enqueue_event,
@@ -81,7 +82,7 @@ async def health():
     return {"status": "ok", "queue_depth": depth}
 
 
-@app.post("/event", status_code=201)
+@app.post("/event", status_code=201, dependencies=[Depends(require_api_key)])
 async def post_event(payload: dict[str, Any]):
     """Accept a single event, validate, and enqueue.
 
@@ -98,7 +99,7 @@ async def post_event(payload: dict[str, Any]):
     return {"queued": True, "id": event_id}
 
 
-@app.post("/event/batch", status_code=201)
+@app.post("/event/batch", status_code=201, dependencies=[Depends(require_api_key)])
 async def post_events(payloads: list[dict[str, Any]]):
     """Accept multiple events, validate all, enqueue in one transaction.
 
