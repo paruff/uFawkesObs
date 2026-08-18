@@ -42,6 +42,13 @@ uFawkesObs provides the observability substrate required for DORA measurement �
 
 uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com/paruff/fawkes) family — a suite of composable platform engineering stacks.
 
+<!-- TODO(product): uFawkesRes's tier status is unresolved — it's real and
+     wired into this repo's optional resource-plane profile, but is not
+     listed on ufawkes.dev's public stack list. Needs a human decision
+     between promoting it there, scoping it to Fawkes-tier only, or
+     deprecating it. See docs/notes/res-status.md. Table left as-is
+     pending that decision. -->
+
 | Plane | Role | Repository |
 |---|---|---|
 | **uFawkesObs** | Observability — metrics, logs, traces, dashboards | [GitHub](https://github.com/paruff/uFawkesObs) |
