@@ -49,11 +49,6 @@ exporters:
     send_timestamps: true
     metric_expiration: 5m
 
-  otlp/dora:
-    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
-    tls:
-      insecure: true
-
   otlp/tempo:
     endpoint: tempo:4317
     tls:
@@ -91,4 +86,4 @@ service:
     metrics/dora:
       receivers: [otlp]
       processors: [memory_limiter, filter/dora, attributes/dora, batch]
-      exporters: [prometheus, otlp/dora]
+      exporters: [prometheus]
