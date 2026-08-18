@@ -38,5 +38,6 @@ Feature: SLI/SLO Test Gates (OBS-SLI-001-006)
 
   @full
   Scenario: OBS-SLI-006 — Dashboard data freshness (SLO: all dashboards show data within 5m)
+    Given a DORA deployment event has been recorded
     When I query each provisioned Grafana dashboard for panel data
     Then at least one panel per dashboard should return non-empty results
