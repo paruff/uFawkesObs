@@ -679,8 +679,12 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
                                         )
                                         if len(values) > 1 and len(values[1]) > 0:
                                             has_data = True
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    print(
+                                        f"    ⚠️ {title} / {panel_title} query "
+                                        f"failed (datasource={ds_type}, "
+                                        f"uid={ds_uid}): {e}"
+                                    )
 
                 if has_data:
                     panels_with_data += 1
