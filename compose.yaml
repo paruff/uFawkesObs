@@ -572,6 +572,7 @@ services:
     environment:
       - TZ=UTC
       - DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}
+      - DORA_API_KEY=${DORA_API_KEY:-}
     volumes:
       - ./dora/ingestion:/app/ingestion:ro
       - ./dora/events:/app/events:ro
