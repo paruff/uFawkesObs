@@ -48,7 +48,10 @@ uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com
 | **uFawkesPipe** | CI/CD — pipeline orchestration, deployment events | [GitHub](https://github.com/paruff/ufawkespipe) |
 | **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
 | **uFawkesDojo** | Learning — belt-level curriculum for uFawkes and Fawkes | [GitHub](https://github.com/paruff/uFawkesDojo) |
-| **uFawkesAI** | AI agent templates — golden path scaffolding | [GitHub](https://github.com/paruff/ufawkesai) |
+
+**Not a suite plane — the template used to build all of the above:**
+
+- **uFawkesAI** — an `AGENTS.md`/agent-instruction template (Copilot, Claude Code, Cursor, Codex, etc.) implementing the DORA AI Capabilities Model, not a deployable service. Every repo in the uFawkes/Fawkes family — including this one — is scaffolded from it, which is what "part of the uFawkesAI suite" means in `AGENTS.md` §1: not a runtime dependency, a shared starting template. See [uFawkesAI](https://github.com/paruff/uFawkesAI).
 
 **Retired from the active uFawkes suite** (2026-08-18 product decision):
 
@@ -573,15 +576,6 @@ PR description format).
 
 ## uFawkes Stack Ecosystem
 
-uFawkesObs is part of the [uFawkes](https://ufawkes.dev) platform engineering ecosystem:
-
-| Stack           | Description                                          | Link                                            |
-| --------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| **uFawkesObs**  | Observability — Prometheus, Grafana, AI dashboards   | [GitHub](https://github.com/paruff/uFawkesObs)  |
-| **uFawkesPipe** | CI/CD — Jenkins, Buildpacks, DevSecOps               | [GitHub](https://github.com/paruff/ufawkespipe) |
-| **uFawkesDORA** | DORA metrics — dashboards, VSM, delivery performance | [GitHub](https://github.com/paruff/ufawkesdora) |
-| **uFawkesSec**  | Security — policy-as-code, supply chain, guardrails  | [GitHub](https://github.com/paruff/ufawkessec)  |
-| **uFawkesDevX** | Developer experience — golden paths, IDP templates   | [GitHub](https://github.com/paruff/ufawkesdevx) |
-| **uFawkesAI**   | AI agent templates — golden path scaffolding         | [GitHub](https://github.com/paruff/ufawkesai)   |
+See [Part of the Fawkes IDP](#part-of-the-fawkes-idp) above for the current suite family table — this section used to duplicate it with stale entries (uFawkesDORA, uFawkesSec still shown active, no uFawkesDojo) and has been removed rather than kept in sync in two places.
 
 **Product Suite Roadmap**: [fawkes/ROADMAP.md](https://github.com/paruff/fawkes/blob/main/ROADMAP.md)
