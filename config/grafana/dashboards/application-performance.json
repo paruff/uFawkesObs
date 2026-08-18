@@ -196,7 +196,7 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "count(count_over_time({compose_service=~\".+\"}[5m]) by (compose_service))",
+          "expr": "count by (compose_service) (count_over_time({compose_service=~\".+\"}[5m]))",
           "refId": "A"
         }
       ],
