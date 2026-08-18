@@ -20,7 +20,7 @@
 
 - **Repo:** paruff/uFawkesObs
 - **What this is:** The observability plane of the Fawkes IDP family — OpenTelemetry, Prometheus, Tempo, Loki, Grafana, and Alloy delivered as Docker Compose with GitOps reconciliation over SSH.
-- **Suite membership:** uFawkesAI
+- **Suite membership:** uFawkes (Compose tier) — active suite is Obs, Pipe, DevX, Dojo. This repo's `AGENTS.md`/agent conventions are scaffolded from the [uFawkesAI](https://github.com/paruff/uFawkesAI) template, which is tooling shared across the family, not a suite-tier peer.
 
 ## 2. Where the Agents Live
 
@@ -223,7 +223,7 @@ See `docs/KNOWN_LIMITATIONS.md` — known issues across storage, networking, pro
 
 ## 10. Suite Integration
 
-uFawkesObs is part of the **uFawkesAI** suite and the **Fawkes IDP** ecosystem. The active uFawkes (Compose-tier) suite is Obs, Pipe, DevX, and Dojo — see `README.md` § Part of the Fawkes IDP.
+uFawkesObs is part of the **uFawkes** (Compose-tier) suite and the **Fawkes IDP** ecosystem. The active uFawkes suite is Obs, Pipe, DevX, and Dojo — see `README.md` § Part of the Fawkes IDP. (uFawkesAI is the shared `AGENTS.md` template this repo and its siblings are scaffolded from, not a suite-tier peer — see §1.)
 
 **Depends on:** nothing required by default. uFawkesRes (shared PostgreSQL) is an optional dependency, only pulled in when the `resource-plane` Compose profile is explicitly activated (`compose.resource-plane.override.yaml`; `datasources.yaml` UID: `ufawkesres-postgres`) — the `dora` profile is self-contained (SQLite) otherwise. uFawkesRes was retired from the active uFawkes suite on 2026-08-18 (product decision, see `docs/notes/res-status.md`); this repo's optional integration with it is unaffected and still works.
 
