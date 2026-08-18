@@ -30,15 +30,16 @@ metadata:
     - url: https://github.com/paruff/fawkes
       title: Fawkes IDP (Parent)
       icon: github
-    - url: https://github.com/paruff/uFawkesRes
-      title: uFawkesRes — Resource Plane
-      icon: github
     - url: https://github.com/paruff/uFawkesDojo
       title: uFawkesDojo — Learning Plane
       icon: github
     # uFawkesDORA is archived — its DORA compute/ingestion code was merged
     # into this repo's dora/ directory (see AGENTS.md §10). No longer a
     # separate system dependency.
+    # uFawkesRes retired from the active uFawkes (Compose-tier) suite —
+    # 2026-08-18 product decision, see docs/notes/res-status.md. The
+    # optional resource-plane Compose profile still exists in this repo
+    # for teams that want it, but it is no longer a promoted dependency.
 spec:
   type: observability
   owner: paruff
@@ -46,7 +47,6 @@ spec:
   dependsOn:
     - system:ufawkespipe
     - system:ufawkesdevx
-    - system:ufawkesres
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format
 apiVersion: backstage.io/v1alpha1
@@ -330,5 +330,3 @@ spec:
   consumedBy:
     - system:ufawkespipe
     - system:ufawkesdevx
-    - system:ufawkesres
-    - system:ufawkesdora
