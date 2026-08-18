@@ -131,6 +131,86 @@ use, out of scope for this doc.**
 | Dashboard JSON (Loki panels) | | ✅ (Loki → OpenSearch rework) | |
 | DORA dashboards/pipeline | | | ✅ (architectural — needs product decision) |
 
+## Migration path — step by step
+
+None of these steps have been executed or tested against a live Fawkes
+cluster — this is a sequencing plan built from the findings above, not a
+verified runbook. Each step should be validated in a non-production Fawkes
+namespace before being treated as authoritative.
+
+### Prerequisites
+
+- A running Fawkes cluster with the `fawkes-observability` namespace
+  provisioned (per `paruff/fawkes`'s own setup docs — out of scope here).
+- **Export everything from uFawkesObs before touching anything on the
+  Fawkes side:**
+  - `dashboards/platform/*.json` and `dashboards/services/*.json` (source
+    of truth is already in this repo's git history — no live export
+    needed, but confirm the running Grafana instance hasn't diverged from
+    committed JSON via UI edits: `allowUiUpdates: false` in
+    `config/grafana/provisioning/dashboards/*.yaml` should guarantee this,
+    but verify before relying on it).
+  - `config/prometheus/rules/*.yml` (recording/alert rules — portable
+    content, see table above).
+  - Prometheus's own data if historical metrics need to survive the cut
+    (`docs/KNOWN_LIMITATIONS.md` — 30-day retention only; snapshot
+    `./data/prometheus` or accept the loss).
+  - `dora/` snapshot data (`./data/dora/dora.db` if SQLite, or the
+    `dora_snapshots` table if using the `resource-plane` Postgres profile)
+    if DORA history needs to survive — see the DORA divergence note below
+    before assuming this data has anywhere to go on the Fawkes side.
+- A rollback point: keep the uFawkesObs Compose stack running and
+  untouched until the Fawkes-side stack is validated end-to-end. Don't
+  decommission Compose services as you migrate each piece — decommission
+  only after full cutover validation (see Rollback below).
+
+### Sequence
+
+1. **Prometheus rules first** — port `config/prometheus/rules/*.yml`
+   content into whatever Fawkes's chart expects (static `values.yaml` block
+   or `PrometheusRule` CRD — **needs validation testing** to determine
+   which). PromQL expressions themselves need no rewriting. Lowest-risk
+   step: rules that don't fire yet don't break anything.
+2. **Grafana datasources next** — recreate the datasource *definitions*
+   (not the delivery mechanism, which differs — see Grafana findings
+   above) in Fawkes's Grafana, using the same UID convention
+   (`prometheus`, `tempo`) where Fawkes's own Prometheus/Tempo instances
+   are the targets. Skip `loki` — there is no Fawkes equivalent (see next
+   step).
+3. **Dashboards without Loki panels** — import `dashboards/platform/` and
+   `dashboards/services/` JSON as-is via Fawkes's Grafana provisioning.
+   Before importing, **inventory which dashboards reference the `loki`
+   datasource UID** (not done in this pass — a real gap, see Findings
+   above) and hold those back.
+4. **Loki-backed dashboards last, and only after a panel rewrite** — these
+   need their log panels re-pointed at OpenSearch (Lucene/OpenSearch DSL,
+   not LogQL) before they'll render correctly. Treat this as new panel
+   authoring, not a config port.
+5. **DORA metrics — a product decision, not a migration step.** Fawkes
+   uses DevLake as its DORA engine; uFawkesObs uses its own `dora/`
+   ingestion+compute pipeline. Migrating DORA dashboards means picking one
+   of: (a) run uFawkesObs's `dora/` stack inside the Fawkes cluster
+   alongside DevLake (duplicate pipelines, not currently how Fawkes is
+   architected per its docs), or (b) rebuild the DORA dashboard panels
+   against DevLake's data model and retire uFawkesObs's `dora/` pipeline
+   at cutover. Do not attempt this step without that decision made first.
+6. **Validate against real traffic** in the Fawkes namespace before
+   touching the Compose stack — confirm scrape targets are actually being
+   scraped, alert rules fire correctly, and dashboard panels show live
+   data, not just that the JSON imported without error.
+7. **Decommission the Compose stack** only after step 6 passes. Keep the
+   exported data (step 0) until you're confident nothing needs to be
+   re-imported.
+
+### Rollback
+
+If validation in step 6 fails or stalls partway: uFawkesObs's Compose
+stack was never touched during steps 1–5 (they only add resources to the
+Fawkes side), so rollback is simply "stop migrating, keep running Compose
+as before" — there's no uFawkesObs-side state to revert. The only
+irreversible step is #7 (decommissioning Compose); don't take it until
+Fawkes-side validation is genuinely done, not just "looks right."
+
 ## When to graduate to Fawkes
 
 Reusable as a standalone checklist (e.g. for ufawkes.dev). uFawkesObs is

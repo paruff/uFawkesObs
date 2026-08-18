@@ -223,10 +223,9 @@ See `docs/KNOWN_LIMITATIONS.md` — known issues across storage, networking, pro
 
 ## 10. Suite Integration
 
-uFawkesObs is part of the **uFawkesAI** suite and the **Fawkes IDP** ecosystem.
+uFawkesObs is part of the **uFawkesAI** suite and the **Fawkes IDP** ecosystem. The active uFawkes (Compose-tier) suite is Obs, Pipe, DevX, and Dojo — see `README.md` § Part of the Fawkes IDP.
 
-**Depends on:**
-- **uFawkesRes** — Shared PostgreSQL for DORA metric snapshots (`datasources.yaml` UID: `ufawkesres-postgres`), used only when the `resource-plane` profile is active; the `dora` profile is self-contained (SQLite) by default
+**Depends on:** nothing required by default. uFawkesRes (shared PostgreSQL) is an optional dependency, only pulled in when the `resource-plane` Compose profile is explicitly activated (`compose.resource-plane.override.yaml`; `datasources.yaml` UID: `ufawkesres-postgres`) — the `dora` profile is self-contained (SQLite) otherwise. uFawkesRes was retired from the active uFawkes suite on 2026-08-18 (product decision, see `docs/notes/res-status.md`); this repo's optional integration with it is unaffected and still works.
 
 Note: uFawkesDORA (the standalone repo) is archived — its collector patterns, spec, and design docs were merged into this repo's `dora/` directory (see `feat/dora-consolidation-*` history). DORA compute and ingestion now live in uFawkesObs itself, not as an external dependency.
 

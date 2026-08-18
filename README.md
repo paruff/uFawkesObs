@@ -40,27 +40,19 @@ uFawkesObs provides the observability substrate required for DORA measurement �
 
 ## Part of the Fawkes IDP
 
-uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com/paruff/fawkes) family — a suite of composable platform engineering stacks.
-
-<!-- TODO(product): uFawkesRes's tier status is unresolved — it's real and
-     wired into this repo's optional resource-plane profile, but is not
-     listed on ufawkes.dev's public stack list. Needs a human decision
-     between promoting it there, scoping it to Fawkes-tier only, or
-     deprecating it. See docs/notes/res-status.md. Table left as-is
-     pending that decision. -->
+uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com/paruff/fawkes) family — a suite of composable platform engineering stacks. The active uFawkes (Docker Compose) suite is Obs, Pipe, DevX, and Dojo, plus [ufawkes.dev](https://ufawkes.dev) as the suite's public site — Fawkes itself is the Kubernetes-track graduation target, not a suite-tier peer. See [When to Graduate to Fawkes](docs/fawkes-migration.md) for that path.
 
 | Plane | Role | Repository |
 |---|---|---|
 | **uFawkesObs** | Observability — metrics, logs, traces, dashboards | [GitHub](https://github.com/paruff/uFawkesObs) |
-<!-- uFawkesRes status unresolved — see docs/notes/res-status.md, do not edit this row pending a product-tier decision -->
-| **uFawkesRes** | Resources — ingress, SSO, Postgres, Valkey | [GitHub](https://github.com/paruff/uFawkesRes) |
 | **uFawkesPipe** | CI/CD — pipeline orchestration, deployment events | [GitHub](https://github.com/paruff/ufawkespipe) |
 | **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
 | **uFawkesDojo** | Learning — belt-level curriculum for uFawkes and Fawkes | [GitHub](https://github.com/paruff/uFawkesDojo) |
 | **uFawkesAI** | AI agent templates — golden path scaffolding | [GitHub](https://github.com/paruff/ufawkesai) |
 
-**Merged into other planes** (no longer standalone repos):
+**Retired from the active uFawkes suite** (2026-08-18 product decision):
 
+- **uFawkesRes** — was the resources plane (ingress, SSO, Postgres, Valkey). The [repo](https://github.com/paruff/uFawkesRes) is still real and active, and this repo's optional `resource-plane` Compose profile (`compose.resource-plane.override.yaml`) still works if you want shared Postgres — but it's no longer a promoted dependency of the small-team uFawkes tier; the `dora` profile is self-contained (SQLite) by default. See [docs/notes/res-status.md](docs/notes/res-status.md) for the full rationale.
 - **DORA metrics** — was uFawkesDORA; merged into uFawkesObs's `dora/` directory. [uFawkesDORA](https://github.com/paruff/ufawkesdora) is archived. See `AGENTS.md` §10.
 - **Security — policy-as-code, supply chain, guardrails** — was uFawkesSec; merged into uFawkesPipe's `security` Compose profile (DefectDojo, Infisical, Trivy server, Falco). Per uFawkesPipe's README, this is "formerly the standalone uFawkesSec repo." Note: unlike uFawkesDORA, the [uFawkesSec](https://github.com/paruff/ufawkessec) repo itself has not been archived as of this writing (still receiving dependabot updates) — the merge is confirmed functionally, but the source repo's own lifecycle status is unresolved.
 

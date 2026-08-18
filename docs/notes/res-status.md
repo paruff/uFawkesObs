@@ -1,12 +1,23 @@
 # Findings: uFawkesRes status in the uFawkes suite
 
-> Findings note, not a decision record — no ADR number assigned. Written to
-> resolve a discrepancy flagged in the "Suite Alignment & Dojo Integration"
-> task brief (2026-08-18): this repo's README family table lists
-> `uFawkesRes` as a live plane, but ufawkes.dev's public stack list does not
-> mention it. This note presents options; it does not pick one. The
-> README family table is intentionally left unchanged pending a human
-> decision — see [`../../README.md`](../../README.md#part-of-the-fawkes-idp).
+## Decision (2026-08-18)
+
+**Retired from the active uFawkes (Compose-tier) suite** — option (b) below,
+scoped to Fawkes-tier only. uFawkesRes is no longer a promoted dependency of
+the small-team uFawkes stack; the `dora` profile stays self-contained
+(SQLite) by default. The repo itself is not archived and this repo's
+optional `resource-plane` Compose profile (`compose.resource-plane.override.yaml`)
+still works unchanged for teams that want shared Postgres — retirement is a
+suite-positioning decision, not a deprecation of the integration code. See
+`README.md` § Part of the Fawkes IDP and `AGENTS.md` §10 for where this is
+now reflected.
+
+> Findings note below, not a decision record — no ADR number assigned.
+> Originally written to resolve a discrepancy flagged in the "Suite
+> Alignment & Dojo Integration" task brief (2026-08-18): this repo's README
+> family table listed `uFawkesRes` as a live plane, but ufawkes.dev's public
+> stack list does not mention it. The findings and options below are
+> unchanged from that investigation; only the decision above is new.
 
 ## What was verified
 
