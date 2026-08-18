@@ -28,6 +28,10 @@ jobs:
       # under --profile core/--profile apps). Never actually used here. See
       # docs/IMPLEMENTATION_PLAN.md finding D1.
       DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
+      # Short recompute interval so dora-compute picks up the deployment
+      # event OBS-SLI-006 seeds within the existing steady-state window,
+      # instead of only computing once at container start (default: 3600s).
+      DORA_COMPUTE_INTERVAL_SECONDS: "15"
 
     steps:
       - name: Checkout repository
@@ -45,12 +49,12 @@ jobs:
 
       - name: Create data directories
         run: |
-          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana}
+          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana,dora}
           chmod -R 777 data/
 
       - name: Start full stack with telemetry generator
         run: |
-          docker compose --profile core --profile apps up -d
+          docker compose --profile core --profile apps --profile dora up -d
           echo "Stack started, waiting for services to stabilize..."
 
       - name: Wait for all services healthy
@@ -66,6 +70,7 @@ jobs:
             ('OTel Collector', 'http://localhost:8888/metrics'),
             ('Alloy', 'http://localhost:12345/-/ready'),
             ('Telemetry Generator', 'http://localhost:5001/'),
+            ('DORA Ingestion API', 'http://localhost:8088/health'),
           ]
           for name, url in services:
             for i in range(60):
@@ -126,7 +131,7 @@ jobs:
 
       - name: Shutdown stack
         if: always()
-        run: docker compose --profile core --profile apps down -v
+        run: docker compose --profile core --profile apps --profile dora down -v
 
       - name: Check test results
         if: always()

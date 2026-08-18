@@ -6,12 +6,14 @@ Provides a registry of available workload generators for use in acceptance tests
   - Web API simulation (web_api module)
   - Batch job simulation (batch_job module)
   - Log emitter (log_emitter module)
-  - DORA events (dora_events module)
 - Directly exported:
   - SyntheticTraceWorkload (web api + batch job simulation)
   - SyntheticMetricWorkload (health check metrics)
   - SyntheticLogWorkload (log emission)
-  - DORAWorkload (deployment, incident, lead-time traces)
+
+DORA deployment events (dora_events module) are seeded directly via a
+pytest-bdd @given step (REST POST to dora-api), not through this registry
+-- see tests/acceptance/workloads/dora_events.py.
 
 Usage::
 
@@ -29,7 +31,6 @@ Usage::
 from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
 from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
 from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
-from tests.acceptance.workloads.dora_events import DORAWorkload
 
 
 # Workload registry for discovery and factory patterns
@@ -54,8 +55,6 @@ def get_workload(workload_type: str, **kwargs):
         "batch": SyntheticTraceWorkload,  # Alias
         "log_emitter": SyntheticLogWorkload,
         "log": SyntheticLogWorkload,  # Alias
-        "dora": DORAWorkload,
-        "dora_events": DORAWorkload,
     }
 
     if workload_type not in workload_registry:
@@ -73,7 +72,6 @@ __all__ = [
     "SyntheticTraceWorkload",
     "SyntheticMetricWorkload",
     "SyntheticLogWorkload",
-    "DORAWorkload",
     # Registry function
     "get_workload",
 ]
@@ -83,13 +81,11 @@ __all__ = [
 WebApiWorkload = SyntheticTraceWorkload
 BatchJobWorkload = SyntheticTraceWorkload
 LogEmitterWorkload = SyntheticLogWorkload
-DORAEventWorkload = DORAWorkload
 
 __all__.extend(
     [
         "WebApiWorkload",
         "BatchJobWorkload",
         "LogEmitterWorkload",
-        "DORAEventWorkload",
     ]
 )
