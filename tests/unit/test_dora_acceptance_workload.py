@@ -11,16 +11,31 @@ deployment-event.schema.json.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
 import jsonschema
 import pytest
 
-from tests.acceptance.workloads.dora_events import build_deployment_event
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_PATH = REPO_ROOT / "dora" / "events" / "deployment-event.schema.json"
+
+# Load dora_events.py directly by file path rather than
+# `from tests.acceptance.workloads.dora_events import ...` -- that import
+# path executes tests/acceptance/workloads/__init__.py first, which eagerly
+# imports opentelemetry.sdk (from sibling workload modules unrelated to
+# this test) -- a dependency the tests/unit CI job's minimal environment
+# doesn't install and shouldn't need to, just to test a pure REST payload
+# builder.
+_spec = importlib.util.spec_from_file_location(
+    "dora_events_under_test",
+    REPO_ROOT / "tests" / "acceptance" / "workloads" / "dora_events.py",
+)
+assert _spec and _spec.loader
+_dora_events = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_dora_events)
+build_deployment_event = _dora_events.build_deployment_event
 
 
 @pytest.fixture(scope="module")

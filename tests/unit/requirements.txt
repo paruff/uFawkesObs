@@ -10,3 +10,5 @@ asyncpg>=0.30
 aiohttp>=3.14
 aiosqlite>=0.20
 fastapi>=0.110
+pytest-bdd>=8.0
+requests>=2.31
