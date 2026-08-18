@@ -102,7 +102,7 @@ Grafana → Explore → Tempo → Search → service.name=telemetry-generator
 ```
 
 To instrument your own app instead of the demo one, see:
-[Instrumentation Guide](examples/media-refinery-integration.md)
+[Multi-Stack Integration](multi-stack-integration.md)
 
 ### 4. ALERTS ✅
 
@@ -246,7 +246,6 @@ alertmanager_alerts
 - [Grafana Navigation Guide](grafana-navigation.md) - Detailed Grafana walkthrough
 - [Data Navigation Guide](data-navigation-guide.md) - Where data is stored
 - [Multi-Stack Integration](multi-stack-integration.md) - Connect other apps
-- [Media-Refinery Integration](examples/media-refinery-integration.md) - Specific setup
 
 ---
 

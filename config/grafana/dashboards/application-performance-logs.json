@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Application logs and performance for Media-Refinery and future application stacks",
+  "description": "Application logs and performance for telemetry-generator and future application stacks",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -41,7 +41,7 @@
         "type": "loki",
         "uid": "loki"
       },
-      "description": "View logs from Media-Refinery application",
+      "description": "View logs from telemetry-generator application",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -78,11 +78,11 @@
       "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "{compose_service=\"media-refinery\"}",
+          "expr": "{compose_service=\"telemetry-generator\"}",
           "refId": "A"
         }
       ],
-      "title": "Media-Refinery Logs",
+      "title": "telemetry-generator Logs",
       "type": "logs"
     },
     {
@@ -342,7 +342,7 @@
           "fields": "",
           "values": false
         },
-        "text": "Use Explore > Loki to search logs. Filter by: compose_service={service-name} OR {compose_service=\"media-refinery\"} for all app logs",
+        "text": "Use Explore > Loki to search logs. Filter by: compose_service={service-name} OR {compose_service=\"telemetry-generator\"} for all app logs",
         "textMode": "auto"
       },
       "pluginVersion": "10.4.2",
@@ -454,7 +454,7 @@
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["application", "logs", "media-refinery"],
+  "tags": ["application", "logs", "telemetry-generator"],
   "templating": {
     "list": []
   },
