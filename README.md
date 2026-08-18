@@ -141,6 +141,8 @@ In this architecture, uFawkesObs provides the telemetry substrate consumed by al
 
 The Prometheus, Tempo, Loki, and Alertmanager datasources are pre-configured and ready to use.
 
+**New to Grafana?** Explore (compass icon, left sidebar) → pick a datasource → query directly — the fastest way to check if data for a specific service exists before building a dashboard, and the right first stop when a dashboard shows "No data" and you're not sure why.
+
 ### Alertmanager
 
 - **URL:** http://localhost:9093

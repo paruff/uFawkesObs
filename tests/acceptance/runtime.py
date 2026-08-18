@@ -435,20 +435,28 @@ class GrafanaClient:
         self,
         datasource_uid: str,
         expr: str,
+        ds_type: str = "prometheus",
         ref_id: str = "A",
         timeout: int = 10,
     ) -> dict[str, Any]:
-        """Execute a query against a datasource via Grafana API."""
+        """Execute a query against a datasource via Grafana API.
+
+        ds_type selects the query shape: "prometheus" (PromQL) or "loki"
+        (LogQL, requires queryType: "range" -- Loki's query API distinguishes
+        instant vs. range queries, unlike Prometheus which infers it from
+        the presence of from/to).
+        """
+        query: dict[str, Any] = {
+            "refId": ref_id,
+            "datasource": {"uid": datasource_uid, "type": ds_type},
+            "expr": expr,
+            "intervalMs": 15000,
+            "maxDataPoints": 100,
+        }
+        if ds_type == "loki":
+            query["queryType"] = "range"
         payload = {
-            "queries": [
-                {
-                    "refId": ref_id,
-                    "datasource": {"uid": datasource_uid, "type": "prometheus"},
-                    "expr": expr,
-                    "intervalMs": 15000,
-                    "maxDataPoints": 100,
-                }
-            ],
+            "queries": [query],
             "from": "now-5m",
             "to": "now",
         }

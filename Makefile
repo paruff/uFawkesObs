@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-dora-resource-plane down logs status test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
+.PHONY: help init check-env up up-apps up-dora up-dora-resource-plane down logs status grafana-folder-descriptions test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -74,6 +74,11 @@ status:
 	@curl -sf http://localhost:9093/-/healthy > /dev/null && echo "  ✅ Alertmanager:9093" || echo "  ❌ Alertmanager:9093"
 	@curl -sf http://localhost:8888/metrics > /dev/null && echo "  ✅ OTel Coll.  :8888" || echo "  ❌ OTel Coll.  :8888"
 	@curl -sf http://localhost:12345/-/ready > /dev/null && echo "  ✅ Alloy       :12345" || echo "  ❌ Alloy       :12345"
+
+## grafana-folder-descriptions: label dashboard folders (Platform/Services
+## maintained, Application legacy) -- run once after `make up`
+grafana-folder-descriptions:
+	set -a && . ./.env && set +a && ./scripts/set-grafana-folder-descriptions.sh
 
 ## install-acceptance-deps: install acceptance test Python dependencies
 install-acceptance-deps:

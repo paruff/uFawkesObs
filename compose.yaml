@@ -378,6 +378,11 @@ services:
       - GF_LOG_MODE=console
       - GF_LOG_FORMAT=json
       - GF_METRICS_ENABLED=true
+      # Home is the first thing a new user sees; the legacy "Application
+      # Performance" dashboard (the previous default) showed mostly "No
+      # data" panels and read as broken. Platform - uFawkesObs Health is
+      # a real status page and consistently has data.
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/dashboards/platform/ufawkesobs-health.json
     volumes:
       - ./data/grafana:/var/lib/grafana
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
