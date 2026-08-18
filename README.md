@@ -575,7 +575,9 @@ This project follows these principles:
 
 ## Contributing
 
-[Add contribution guidelines here]
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, suggest
+features, and submit pull requests (branch naming, test requirements, and
+PR description format).
 
 ## uFawkes Stack Ecosystem
 
