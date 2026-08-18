@@ -33,9 +33,12 @@ metadata:
     - url: https://github.com/paruff/uFawkesRes
       title: uFawkesRes — Resource Plane
       icon: github
-    - url: https://github.com/paruff/ufawkesdora
-      title: uFawkesDORA — DORA Metrics Plane
+    - url: https://github.com/paruff/uFawkesDojo
+      title: uFawkesDojo — Learning Plane
       icon: github
+    # uFawkesDORA is archived — its DORA compute/ingestion code was merged
+    # into this repo's dora/ directory (see AGENTS.md §10). No longer a
+    # separate system dependency.
 spec:
   type: observability
   owner: paruff
@@ -44,7 +47,6 @@ spec:
     - system:ufawkespipe
     - system:ufawkesdevx
     - system:ufawkesres
-    - system:ufawkesdora
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format
 apiVersion: backstage.io/v1alpha1

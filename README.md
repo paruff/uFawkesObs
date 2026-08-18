@@ -45,12 +45,17 @@ uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com
 | Plane | Role | Repository |
 |---|---|---|
 | **uFawkesObs** | Observability — metrics, logs, traces, dashboards | [GitHub](https://github.com/paruff/uFawkesObs) |
+<!-- uFawkesRes status unresolved — see docs/notes/res-status.md, do not edit this row pending a product-tier decision -->
 | **uFawkesRes** | Resources — ingress, SSO, Postgres, Valkey | [GitHub](https://github.com/paruff/uFawkesRes) |
 | **uFawkesPipe** | CI/CD — pipeline orchestration, deployment events | [GitHub](https://github.com/paruff/ufawkespipe) |
 | **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
-| **uFawkesDORA** | DORA metrics — dashboards, VSM, delivery performance | [GitHub](https://github.com/paruff/ufawkesdora) |
-| **uFawkesSec** | Security — policy-as-code, supply chain, guardrails | [GitHub](https://github.com/paruff/ufawkessec) |
+| **uFawkesDojo** | Learning — belt-level curriculum for uFawkes and Fawkes | [GitHub](https://github.com/paruff/uFawkesDojo) |
 | **uFawkesAI** | AI agent templates — golden path scaffolding | [GitHub](https://github.com/paruff/ufawkesai) |
+
+**Merged into other planes** (no longer standalone repos):
+
+- **DORA metrics** — was uFawkesDORA; merged into uFawkesObs's `dora/` directory. [uFawkesDORA](https://github.com/paruff/ufawkesdora) is archived. See `AGENTS.md` §10.
+- **Security — policy-as-code, supply chain, guardrails** — was uFawkesSec; merged into uFawkesPipe's `security` Compose profile (DefectDojo, Infisical, Trivy server, Falco). Per uFawkesPipe's README, this is "formerly the standalone uFawkesSec repo." Note: unlike uFawkesDORA, the [uFawkesSec](https://github.com/paruff/ufawkessec) repo itself has not been archived as of this writing (still receiving dependabot updates) — the merge is confirmed functionally, but the source repo's own lifecycle status is unresolved.
 
 In this architecture, uFawkesObs provides the telemetry substrate consumed by all other planes. The OTLP API (`otel-collector:4317`/`4318`) is how every plane ships metrics, logs, and traces to uFawkesObs for centralized observability.
 
