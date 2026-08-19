@@ -37,7 +37,9 @@ REQUIRED_DEPLOY_SECRETS: tuple[str, ...] = (
     "DEPLOY_HOST_KEY",
 )
 
-PINNED_REF_RE = re.compile(r"(?:v[0-9]+\.[0-9]+\.[0-9]+|[0-9a-f]{40})$")
+PINNED_REF_RE = re.compile(
+    r"(?:v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.]+)?|[0-9a-f]{40})$"
+)
 
 BAD_DRILL_PATHS: tuple[str, ...] = (
     "config/otel/collector.yaml",

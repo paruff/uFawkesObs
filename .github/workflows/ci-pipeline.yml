@@ -24,7 +24,7 @@ jobs:
   # Fastest feedback: pre-commit hooks, PR size, commit format, secret detection
   preflight:
     name: Pre-flight
-    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@v1.3.0-beta.1
     with:
       commit-format: ${{ startsWith(github.head_ref, 'copilot/') && 'none' || 'conventional' }}
 
@@ -33,7 +33,7 @@ jobs:
   lint:
     name: Static Analysis
     needs: [preflight]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@v1.3.0-beta.1
 
   # ─── Stage 2: Security Scanning ─────────────────────────────────────────
   # Static security: secrets (Gitleaks), vulnerabilities (Trivy), dependencies
@@ -41,7 +41,7 @@ jobs:
   security:
     name: Security Scanning
     needs: [lint]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml@v1.3.0-beta.1
     with:
       scan-type: all
       severity-threshold: MEDIUM
@@ -53,7 +53,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     needs: [lint]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml@v1.3.0-beta.1
     with:
       fail-on-severity: high
       comment-summary-in-pr: "true"
@@ -63,7 +63,7 @@ jobs:
   build:
     name: Build & Validate
     needs: [security, dependency-review]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@v1.3.0-beta.1
     with:
       validate-prometheus: true
       validate-otel: true
