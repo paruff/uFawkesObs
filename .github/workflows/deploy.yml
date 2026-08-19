@@ -429,7 +429,7 @@ jobs:
     name: "🔄 Rollback"
     needs: post-deploy-verify
     if: failure() && needs.post-deploy-verify.result == 'failure'
-    uses: paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.2.0
+    uses: paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.3.0-beta.1
     with:
       deploy-path: ${{ vars.DEPLOY_PATH }}
       restart-command: "cd ${DEPLOY_PATH:-$HOME/${GITHUB_REPOSITORY##*/}} && make up"
