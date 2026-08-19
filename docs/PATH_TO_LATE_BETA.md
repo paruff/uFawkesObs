@@ -54,7 +54,7 @@ Concretely, late beta requires:
 | ID | Task | Issue | Status |
 |----|------|-------|--------|
 | LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | ✅ DONE (93s, PASS) |
-| LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | 🔲 PENDING |
+| LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | ✅ DONE — `compose.yaml` binds Loki (3100), Tempo (3200), Prometheus (9090), and Alertmanager (9093) to `127.0.0.1:` |
 | LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) | 🔲 PENDING |
 | LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING (runbook ready) |
 | LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) | ✅ DONE — root cause was a dead `push` trigger (deploy secrets unavailable in that context, 100% failure rate); removed in PR #196. 55/55 `workflow_run`-triggered deploys since have succeeded. |
