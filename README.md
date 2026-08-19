@@ -576,6 +576,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, suggest
 features, and submit pull requests (branch naming, test requirements, and
 PR description format).
 
+## Beta Feedback
+
+We're closing in on calling uFawkesObs "beta" and want to hear from real
+users first — especially if you starred/forked this repo but never
+actually ran it, or you tried it and got stuck. Tell us what happened in
+[**Beta Feedback discussion**](https://github.com/paruff/uFawkesObs/discussions/242)
+— a sentence is enough.
+
 ## uFawkes Stack Ecosystem
 
 See [Part of the Fawkes IDP](#part-of-the-fawkes-idp) above for the current suite family table — this section used to duplicate it with stale entries (uFawkesDORA, uFawkesSec still shown active, no uFawkesDojo) and has been removed rather than kept in sync in two places.

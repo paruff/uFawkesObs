@@ -153,10 +153,12 @@ first:
    (disk growth, upgrade pain, "how do I back this up" questions). This is
    free, uses data that already exists, and would show early churn signal
    without needing to design a survey.
-3. **If (1) and (2) don't settle it, ask directly.** Post a short
-   discussion/issue template aimed at anyone who starred or forked the repo
-   but never adopted it: "what stopped you?" A handful of real responses
-   would outweigh everything in this brief.
+3. **If (1) and (2) don't settle it, ask directly.** 🔄 In progress — posted
+   [Beta Feedback discussion #242](https://github.com/paruff/uFawkesObs/discussions/242)
+   2026-08-19, aimed at anyone who starred or forked the repo but never
+   adopted it, plus anyone who ran it and got stuck: "what stopped you?"
+   Linked from `README.md`. A handful of real responses would outweigh
+   everything in this brief.
 4. Whichever of the above runs first should update `baseline` in this
    file's frontmatter and flip the riskiest assumption from "asserted" to
    either "supported" or "falsified" — don't let this brief go stale as a
