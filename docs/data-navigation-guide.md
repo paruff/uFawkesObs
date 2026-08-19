@@ -103,46 +103,42 @@ scrapes all Docker container stdout/stderr logs via the Docker socket.
 
 ---
 
-## 3. TRACES (Tempo) ⚠️ Not Yet Implemented
+## 3. TRACES (Tempo) ✅
 
-### Current Status: Empty
+### Current Status: Active
 
-Tempo is running but has **no traces** because:
+The `apps` profile's `telemetry-generator` demo app (Python/Flask) is fully
+instrumented with the OpenTelemetry SDK and exports spans via OTLP to the
+collector — see `apps/telemetry-generator/README.md`. Start it with
+`make up-apps`.
 
-- **Media-Refinery** does NOT have OpenTelemetry SDK in its code
-- Environment variables alone don't generate traces
-- You need code instrumentation to emit traces
+### Instrumenting Your Own App
 
-### Trace Requirements
+1. **OpenTelemetry SDK for your language** installed
+2. **Instrumentation code** pointed at the collector, e.g. (Python):
 
-To send traces, Media-Refinery would need:
+   ```python
+   from opentelemetry import trace
+   from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-1. **OpenTelemetry SDK for Go** installed
-2. **Instrumentation code** like:
+   exporter = OTLPSpanExporter(endpoint="http://otel-collector:4318/v1/traces")
+   tracer = trace.get_tracer("your-app")
 
-   ```go
-   import "go.opentelemetry.io/otel"
-   import "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
-
-   // Initialize exporter
-   exporter, _ := otlptracehttp.New(ctx)
-   tracer := otel.Tracer("media-refinery")
-
-   // In your code:
-   ctx, span := tracer.Start(ctx, "process_file")
-   defer span.End()
+   with tracer.start_as_current_span("process_request"):
+       ...
    ```
 
-3. **Rebuild Media-Refinery** with this instrumentation
+3. See [Multi-Stack Integration](multi-stack-integration.md) for connecting
+   an external app's compose stack to this network.
 
-### How to View Traces (When Available)
+### How to View Traces
 
 1. http://localhost:3000
 2. Left sidebar → **Explore**
 3. Top left dropdown → **"Tempo"**
 4. Click "Search" button (top right)
 5. Will show traces by:
-   - Service name (media-refinery)
+   - Service name (e.g. `telemetry-generator`, or your app's service name)
    - Operation name
    - Duration
    - Status
@@ -199,9 +195,9 @@ Pre-configured alert rules are in place.
          ┌────────────┴────────────┐
          │                         │
     ┌────▼──────┐          ┌──────▼────┐
-    │   MEDIA   │          │   OTHER   │
-    │ REFINERY  │          │   APPS    │
-    │  STACK    │          │   STACK   │
+    │   YOUR    │          │   OTHER   │
+    │    APP    │          │   APPS    │
+    │   STACK   │          │   STACK   │
     └───────────┘          └───────────┘
 ```
 
@@ -274,12 +270,15 @@ count(up) by (job)
 
 ### "No Traces in Tempo"
 
-- **Root cause**: Media-Refinery code doesn't have OTel SDK
-- **Fix**: Add OpenTelemetry instrumentation to Media-Refinery Go code
+- **Root cause**: your app doesn't have OTel SDK instrumentation (the `apps`
+  profile's `telemetry-generator` demo app does, and traces from it should
+  already appear — see `apps/telemetry-generator/README.md`)
+- **Fix**: add OpenTelemetry instrumentation to your app, or run
+  `make up-apps` to generate traces from the demo app instead
 - **Verification**:
   ```bash
   curl http://localhost:3200/api/traces
-  # Should return some traces (if instrumented)
+  # Should return traces once an instrumented app is running
   ```
 
 ### "Metrics Missing from Prometheus"
@@ -303,28 +302,6 @@ count(up) by (job)
   curl 'http://localhost:9090/api/v1/labels' | jq '.data | length'
   # Should show > 40
   ```
-
----
-
-## Next Steps
-
-### Phase 1: Enable Full Data Collection (This Week)
-
-- [ ] Verify logs appear in Loki (check `curl http://localhost:3100/loki/api/v1/label/job/values`)
-- [ ] Verify Alloy is collecting Docker logs (`curl http://localhost:12345/metrics | grep loki_source_docker`)
-- [ ] Create dashboard for Media-Refinery logs
-
-### Phase 2: Add Instrumentation (Next Week)
-
-- [ ] Add OpenTelemetry SDK to Media-Refinery
-- [ ] Emit traces for file processing operations
-- [ ] Create trace visualization dashboard
-
-### Phase 3: Custom Metrics (Optional)
-
-- [ ] Add Prometheus metrics to Media-Refinery
-- [ ] Track processing times, file counts, success rates
-- [ ] Create custom Grafana dashboards
 
 ---
 
@@ -368,6 +345,6 @@ curl 'http://localhost:8889/metrics' | head -20
 | Prometheus     | `http://localhost:9090`      | Infrastructure metrics | ✅ Viewing now                  |
 | Grafana        | `http://localhost:3000`      | Dashboards             | ✅ Use this                     |
 | Loki           | `http://localhost:3100`      | Logs                   | ✅ Alloy collecting Docker logs |
-| Tempo          | `http://localhost:3200`      | Traces                 | ⚠️ Instrument code              |
+| Tempo          | `http://localhost:3200`      | Traces                 | ✅ telemetry-generator instrumented |
 | OTel Collector | `http://localhost:4317/4318` | OTLP receiver          | ✅ Ready for data               |
 | Alertmanager   | `http://localhost:9093`      | Alerts                 | ✅ Configured                   |
