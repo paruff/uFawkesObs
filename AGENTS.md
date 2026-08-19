@@ -173,27 +173,8 @@ Commit message format: `feat(scope):`, `fix(scope):`, `test(scope):`,
 
 Every PR opened by an agent must include this block in its description.
 `review.md` checks for this literal structure — if you change the
-headings, update `review.md`'s check to match.
-
-```markdown
-## AI-Assisted Review Block
-
-**What does this PR do?**
-[...]
-
-**What could go wrong?**
-[...]
-
-**What tests cover this change?**
-[...]
-
-**Architecture check:**
-- What layer(s) were touched and are they correct per §4?
-- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDevX)?
-
-**What I was NOT sure about:**
-[...]
-```
+headings, update `review.md`'s check to match. See skill: `pr-review-block`
+for the exact template.
 
 ## 8. GitOps / Trunk-Based Delivery Contract
 
