@@ -9,12 +9,20 @@
 
 uFawkesObs currently deploys via SSH push to a single host. The process:
 
-1. **Push to `main`** triggers `deploy.yml`
-2. **Path detection** determines what changed (config vs compose)
-3. **Config-only changes**: `git pull` on target → Prometheus `/-/reload` + Alloy `SIGHUP`
-4. **Compose/non-reloadable changes**: `git pull` → `make up` (full compose restart)
-5. **Post-deployment verification**: smoke tests against the live instance
-6. **Rollback on failure**: `git revert` + optional restart
+1. **Merge to `main`** passes Acceptance Full, which triggers `deploy.yml`
+2. **Tag the candidate**: an immutable `deploy-<UTC-ts>-<sha>` tag is created
+   and pushed, pinned to the exact verified commit — this is what gets
+   deployed, not whatever `main` happens to be by the time the job runs
+3. **Path detection** determines what changed (config vs compose)
+4. **Config-only changes**: target host checks out the candidate tag →
+   Prometheus `/-/reload` + Alloy `SIGHUP`
+5. **Compose/non-reloadable changes**: target host checks out the candidate
+   tag → `make up` (full compose restart)
+6. **Post-deployment verification**: smoke tests against the live instance;
+   on success, `deploy-latest-good` is force-pushed to the candidate SHA
+7. **Rollback on failure**: target host checks out `deploy-latest-good` →
+   `make up`. No `git revert`, no push to `main` — rollback only ever reads
+   an already-published tag (LB-04 redesign, [#182](https://github.com/paruff/uFawkesObs/issues/182))
 
 ### Limitations of Current Model
 
@@ -49,7 +57,7 @@ When uFawkesObs serves production traffic, deploy will follow a staged model:
 | **Canary** | 1 host | Automated health checks | Deploy → verify → promote or rollback |
 | **Staging** | 1 host | Automated health checks + smoke tests | Same as canary |
 | **Production** | N hosts (behind LB) | Human approval required | Deploy to subset, verify, full rollout |
-| **Rollback** | All | Automated on gate failure | `git revert` + `make up` |
+| **Rollback** | All | Automated on gate failure | checkout `deploy-latest-good` + `make up` |
 
 ### Prerequisites for Progressive Delivery
 
@@ -67,16 +75,25 @@ Before implementing the target model:
 
 ### Automated (Current)
 
-When `post-deploy-verify` fails in `deploy.yml`, the `rollback` job
-(`paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.2.0`):
+When `post-deploy-verify` fails in `deploy.yml`, the inline `rollback` job:
 1. SSHs into the target host
-2. Runs `git revert HEAD --no-edit`
-3. Pushes the revert to `origin main`
-4. Runs `make up` to restart the previous stack
+2. Fetches tags and checks out `deploy-latest-good` (the most recent
+   candidate tag that actually passed `post-deploy-verify`)
+3. Runs `make up` to restart that stack
 
-> **Not yet proven.** This path is documented and wired in CI but has never
-> been exercised end-to-end against a real host. It is **unproven** until a
-> live rollback drill records successful results (LB-04). See
+No `git revert`, no push — rollback is purely read-only from git's
+perspective (fetch + checkout), on the runner and on the host. This is a
+deliberate redesign (LB-04, [#182](https://github.com/paruff/uFawkesObs/issues/182)):
+the previous `git revert HEAD` + push-to-`main` design was structurally
+incompatible with the branch protection enabled on `main` (required PR
+review blocks any direct push, including the host's revert). Rollback never
+touching `main` makes that conflict structurally impossible rather than a
+static argument to re-check on every branch-protection change.
+
+> **Not yet proven.** This path is wired and unit-tested (`tests/unit/
+> test_deploy_pipeline.py::TestTagBasedDeployRollback`) but has never been
+> exercised end-to-end against a real host. It is **unproven** until a live
+> rollback drill records successful results. See
 > [Rollback Drill (LB-04)](#rollback-drill-lb-04) below.
 
 ### Rollback Drill (LB-04)
@@ -89,14 +106,18 @@ automatically, and confirms the host returns to a healthy previous state.
 
 Status: **PENDING** — runbook ready, live drill not yet executed against a real
 target host ([issue #182](https://github.com/paruff/uFawkesObs/issues/182)).
+An OCI Compute sandbox host is being provisioned as the drill target.
 
-2026-08-11: static enablement review (guard tests + wiring verification)
-confirmed the drill's fault-injection path (`config/otel/**` →
-`deploy-compose-restart` → `post-deploy-verify` → `rollback`) is wired in
-`deploy.yml`, and cleared the suspected runner-token blocker in
-[issue #193](https://github.com/paruff/uFawkesObs/issues/193) (the revert+push
-runs on the target host, not the runner). The live drill still must prove host
-push credentials and `main` branch protection permit the revert.
+2026-08-21: redesigned deploy/rollback to be tag-based instead of
+`git revert`-based, since the original design's host-side push to `main`
+would have been rejected by the branch protection enabled this session. The
+new design has no push path to `main` at all — see "Automated (Current)"
+above. This supersedes the 2026-08-11 static review of
+[issue #193](https://github.com/paruff/uFawkesObs/issues/193) (that review's
+"does the push run on the runner or the host" question no longer applies,
+since rollback doesn't push anywhere). The only remaining live-drill unknown
+is whether `deploy-latest-good` actually resolves and checks out cleanly
+under real network/SSH conditions.
 
 | Drill date | Host | Pre-drill SHA | Time to rollback | Recovered? | Gaps |
 |---|---|---|---|---|---|
@@ -114,9 +135,9 @@ ssh user@host
 # Navigate to repo
 cd /path/to/uFawkesObs
 
-# Revert the last deploy commit
-git revert HEAD --no-edit
-git push origin main
+# Check out the last known-good deploy tag
+git fetch --tags --force origin
+git checkout --detach deploy-latest-good
 
 # Restart the stack
 make up
