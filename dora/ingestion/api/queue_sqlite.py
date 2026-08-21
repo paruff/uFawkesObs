@@ -14,12 +14,15 @@ from contextlib import asynccontextmanager
 
 import aiosqlite
 
+from .idempotency import payload_hash as _payload_hash
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS event_queue (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     event_type      TEXT    NOT NULL,
     source          TEXT    NOT NULL,
     payload         TEXT    NOT NULL,
+    payload_hash    TEXT,
     status          TEXT    NOT NULL DEFAULT 'pending',
     attempts        INTEGER NOT NULL DEFAULT 0,
     received_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -81,7 +84,34 @@ async def get_pool(
         _pool = await aiosqlite.connect(_sqlite_path(dsn))
         await _pool.executescript(_SCHEMA)
         await _pool.commit()
+        await _ensure_payload_hash_column(_pool)
     return _pool
+
+
+async def _ensure_payload_hash_column(conn: aiosqlite.Connection) -> None:
+    """Add payload_hash to event_queue if this database predates it, and
+    ensure its unique index exists either way.
+
+    ``CREATE TABLE IF NOT EXISTS`` in _SCHEMA only applies to brand-new
+    databases — an existing event_queue table (e.g. one already running the
+    dora profile before this fix) never gets the column added just by
+    changing the schema string. The index can't live in _SCHEMA's
+    executescript either: on a legacy database that script would try to
+    index a column that doesn't exist yet, failing before this function
+    ever runs. So both column and index are created here, unconditionally
+    safe to re-run (IF NOT EXISTS / column-presence check) on every
+    connect. Existing rows get payload_hash = NULL, which the partial
+    unique index excludes, so nothing conflicts.
+    """
+    cursor = await conn.execute("PRAGMA table_info(event_queue)")
+    columns = {row[1] for row in await cursor.fetchall()}
+    if "payload_hash" not in columns:
+        await conn.execute("ALTER TABLE event_queue ADD COLUMN payload_hash TEXT")
+    await conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_event_queue_payload_hash "
+        "ON event_queue (payload_hash) WHERE payload_hash IS NOT NULL"
+    )
+    await conn.commit()
 
 
 async def close_pool():
@@ -108,33 +138,60 @@ async def _connect():
 
 
 async def enqueue_event(payload: dict) -> int:
-    """Insert an event into the event_queue and return its id."""
+    """Insert an event into the event_queue and return its id.
+
+    Idempotent: a payload identical to one already enqueued returns the
+    existing row's id instead of inserting a duplicate (production-audit
+    finding — a client retry must not double-count DORA metrics).
+    """
     event_type: str = payload.get("event_type", "unknown")
     source: str = payload.get("repo", "unknown")
+    p_hash = _payload_hash(payload)
 
     async with _connect() as conn:
         cursor = await conn.execute(
-            "INSERT INTO event_queue (event_type, source, payload) VALUES (?, ?, ?)",
-            (event_type, source, json.dumps(payload)),
+            "INSERT INTO event_queue (event_type, source, payload, payload_hash) "
+            "VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(payload_hash) WHERE payload_hash IS NOT NULL DO NOTHING",
+            (event_type, source, json.dumps(payload), p_hash),
         )
+        if cursor.rowcount == 0:
+            row = await (
+                await conn.execute(
+                    "SELECT id FROM event_queue WHERE payload_hash = ?", (p_hash,)
+                )
+            ).fetchone()
+            return row[0]
         return cursor.lastrowid
 
 
 async def enqueue_events(payloads: list[dict]) -> list[int]:
-    """Insert multiple events. SQLite has no cross-statement RETURNING, so
-    ids are read back from lastrowid, which is safe here since writes are
+    """Insert multiple events, deduping each against payload_hash the same
+    way enqueue_event does. SQLite has no cross-statement RETURNING, so ids
+    are read back from lastrowid, which is safe here since writes are
     serialized through the single shared connection."""
     ids: list[int] = []
     async with _connect() as conn:
         for payload in payloads:
             event_type: str = payload.get("event_type", "unknown")
             source: str = payload.get("repo", "unknown")
+            p_hash = _payload_hash(payload)
             cursor = await conn.execute(
-                "INSERT INTO event_queue (event_type, source, payload) "
-                "VALUES (?, ?, ?)",
-                (event_type, source, json.dumps(payload)),
+                "INSERT INTO event_queue (event_type, source, payload, payload_hash) "
+                "VALUES (?, ?, ?, ?) "
+                "ON CONFLICT(payload_hash) WHERE payload_hash IS NOT NULL DO NOTHING",
+                (event_type, source, json.dumps(payload), p_hash),
             )
-            ids.append(cursor.lastrowid)
+            if cursor.rowcount == 0:
+                row = await (
+                    await conn.execute(
+                        "SELECT id FROM event_queue WHERE payload_hash = ?",
+                        (p_hash,),
+                    )
+                ).fetchone()
+                ids.append(row[0])
+            else:
+                ids.append(cursor.lastrowid)
     return ids
 
 

@@ -10,6 +10,8 @@ import json
 
 import asyncpg
 
+from .idempotency import payload_hash as _payload_hash
+
 # ── Connection pool ────────────────────────────────────────────────────────────
 
 _pool: asyncpg.Pool | None = None
@@ -50,38 +52,50 @@ async def close_pool():
 async def enqueue_event(payload: dict) -> int:
     """Insert an event into the event_queue and return its id.
 
+    Idempotent: a payload identical to one already enqueued returns the
+    existing row's id instead of inserting a duplicate (production-audit
+    finding — a client retry must not double-count DORA metrics). The
+    ``DO UPDATE ... EXCLUDED`` no-op is a standard Postgres upsert idiom to
+    still get ``RETURNING id`` back on a conflict, which plain
+    ``DO NOTHING`` would not return.
+
     Args:
         payload: The validated event payload (dict).
 
     Returns:
-        The id of the newly inserted event_queue row.
+        The id of the newly inserted (or pre-existing, deduped) row.
     """
     pool = await get_pool()
     event_type: str = payload.get("event_type", "unknown")
     source: str = payload.get("repo", "unknown")
+    p_hash = _payload_hash(payload)
 
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
             """
-            INSERT INTO event_queue (event_type, source, payload)
-            VALUES ($1, $2, $3::jsonb)
+            INSERT INTO event_queue (event_type, source, payload, payload_hash)
+            VALUES ($1, $2, $3::jsonb, $4)
+            ON CONFLICT (payload_hash) DO UPDATE
+                SET payload_hash = EXCLUDED.payload_hash
             RETURNING id
             """,
             event_type,
             source,
             json.dumps(payload),
+            p_hash,
         )
         return row["id"]
 
 
 async def enqueue_events(payloads: list[dict]) -> list[int]:
-    """Insert multiple events in a single transaction.
+    """Insert multiple events in a single transaction, deduping each against
+    payload_hash the same way enqueue_event does.
 
     Args:
         payloads: List of validated event payloads.
 
     Returns:
-        List of ids for the newly inserted rows.
+        List of ids for the newly inserted (or pre-existing, deduped) rows.
     """
     pool = await get_pool()
     ids: list[int] = []
@@ -90,15 +104,19 @@ async def enqueue_events(payloads: list[dict]) -> list[int]:
         for payload in payloads:
             event_type: str = payload.get("event_type", "unknown")
             source: str = payload.get("repo", "unknown")
+            p_hash = _payload_hash(payload)
             row = await conn.fetchrow(
                 """
-                    INSERT INTO event_queue (event_type, source, payload)
-                    VALUES ($1, $2, $3::jsonb)
+                    INSERT INTO event_queue (event_type, source, payload, payload_hash)
+                    VALUES ($1, $2, $3::jsonb, $4)
+                    ON CONFLICT (payload_hash) DO UPDATE
+                        SET payload_hash = EXCLUDED.payload_hash
                     RETURNING id
                     """,
                 event_type,
                 source,
                 json.dumps(payload),
+                p_hash,
             )
             ids.append(row["id"])
 
