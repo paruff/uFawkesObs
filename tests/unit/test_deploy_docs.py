@@ -74,31 +74,37 @@ class TestRollbackDrillRunbook:
         )
 
 
-class TestRollbackDrillStaticVerification:
-    """Verify the runbook records the LB-04 enablement static review (#182)."""
+class TestRollbackDrillTagBasedDesign:
+    """Verify the runbook documents the tag-based deploy/rollback redesign.
 
-    def test_runbook_records_static_verdict_on_gap(
+    Rollback checks out the ``deploy-latest-good`` tag on the host instead of
+    ``git revert`` + pushing to ``main`` — this is what makes the drill immune
+    to main's branch protection (the original #193/#182 concern).
+    """
+
+    def test_runbook_documents_deploy_latest_good_tag(
         self, rollback_drill_text: str
     ) -> None:
-        assert "refutes" in rollback_drill_text, (
-            "Runbook must record the static-review verdict that issue #193's "
-            "runner-token reasoning is refuted"
+        assert "deploy-latest-good" in rollback_drill_text, (
+            "Runbook must document the deploy-latest-good tag rollback targets"
         )
 
-    def test_runbook_contrasts_host_and_runner_execution(
+    def test_runbook_confirms_rollback_never_pushes_to_main(
         self, rollback_drill_text: str
     ) -> None:
-        assert "not on the runner" in rollback_drill_text, (
-            "Runbook must document that the revert+push runs on the target "
-            "host, not on the runner"
+        assert "does not push to main" in rollback_drill_text.lower() or (
+            "never push" in rollback_drill_text.lower()
+        ), (
+            "Runbook must state that rollback never pushes to main, since "
+            "that's what makes it immune to branch protection"
         )
 
-    def test_runbook_names_remaining_live_unknowns(
+    def test_runbook_no_longer_names_branch_protection_as_a_blocker(
         self, rollback_drill_text: str
     ) -> None:
-        assert "push credential" in rollback_drill_text, (
-            "Runbook must name the remaining live-drill unknowns (target host "
-            "push credential, main branch protection)"
+        assert "cannot run as automated" not in rollback_drill_text, (
+            "Tag-based rollback never pushes to main, so branch protection "
+            "can no longer block the drill — this stale caveat must be removed"
         )
 
 
