@@ -28,19 +28,6 @@ import yaml
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
 DEPLOY_WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "deploy.yml"
 
-REUSABLE_ROLLBACK_PREFIX = "paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@"
-
-REQUIRED_DEPLOY_SECRETS: tuple[str, ...] = (
-    "DEPLOY_HOST",
-    "DEPLOY_USER",
-    "DEPLOY_KEY",
-    "DEPLOY_HOST_KEY",
-)
-
-PINNED_REF_RE = re.compile(
-    r"(?:v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.]+)?|[0-9a-f]{40})$"
-)
-
 BAD_DRILL_PATHS: tuple[str, ...] = (
     "config/otel/collector.yaml",
     "config/alertmanager/alertmanager.yml",
@@ -145,8 +132,54 @@ class TestDeployTrigger:
         assert "main" in run["branches"]
 
 
-class TestRollbackWiring:
-    """The drill's core assertion: post-deploy-verify failure fires rollback."""
+class TestTagBasedDeployRollback:
+    """Tag-based deploy/rollback (LB-04 redesign): deploy targets an immutable
+    ``deploy-<ts>-<sha>`` tag; rollback checks out the ``deploy-latest-good``
+    tag on the host. Neither ever pushes to ``main`` — this replaces the
+    ``git revert HEAD`` + host push design that conflicted with branch
+    protection (see docs/DEPLOYMENT_STRATEGY.md).
+    """
+
+    def test_tag_candidate_job_gated_on_acceptance_success(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        job = deploy_workflow["jobs"]["tag-candidate"]
+        assert "workflow_run.conclusion == 'success'" in job.get("if", "")
+
+    def test_tag_candidate_pushes_immutable_deploy_tag(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        steps = deploy_workflow["jobs"]["tag-candidate"]["steps"]
+        joined = "\n".join(str(step) for step in steps)
+        assert "deploy-" in joined
+        assert "git tag" in joined
+        assert "git push origin" in joined
+
+    def test_deploy_jobs_need_tag_candidate_and_checkout_its_tag(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        for job_name in ("deploy-config-reload", "deploy-compose-restart"):
+            job = deploy_workflow["jobs"][job_name]
+            assert "tag-candidate" in job["needs"], (
+                f"{job_name} must depend on tag-candidate to receive DEPLOY_TAG"
+            )
+            steps = job["steps"]
+            joined = "\n".join(str(step) for step in steps)
+            assert "git pull --ff-only origin main" not in joined, (
+                f"{job_name} must check out the candidate tag, not pull main"
+            )
+            assert "git checkout" in joined
+            assert "DEPLOY_TAG" in joined
+
+    def test_post_deploy_verify_promotes_latest_good_on_success(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        job = deploy_workflow["jobs"]["post-deploy-verify"]
+        assert "tag-candidate" in job["needs"]
+        steps = job["steps"]
+        joined = "\n".join(str(step) for step in steps)
+        assert "deploy-latest-good" in joined
+        assert "--force" in joined
 
     def test_rollback_requires_post_deploy_verify(
         self, deploy_workflow: dict[str, Any]
@@ -165,73 +198,48 @@ class TestRollbackWiring:
         assert "needs.post-deploy-verify.result" in condition
         assert "'failure'" in condition
 
-    def test_rollback_uses_pinned_reusable_workflow(
+    def test_rollback_is_inline_job_checking_out_latest_good(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
-        uses = deploy_workflow["jobs"]["rollback"].get("uses", "")
-        assert uses.startswith(REUSABLE_ROLLBACK_PREFIX), (
-            f"Unexpected rollback workflow: {uses}"
-        )
-        ref = uses.rsplit("@", 1)[-1]
-        assert PINNED_REF_RE.search(ref), f"Rollback workflow ref not pinned: {ref}"
-
-    def test_rollback_receives_all_deploy_secrets(
-        self, deploy_workflow: dict[str, Any]
-    ) -> None:
-        secrets = deploy_workflow["jobs"]["rollback"].get("secrets", {})
-        assert secrets, "rollback job must forward deploy secrets"
-        for name in REQUIRED_DEPLOY_SECRETS:
-            value = secrets.get(name, "")
-            assert name in value, f"rollback job missing secret {name}"
-
-    def test_rollback_does_not_add_job_level_contents_write(
-        self, deploy_workflow: dict[str, Any]
-    ) -> None:
-        """The rollback job must not add job-level permissions: contents: write.
-
-        The reusable-rollback.yml executes git revert + git push via an
-        ``ssh … bash -s`` heredoc on the target host — the runner's
-        GITHUB_TOKEN is not in the git-push credential path (#193 static
-        review verdict).  Adding contents: write at the job level would be
-        both unnecessary and a wider-than-needed token scope.
-        """
         job = deploy_workflow["jobs"]["rollback"]
-        job_perms = job.get("permissions", {})
-        # Guard both the shorthand string forms and the mapping form.
-        assert job_perms != "write-all", (
-            "rollback job must not use permissions: write-all — git ops run "
-            "on the SSH host, not the runner (issue #193)"
+        assert "steps" in job, (
+            "rollback is now an inline job, not a reusable-workflow call"
         )
+        joined = "\n".join(str(step) for step in job["steps"])
+        assert "deploy-latest-good" in joined
+        assert "git checkout" in joined
+        assert "make up" in joined
+
+    def test_rollback_never_pushes_git_state(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        """Rollback is read-only from git's perspective: it only fetches tags
+        and checks one out — no git push, no git revert, on the runner or the
+        host. This is what makes it immune to main's branch protection."""
+        joined = "\n".join(
+            str(step) for step in deploy_workflow["jobs"]["rollback"]["steps"]
+        )
+        assert "git push" not in joined
+        assert "git revert" not in joined
+
+    def test_rollback_does_not_grant_contents_write(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        """Rollback only reads tags over SSH on the host — no runner-side git
+        write ever happens, so the job token should be read-only."""
+        job_perms = deploy_workflow["jobs"]["rollback"].get("permissions", {})
+        assert job_perms != "write-all"
         if isinstance(job_perms, dict):
-            assert job_perms.get("contents") != "write", (
-                "rollback job must not grant contents: write — git ops run "
-                "on the SSH host, not the runner (issue #193)"
-            )
+            assert job_perms.get("contents") != "write"
 
-    def test_rollback_has_no_local_checkout_step(
+    def test_no_push_to_main_anywhere_in_deploy_workflow(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
-        """The rollback job must not contain an actions/checkout step.
-
-        Because it calls a reusable workflow via ``uses:``, it cannot have
-        a ``steps:`` block; the git credentials it needs are provided through
-        ``secrets:`` pass-through (DEPLOY_KEY) and used on the SSH host, not
-        on the runner.  This test guards against a future refactor that
-        converts the job to an inline job and accidentally adds checkout.
-        """
-        job = deploy_workflow["jobs"]["rollback"]
-        # A reusable-workflow call job has no steps key; if that ever changes
-        # we want to be alerted so the git-credential approach is re-reviewed.
-        assert "steps" not in job, (
-            "rollback job must not have a steps block — it should remain a "
-            "reusable-workflow call (uses:) so git ops stay on the SSH host"
-        )
-
-    def test_rollback_restarts_with_make_up(
-        self, deploy_workflow: dict[str, Any]
-    ) -> None:
-        restart = deploy_workflow["jobs"]["rollback"]["with"]["restart-command"]
-        assert "make up" in restart
+        """Core regression guard: nothing in this workflow pushes to main —
+        deploy and rollback both operate purely on tags."""
+        joined = "\n".join(str(job) for job in deploy_workflow["jobs"].values())
+        assert "push origin main" not in joined
+        assert "push origin HEAD:main" not in joined
 
 
 class TestPostDeployVerify:

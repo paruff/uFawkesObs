@@ -22,6 +22,43 @@ concurrency:
 
 # Deploy only when the triggering acceptance-full workflow passed
 jobs:
+  # ─── Tag Deploy Candidate ──────────────────────────────────────────────────
+  # Deploy targets an immutable tag, not main's moving HEAD (LB-04 redesign,
+  # #182). Rollback checks out deploy-latest-good instead of reverting +
+  # pushing to main, so neither deploy nor rollback ever pushes to main —
+  # branch protection on main no longer affects this pipeline at all.
+  tag-candidate:
+    name: Tag deploy candidate
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Create and push candidate tag
+        id: tag
+        run: |
+          set -euo pipefail
+          sha="${{ github.event.workflow_run.head_sha }}"
+          tag="deploy-$(date -u +%Y%m%d-%H%M%S)-${sha:0:7}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "Deploy candidate ${sha}"
+          git push origin "$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -59,7 +96,7 @@ jobs:
 
   deploy-config-reload:
     name: Deploy (config reload)
-    needs: detect-changes
+    needs: [detect-changes, tag-candidate]
     # Ensure the triggering acceptance-full workflow passed
     if: |
       github.event.workflow_run.conclusion == 'success' &&
@@ -123,6 +160,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_TAG: ${{ needs.tag-candidate.outputs.tag }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
@@ -147,7 +185,14 @@ jobs:
                 ;;
             esac
           fi
-          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          case "${DEPLOY_TAG}" in
+            deploy-????????-??????-*) ;;
+            *)
+              echo "::error::Unexpected DEPLOY_TAG format: ${DEPLOY_TAG}"
+              exit 1
+              ;;
+          esac
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -168,7 +213,8 @@ jobs:
           fi
 
           cd "${REPO_DIR}"
-          git pull --ff-only origin main
+          git fetch --tags --force origin
+          git checkout --detach "${DEPLOY_TAG}"
 
           curl --fail --show-error --silent --connect-timeout 5 --max-time 10 -X POST http://localhost:9090/-/reload || {
             echo "Prometheus reload failed"
@@ -201,7 +247,7 @@ jobs:
 
   deploy-compose-restart:
     name: Deploy (compose restart)
-    needs: detect-changes
+    needs: [detect-changes, tag-candidate]
     if: |
       github.event.workflow_run.conclusion == 'success' &&
       (
@@ -266,6 +312,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_TAG: ${{ needs.tag-candidate.outputs.tag }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
@@ -290,7 +337,14 @@ jobs:
                 ;;
             esac
           fi
-          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          case "${DEPLOY_TAG}" in
+            deploy-????????-??????-*) ;;
+            *)
+              echo "::error::Unexpected DEPLOY_TAG format: ${DEPLOY_TAG}"
+              exit 1
+              ;;
+          esac
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -311,7 +365,8 @@ jobs:
           fi
 
           cd "${REPO_DIR}"
-          git pull --ff-only origin main
+          git fetch --tags --force origin
+          git checkout --detach "${DEPLOY_TAG}"
 
           make up
 
@@ -339,6 +394,7 @@ jobs:
     name: "🧪 Post-Deploy Verification"
     needs:
       - detect-changes
+      - tag-candidate
       - deploy-config-reload
       - deploy-compose-restart
     if: |
@@ -348,6 +404,8 @@ jobs:
       )
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     outputs:
       health_result: ${{ steps.verify.outputs.health_result }}
     steps:
@@ -420,29 +478,149 @@ jobs:
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
           echo "✅ Post-deployment verification passed"
 
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.tag-candidate.outputs.tag }}
+
+      - name: Promote deploy-latest-good
+        env:
+          DEPLOY_TAG: ${{ needs.tag-candidate.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f deploy-latest-good "${DEPLOY_TAG}"
+          git push origin deploy-latest-good --force
+
       - name: "job-finish"
         if: always()
         run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   # ─── Rollback on Verification Failure ──────────────────────────────────────
+  # Checks out deploy-latest-good on the host — the last candidate tag that
+  # actually passed post-deploy-verify. Purely read-only from git's
+  # perspective (fetch + checkout, no push, no revert), on the runner or the
+  # host, so it is unaffected by main's branch protection (LB-04 redesign,
+  # #182).
   rollback:
     name: "🔄 Rollback"
     needs: post-deploy-verify
     if: failure() && needs.post-deploy-verify.result == 'failure'
-    uses: paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.3.0-beta.1
-    with:
-      deploy-path: ${{ vars.DEPLOY_PATH }}
-      restart-command: "cd ${DEPLOY_PATH:-$HOME/${GITHUB_REPOSITORY##*/}} && make up"
-    secrets:
-      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-      DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      rollback_result: ${{ steps.rollback.outputs.result }}
+    steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${DEPLOY_HOST}" ]; then echo "::error::Missing DEPLOY_HOST"; missing=1; fi
+          if [ -z "${DEPLOY_USER}" ]; then echo "::error::Missing DEPLOY_USER"; missing=1; fi
+          if [ -z "${DEPLOY_KEY}" ]; then echo "::error::Missing DEPLOY_KEY"; missing=1; fi
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Add deploy host to known_hosts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          if [ -n "${DEPLOY_HOST_KEY}" ]; then
+            printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
+          else
+            echo "::warning::DEPLOY_HOST_KEY not set; using ssh-keyscan TOFU fallback for ${DEPLOY_HOST}"
+            ssh-keyscan -T 10 -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          fi
+
+      - name: Roll back to deploy-latest-good on target host
+        id: rollback
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY##*/}"
+          case "${REPO_NAME}" in
+            ""|.*|*..*|*.|*[!A-Za-z0-9._-]*)
+              echo "::error::Unsafe repository name for remote path: ${REPO_NAME}"
+              exit 1
+              ;;
+          esac
+          if [ -n "${DEPLOY_PATH}" ]; then
+            case "${DEPLOY_PATH}" in
+              /*) ;;
+              *)
+                echo "::error::DEPLOY_PATH must be an absolute path: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+            case "${DEPLOY_PATH}" in
+              *"'"*|*..*|*[!A-Za-z0-9_./-]*)
+                echo "::error::Unsafe DEPLOY_PATH value: ${DEPLOY_PATH}"
+                exit 1
+                ;;
+            esac
+          fi
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
+          case "${REPO_DIR}" in
+            ""|*..*)
+              echo "Unsafe repository path: ${REPO_DIR}"
+              exit 1
+              ;;
+          esac
+          if [[ "${REPO_DIR}" != /* ]]; then
+            echo "Repository path must be absolute: ${REPO_DIR}"
+            exit 1
+          fi
+
+          if [ ! -d "${REPO_DIR}/.git" ]; then
+            echo "Repository not found at ${REPO_DIR}. Set repository variable DEPLOY_PATH to the clone path on the target host."
+            exit 1
+          fi
+
+          cd "${REPO_DIR}"
+          git fetch --tags --force origin
+          git checkout --detach deploy-latest-good
+
+          make up
+
+          if [ ! -x ./scripts/wait-healthy.sh ]; then
+            echo "Missing executable script: ./scripts/wait-healthy.sh"
+            exit 1
+          fi
+
+          ./scripts/wait-healthy.sh
+          REMOTE
+          echo "result=success" >> "$GITHUB_OUTPUT"
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
   comment-summary:
     name: Post deployment summary
     needs:
       - detect-changes
+      - tag-candidate
       - deploy-config-reload
       - deploy-compose-restart
       - post-deploy-verify
@@ -467,6 +645,7 @@ jobs:
 
             const body = [
               '## GitOps Reconciliation Summary',
+              `- Deploy tag: ${{ needs.tag-candidate.outputs.tag }}`,
               `- Mode: ${mode}`,
               `- Services: ${services}`,
               `- Health check: ${health}`,

@@ -49,19 +49,18 @@ docker compose ps           # all services running
 ./scripts/wait-healthy.sh   # exit 0
 ```
 
-### 3. Main is pushable
+### 3. Host can fetch tags
 
-The drill pushes a deliberately-bad commit to `main`, and the automated
-rollback pushes a revert to `main`. Both must be permitted:
+Deploy and rollback are both tag-based (LB-04 redesign) — rollback checks
+out `deploy-latest-good` on the host and **does not push to main**, so main's
+branch protection has no bearing on rollback at all. The only requirement:
 
-- The rollback's `git push origin main` executes **on the target host over
-  SSH** — the host pushes with its own cloned `origin` credential, not a runner
-  token. The host must therefore already hold a working **push credential**
-  for `origin` (verify with `git fetch origin main` from the host).
-- Check branch protection on `main` (Settings → Branches). If it rejects the
-  host's push or a direct push path, the drill **cannot run as automated** —
-  use the manual fallback in [Safety & Cleanup](#safety--cleanup) and file a
-  follow-up issue.
+- The target host's clone must have a working `origin` remote it can
+  **fetch** from (verify with `git fetch --tags origin` from the host — no
+  push credential is needed for this step).
+- Landing the bad commit on `main` (Step 2 below) still goes through the
+  normal PR path, since branch protection requires a PR + review to reach
+  `main` — the drill no longer force-pushes directly to `main`.
 
 ### 4. Environment approval ready
 
@@ -120,6 +119,9 @@ git commit -m "chore(drill): deliberately break otel collector config (LB-04)"
 git push origin drill/lb04-bad-deploy
 ```
 
+Branch protection on `main` requires a PR + review, so this no longer lands
+via a direct push — open and merge it like a real change (Step 2 below).
+
 Alternative recipes (same failure mode, choose one):
 
 - Break `config/alertmanager/alertmanager.yml` (also `non_reloadable_config`).
@@ -145,17 +147,22 @@ date -u +%FT%TZ
 ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "${DEPLOY_PATH:-$HOME/uFawkesObs}/scripts/wait-healthy.sh" && echo BASELINE_OK
 ```
 
-### Step 2 — Push the bad commit to main
+### Step 2 — Land the bad commit on main
 
 ```bash
-git push origin drill/lb04-bad-deploy:main
+gh pr create --base main --head drill/lb04-bad-deploy \
+  --title "chore(drill): deliberately break otel collector config (LB-04)" \
+  --body "Rollback drill — see docs/ROLLBACK_DRILL.md. Do not squash-merge as a real fix."
+gh pr merge --squash --admin   # repo admin self-approve; a non-admin needs a real review
 ```
 
-> Expected: **Acceptance Full (Post-Merge)** starts on the bad SHA (deploy.yml
-> has been acceptance-gated since LB-05/#183 — it no longer triggers directly
-> on `push`). When that workflow completes, a run of **GitOps Reconciliation
-> Deploy** starts on the bad SHA; `detect-changes` →
-> `deploy-compose-restart` waits on the `compose-restart` environment approval.
+> Expected: merging starts **Acceptance Full (Post-Merge)** on the bad SHA
+> (deploy.yml has been acceptance-gated since LB-05/#183 — it no longer
+> triggers directly on `push`). When that workflow completes, `deploy.yml`'s
+> `tag-candidate` job tags and pushes the bad SHA as
+> `deploy-<ts>-<sha>`, and a run of **GitOps Reconciliation Deploy** starts;
+> `detect-changes` → `deploy-compose-restart` waits on the `compose-restart`
+> environment approval.
 
 ### Step 3 — Approve the compose-restart environment
 
@@ -175,28 +182,37 @@ Expected sequence on the host (watch via
 
 ### Step 5 — Confirm the rollback fires automatically
 
-- The `rollback` job (`uses: paruff/ufawkespipe/.github/workflows/reusable-rollback.yml@v1.2.0`)
-  must start **automatically** (no human trigger) within seconds of
-  `post-deploy-verify` failing.
+- The inline `rollback` job in `deploy.yml` must start **automatically** (no
+  human trigger) within seconds of `post-deploy-verify` failing.
 - Expected inside the rollback job:
   1. SSH to target.
-  2. `git revert --no-edit HEAD` — reverts the bad commit **locally**.
-  3. `git push origin main` — the revert must reach `main`.
-  4. `make up` — previous stack restarts.
+  2. `git fetch --tags --force origin` — read-only, no push credential used.
+  3. `git checkout --detach deploy-latest-good` — the last candidate tag that
+     actually passed `post-deploy-verify` (never the just-failed bad one,
+     since it was never promoted).
+  4. `make up` — that stack restarts.
+- Rollback does not push to `main`, and it does not run `git revert`
+  anywhere, on the runner or the host — this is what makes it immune to
+  main's branch protection.
 
 ### Step 6 — Confirm recovery
 
-- The rollback push creates a **new** deploy run on the revert SHA; that run's
-  `post-deploy-verify` must pass.
 - On the host, confirm the previous healthy state:
   ```bash
   ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "${DEPLOY_PATH:-$HOME/uFawkesObs}/scripts/wait-healthy.sh" && echo RECOVERED
   docker compose ps
   ```
-- Confirm `main` is clean and CI is green again:
+- **`main` is not automatically fixed** — unlike the old revert-based design,
+  the tag-based rollback only recovers the *deployed host*; the bad commit
+  stays merged on `main` until a human lands a real fix or revert PR (see
+  [Safety & Cleanup](#safety--cleanup)). This is a deliberate trade-off: the
+  host recovers immediately and automatically, and the actual code fix goes
+  through normal review instead of an unreviewed automated revert.
+- Confirm `deploy-latest-good` still points at the pre-drill (good) SHA, not
+  the drill's bad one:
   ```bash
-  git fetch origin main && git log origin/main --oneline -3   # HEAD~1 == pre-drill SHA
-  gh run list --limit 5
+  git fetch origin main && git log origin/main --oneline -3   # bad commit still present
+  git rev-parse deploy-latest-good   # should equal the pre-drill SHA
   ```
 
 **Drill success criteria (all must hold):**
@@ -204,8 +220,8 @@ Expected sequence on the host (watch via
 1. `post-deploy-verify` caught the bad deploy (job failed).
 2. `rollback` fired automatically — no human pressed the button.
 3. The host returned to a healthy previous state.
-4. `main` self-healed: it contains the revert, and the post-revert deploy
-   verified green.
+4. `deploy-latest-good` was never advanced to the bad commit's tag — it still
+   points at the last genuinely good deploy.
 
 ---
 
@@ -221,17 +237,17 @@ Workflow run: https://github.com/paruff/uFawkesObs/actions/runs/<RUN_ID>
 | # | Timestamp (UTC) | Event | Expected | Observed | Pass/Fail |
 |---|---|---|---|---|---|
 | 1 | | Baseline `wait-healthy.sh` | exit 0 | | |
-| 2 | | Bad commit pushed to main | deploy run starts | | |
-| 3 | | `compose-restart` env approved | deploy proceeds | | |
-| 4 | | OTel Collector container | crashes at boot | | |
-| 5 | | `post-deploy-verify` | FAILS (wait-healthy timeout) | | |
-| 6 | | `rollback` job | auto-starts | | |
-| 7 | | `git revert` on host | local revert applied | | |
-| 8 | | `git push origin main` (revert) | main reverted | | |
-| 9 | | `make up` after revert | previous stack restarts | | |
-| 10 | | Recovery `wait-healthy.sh` | exit 0 | | |
-| 11 | | Post-revert deploy verify | PASS | | |
-| 12 | | `main` CI | green | | |
+| 2 | | Bad commit merged to main via PR | Acceptance Full starts | | |
+| 3 | | `tag-candidate` job | pushes `deploy-<ts>-<sha>` for the bad SHA | | |
+| 4 | | `compose-restart` env approved | deploy proceeds | | |
+| 5 | | OTel Collector container | crashes at boot | | |
+| 6 | | `post-deploy-verify` | FAILS (wait-healthy timeout); `deploy-latest-good` NOT advanced | | |
+| 7 | | `rollback` job | auto-starts | | |
+| 8 | | `git fetch --tags` on host | succeeds (read-only) | | |
+| 9 | | `git checkout --detach deploy-latest-good` | checks out last good tag | | |
+| 10 | | `make up` after checkout | previous stack restarts | | |
+| 11 | | Recovery `wait-healthy.sh` | exit 0 | | |
+| 12 | | `deploy-latest-good` after drill | still points at pre-drill SHA | | |
 
 **Timing:** note seconds from Step 2 push → Step 5 rollback start, and from
 Step 5 → Step 6 recovery. These go into the results table.
@@ -248,12 +264,12 @@ line.
 ## Drill Results — <date> (run <RUN_ID>)
 
 - Host: <non-prod host>
-- Pre-drill SHA: <...>  Post-revert SHA: <...>
+- Pre-drill SHA: <...>  Bad candidate tag: <deploy-...>
 - Time to rollback start: <s>   Time to recovery: <s>
 - post-deploy-verify caught the break: yes/no
 - rollback fired automatically: yes/no
 - Host returned to healthy: yes/no
-- main self-healed: yes/no
+- deploy-latest-good still points at the pre-drill SHA: yes/no
 - Gaps found: <list>
 ```
 
@@ -264,31 +280,25 @@ line.
 - Every gap issue must reference this drill's run URL and the failing evidence
   row(s).
 
-### Static review of the suspected gap — 2026-08-11 (LB-04 enablement)
+### Design history
 
-The suspected gap below was re-checked statically during LB-04 enablement
-(`tests/unit/test_deploy_pipeline.py` and `tests/unit/test_deploy_docs.py`).
+**2026-08-11 (LB-04 enablement):** a static review found the original
+`git revert HEAD` + host push design's suspected gap (issue #193, "does the
+runner's `GITHUB_TOKEN` block the push?") was refuted — the push executed on
+the target host over SSH, not the runner, so token permissions never gated
+it. Two unknowns remained that only a live run could clear: whether the host
+held a working push credential, and whether main's branch protection would
+let the revert land.
 
-**Verdict: issue #193's two stated reasons are refuted.** The rollback job's
-`git revert` + `git push origin main` execute **on the target host over SSH,
-not on the runner** — the git commands are shipped through an `ssh … bash -s`
-heredoc in `reusable-rollback.yml@v1.2.0`. Consequences:
-
-- The runner's `GITHUB_TOKEN` (downgraded to `contents: read`) is **not** the
-  credential that pushes; the host pushes with its own `origin` credential, so
-  the token-permission concern does **not** gate the drill.
-- The missing `actions/checkout` on the runner is irrelevant to the push for
-  the same reason; the steps that need `DEPLOY_KEY` read it directly from the
-  `secrets:` pass-through, which read-only permissions do not block.
-
-**Remaining live-drill unknowns (only the live run can clear these):**
-
-- [ ] The target host holds a working **push credential** for `origin`.
-- [ ] `main` branch protection lets the host's revert push land.
-
-Evidence rows 6–9 in the Evidence Log exist to record these against the run.
-Tracked in [issue #193](https://github.com/paruff/uFawkesObs/issues/193) —
-the live drill confirms or refutes the remaining unknowns.
+**2026-08-21 (this redesign):** rather than resolve those unknowns, the
+mechanism changed so they no longer apply. Rollback now checks out
+`deploy-latest-good` on the host instead of reverting and pushing — it
+**does not push to main** at all, on the runner or the host. This
+structurally eliminates both #193's original concern and its interaction
+with branch protection, rather than depending on a specific credential or
+protection-rule configuration holding. The only unknown a live drill still
+needs to clear: does `deploy-latest-good` actually resolve and check out
+cleanly under real network/SSH conditions.
 
 ---
 
@@ -296,26 +306,32 @@ the live drill confirms or refutes the remaining unknowns.
 
 - **Never run against a production host.** Verify `DEPLOY_HOST` first
   (Preconditions).
-- The drill deliberately puts a broken commit on `main`. If automated rollback
-  does **not** fire or does not complete, restore manually **immediately**:
+- If automated rollback does **not** fire or does not complete, restore the
+  host manually **immediately**:
 
   ```bash
-  # From a clean checkout of main:
-  git revert --no-edit HEAD
-  git push origin main
-  # On the target host:
   ssh "${DEPLOY_USER}@${DEPLOY_HOST}"
   cd "${DEPLOY_PATH:-$HOME/uFawkesObs}"
-  git pull --ff-only origin main
+  git fetch --tags --force origin
+  git checkout --detach deploy-latest-good
   make up
   ./scripts/wait-healthy.sh
   ```
 
-- After the drill, confirm the local drill branch is deleted and `main` has no
-  leftover drill artifacts:
+- **`main` always needs manual cleanup after this drill**, whether or not
+  rollback succeeded — the tag-based design deliberately leaves the bad
+  commit merged on `main` (see Step 6). Open and merge a normal revert PR:
+
   ```bash
+  git revert --no-edit <bad-commit-sha>
+  gh pr create --base main --title "revert: LB-04 drill bad commit" --body "See docs/ROLLBACK_DRILL.md"
+  gh pr merge --squash --admin
+  ```
+
+- Confirm the drill branch is deleted:
+  ```bash
+  git push origin --delete drill/lb04-bad-deploy
   git branch -D drill/lb04-bad-deploy
-  git fetch origin main && git diff --stat origin/main@{1} origin/main || true
   ```
 - If any step could not be completed, leave LB-04 **PENDING** and file a
   follow-up issue describing the blocker. Do not mark the drill done.
