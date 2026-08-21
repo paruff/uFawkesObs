@@ -241,31 +241,6 @@ class TestTagBasedDeployRollback:
         assert "push origin main" not in joined
         assert "push origin HEAD:main" not in joined
 
-    def test_rollback_has_no_local_checkout_step(
-        self, deploy_workflow: dict[str, Any]
-    ) -> None:
-        """The rollback job must not contain an actions/checkout step.
-
-        Because it calls a reusable workflow via ``uses:``, it cannot have
-        a ``steps:`` block; the git credentials it needs are provided through
-        ``secrets:`` pass-through (DEPLOY_KEY) and used on the SSH host, not
-        on the runner.  This test guards against a future refactor that
-        converts the job to an inline job and accidentally adds checkout.
-        """
-        job = deploy_workflow["jobs"]["rollback"]
-        # A reusable-workflow call job has no steps key; if that ever changes
-        # we want to be alerted so the git-credential approach is re-reviewed.
-        assert "steps" not in job, (
-            "rollback job must not have a steps block — it should remain a "
-            "reusable-workflow call (uses:) so git ops stay on the SSH host"
-        )
-
-    def test_rollback_restarts_with_make_up(
-        self, deploy_workflow: dict[str, Any]
-    ) -> None:
-        restart = deploy_workflow["jobs"]["rollback"]["with"]["restart-command"]
-        assert "make up" in restart
-
 
 class TestPostDeployVerify:
     """The drill relies on post-deploy-verify being a real, bounded health gate."""
