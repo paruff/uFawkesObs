@@ -63,6 +63,28 @@ Also enable service-level auth where available (for example `auth_enabled: true`
 
 ---
 
+### No Authentication on DORA Ingestion API by Default
+
+**Limitation:** `dora-api`'s `/event` and `/event/batch` endpoints only enforce
+the `Authorization: Bearer <DORA_API_KEY>` header when `DORA_API_KEY` is set in
+`.env` — unset (the default) leaves ingestion open to anything that can reach
+`http://localhost:8088` (see `dora/ingestion/api/auth.py`). Mitigated by the
+same localhost-only binding as the other backends (`127.0.0.1:8088:8088` in
+`compose.yaml`), but it's a real gap if that port is ever re-exposed the way
+the section above describes for Loki/Tempo/Prometheus/Alertmanager.
+
+**Impact:** On a shared host, or if the port is re-exposed, anyone who can
+reach it can submit fabricated deployment/incident/PR/rework events, skewing
+DORA metrics.
+
+**Workaround / Opt-out path:** Set `DORA_API_KEY` in `.env` — it's supported
+today, just not required. There is no fail-fast check enforcing it (unlike
+`GRAFANA_ADMIN_PASSWORD`, which `scripts/check-env.sh` refuses to start
+without); making it required-by-default would be a breaking change for
+existing deployments and hasn't been made yet.
+
+---
+
 ## Data Storage
 
 ### Local Filesystem Storage Only

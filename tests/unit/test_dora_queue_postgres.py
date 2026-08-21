@@ -174,6 +174,27 @@ class TestEnqueueEvent:
         assert event_id == 42
         mock_conn.fetchrow.assert_awaited_once()
 
+    @pytest.mark.asyncio
+    async def test_enqueue_event_uses_payload_hash_conflict_upsert(self):
+        """Production-audit finding: retried submissions must dedupe via
+        payload_hash instead of inserting a duplicate row."""
+        mock_conn = AsyncMock()
+        mock_conn.fetchrow = AsyncMock(return_value={"id": 7})
+
+        mock_pool = MagicMock()
+        mock_pool.is_closing.return_value = False
+        mock_pool.acquire.return_value = _mock_async_context_manager(mock_conn)
+
+        import dora.ingestion.api.queue_postgres as q
+
+        q._pool = mock_pool
+
+        await enqueue_event({"event_type": "deployment", "repo": "myapp"})
+
+        query = mock_conn.fetchrow.await_args.args[0]
+        assert "payload_hash" in query
+        assert "ON CONFLICT" in query
+
 
 class TestEnqueueEvents:
     """Cover enqueue_events()."""
