@@ -109,7 +109,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1 - (sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[5m])))",
+          "expr": "1 - (sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[5m])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[5m])))",
           "refId": "A"
         }
       ],
@@ -147,7 +147,7 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -177,7 +177,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"$service\",instance=~\"$instance\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(app_metrics_http_server_duration_milliseconds_bucket{job=~\"$service\",instance=~\"$instance\"}[5m])))",
           "refId": "A"
         }
       ],
@@ -215,7 +215,7 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -245,7 +245,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=~\"$service\",instance=~\"$instance\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(app_metrics_http_server_duration_milliseconds_bucket{job=~\"$service\",instance=~\"$instance\"}[5m])))",
           "refId": "A"
         }
       ],
@@ -313,7 +313,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1 - (sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[30d])) / sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[30d])))",
+          "expr": "1 - (sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[30d])) / sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[30d])))",
           "refId": "A"
         }
       ],
@@ -394,7 +394,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (1 - (sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[30d])) / sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[30d])) - 0.999) / 0.001)",
+          "expr": "100 * (1 - (sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[30d])) / sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[30d])) - 0.999) / 0.001)",
           "refId": "A"
         }
       ],
@@ -491,7 +491,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (1 - (sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[30d])) / sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[30d])) - 0.999) / 0.001)",
+          "expr": "100 * (1 - (sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[30d])) / sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[30d])) - 0.999) / 0.001)",
           "legendFormat": "Error Budget Remaining",
           "refId": "A"
         }
@@ -573,7 +573,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "((0.001 * sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[30d])) - sum(increase(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[30d]))) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[1h])))",
+          "expr": "((0.001 * sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[30d])) - sum(increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[30d]))) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[1h])))",
           "refId": "A"
         }
       ],
@@ -670,7 +670,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (status) (increase(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[1h]))",
+          "expr": "sum by (status) (increase(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[1h]))",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -752,7 +752,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[1h])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[1h]))) / 0.001",
+          "expr": "(sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[1h])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[1h]))) / 0.001",
           "refId": "A"
         }
       ],
@@ -820,7 +820,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[6h])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[6h]))) / 0.001",
+          "expr": "(sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[6h])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[6h]))) / 0.001",
           "refId": "A"
         }
       ],
@@ -919,7 +919,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[1h])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[1h]))) / 0.001",
+          "expr": "(sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[1h])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[1h]))) / 0.001",
           "legendFormat": "1h (fast)",
           "refId": "A"
         },
@@ -928,7 +928,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[6h])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[6h]))) / 0.001",
+          "expr": "(sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[6h])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[6h]))) / 0.001",
           "legendFormat": "6h (slow)",
           "refId": "B"
         }
@@ -1039,7 +1039,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1 - (sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[5m])))",
+          "expr": "1 - (sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[5m])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[5m])))",
           "legendFormat": "Availability (5m)",
           "refId": "A"
         },
@@ -1048,7 +1048,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1 - (sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\",status=~\"5..\"}[1h])) / sum(rate(http_requests_total{job=~\"$service\",instance=~\"$instance\"}[1h])))",
+          "expr": "1 - (sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\",http_status_code=~\"5..\"}[1h])) / sum(rate(app_metrics_http_server_duration_milliseconds_count{job=~\"$service\",instance=~\"$instance\"}[1h])))",
           "legendFormat": "Availability (1h)",
           "refId": "B"
         }

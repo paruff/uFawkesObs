@@ -736,10 +736,6 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   Indicators: unwired stub dashboards with zero PromQL queries at all —
 #   scaffolded ahead of the underlying dora-compute metrics, which were
 #   never finished. See issue #251.
-# - Service - Error Analysis / Latency Analysis / SLO: query a metric
-#   (http_requests_total) that doesn't exist in this stack; the correct
-#   metric family needs a real rework (units, labels), not a name swap.
-#   See issue #250.
 # - IoT Devices & MQTT: provisioned via the legacy dashboard provider
 #   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
 #   queries an MQTT broker that has never existed anywhere in this stack —
@@ -752,6 +748,21 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   complete within the test's ~37s window on first boot, even though it
 #   does eventually on a long-running instance. Separate, still-open issue
 #   from the label bug (which stays fixed). See issue #253.
+#
+# dashboards/platform/dora-overview.json had a related but distinct bug
+# (querying team/service/environment labels dora-compute doesn't emit) and
+# was fixed directly rather than excluded — see the same audit's PR.
+#
+# Service - Error Analysis / Latency Analysis / SLO (issue #250) were
+# fixed and REMOVED from this set: wrong metric family (http_requests_total
+# doesn't exist; app_metrics_http_server_duration_milliseconds_* does, with
+# real http_status_code labels) plus two missing pipeline pieces — nothing
+# generated HTTP traffic to telemetry-generator in this scenario at all
+# (see workloads/app_traffic.py), and the OTel SDK's default 60s metric
+# export interval left no margin in the test's window (shortened via
+# OTEL_METRIC_EXPORT_INTERVAL, same pattern as DORA_COMPUTE_INTERVAL_SECONDS
+# above). Verified end-to-end locally with the same CI configuration:
+# 0/15/12/16 -> 8/15, 7/12, 11/16 panels with real data.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
         "AI Impact",
@@ -759,9 +770,6 @@ KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
         "DORA Leading Indicators",
         "DORA Overview",
         "Value Stream Indicators",
-        "Service - Error Analysis",
-        "Service - Latency Analysis",
-        "Service - SLO",
         "IoT Devices & MQTT",
     }
 )
