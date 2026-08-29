@@ -49,6 +49,7 @@ import tests.acceptance.steps.nonfunctional_requirements_steps as _nonfunctional
 import tests.acceptance.steps.repo_hardening_steps as _repo_hardening_steps
 import tests.acceptance.steps.adr_docs_steps as _adr_docs_steps
 import tests.acceptance.workloads.dora_events as _dora_events
+import tests.acceptance.workloads.app_traffic as _app_traffic
 import tests.acceptance.workloads.web_api as _web_api
 import tests.acceptance.workloads.batch_job as _batch_job
 import tests.acceptance.workloads.log_emitter as _log_emitter
@@ -69,6 +70,7 @@ for _step_mod in [
     _repo_hardening_steps,
     _adr_docs_steps,
     _dora_events,
+    _app_traffic,
     _web_api,
     _batch_job,
     _log_emitter,
