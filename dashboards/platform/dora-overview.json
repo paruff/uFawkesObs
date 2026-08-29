@@ -46,49 +46,19 @@
   "templating": {
     "list": [
       {
-        "name": "team",
+        "name": "team_id",
         "type": "query",
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "query": "label_values(dora_deployment_frequency_per_week, team)",
+        "query": "label_values(dora_deployment_frequency_per_week, team_id)",
         "refresh": 1,
         "includeAll": true,
         "allValue": ".*",
         "sort": 1,
         "label": "Team",
         "multi": false
-      },
-      {
-        "name": "service",
-        "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "query": "label_values(dora_deployment_frequency_per_week{team=~\"$team\"}, service)",
-        "refresh": 2,
-        "includeAll": true,
-        "allValue": ".*",
-        "sort": 1,
-        "label": "Service",
-        "multi": true
-      },
-      {
-        "name": "environment",
-        "type": "query",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "query": "label_values(dora_deployment_frequency_per_week{team=~\"$team\", service=~\"$service\"}, environment)",
-        "refresh": 2,
-        "includeAll": true,
-        "allValue": ".*",
-        "sort": 1,
-        "label": "Environment",
-        "multi": true
       },
       {
         "name": "window",
@@ -235,7 +205,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_deployment_frequency_per_week{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}[$window])",
+          "expr": "last_over_time(dora_deployment_frequency_per_week{team_id=~\"$team_id\"}[$window])",
           "legendFormat": "{{team}} - {{service}} - {{environment}}",
           "refId": "A"
         }
@@ -321,7 +291,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_lead_time_p50_hours{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}[$window])",
+          "expr": "last_over_time(dora_lead_time_p50_hours{team_id=~\"$team_id\"}[$window])",
           "legendFormat": "{{team}} - {{service}} - {{environment}}",
           "refId": "A"
         }
@@ -411,7 +381,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_fdrt_p50_hours{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}[$window])",
+          "expr": "last_over_time(dora_fdrt_p50_hours{team_id=~\"$team_id\"}[$window])",
           "legendFormat": "{{team}} - {{service}} - {{environment}}",
           "refId": "A"
         }
@@ -498,7 +468,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_cfr_pct{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}[$window]) * 100",
+          "expr": "last_over_time(dora_cfr_pct{team_id=~\"$team_id\"}[$window]) * 100",
           "legendFormat": "{{team}} - {{service}} - {{environment}}",
           "refId": "A"
         }
@@ -586,7 +556,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_rework_rate_pct{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}[$window])",
+          "expr": "last_over_time(dora_rework_rate_pct{team_id=~\"$team_id\"}[$window])",
           "legendFormat": "{{team}} - {{service}} - {{environment}}",
           "refId": "A"
         }
@@ -674,7 +644,7 @@
       },
       "targets": [
         {
-          "expr": "dora_deployment_frequency_per_week{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}",
+          "expr": "dora_deployment_frequency_per_week{team_id=~\"$team_id\"}",
           "legendFormat": "{{team}} - {{service}}",
           "refId": "A"
         }
@@ -772,12 +742,12 @@
       },
       "targets": [
         {
-          "expr": "dora_lead_time_p50_hours{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}",
+          "expr": "dora_lead_time_p50_hours{team_id=~\"$team_id\"}",
           "legendFormat": "P50 - {{team}} - {{service}}",
           "refId": "A"
         },
         {
-          "expr": "dora_lead_time_p95_hours{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}",
+          "expr": "dora_lead_time_p95_hours{team_id=~\"$team_id\"}",
           "legendFormat": "P95 - {{team}} - {{service}}",
           "refId": "B"
         }
@@ -883,7 +853,7 @@
       },
       "targets": [
         {
-          "expr": "dora_fdrt_p50_hours{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}",
+          "expr": "dora_fdrt_p50_hours{team_id=~\"$team_id\"}",
           "legendFormat": "P50 - {{team}} - {{service}}",
           "refId": "A"
         }
@@ -985,7 +955,7 @@
       },
       "targets": [
         {
-          "expr": "dora_cfr_pct{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"} * 100",
+          "expr": "dora_cfr_pct{team_id=~\"$team_id\"} * 100",
           "legendFormat": "{{team}} - {{service}}",
           "refId": "A"
         }
@@ -1089,7 +1059,7 @@
       },
       "targets": [
         {
-          "expr": "dora_rework_rate_pct{team=~\"$team\", service=~\"$service\", environment=~\"$environment\"}",
+          "expr": "dora_rework_rate_pct{team_id=~\"$team_id\"}",
           "legendFormat": "{{team}} - {{service}}",
           "refId": "A"
         }
