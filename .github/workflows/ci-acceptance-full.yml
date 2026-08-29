@@ -31,6 +31,10 @@ jobs:
       # event OBS-SLI-006 seeds within the existing steady-state window,
       # instead of only computing once at container start (default: 3600s).
       DORA_COMPUTE_INTERVAL_SECONDS: "15"
+      # Same idea for telemetry-generator's app metrics (Service - Error/
+      # Latency/SLO dashboards, OBS-SLI-006, issue #250) — the OTel SDK's
+      # own default (60s) left no margin inside the test's window.
+      OTEL_METRIC_EXPORT_INTERVAL: "5000"
 
     steps:
       - name: Checkout repository

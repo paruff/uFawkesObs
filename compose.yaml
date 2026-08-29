@@ -443,6 +443,9 @@ services:
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=telemetry-generator
+      # OTel SDK's own default (60s) — CI shortens this so acceptance tests
+      # don't have to wait a full minute for metrics to export (see OBS-SLI-006).
+      - OTEL_METRIC_EXPORT_INTERVAL=${OTEL_METRIC_EXPORT_INTERVAL:-60000}
     deploy:
       resources:
         limits:
