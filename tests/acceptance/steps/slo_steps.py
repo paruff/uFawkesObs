@@ -107,14 +107,25 @@ def _capture_slo_measurement(
     measured_ms: float,
     slo_threshold_ms: float,
     extra: dict[str, Any] | None = None,
+    passed: bool | None = None,
 ) -> SloMeasurement:
-    """Record an SLO measurement and store it in the module-level list."""
+    """Record an SLO measurement and store it in the module-level list.
+
+    For latency SLIs, ``passed`` defaults to ``measured_ms < slo_threshold_ms``.
+    Non-latency SLIs (scrape completeness, datasource health, dashboard
+    freshness) have no meaningful measured_ms/threshold — pass the real
+    outcome explicitly so both the printed summary and the captured
+    evidence reflect it immediately, instead of a caller mutating
+    ``measurement.passed`` after this function has already printed and
+    recorded the wrong (always-False, since 0.0 < 0.0 is False) default.
+    """
+    resolved_passed = passed if passed is not None else measured_ms < slo_threshold_ms
     measurement = SloMeasurement(
         sli_id=sli_id,
         sli_name=sli_name,
         measured_ms=round(measured_ms, 1),
         slo_threshold_ms=slo_threshold_ms,
-        passed=measured_ms < slo_threshold_ms,
+        passed=resolved_passed,
         extra=extra or {},
     )
     _slo_results.append(measurement)
@@ -132,7 +143,7 @@ def _capture_slo_measurement(
             "sli_name": sli_name,
             "measured_ms": round(measured_ms, 1),
             "slo_threshold_ms": slo_threshold_ms,
-            "passed": measured_ms < slo_threshold_ms,
+            "passed": resolved_passed,
             "extra": extra or {},
         }
     )
@@ -435,7 +446,7 @@ def all_targets_up(stack: ObservabilityStack) -> None:
     up_count = total - len(missing) - len(down)
     passed = len(missing) == 0 and len(down) == 0
 
-    measurement = _capture_slo_measurement(
+    _capture_slo_measurement(
         sli_id="OBS-SLI-004",
         sli_name="Scrape completeness (100% targets UP)",
         measured_ms=0.0,  # Not a latency measurement
@@ -447,10 +458,8 @@ def all_targets_up(stack: ObservabilityStack) -> None:
             "missing_targets": missing,
             "target_status": target_status,
         },
+        passed=passed,
     )
-    # Override the pass/fail for non-latency SLO
-    measurement.passed = passed
-    _slo_results[-1] = measurement  # Update in place
 
     assert passed, (
         f"\n{'=' * 60}\n"
@@ -532,7 +541,7 @@ def all_datasources_reachable(stack: ObservabilityStack) -> None:
     total = len(EXPECTED_DATASOURCES)
     healthy_count = len(reachable)
 
-    measurement = _capture_slo_measurement(
+    _capture_slo_measurement(
         sli_id="OBS-SLI-005",
         sli_name="Grafana datasource health (100% reachable)",
         measured_ms=0.0,
@@ -544,9 +553,8 @@ def all_datasources_reachable(stack: ObservabilityStack) -> None:
             "unreachable": unreachable,
             "details": ds_details,
         },
+        passed=passed,
     )
-    measurement.passed = passed
-    _slo_results[-1] = measurement
 
     assert passed, (
         f"\n{'=' * 60}\n"
@@ -812,7 +820,7 @@ def dashboards_have_data() -> None:
 
     passed = len(empty_dashboards) == 0
 
-    measurement = _capture_slo_measurement(
+    _capture_slo_measurement(
         sli_id="OBS-SLI-006",
         sli_name="Dashboard data freshness",
         measured_ms=0.0,
@@ -824,9 +832,8 @@ def dashboards_have_data() -> None:
             "known_incomplete_and_empty": known_incomplete_and_empty,
             "details": dashboard_data,
         },
+        passed=passed,
     )
-    measurement.passed = passed
-    _slo_results[-1] = measurement
 
     assert passed, (
         f"\n{'=' * 60}\n"
