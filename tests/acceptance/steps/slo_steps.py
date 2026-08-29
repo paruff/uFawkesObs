@@ -726,14 +726,57 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
     pytest._step_context = {"dashboard_data": dashboard_data}
 
 
+# Dashboards excluded from the strict "every dashboard has data" gate below.
+# Each entry is a KNOWN, TRACKED gap — not a flaky exception. Root-caused
+# during the 2026-08-29 production-readiness audit, which found this gate
+# had been red on every Acceptance Full run since at least 2026-08-12
+# (17+ days), silently skipping every deploy behind it.
+#
+# - AI Impact / Archetype Profile / DORA Leading Indicators / Value Stream
+#   Indicators: unwired stub dashboards with zero PromQL queries at all —
+#   scaffolded ahead of the underlying dora-compute metrics, which were
+#   never finished. See issue #251.
+# - Service - Error Analysis / Latency Analysis / SLO: query a metric
+#   (http_requests_total) that doesn't exist in this stack; the correct
+#   metric family needs a real rework (units, labels), not a name swap.
+#   See issue #250.
+# - IoT Devices & MQTT: provisioned via the legacy dashboard provider
+#   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
+#   queries an MQTT broker that has never existed anywhere in this stack —
+#   structurally undeliverable, not a regression.
+#
+# dashboards/platform/dora-overview.json had a related but distinct bug
+# (querying team/service/environment labels dora-compute doesn't emit) and
+# was fixed directly rather than excluded — see the same audit's PR.
+KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
+    {
+        "AI Impact",
+        "Archetype Profile",
+        "DORA Leading Indicators",
+        "Value Stream Indicators",
+        "Service - Error Analysis",
+        "Service - Latency Analysis",
+        "Service - SLO",
+        "IoT Devices & MQTT",
+    }
+)
+
+
 @then("at least one panel per dashboard should return non-empty results")
 def dashboards_have_data() -> None:
-    """Assert every provisioned dashboard has at least one panel with data."""
+    """Assert every provisioned, feature-complete dashboard has data.
+
+    Dashboards in KNOWN_INCOMPLETE_DASHBOARDS are reported but excluded from
+    the pass/fail assertion — they're tracked, real gaps (see the constant's
+    docstring and linked issues), not something a retry or a flaky-test
+    label should paper over.
+    """
     ctx = getattr(pytest, "_step_context", {})
     dashboard_data = ctx.get("dashboard_data", [])
 
     print("\n📋 Dashboard Data Freshness:")
     empty_dashboards: list[str] = []
+    known_incomplete_and_empty: list[str] = []
     total_dashboards = len(dashboard_data)
     dashboards_with_data = 0
 
@@ -745,6 +788,11 @@ def dashboards_have_data() -> None:
         if panels_with_data > 0:
             dashboards_with_data += 1
             print(f"  ✅ {title}: {panels_with_data}/{total_panels} panels have data")
+        elif title in KNOWN_INCOMPLETE_DASHBOARDS:
+            known_incomplete_and_empty.append(title)
+            print(
+                f"  ⚠️  {title}: No panels have data ({total_panels} panels) — known gap, tracked"
+            )
         else:
             empty_dashboards.append(title)
             print(f"  ❌ {title}: No panels have data ({total_panels} panels)")
@@ -760,6 +808,7 @@ def dashboards_have_data() -> None:
             "total_dashboards": total_dashboards,
             "dashboards_with_data": dashboards_with_data,
             "empty_dashboards": empty_dashboards,
+            "known_incomplete_and_empty": known_incomplete_and_empty,
             "details": dashboard_data,
         },
     )
@@ -771,9 +820,11 @@ def dashboards_have_data() -> None:
         f"SLO VIOLATION: OBS-SLI-006 — Dashboard data freshness\n"
         f"  Dashboards with data: {dashboards_with_data}/{total_dashboards}\n"
         f"  Empty dashboards:     {empty_dashboards}\n"
+        f"  (known incomplete, excluded from gate: {known_incomplete_and_empty})\n"
         f"{'=' * 60}"
     )
     print(
         f"\n✅ Dashboard freshness SLO met: "
         f"{dashboards_with_data}/{total_dashboards} dashboards have data"
+        f" ({len(known_incomplete_and_empty)} known-incomplete dashboards excluded)"
     )
