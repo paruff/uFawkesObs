@@ -1,10 +1,10 @@
 """
-Unit tests for the 5 DORA dashboards merged from uFawkesDORA (issue #203).
+Unit tests for the shipped DORA dashboards.
 
 General Grafana conventions (uid prefix, no numeric datasource IDs,
 schemaVersion) are already covered generically for every file under
 dashboards/ by tests/unit/test_grafana_dashboards.py. These tests check
-the DORA-specific expectations: the 5 dashboards exist with the right
+the DORA-specific expectations: shipped dashboards exist with the right
 uids, and none of them reference the source repo's placeholder
 "PostgreSQL" datasource uid instead of this repo's "ufawkesres-postgres".
 """
@@ -19,15 +19,11 @@ import pytest
 DASHBOARDS_DIR = pathlib.Path(__file__).resolve().parents[2] / "dashboards" / "platform"
 
 EXPECTED_DASHBOARDS = {
-    "dora-ai-impact.json": "ufawkesobs-dora-ai-impact",
-    "dora-archetype-profile.json": "ufawkesobs-dora-archetype-profile",
     "dora-overview.json": "ufawkesobs-dora-overview",
-    "dora-leading-indicators.json": "ufawkesobs-dora-leading-indicators",
-    "dora-value-stream.json": "ufawkesobs-dora-value-stream",
 }
 
 
-class TestDoraDashboardsMerged:
+class TestDoraDashboards:
     @pytest.mark.parametrize(
         "filename,expected_uid",
         EXPECTED_DASHBOARDS.items(),

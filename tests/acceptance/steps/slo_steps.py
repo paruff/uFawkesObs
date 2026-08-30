@@ -741,13 +741,8 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 # (17+ days), silently skipping every deploy behind it.
 #
 # - AI Impact / Archetype Profile / DORA Leading Indicators / Value Stream
-#   Indicators: unwired stub dashboards with zero PromQL queries at all —
-#   scaffolded ahead of the underlying dora-compute metrics, which were
-#   never finished. See issue #251.
-# - IoT Devices & MQTT: provisioned via the legacy dashboard provider
-#   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
-#   queries an MQTT broker that has never existed anywhere in this stack —
-#   structurally undeliverable, not a regression.
+#   Indicators were removed from dashboards/platform as unwired aspirational
+#   stubs (issue #251), so they are no longer part of this exclusion set.
 # - DORA Overview: PR #252 fixed a real bug here (queried team/service/
 #   environment labels dora-compute doesn't emit — verified 0/14 -> 6/14
 #   panels with real data on a long-running local stack). But PR #252's
@@ -756,28 +751,13 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   complete within the test's ~37s window on first boot, even though it
 #   does eventually on a long-running instance. Separate, still-open issue
 #   from the label bug (which stays fixed). See issue #253.
-#
-# dashboards/platform/dora-overview.json had a related but distinct bug
-# (querying team/service/environment labels dora-compute doesn't emit) and
-# was fixed directly rather than excluded — see the same audit's PR.
-#
-# Service - Error Analysis / Latency Analysis / SLO (issue #250) were
-# fixed and REMOVED from this set: wrong metric family (http_requests_total
-# doesn't exist; app_metrics_http_server_duration_milliseconds_* does, with
-# real http_status_code labels) plus two missing pipeline pieces — nothing
-# generated HTTP traffic to telemetry-generator in this scenario at all
-# (see workloads/app_traffic.py), and the OTel SDK's default 60s metric
-# export interval left no margin in the test's window (shortened via
-# OTEL_METRIC_EXPORT_INTERVAL, same pattern as DORA_COMPUTE_INTERVAL_SECONDS
-# above). Verified end-to-end locally with the same CI configuration:
-# 0/15/12/16 -> 8/15, 7/12, 11/16 panels with real data.
+# - IoT Devices & MQTT: provisioned via the legacy dashboard provider
+#   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
+#   queries an MQTT broker that has never existed anywhere in this stack —
+#   structurally undeliverable, not a regression.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
-        "AI Impact",
-        "Archetype Profile",
-        "DORA Leading Indicators",
         "DORA Overview",
-        "Value Stream Indicators",
         "IoT Devices & MQTT",
     }
 )
