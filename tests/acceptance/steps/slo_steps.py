@@ -743,21 +743,16 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 # - AI Impact / Archetype Profile / DORA Leading Indicators / Value Stream
 #   Indicators were removed from dashboards/platform as unwired aspirational
 #   stubs (issue #251), so they are no longer part of this exclusion set.
-# - DORA Overview: PR #252 fixed a real bug here (queried team/service/
-#   environment labels dora-compute doesn't emit — verified 0/14 -> 6/14
-#   panels with real data on a long-running local stack). But PR #252's
-#   own follow-up CI run showed it still empty on a *fresh* boot — the
-#   dora-compute -> Pushgateway -> Prometheus scrape cycle may not
-#   complete within the test's ~37s window on first boot, even though it
-#   does eventually on a long-running instance. Separate, still-open issue
-#   from the label bug (which stays fixed). See issue #253.
+# - DORA Overview: fixed in issue #253 — reduced Pushgateway scrape_interval
+#   from 60 s to 15 s and added a Prometheus poll-wait in the
+#   seeded_dora_deployment_event step so the dora-compute → Pushgateway →
+#   Prometheus cycle completes before the dashboard query runs.
 # - IoT Devices & MQTT: provisioned via the legacy dashboard provider
 #   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
 #   queries an MQTT broker that has never existed anywhere in this stack —
 #   structurally undeliverable, not a regression.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
-        "DORA Overview",
         "IoT Devices & MQTT",
     }
 )
