@@ -365,8 +365,8 @@ def prometheus_resumes_scraping(stack: ObservabilityStack, timeout: int) -> None
                     },
                 )
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Prometheus target query error (retrying): {e}")
         time.sleep(CHAOS_CHECK_INTERVAL)
 
     result = promql.query("up")
@@ -407,10 +407,9 @@ def metric_gaps_within_limit(stack: ObservabilityStack, max_gap: int) -> None:
             f"Max scrape duration: {max_duration}s",
             {"max_scrape_duration": max_duration, "limit": max_gap},
         )
-    except Exception:
-        print("⚠️  Could not verify metric gaps")
-        add_chaos_event("metric", "prometheus", "Could not verify metric gaps")
-        pass
+    except Exception as e:
+        print(f"⚠️  Could not verify metric gaps: {e}")
+        add_chaos_event("metric", "prometheus", f"Could not verify metric gaps: {e}")
 
 
 @then(parsers.parse("the trace pipeline should resume within {timeout:d} seconds"))
@@ -437,8 +436,8 @@ def trace_pipeline_resumes_within_timeout(
                     {"elapsed_seconds": elapsed},
                 )
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Tempo readiness query error (retrying): {e}")
         time.sleep(CHAOS_CHECK_INTERVAL)
 
     assert tempo.is_ready(), "Tempo is not responsive after restart"
@@ -517,22 +516,22 @@ def all_telemetry_pipelines_resume(stack: ObservabilityStack, timeout: int) -> N
             promql = stack.promql()
             promql.query('up{job="otel-collector"}')
             prometheus_ok = True
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Prometheus query error (retrying): {e}")
 
         try:
             loki = stack.loki()
             loki.query_range(CHAOS_LOG_STREAM_QUERY, limit=1)
             loki_ok = True
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Loki query error (retrying): {e}")
 
         try:
             tempo = stack.tempo()
             tempo.is_ready()
             tempo_ok = True
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"⚠️  Tempo readiness query error (retrying): {e}")
 
         if prometheus_ok and loki_ok and tempo_ok:
             elapsed = time.time() - start

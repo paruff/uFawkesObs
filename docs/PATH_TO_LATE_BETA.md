@@ -56,7 +56,7 @@ Concretely, late beta requires:
 | LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | ✅ DONE (93s, PASS) |
 | LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | ✅ DONE — `compose.yaml` binds Loki (3100), Tempo (3200), Prometheus (9090), and Alertmanager (9093) to `127.0.0.1:` |
 | LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) | 🔲 PENDING |
-| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔲 PENDING (runbook ready) |
+| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔴 BLOCKED — runbook ready, but no deploy target host is provisioned (no `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_KEY`/`DEPLOY_HOST_KEY` in repo or `compose-restart` environment secrets as of 2026-08-30) |
 | LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) | ✅ DONE — root cause was a dead `push` trigger (deploy secrets unavailable in that context, 100% failure rate); removed in PR #196. 55/55 `workflow_run`-triggered deploys since have succeeded. |
 | LB-06 | Add a beta feedback channel | [#184](https://github.com/paruff/uFawkesObs/issues/184) | ✅ DONE — [discussion #242](https://github.com/paruff/uFawkesObs/discussions/242) posted, linked from README (PR #243, merged) |
 | LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185) | 🟡 IN PROGRESS (plan.md reconciled 2026-08-12; superseded issues #51–#54, #80–#83 closed) |
@@ -65,10 +65,13 @@ All issues are labeled `late-beta` for tracking:
 <https://github.com/paruff/uFawkesObs/issues?q=is%3Aissue+is%3Aopen+label%3Alate-beta>
 
 > LB-04: the executable drill is in `docs/ROLLBACK_DRILL.md` and linked from
-> `docs/DEPLOYMENT_STRATEGY.md`. The live run against a non-prod host is still
-> PENDING. A suspected rollback-push gap (reusable-rollback `GITHUB_TOKEN`
-> permissions / missing checkout) is tracked as a follow-up issue — the drill
-> will confirm or refute it.
+> `docs/DEPLOYMENT_STRATEGY.md`. The live run is BLOCKED, not merely pending —
+> no non-prod deploy host is provisioned (no `DEPLOY_HOST`/`DEPLOY_USER`/
+> `DEPLOY_KEY`/`DEPLOY_HOST_KEY` in repo or `compose-restart` environment
+> secrets as of 2026-08-30), so the drill's own Precondition 1 cannot be
+> satisfied yet. A suspected rollback-push gap (reusable-rollback
+> `GITHUB_TOKEN` permissions / missing checkout) is tracked as a follow-up
+> issue — the drill will confirm or refute it once a host exists.
 
 ## Already Done (not re-tracked here)
 
