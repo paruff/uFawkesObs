@@ -213,6 +213,25 @@ def compute_deployment_id(repo: str, pr_number: int) -> str:
     return f"{repo}/PR#{pr_number}"
 
 
+def _stage_record(
+    dep_id: str,
+    repo: str,
+    pr_number: int,
+    stage_name: str,
+    duration_seconds: int,
+    status: str,
+    **extra_metadata: Any,
+) -> dict[str, Any]:
+    """Build one vsi_stage_breakdown record with the shared metadata shape."""
+    return {
+        "deployment_id": dep_id,
+        "stage_name": stage_name,
+        "duration_seconds": duration_seconds,
+        "status": status,
+        "metadata": {"repo": repo, "pr_number": pr_number, **extra_metadata},
+    }
+
+
 def compute_pr_stages(
     prs: list[dict[str, Any]],
     deployments: list[dict[str, Any]],
@@ -270,35 +289,31 @@ def compute_pr_stages(
         # ── Coding time: first_commit_at → opened_at ────────────────────────
         coding_duration = max(0, int((opened_at - first_commit_at).total_seconds()))
         records.append(
-            {
-                "deployment_id": dep_id,
-                "stage_name": "coding",
-                "duration_seconds": coding_duration,
-                "status": "success",
-                "metadata": {
-                    "repo": repo,
-                    "pr_number": pr_number,
-                    "first_commit_at": first_commit_at.isoformat(),
-                    "opened_at": opened_at.isoformat(),
-                },
-            }
+            _stage_record(
+                dep_id,
+                repo,
+                pr_number,
+                "coding",
+                coding_duration,
+                "success",
+                first_commit_at=first_commit_at.isoformat(),
+                opened_at=opened_at.isoformat(),
+            )
         )
 
         # ── Review time: opened_at → merged_at ──────────────────────────────
         review_duration = max(0, int((merged_at - opened_at).total_seconds()))
         records.append(
-            {
-                "deployment_id": dep_id,
-                "stage_name": "review",
-                "duration_seconds": review_duration,
-                "status": "success",
-                "metadata": {
-                    "repo": repo,
-                    "pr_number": pr_number,
-                    "opened_at": opened_at.isoformat(),
-                    "merged_at": merged_at.isoformat(),
-                },
-            }
+            _stage_record(
+                dep_id,
+                repo,
+                pr_number,
+                "review",
+                review_duration,
+                "success",
+                opened_at=opened_at.isoformat(),
+                merged_at=merged_at.isoformat(),
+            )
         )
 
         # ── Deploy time: merged_at → nearest deploy after merge ─────────────
@@ -315,49 +330,43 @@ def compute_pr_stages(
         if deploy_time is not None:
             deploy_duration = max(0, int((deploy_time - merged_at).total_seconds()))
             records.append(
-                {
-                    "deployment_id": dep_id,
-                    "stage_name": "deploy",
-                    "duration_seconds": deploy_duration,
-                    "status": "success",
-                    "metadata": {
-                        "repo": repo,
-                        "pr_number": pr_number,
-                        "merged_at": merged_at.isoformat(),
-                        "deployed_at": deploy_time.isoformat(),
-                        "commit_sha": deploy_sha or "",
-                    },
-                }
+                _stage_record(
+                    dep_id,
+                    repo,
+                    pr_number,
+                    "deploy",
+                    deploy_duration,
+                    "success",
+                    merged_at=merged_at.isoformat(),
+                    deployed_at=deploy_time.isoformat(),
+                    commit_sha=deploy_sha or "",
+                )
             )
         else:
             # No deployment found after merge — mark deploy as pending
             records.append(
-                {
-                    "deployment_id": dep_id,
-                    "stage_name": "deploy",
-                    "duration_seconds": 0,
-                    "status": "pending",
-                    "metadata": {
-                        "repo": repo,
-                        "pr_number": pr_number,
-                        "note": "No deployment found after PR merge",
-                    },
-                }
+                _stage_record(
+                    dep_id,
+                    repo,
+                    pr_number,
+                    "deploy",
+                    0,
+                    "pending",
+                    note="No deployment found after PR merge",
+                )
             )
 
         # ── CI stage: null for v0.1 (no CI event schema yet) ────────────────
         records.append(
-            {
-                "deployment_id": dep_id,
-                "stage_name": "ci",
-                "duration_seconds": 0,
-                "status": "skipped",
-                "metadata": {
-                    "repo": repo,
-                    "pr_number": pr_number,
-                    "note": "CI stage requires CI event schema (v0.2+)",
-                },
-            }
+            _stage_record(
+                dep_id,
+                repo,
+                pr_number,
+                "ci",
+                0,
+                "skipped",
+                note="CI stage requires CI event schema (v0.2+)",
+            )
         )
 
     return records

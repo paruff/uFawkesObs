@@ -572,6 +572,47 @@ def parse_quarter(quarter_str: str) -> tuple[datetime, datetime]:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+def _resolve_quarter_bounds(quarter: str | None) -> tuple[datetime, datetime]:
+    """Return (start, end) for the given quarter string, or the current quarter."""
+    if quarter:
+        return parse_quarter(quarter)
+    now = datetime.now(UTC)
+    current_quarter = (now.month - 1) // 3 + 1
+    return parse_quarter(f"{now.year}-Q{current_quarter}")
+
+
+def _unknown_team_result() -> dict[str, Any]:
+    """Fallback result when no DORA snapshot exists for a team yet."""
+    return {
+        "archetype": "unknown",
+        "confidence": 0.0,
+        "wellbeing_data": False,
+        "primary_bottleneck": "insufficient_data",
+        "recommendations": [
+            "Ensure DORA metrics collection is configured for this team",
+            "Check that the compute-metrics workflow has run",
+        ],
+    }
+
+
+async def _persist_classification(
+    db: ArchetypeDB,
+    team_id: str,
+    archetype_name: str,
+    confidence: float,
+    snapshot_id: Any,
+) -> None:
+    """Write the classification to archetype_history, logging on failure."""
+    try:
+        await db.write_classification(team_id, archetype_name, confidence, snapshot_id)
+        logger.info("Classification written to archetype_history for %s", team_id)
+    except Exception as e:
+        logger.warning("Failed to write classification: %s", e)
+        logger.warning(
+            "  (This may be due to the archetype CHECK constraint — see Issue #6)"
+        )
+
+
 async def classify_team(
     team_id: str,
     quarter: str | None = None,
@@ -588,53 +629,23 @@ async def classify_team(
         Classification result dict with archetype, confidence, wellbeing_data
         flag, primary_bottleneck, and recommendations.
     """
-    if verbose:
-        logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-    else:
-        logging.basicConfig(level=logging.INFO, format="%(message)s")
-
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.INFO, format="%(message)s"
+    )
     logger.info("Classifying team: %s (quarter: %s)", team_id, quarter or "current")
-
-    # Determine quarter boundaries
-    if quarter:
-        q_start, q_end = parse_quarter(quarter)
-    else:
-        now = datetime.now(UTC)
-        # Compute current quarter
-        current_month = now.month
-        q = (current_month - 1) // 3 + 1
-        q_start = datetime(now.year, (q - 1) * 3 + 1, 1, tzinfo=UTC)
-        q_end = datetime(
-            now.year + 1 if q == 4 else now.year, (q % 4) * 3 + 1, 1, tzinfo=UTC
-        )
+    q_start, q_end = _resolve_quarter_bounds(quarter)
 
     async with ArchetypeDB() as db:
-        # Fetch the latest dora_snapshot
         snapshot = await db.get_latest_snapshot(team_id)
         if snapshot is None:
             logger.warning("No DORA metrics found for team: %s", team_id)
-            return {
-                "archetype": "unknown",
-                "confidence": 0.0,
-                "wellbeing_data": False,
-                "primary_bottleneck": "insufficient_data",
-                "recommendations": [
-                    "Ensure DORA metrics collection is configured for this team",
-                    "Check that the compute-metrics workflow has run",
-                ],
-            }
+            return _unknown_team_result()
 
         snapshot_id = snapshot.get("id")
-
-        # Fetch wellbeing data
         wellbeing_scores = await db.get_wellbeing_scores(
-            team_id=team_id,
-            quarter_start=q_start,
-            quarter_end=q_end,
+            team_id=team_id, quarter_start=q_start, quarter_end=q_end
         )
         has_wellbeing = len(wellbeing_scores) > 0
-
-        # Normalise wellbeing
         wellbeing_normalised = (
             normalise_wellbeing(wellbeing_scores) if has_wellbeing else None
         )
@@ -654,27 +665,14 @@ async def classify_team(
             len(wellbeing_scores),
         )
 
-        # Build team vector and classify
         team_vector = build_team_vector(snapshot, wellbeing_normalised)
         archetype_name, confidence, distances = classify(team_vector, has_wellbeing)
-
-        # Identify bottleneck
         bottleneck = identify_bottleneck(team_vector, archetype_name)
-
-        # Get recommendations
         recommendations = get_recommendations(archetype_name)
 
-        # Write to archetype_history
-        try:
-            await db.write_classification(
-                team_id, archetype_name, confidence, snapshot_id
-            )
-            logger.info("Classification written to archetype_history for %s", team_id)
-        except Exception as e:
-            logger.warning("Failed to write classification: %s", e)
-            logger.warning(
-                "  (This may be due to the archetype CHECK constraint — see Issue #6)"
-            )
+        await _persist_classification(
+            db, team_id, archetype_name, confidence, snapshot_id
+        )
 
         result = {
             "archetype": archetype_name,
