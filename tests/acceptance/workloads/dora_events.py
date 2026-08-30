@@ -17,6 +17,14 @@ from typing import Any
 import requests
 from pytest_bdd import given
 
+from tests.acceptance.runtime import ObservabilityStack
+
+# How long to wait (seconds) for dora_deployment_frequency_per_week to appear
+# in Prometheus after seeding the event. Covers:
+#   DORA_COMPUTE_INTERVAL_SECONDS (15 in CI) + Prometheus pushgateway
+#   scrape_interval (15 s after PR #253 fix) + container-startup latency.
+_DORA_PROPAGATION_TIMEOUT_S = 90
+
 
 def build_deployment_event(
     repo: str = "paruff/uFawkesObs",
@@ -51,12 +59,37 @@ def seed_deployment_event(
 
 
 @given("a DORA deployment event has been recorded")
-def seeded_dora_deployment_event() -> None:
-    """Seed one successful deployment event via the real REST ingestion path.
+def seeded_dora_deployment_event(stack: ObservabilityStack) -> None:
+    """Seed one successful deployment event and wait for it to reach Prometheus.
 
-    dora-compute runs its first compute cycle immediately on container
-    start (see dora/compute/run.sh) and then on DORA_COMPUTE_INTERVAL_SECONDS
-    -- CI sets that short so a cycle after this seed has a chance to pick
-    the event up before OBS-SLI-006 queries Prometheus.
+    After posting the event to dora-api this step polls Prometheus until
+    ``dora_deployment_frequency_per_week`` appears, ensuring the full
+    dora-compute → Pushgateway → Prometheus scrape cycle has completed
+    before OBS-SLI-006 queries the DORA Overview dashboard.
+
+    Without this wait the dashboard check races against:
+    - dora-compute's DORA_COMPUTE_INTERVAL_SECONDS cycle (15 s in CI)
+    - Prometheus's pushgateway scrape_interval (15 s after the config fix)
+    and shows 0/14 panels on a fresh boot even though the label queries
+    are correct (the root cause of issue #253).
     """
     seed_deployment_event()
+
+    promql = stack.promql()
+    found, elapsed, _ = promql.poll_metric(
+        "dora_deployment_frequency_per_week",
+        timeout=_DORA_PROPAGATION_TIMEOUT_S,
+        interval=5.0,
+    )
+    if found:
+        print(
+            f"✅ dora_deployment_frequency_per_week visible in Prometheus "
+            f"after {elapsed:.1f}s"
+        )
+    else:
+        raise AssertionError(
+            f"dora_deployment_frequency_per_week not visible in Prometheus "
+            f"after {_DORA_PROPAGATION_TIMEOUT_S}s — "
+            f"dora-compute → Pushgateway → Prometheus pipeline did not complete. "
+            f"Check dora-compute logs and the Pushgateway /metrics endpoint."
+        )
