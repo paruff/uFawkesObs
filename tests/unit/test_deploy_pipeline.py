@@ -305,13 +305,17 @@ class TestCommentSummary:
     def test_comment_summary_mentions_acceptance_gate_skip_reason(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
-        joined = "\n".join(str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"])
+        joined = "\n".join(
+            str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"]
+        )
         assert "Acceptance Full gate did not pass" in joined
         assert "workflow_run.conclusion" in joined
 
     def test_comment_summary_mentions_no_deployable_changes(
         self, deploy_workflow: dict[str, Any]
     ) -> None:
-        joined = "\n".join(str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"])
+        joined = "\n".join(
+            str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"]
+        )
         assert "no deployable compose/config/dashboard changes were detected" in joined
         assert "Changed paths: compose=" in joined
