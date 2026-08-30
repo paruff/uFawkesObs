@@ -755,8 +755,9 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
 #   queries an MQTT broker that has never existed anywhere in this stack —
 #   structurally undeliverable, not a regression.
-# - Service - Error Analysis / Latency Analysis / SLO were fixed in issue
-#   #250 and removed from this exclusion set after end-to-end verification.
+# - Service - Error Analysis / Latency Analysis / SLO were previously fixed
+#   in issue #250 and removed from this exclusion set after end-to-end
+#   verification.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
         "DORA Overview",
