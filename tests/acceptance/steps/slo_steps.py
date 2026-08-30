@@ -740,10 +740,6 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 # had been red on every Acceptance Full run since at least 2026-08-12
 # (17+ days), silently skipping every deploy behind it.
 #
-# - AI Impact / Archetype Profile / DORA Leading Indicators / Value Stream
-#   Indicators: unwired stub dashboards with zero PromQL queries at all —
-#   scaffolded ahead of the underlying dora-compute metrics, which were
-#   never finished. See issue #251.
 # - IoT Devices & MQTT: provisioned via the legacy dashboard provider
 #   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
 #   queries an MQTT broker that has never existed anywhere in this stack —
@@ -773,11 +769,7 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 # 0/15/12/16 -> 8/15, 7/12, 11/16 panels with real data.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
-        "AI Impact",
-        "Archetype Profile",
-        "DORA Leading Indicators",
         "DORA Overview",
-        "Value Stream Indicators",
         "IoT Devices & MQTT",
     }
 )
