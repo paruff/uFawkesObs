@@ -47,6 +47,9 @@ jobs:
               }
             );
 
+            // This guard watches the post-merge gate specifically, so it tracks
+            // only the `push`-triggered main runs of Acceptance Full and ignores
+            // manual workflow_dispatch reruns.
             const recentRuns = data.workflow_runs.filter(
               (run) =>
                 run.event === 'push' &&
@@ -118,12 +121,14 @@ jobs:
               '<sub>Updated automatically by `acceptance-full-health-guard.yml`.</sub>',
             ].join('\n');
 
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'all',
-              per_page: 100,
-            });
+            const { data: searchResults } =
+              await github.rest.search.issuesAndPullRequests({
+                q:
+                  `repo:${context.repo.owner}/${context.repo.repo} ` +
+                  `is:issue "${issueTitle}" in:title`,
+                per_page: 10,
+              });
+            const issues = searchResults.items || [];
             const trackingIssue = issues.find(
               (issue) => !issue.pull_request && issue.title === issueTitle
             );
@@ -134,8 +139,7 @@ jobs:
                 .find((line) => line.startsWith(markerPrefix)) || '';
             const isNewAlert =
               shouldAlert &&
-              (!trackingIssue ||
-                trackingIssue.state !== 'open' ||
+              (trackingIssue.state !== 'open' ||
                 !previousMarkerLine.includes(`latest-run=${latestRunId}`) ||
                 !previousMarkerLine.includes('state=alert'));
 
