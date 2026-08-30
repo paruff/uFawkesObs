@@ -1,7 +1,12 @@
 # Rollback Drill — uFawkesObs
 
-> **Status: PENDING** — runbook ready; the live drill has not been executed
-> against a real target host yet. See [LB-04](https://github.com/paruff/uFawkesObs/issues/182).
+> **Status: BLOCKED** — runbook ready, but no deploy target exists to run it
+> against. As of 2026-08-30, `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_KEY`/
+> `DEPLOY_HOST_KEY` are not set as repo secrets or variables, and the
+> `compose-restart` GitHub Environment has zero secrets, zero variables, and
+> no required-reviewer protection rule. Precondition 1 below cannot be
+> satisfied until a non-prod SSH-reachable host is provisioned and its
+> credentials added. See [LB-04](https://github.com/paruff/uFawkesObs/issues/182).
 >
 > Part of the Path to Late Beta plan — `docs/PATH_TO_LATE_BETA.md`.
 
