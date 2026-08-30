@@ -776,7 +776,7 @@
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 40,
+  "schemaVersion": 39,
   "tags": ["platform", "ai", "capabilities", "llm"],
   "templating": {
     "list": []
