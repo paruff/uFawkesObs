@@ -625,7 +625,7 @@ jobs:
       - deploy-compose-restart
       - post-deploy-verify
       - rollback
-    if: always() && (needs.deploy-config-reload.result != 'skipped' || needs.deploy-compose-restart.result != 'skipped')
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: "job-start"
@@ -635,31 +635,90 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const mode = `${{ needs.deploy-compose-restart.outputs.deployment_mode || needs.deploy-config-reload.outputs.deployment_mode || 'unknown' }}`;
-            const services = `${{ needs.deploy-compose-restart.outputs.services_action || needs.deploy-config-reload.outputs.services_action || 'n/a' }}`;
-            const health = `${{ needs.post-deploy-verify.outputs.health_result || needs.deploy-compose-restart.outputs.health_result || needs.deploy-config-reload.outputs.health_result || 'failed' }}`;
+            const acceptanceConclusion = `${{ github.event.workflow_run.conclusion || 'unknown' }}`;
+            const acceptanceRunUrl = `${{ github.event.workflow_run.html_url || '' }}`;
+            const acceptanceRunNumber = `${{ github.event.workflow_run.run_number || '' }}`;
+            const triggerSha = `${{ github.event.workflow_run.head_sha || github.sha }}`;
+            const composeMode =
+              `${{ needs.deploy-compose-restart.outputs.deployment_mode || '' }}`;
+            const configMode =
+              `${{ needs.deploy-config-reload.outputs.deployment_mode || '' }}`;
+            const mode = composeMode || configMode || 'unknown';
+            const composeServices =
+              `${{ needs.deploy-compose-restart.outputs.services_action || '' }}`;
+            const configServices =
+              `${{ needs.deploy-config-reload.outputs.services_action || '' }}`;
+            const services = composeServices || configServices || 'n/a';
+            const verifyHealth =
+              `${{ needs.post-deploy-verify.outputs.health_result || '' }}`;
+            const composeHealth =
+              `${{ needs.deploy-compose-restart.outputs.health_result || '' }}`;
+            const configHealth =
+              `${{ needs.deploy-config-reload.outputs.health_result || '' }}`;
+            const health = verifyHealth || composeHealth || configHealth || 'failed';
             const composeResult = `${{ needs.deploy-compose-restart.result }}`;
             const configResult = `${{ needs.deploy-config-reload.result }}`;
             const verifyResult = `${{ needs.post-deploy-verify.result }}`;
             const rollbackResult = `${{ needs.rollback.result }}`;
+            const deployTag = `${{ needs.tag-candidate.outputs.tag || '' }}` || 'n/a';
+            const composeChanged = `${{ needs.detect-changes.outputs.compose_changed }}` === 'true';
+            const reloadChanged = `${{ needs.detect-changes.outputs.reload_changed }}` === 'true';
+            const nonReloadableChanged = `${{ needs.detect-changes.outputs.non_reloadable_config_changed }}` === 'true';
+            const hasDeployableChanges = composeChanged || reloadChanged || nonReloadableChanged;
+
+            let summaryStatus = 'deployed';
+            let reason = 'Deployment executed.';
+            let deploymentMode = mode;
+            let servicesAction = services;
+            let healthResult = health;
+            let deployTagSummary = deployTag;
+
+            if (acceptanceConclusion !== 'success') {
+              summaryStatus = 'skipped';
+              reason = `Acceptance Full gate did not pass (\`${acceptanceConclusion}\`).`;
+              deploymentMode = 'skipped';
+              servicesAction = 'none';
+              healthResult = 'not run';
+              deployTagSummary = 'n/a (acceptance gate did not pass)';
+            } else if (!hasDeployableChanges) {
+              summaryStatus = 'skipped';
+              reason = 'Acceptance Full passed, but no deployable compose/config/dashboard changes were detected.';
+              deploymentMode = 'no-op';
+              servicesAction = 'none';
+              healthResult = 'not run';
+            } else if (composeResult === 'skipped' && configResult === 'skipped') {
+              summaryStatus = 'skipped';
+              reason = 'Deployable changes were detected, but no deploy job executed.';
+              healthResult = 'not run';
+            }
 
             const body = [
               '## GitOps Reconciliation Summary',
-              `- Deploy tag: ${{ needs.tag-candidate.outputs.tag }}`,
-              `- Mode: ${mode}`,
-              `- Services: ${services}`,
-              `- Health check: ${health}`,
+              `- Status: ${summaryStatus}`,
+              `- Reason: ${reason}`,
+              `- Acceptance Full: ${
+                acceptanceRunUrl
+                  ? `[run #${acceptanceRunNumber}](${acceptanceRunUrl})`
+                  : 'n/a'
+              } — ${acceptanceConclusion}`,
+              `- Deploy tag: ${deployTagSummary}`,
+              `- Mode: ${deploymentMode}`,
+              `- Services: ${servicesAction}`,
+              `- Health check: ${healthResult}`,
               `- Post-deploy verify: ${verifyResult}`,
               `- Rollback: ${rollbackResult}`,
               `- compose-restart job: ${composeResult}`,
               `- config-reload job: ${configResult}`,
-              `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+              `- Changed paths: compose=${composeChanged}, reload=${reloadChanged}, ` +
+                `non_reloadable_config=${nonReloadableChanged}`,
+              `- Workflow run: ${context.serverUrl}/${context.repo.owner}/` +
+                `${context.repo.repo}/actions/runs/${context.runId}`
             ].join('\n');
 
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: context.sha,
+              commit_sha: triggerSha,
               body
             });
 

@@ -1,0 +1,214 @@
+name: Acceptance Full Health Guard
+
+on:
+  workflow_run:
+    workflows: ["Acceptance Full (Post-Merge)"]
+    types:
+      - completed
+    branches:
+      - main
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  acceptance-full-health:
+    name: Acceptance Full health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate recent Acceptance Full runs
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const workflowId = 'ci-acceptance-full.yml';
+            const workflowName = 'Acceptance Full (Post-Merge)';
+            const issueTitle = 'Acceptance Full (Post-Merge) health guard';
+            const consecutiveFailureThreshold = 2;
+            const alertAfterHours = 24;
+            const labels = ['bug', 'github_actions'];
+            const now = Date.now();
+            const markerPrefix = '<!-- acceptance-full-health-guard';
+
+            const { data } = await github.request(
+              'GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs',
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflowId,
+                branch: 'main',
+                per_page: 100,
+                status: 'completed',
+              }
+            );
+
+            // This guard watches the post-merge gate specifically, so it tracks
+            // only the `push`-triggered main runs of Acceptance Full and ignores
+            // manual workflow_dispatch reruns.
+            const recentRuns = data.workflow_runs.filter(
+              (run) =>
+                run.event === 'push' &&
+                run.head_branch === 'main' &&
+                run.conclusion !== 'cancelled'
+            );
+
+            if (recentRuns.length === 0) {
+              core.setFailed(`No completed ${workflowName} runs found on main.`);
+              return;
+            }
+
+            const latestRun = recentRuns[0];
+            const failureStreak = [];
+            for (const run of recentRuns) {
+              if (run.conclusion === 'success') {
+                break;
+              }
+              failureStreak.push(run);
+            }
+
+            const consecutiveFailures = failureStreak.length;
+            const oldestFailingRun =
+              consecutiveFailures > 0
+                ? failureStreak[consecutiveFailures - 1]
+                : null;
+            const failureStreakHours = oldestFailingRun
+              ? (now - Date.parse(oldestFailingRun.created_at)) / 3600000
+              : 0;
+            const shouldAlert =
+              consecutiveFailures >= consecutiveFailureThreshold ||
+              (consecutiveFailures > 0 && failureStreakHours >= alertAfterHours);
+
+            const recentSummary = recentRuns
+              .slice(0, 5)
+              .map(
+                (run) =>
+                  `- [#${run.run_number}](${run.html_url}) — \`${run.conclusion}\` at ${run.created_at}`
+              )
+              .join('\n');
+
+            const state = shouldAlert ? 'alert' : 'healthy';
+            const latestRunId = latestRun.id;
+            const body = [
+              `${markerPrefix} state=${state} latest-run=${latestRunId} -->`,
+              '## Acceptance Full Health Guard',
+              '',
+              shouldAlert
+                ? `Acceptance Full is unhealthy: ${consecutiveFailures} consecutive non-success run(s).`
+                : 'Acceptance Full is healthy.',
+              '',
+              `- Workflow: ${workflowName}`,
+              `- Thresholds: ${consecutiveFailureThreshold} consecutive ` +
+                `non-success runs or ${alertAfterHours}h without recovery`,
+              `- Latest run: [#${latestRun.run_number}](${latestRun.html_url}) — \`${latestRun.conclusion}\``,
+              `- Current failure streak: ${consecutiveFailures}`,
+              oldestFailingRun
+                ? `- First run in current failure streak: ` +
+                  `[#${oldestFailingRun.run_number}](${oldestFailingRun.html_url}) ` +
+                  `at ${oldestFailingRun.created_at}`
+                : '- First run in current failure streak: n/a',
+              oldestFailingRun
+                ? `- Failure streak age: ${failureStreakHours.toFixed(1)}h`
+                : '- Failure streak age: 0.0h',
+              '',
+              '### Recent runs',
+              recentSummary,
+              '',
+              '<sub>Updated automatically by `acceptance-full-health-guard.yml`.</sub>',
+            ].join('\n');
+
+            const { data: searchResults } =
+              await github.rest.search.issuesAndPullRequests({
+                q:
+                  `repo:${context.repo.owner}/${context.repo.repo} ` +
+                  `is:issue "${issueTitle}" in:title`,
+                per_page: 10,
+              });
+            const issues = searchResults.items || [];
+            const trackingIssue = issues.find(
+              (issue) => !issue.pull_request && issue.title === issueTitle
+            );
+            const previousBody = trackingIssue?.body || '';
+            const previousMarkerLine =
+              previousBody
+                .split('\n')
+                .find((line) => line.startsWith(markerPrefix)) || '';
+            const isNewAlert =
+              shouldAlert &&
+              (trackingIssue.state !== 'open' ||
+                !previousMarkerLine.includes(`latest-run=${latestRunId}`) ||
+                !previousMarkerLine.includes('state=alert'));
+
+            if (shouldAlert) {
+              if (!trackingIssue) {
+                const { data: createdIssue } = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body,
+                  labels,
+                });
+                core.notice(
+                  `Opened tracking issue #${createdIssue.number} ` +
+                    `for unhealthy Acceptance Full runs.`
+                );
+              } else {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: trackingIssue.number,
+                  state: 'open',
+                  body,
+                });
+                if (isNewAlert) {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: trackingIssue.number,
+                    body: [
+                      'Acceptance Full remains unhealthy.',
+                      `- Latest run: [#${latestRun.run_number}](${latestRun.html_url}) — \`${latestRun.conclusion}\``,
+                      `- Current failure streak: ${consecutiveFailures}`,
+                      oldestFailingRun
+                        ? `- First failing run in current streak: ` +
+                          `[#${oldestFailingRun.run_number}](${oldestFailingRun.html_url})`
+                        : '- First failing run in current streak: n/a',
+                    ].join('\n'),
+                  });
+                }
+              }
+
+              core.setFailed(
+                `${workflowName} is unhealthy: ${consecutiveFailures} ` +
+                  `consecutive non-success run(s); first failing run ` +
+                  `in the current streak is ` +
+                  `${oldestFailingRun?.created_at || 'unknown'}.`
+              );
+              return;
+            }
+
+            if (trackingIssue && trackingIssue.state === 'open') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: trackingIssue.number,
+                body:
+                  `✅ Acceptance Full recovered on ` +
+                  `[#${latestRun.run_number}](${latestRun.html_url}) with ` +
+                  `conclusion \`${latestRun.conclusion}\`. ` +
+                  'Closing this tracking issue.',
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: trackingIssue.number,
+                state: 'closed',
+                body,
+              });
+            }
+
+            core.notice(`${workflowName} is healthy.`);

@@ -294,3 +294,28 @@ class TestDrillPathClassification:
         known_path = "config/prometheus/prometheus.yml"
         assert _in_group(path_filters["reload"], known_path)
         assert not _in_group(path_filters["non_reloadable_config"], known_path)
+
+
+class TestCommentSummary:
+    """Commit comments must explain why deploy did or did not happen."""
+
+    def test_comment_summary_always_runs(self, deploy_workflow: dict[str, Any]) -> None:
+        assert deploy_workflow["jobs"]["comment-summary"].get("if") == "always()"
+
+    def test_comment_summary_mentions_acceptance_gate_skip_reason(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        joined = "\n".join(
+            str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"]
+        )
+        assert "Acceptance Full gate did not pass" in joined
+        assert "workflow_run.conclusion" in joined
+
+    def test_comment_summary_mentions_no_deployable_changes(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        joined = "\n".join(
+            str(step) for step in deploy_workflow["jobs"]["comment-summary"]["steps"]
+        )
+        assert "no deployable compose/config/dashboard changes were detected" in joined
+        assert "Changed paths: compose=" in joined
