@@ -156,6 +156,6 @@ scrape_configs:
         labels:
           plane: "obstackd"
           component: "pushgateway"
-    scrape_interval: 60s
+    scrape_interval: 15s
     metrics_path: "/metrics"
     scheme: "http"
