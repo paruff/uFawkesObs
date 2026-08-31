@@ -108,9 +108,16 @@ class MetricsDB:
         team: str | None,
         outcomes: tuple[str, ...] | None = None,
     ) -> list[tuple]:
-        """Fetch (source, outcome, recorded_at, metadata) for deployment events."""
+        """Fetch (id, source, outcome, recorded_at, metadata) for deployment events.
+
+        ``id`` is included as an ordering tiebreaker (#286) — SQLite's
+        ``CURRENT_TIMESTAMP`` has 1-second resolution, so two deployments
+        of the same source landing in the same second is realistic under
+        burst load, and ``id`` (autoincrement, insertion order) is the
+        only unambiguous way to know which one is actually "next".
+        """
         sql = (
-            "SELECT source, outcome, recorded_at, metadata FROM raw_events "
+            "SELECT id, source, outcome, recorded_at, metadata FROM raw_events "
             "WHERE event_type = 'deployment' AND recorded_at >= ?"
         )
         params: list[Any] = [self._cutoff(window_days)]
@@ -131,7 +138,7 @@ class MetricsDB:
         """Deployment Frequency: deploys/week per team over the window."""
         rows = await self._deployment_rows(window_days, team, outcomes=("success",))
         counts: dict[str, int] = {}
-        for source, *_ in rows:
+        for _id, source, *_ in rows:
             counts[source] = counts.get(source, 0) + 1
         weeks = max(window_days / 7.0, 1.0)
         return [
@@ -150,7 +157,7 @@ class MetricsDB:
         rows = await self._deployment_rows(window_days, team, outcomes=("success",))
         exact: dict[str, list[float]] = {}
         proxy: dict[str, list[float]] = {}
-        for source, _outcome, _recorded_at, metadata in rows:
+        for _id, source, _outcome, _recorded_at, metadata in rows:
             meta = json.loads(metadata) if metadata else {}
             deployed_at = meta.get("deployed_at")
             if not deployed_at:
@@ -201,22 +208,24 @@ class MetricsDB:
         """Failure Deployment Recovery Time: gap from a failed deploy to the
         next deploy of the same source, when that next deploy succeeded.
 
-        ponytail: matches the next row directly rather than Postgres's
-        recorded_at self-join, which is equivalent unless two deployments of
-        the same source share an identical recorded_at timestamp.
+        #286: ordered by (recorded_at, id) rather than recorded_at alone —
+        SQLite's CURRENT_TIMESTAMP has 1-second resolution, so two
+        deployments of the same source landing in the same second is
+        realistic under burst load, and id (insertion order) is the only
+        unambiguous tiebreaker for which one is actually "next".
         """
         rows = await self._deployment_rows(window_days, team)
-        by_source: dict[str, list[tuple[str, str]]] = {}
-        for source, outcome, recorded_at, _metadata in rows:
-            by_source.setdefault(source, []).append((outcome, recorded_at))
+        by_source: dict[str, list[tuple[int, str, str]]] = {}
+        for row_id, source, outcome, recorded_at, _metadata in rows:
+            by_source.setdefault(source, []).append((row_id, outcome, recorded_at))
 
         gaps: dict[str, list[float]] = {}
         for source, events in by_source.items():
-            events.sort(key=lambda e: e[1])
-            for i, (outcome, recorded_at) in enumerate(events[:-1]):
+            events.sort(key=lambda e: (e[2], e[0]))
+            for i, (_row_id, outcome, recorded_at) in enumerate(events[:-1]):
                 if outcome not in ("failure", "rollback"):
                     continue
-                next_outcome, next_recorded_at = events[i + 1]
+                _next_row_id, next_outcome, next_recorded_at = events[i + 1]
                 if next_outcome != "success":
                     continue
                 gap_hours = (
@@ -237,7 +246,7 @@ class MetricsDB:
         rows = await self._deployment_rows(window_days, team)
         totals: dict[str, int] = {}
         failures: dict[str, int] = {}
-        for source, outcome, _recorded_at, _metadata in rows:
+        for _id, source, outcome, _recorded_at, _metadata in rows:
             totals[source] = totals.get(source, 0) + 1
             if outcome in ("failure", "rollback"):
                 failures[source] = failures.get(source, 0) + 1
@@ -270,7 +279,7 @@ class MetricsDB:
 
         totals: dict[str, int] = {}
         matched: dict[str, int] = {}
-        for source, _outcome, _recorded_at, metadata in deploy_rows:
+        for _id, source, _outcome, _recorded_at, metadata in deploy_rows:
             totals[source] = totals.get(source, 0) + 1
             meta = json.loads(metadata) if metadata else {}
             commit_sha = meta.get("commit_sha")

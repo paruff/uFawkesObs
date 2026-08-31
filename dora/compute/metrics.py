@@ -166,6 +166,30 @@ def _ensure_team_entry(
     return teams[team_id]
 
 
+def _to_float_or_none(value: Any) -> float | None:
+    return float(value) if value is not None else None
+
+
+# (source rows, entry key, row key) for the three metrics whose merge is a
+# plain float-or-None copy with no team-level side effects. deployment
+# frequency and lead time are handled separately below since they also set
+# the proxy_metrics flag.
+_SIMPLE_METRIC_MERGES = (
+    ("fdrt_p50_hours", "p50_fdrt_hours"),
+    ("change_failure_rate", "cfr"),
+    ("rework_rate_pct", "rework_pct"),
+)
+
+# (tier key, classify_tier() metric name, entry key to read the value from)
+_TIER_FIELDS = (
+    ("dora_tier_deployment_frequency", "deployment_frequency", "deployment_frequency"),
+    ("dora_tier_lead_time", "lead_time", "lead_time_p50_hours"),
+    ("dora_tier_fdrt", "fdrt", "fdrt_p50_hours"),
+    ("dora_tier_cfr", "cfr", "change_failure_rate"),
+    ("dora_tier_rework_rate", "rework_rate", "rework_rate_pct"),
+)
+
+
 def _merge_team_results(
     df: list[dict],
     lt: list[dict],
@@ -177,57 +201,29 @@ def _merge_team_results(
     teams: dict[str, dict] = {}
 
     for row in df:
-        tid = row["team_id"]
-        entry = _ensure_team_entry(teams, tid)
+        entry = _ensure_team_entry(teams, row["team_id"])
         entry["deployment_frequency"] = float(row["deploys_per_week"])
         entry["proxy_metrics"] = row.get("proxy_metrics", False)
 
     for row in lt:
-        tid = row["team_id"]
-        entry = _ensure_team_entry(teams, tid, proxy=row.get("proxy_used", False))
-        entry["lead_time_p50_hours"] = (
-            float(row["p50"]) if row["p50"] is not None else None
+        entry = _ensure_team_entry(
+            teams, row["team_id"], proxy=row.get("proxy_used", False)
         )
-        entry["lead_time_p95_hours"] = (
-            float(row["p95"]) if row["p95"] is not None else None
-        )
+        entry["lead_time_p50_hours"] = _to_float_or_none(row["p50"])
+        entry["lead_time_p95_hours"] = _to_float_or_none(row["p95"])
         if row.get("proxy_used"):
             entry["proxy_metrics"] = True
 
-    for row in fdrt_res:
-        tid = row["team_id"]
-        entry = _ensure_team_entry(teams, tid)
-        entry["fdrt_p50_hours"] = (
-            float(row["p50_fdrt_hours"]) if row["p50_fdrt_hours"] is not None else None
-        )
+    for rows, (entry_key, row_key) in zip(
+        (fdrt_res, cfr, rr), _SIMPLE_METRIC_MERGES, strict=True
+    ):
+        for row in rows:
+            entry = _ensure_team_entry(teams, row["team_id"])
+            entry[entry_key] = _to_float_or_none(row[row_key])
 
-    for row in cfr:
-        tid = row["team_id"]
-        entry = _ensure_team_entry(teams, tid)
-        entry["change_failure_rate"] = (
-            float(row["cfr"]) if row["cfr"] is not None else None
-        )
-
-    for row in rr:
-        tid = row["team_id"]
-        entry = _ensure_team_entry(teams, tid)
-        entry["rework_rate_pct"] = (
-            float(row["rework_pct"]) if row["rework_pct"] is not None else None
-        )
-
-    # Add DORA tiers
-    for _tid, entry in teams.items():
-        entry["dora_tier_deployment_frequency"] = classify_tier(
-            "deployment_frequency", entry.get("deployment_frequency")
-        )
-        entry["dora_tier_lead_time"] = classify_tier(
-            "lead_time", entry.get("lead_time_p50_hours")
-        )
-        entry["dora_tier_fdrt"] = classify_tier("fdrt", entry.get("fdrt_p50_hours"))
-        entry["dora_tier_cfr"] = classify_tier("cfr", entry.get("change_failure_rate"))
-        entry["dora_tier_rework_rate"] = classify_tier(
-            "rework_rate", entry.get("rework_rate_pct")
-        )
+    for entry in teams.values():
+        for tier_key, metric_name, value_key in _TIER_FIELDS:
+            entry[tier_key] = classify_tier(metric_name, entry.get(value_key))
 
     return list(teams.values())
 
