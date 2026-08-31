@@ -107,6 +107,13 @@ jobs:
             --junit-xml=reports/acceptance-full.xml \
             -o junit_family=legacy 2>&1 | tee reports/acceptance-full-output.log
 
+      - name: Capture container logs
+        if: always()
+        run: |
+          docker compose logs --no-color --timestamps \
+            dora-api dora-compute dora-pushgateway \
+            > reports/dora-container-logs.txt 2>&1 || true
+
       - name: Generate runbook snippets
         if: always()
         run: |
@@ -132,6 +139,7 @@ jobs:
             reports/slo-report.md
             reports/acceptance-full.xml
             reports/acceptance-full-output.log
+            reports/dora-container-logs.txt
           retention-days: 30
 
       - name: Shutdown stack
