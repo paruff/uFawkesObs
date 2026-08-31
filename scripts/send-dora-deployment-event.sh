@@ -13,7 +13,12 @@
 #
 # Required env: DORA_REPO, DORA_SERVICE, DORA_ENVIRONMENT, DORA_COMMIT_SHA,
 #               DORA_STATUS, DORA_PIPELINE_URL
-# Optional env: DORA_PR_MERGED_AT, DORA_INGESTION_URL (default localhost:8088)
+# Optional env: DORA_PR_MERGED_AT, DORA_INGESTION_URL (default localhost:8088),
+#               DORA_API_KEY (sent as a Bearer token if set — #283: this
+#               script was the one DORA collector that didn't support it,
+#               so setting DORA_API_KEY on dora-api would have silently
+#               and permanently stopped deploy-triggered events with only
+#               a GitHub Actions warning as evidence)
 # ============================================================================
 
 set -euo pipefail
@@ -51,6 +56,7 @@ EOF
 
 if curl -sf -X POST "${DORA_URL}/event" \
     -H "Content-Type: application/json" \
+    ${DORA_API_KEY:+-H "Authorization: Bearer ${DORA_API_KEY}"} \
     --connect-timeout 5 --max-time 10 \
     -d "${PAYLOAD}" > /dev/null; then
     echo "[dora] deployment event sent (status=${DORA_STATUS})"

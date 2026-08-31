@@ -119,8 +119,14 @@ groups:
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-spike-absent"
 
       - alert: DORARegressionCFRSpike
+        # dora_cfr_pct is a 0-1 ratio despite the name (see
+        # ufawkesobs-dora-metrics.yml) -- the +5/+3 thresholds here
+        # previously meant "5/3 percentage points" but were being added
+        # directly to a 0-1 value, making both alerts structurally unable
+        # to ever fire (#281). +0.05 = 5 percentage points on the real
+        # ratio scale.
         expr: |
-          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 5)
+          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 0.05)
         for: 24h
         labels:
           severity: warning
@@ -147,8 +153,10 @@ groups:
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-spike-absent"
 
       - alert: DORARegressionReworkRateClimb
+        # Same fix as DORARegressionCFRSpike above -- dora_rework_rate_pct
+        # is also a 0-1 ratio (#281); +0.03 = 3 percentage points.
         expr: |
-          dora_rework_rate_pct > (avg_over_time(dora_rework_rate_pct[30d]) + 3)
+          dora_rework_rate_pct > (avg_over_time(dora_rework_rate_pct[30d]) + 0.03)
         for: 48h
         labels:
           severity: warning

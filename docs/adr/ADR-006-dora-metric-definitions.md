@@ -7,6 +7,32 @@
 
 ---
 
+> **Amendment (2026-08-31, #282):** Sections 1-5 below describe an
+> OTLP-span-based ingestion model (`ufawkesdora-ingestion:4318/v1/metrics`,
+> deployment/incident spans with `cicd.*`/`dora.*` OTel attributes) that
+> was **never implemented** — nothing in this repo ever emitted those
+> spans, and every recording rule that once queried for them silently
+> evaluated to `vector(0)` until #266 repointed them at the real
+> pipeline. The metric *definitions themselves* (deployment/incident/
+> restoration semantics, the five DORA metrics) are still the intended
+> business meaning; only the transport/ingestion mechanism described
+> below is stale.
+>
+> **What's actually running today:** a REST `POST /event` API
+> (`dora-api`, see `dora/ingestion/`), validated against the JSON
+> Schemas in `dora/events/*.schema.json`, queued and processed by a
+> background worker into `raw_events`, computed into the five DORA
+> metrics by `dora-compute` (`dora/compute/metrics.py`) on a periodic
+> interval, and pushed to a Prometheus Pushgateway — see
+> `config/prometheus/rules/ufawkesobs-dora-metrics.yml`'s own header
+> comment for the authoritative current pipeline description, and
+> `docs/adr/ADR-007-dora-consolidation.md` for how it landed in this
+> repo. Datastore is SQLite only (see ADR-007's own 2026-08-31
+> amendment) — the resource-plane Postgres path mentioned nowhere in
+> this file either was removed.
+
+---
+
 ## Context
 
 uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the five DORA 2025/2026 key metrics:
