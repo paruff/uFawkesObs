@@ -25,10 +25,11 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import quote
+
+from .metrics_db_sqlite import MetricsDB
 
 logger = logging.getLogger("ufawkesdora.metrics")
 
@@ -90,14 +91,6 @@ def classify_tier(metric_name: str, value: float | None) -> str:
         if thresholds[tier](value):
             return tier
     return "unknown"
-
-
-# ── Database backend ───────────────────────────────────────────────────────
-
-if os.environ.get("DATABASE_URL", "").startswith("postgresql"):
-    from .metrics_db_postgres import MetricsDB  # noqa: F401
-else:
-    from .metrics_db_sqlite import MetricsDB  # noqa: F401
 
 
 # ── Metric computation orchestrator ────────────────────────────────────────────

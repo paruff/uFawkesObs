@@ -24,6 +24,23 @@ into uFawkesObs; archives the standalone uFawkesDORA repo.
 >   own Dockerfile + requirements file — not the `pyproject.toml`/entry-point
 >   plan in step 05 below.
 
+> **Amendment (2026-08-31):** The Postgres/resource-plane backend described
+> throughout this ADR (external `DORA_POSTGRES_URL` instance, `dora/database/`
+> migrations, `compose.resource-plane.override.yaml`, the `resource-plane`
+> Compose profile, `metrics_db_postgres.py`/`queue_postgres.py`) has been
+> **fully decommissioned**. DORA's datastore is SQLite only, permanently —
+> see `dora/compute/metrics_db_sqlite.py` and
+> `dora/ingestion/api/queue_sqlite.py`. This was a product decision (see
+> `docs/notes/res-status.md`) combined with a code review
+> (`.claude/reviews/dora-consolidation-review.md`) that found the
+> Postgres-only path carried real, untested bugs (a hardcoded default
+> migration password, a SQL-injection pattern, and a duplicate-event
+> `ON CONFLICT` clause that didn't match its own partial unique index) —
+> rather than fix bugs in code being deleted, the code was deleted. Anyone
+> wanting a resource plane going forward should target Fawkes (the
+> Kubernetes track) — see `docs/fawkes-migration.md`. Implemented in the
+> `chore/dora-drop-postgres` PR (issue #275).
+
 ---
 
 ## Context

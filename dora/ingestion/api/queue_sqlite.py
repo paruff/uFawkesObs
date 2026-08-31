@@ -1,11 +1,9 @@
 """SQLite-backed event_queue operations (aiosqlite).
 
-Default backend for the ``dora`` profile — self-contained, zero external
-dependencies. Selected via queue.py when DATABASE_URL is unset or points at
-SQLite. Runs as a single shared connection since the worker loop executes
-in-process inside dora-api (see main.py's lifespan), so there is no
-multi-writer contention to guard against with row locking. See
-queue_postgres.py for the resource-plane / suite-mode backend.
+The only backend for the ``dora`` profile — self-contained, zero external
+dependencies. Runs as a single shared connection since the worker loop
+executes in-process inside dora-api (see main.py's lifespan), so there is
+no multi-writer contention to guard against with row locking.
 """
 
 import json
@@ -74,8 +72,8 @@ async def get_pool(
     """Get or create the shared aiosqlite connection.
 
     If ``dsn`` is ``None``, uses the ``DATABASE_URL`` environment variable.
-    ``min_size``/``max_size`` are accepted for interface parity with
-    queue_postgres.get_pool() but unused — SQLite here is single-connection.
+    ``min_size``/``max_size`` are accepted for call-site parity with
+    connection-pooled backends but unused — SQLite here is single-connection.
     """
     global _pool
     if _pool is None:

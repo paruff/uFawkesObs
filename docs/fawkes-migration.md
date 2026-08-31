@@ -55,9 +55,13 @@ the actual `paruff/fawkes` chart values.
 ### Grafana
 
 **uFawkesObs:** `config/grafana/provisioning/datasources/datasources.yaml`
-defines 5 datasources with fixed string UIDs (`prometheus`, `tempo`, `loki`,
-`alertmanager`, `ufawkesres-postgres`) — file-based provisioning, mounted
-into the container per `compose.yaml`.
+defines 4 datasources with fixed string UIDs (`prometheus`, `tempo`, `loki`,
+`alertmanager`) — file-based provisioning, mounted into the container per
+`compose.yaml`. (A 5th, `ufawkesres-postgres`, existed for DORA metrics
+snapshots via the resource-plane Postgres backend; that backend was
+decommissioned — DORA is SQLite-only now, see `docs/notes/res-status.md`.
+A future resource plane on this Fawkes track would need its own
+datasource, not a resurrection of the removed one.)
 
 **Fawkes:** Grafana runs in-cluster per the namespace table
 (`fawkes-observability`), deployed via Helm/ArgoCD. The architecture doc
@@ -155,10 +159,10 @@ namespace before being treated as authoritative.
   - Prometheus's own data if historical metrics need to survive the cut
     (`docs/KNOWN_LIMITATIONS.md` — 30-day retention only; snapshot
     `./data/prometheus` or accept the loss).
-  - `dora/` snapshot data (`./data/dora/dora.db` if SQLite, or the
-    `dora_snapshots` table if using the `resource-plane` Postgres profile)
-    if DORA history needs to survive — see the DORA divergence note below
-    before assuming this data has anywhere to go on the Fawkes side.
+  - `dora/` snapshot data (`./data/dora/dora.db` — SQLite is the only
+    backend now, see `docs/notes/res-status.md`) if DORA history needs to
+    survive — see the DORA divergence note below before assuming this data
+    has anywhere to go on the Fawkes side.
 - A rollback point: keep the uFawkesObs Compose stack running and
   untouched until the Fawkes-side stack is validated end-to-end. Don't
   decommission Compose services as you migrate each piece — decommission

@@ -1,11 +1,9 @@
 """SQLite-backed metric queries (aiosqlite).
 
-Default backend for the ``dora`` profile — self-contained, zero external
-dependencies. Selected via metrics.py when DATABASE_URL is unset or points at
-SQLite. Postgres computes percentiles and gaps in SQL (percentile_cont,
-LEAD() OVER); SQLite has neither, so this module fetches the raw rows and
-reimplements the same math in Python, returning identical result shapes.
-See metrics_db_postgres.py for the resource-plane / suite-mode backend.
+The only backend for the ``dora`` profile — self-contained, zero external
+dependencies. SQLite has no percentile_cont/LEAD() OVER window functions,
+so this module fetches the raw rows and reimplements the same math in
+Python, matching the semantics of those SQL functions.
 """
 
 import json
@@ -146,8 +144,8 @@ class MetricsDB:
     ) -> list[dict[str, Any]]:
         """Lead Time for Changes: P50 and P95 in hours.
 
-        Mirrors metrics_db_postgres.py's exact/proxy split: uses
-        ``first_commit_at`` when present, falls back to ``pr_merged_at``.
+        Uses ``first_commit_at`` when present, falls back to
+        ``pr_merged_at`` (proxy metric).
         """
         rows = await self._deployment_rows(window_days, team, outcomes=("success",))
         exact: dict[str, list[float]] = {}

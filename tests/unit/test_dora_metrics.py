@@ -1,7 +1,7 @@
-"""Unit tests for compute/metrics.py (backend-agnostic orchestration).
+"""Unit tests for compute/metrics.py (orchestration around MetricsDB).
 
-MetricsDB-specific tests live in test_dora_metrics_postgres.py and
-test_dora_metrics_sqlite.py.
+MetricsDB-specific tests live in test_dora_metrics_sqlite.py (the only
+backend).
 
 Tests cover:
 - DORA tier classification logic
@@ -11,10 +11,6 @@ Tests cover:
 - Proxy metrics flag propagation
 - CLI argument parsing
 - Prometheus pushgateway output format
-
-These tests mock the asyncpg database layer to avoid requiring
-a running TimescaleDB instance. Integration tests with a real DB
-are in test_compute_integration.py (requires Docker).
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch

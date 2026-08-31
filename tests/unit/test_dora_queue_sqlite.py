@@ -1,8 +1,6 @@
 """Unit tests for the SQLite-backed event_queue implementation.
 
-Covers the same behavior contract as the Postgres/asyncpg implementation
-(dora/ingestion/api/queue_postgres.py) so dora-api and the worker loop can
-run against either backend transparently. Uses an in-memory SQLite database
+SQLite is the only event_queue backend. Uses an in-memory SQLite database
 per test — see queue_sqlite.get_pool(dsn=...).
 """
 

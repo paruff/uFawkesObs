@@ -43,11 +43,8 @@ EXPECTED_INGESTION_FILES = [
 ]
 EXPECTED_COMPUTE_FILES = [
     "__init__.py",
-    "archetype.py",
-    "archetype_survey.md",
     "metrics.py",
     "requirements.txt",
-    "vsi.py",
 ]
 EXPECTED_EVENT_SCHEMAS = [
     "deployment-event.schema.json",
@@ -212,191 +209,6 @@ class TestComposeDoraApi:
 
 
 # ---------------------------------------------------------------------------
-# compose.yaml dora-db-init service (issue #202)
-# ---------------------------------------------------------------------------
-class TestComposeDoraDbInit:
-    """The dora-db-init one-shot job must apply dora/database/*.sql against
-    the existing DORA_POSTGRES_URL database — no local postgres service
-    exists to mount docker-entrypoint-initdb.d into (see ADR-007 amendment).
-    """
-
-    def test_service_present(self, compose_data: dict) -> None:
-        assert "dora-db-init" in compose_data.get("services", {}), (
-            "compose.yaml missing dora-db-init service"
-        )
-
-    def test_mounts_dora_database(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-db-init"]
-        assert "./dora/database:/migrations:ro" in svc.get("volumes", []), (
-            "dora-db-init must mount ./dora/database into /migrations"
-        )
-
-    def test_resource_plane_profile(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-db-init"]
-        assert "resource-plane" in svc.get("profiles", []), (
-            "dora-db-init must be gated behind the resource-plane profile"
-        )
-        assert "dora" not in svc.get("profiles", []), (
-            "dora-db-init must not run in the base dora profile (SQLite-only)"
-        )
-
-    def test_runs_once_not_restarted(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-db-init"]
-        assert svc.get("restart") == "no", (
-            "dora-db-init is a one-shot job — restart must be 'no'"
-        )
-
-    def test_database_url_from_dora_postgres_url(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-db-init"]
-        env = svc.get("environment", [])
-        assert any(
-            isinstance(e, str) and e.startswith("DORA_POSTGRES_URL=") for e in env
-        ), "dora-db-init must derive its connection string from DORA_POSTGRES_URL"
-
-    def test_dora_api_no_migration_dependency_by_default(self, dora_api: dict) -> None:
-        assert "dora-db-init" not in dora_api.get("depends_on", {}), (
-            "dora-api must not depend on dora-db-init in the base dora profile "
-            "— only compose.resource-plane.override.yaml adds that dependency"
-        )
-
-    def test_database_url_not_required_at_compose_parse_time(
-        self, compose_data: dict
-    ) -> None:
-        """Regression test for the 2026-08-17 Chaos Nightly outage: Docker
-        Compose evaluates ``${VAR:?...}`` required-variable interpolation for
-        every service in the file at parse time, regardless of which
-        --profile flags are active. dora-db-init previously hard-required
-        DORA_POSTGRES_URL this way, which broke `--profile core`-only
-        invocations even though dora-db-init never runs outside the
-        resource-plane profile. The required-var check belongs in
-        dora/database/migrate.sh (see test_migrate_sh_still_requires_url
-        below), which only executes when the container actually starts.
-        """
-        svc = compose_data["services"]["dora-db-init"]
-        env = svc.get("environment", [])
-        entry = next(e for e in env if e.startswith("DORA_POSTGRES_URL="))
-        assert ":?" not in entry, (
-            "dora-db-init's DORA_POSTGRES_URL must use a soft default (:-), "
-            "not required (:?) interpolation — see docstring for why"
-        )
-
-    def test_migrate_sh_still_requires_url(self) -> None:
-        """dora-db-init's compose.yaml env var is a soft default (see test
-        above) precisely because dora/database/migrate.sh enforces the
-        actual requirement at container-start time — this test guards that
-        the fail-closed check doesn't silently disappear from both places.
-        """
-        migrate_sh = (DORA_DIR / "database" / "migrate.sh").read_text()
-        assert "DORA_POSTGRES_URL:?" in migrate_sh, (
-            "migrate.sh must still hard-require DORA_POSTGRES_URL at "
-            "container start, now that compose.yaml no longer does"
-        )
-
-
-# ---------------------------------------------------------------------------
-# compose.resource-plane.override.yaml — Postgres backend for the dora profile
-# ---------------------------------------------------------------------------
-@pytest.fixture(scope="module")
-def override_data() -> dict:
-    """Return the parsed compose.resource-plane.override.yaml document."""
-    path = REPO_ROOT / "compose.resource-plane.override.yaml"
-    assert path.exists(), "compose.resource-plane.override.yaml not found"
-    with open(path, encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
-
-
-class TestComposeResourcePlanOverride:
-    """Overlay that swaps the dora profile SQLite default for uFawkesRes Postgres."""
-
-    @pytest.mark.parametrize("service", ["dora-api", "dora-compute"])
-    def test_database_url_from_dora_postgres_url(
-        self, override_data: dict, service: str
-    ) -> None:
-        env = override_data["services"][service].get("environment", [])
-        assert any(
-            isinstance(e, str)
-            and e.startswith("DATABASE_URL=")
-            and "DORA_POSTGRES_URL" in e
-            for e in env
-        ), f"{service} override must derive DATABASE_URL from DORA_POSTGRES_URL"
-
-    @pytest.mark.parametrize("service", ["dora-api", "dora-compute"])
-    def test_waits_for_migration(self, override_data: dict, service: str) -> None:
-        depends_on = override_data["services"][service].get("depends_on", {})
-        assert depends_on.get("dora-db-init", {}).get("condition") == (
-            "service_completed_successfully"
-        ), f"{service} override must wait for dora-db-init to complete"
-
-    @pytest.mark.parametrize("service", ["dora-api", "dora-compute", "dora-db-init"])
-    def test_joins_fawkes_backbone_net(self, override_data: dict, service: str) -> None:
-        """Regression test: found live 2026-08-18 -- none of these services
-        were ever attached to fawkes-backbone-net (the external network
-        uFawkesRes's Postgres actually runs on, per docs/product/design.md
-        §5), so DATABASE_URL pointing at DORA_POSTGRES_URL would still fail
-        to connect even with correct credentials -- the network path
-        literally didn't exist."""
-        networks = override_data["services"][service].get("networks", [])
-        assert "fawkes-backbone-net" in networks, (
-            f"{service} must join fawkes-backbone-net to reach uFawkesRes's "
-            f"fawkes-postgres -- resource-plane mode is unreachable without it"
-        )
-
-    def test_declares_fawkes_backbone_net_as_external(
-        self, override_data: dict
-    ) -> None:
-        net = override_data.get("networks", {}).get("fawkes-backbone-net", {})
-        assert net.get("external") is True, (
-            "fawkes-backbone-net must be declared external -- it's created by "
-            "uFawkesRes's own compose stack, not by uFawkesObs"
-        )
-        assert net.get("name") == "ufawkes-resources_fawkes-backbone-net", (
-            "external network name must match uFawkesRes's actual compose "
-            "project name (name: ufawkes-resources in its compose.yaml)"
-        )
-
-
-class TestDoraDatabaseFiles:
-    """DB init/migration/hypertable SQL moved from uFawkesDORA (issue #202)."""
-
-    EXPECTED_FILES = [
-        "init/01-dora-schema.sql",
-        "migrations/001-initial-schema.sql",
-        "migrations/002-add-attempts-to-event-queue.sql",
-        "migrations/003-extend-dora-snapshots.sql",
-        "timescaledb/hypertables.sql",
-        "migrate.sh",
-    ]
-
-    @pytest.mark.parametrize("rel", EXPECTED_FILES)
-    def test_file_present(self, rel: str) -> None:
-        assert (DORA_DIR / "database" / rel).is_file(), (
-            f"expected dora/database/{rel} — migration did not land"
-        )
-
-    @pytest.mark.parametrize(
-        "rel",
-        ["init/01-dora-schema.sql", "timescaledb/hypertables.sql"],
-    )
-    def test_sql_does_not_switch_database(self, rel: str) -> None:
-        """`\\c dora_metrics` would reconnect away from DORA_POSTGRES_URL's
-        actual target database — must be stripped (see ADR-007 amendment)."""
-        sql = (DORA_DIR / "database" / rel).read_text(encoding="utf-8")
-        assert "\\c dora_metrics" not in sql, (
-            f"{rel} still has a \\c dora_metrics database-switch command"
-        )
-
-    def test_no_out_of_scope_role_provisioning(self) -> None:
-        """Database/role creation is the shared Postgres server's own
-        provisioning (uFawkesRes) — out of scope for uFawkesObs."""
-        init_dir = DORA_DIR / "database" / "init"
-        leftover = {p.name for p in init_dir.glob("*")} - {"01-dora-schema.sql"}
-        assert not leftover, (
-            f"unexpected files in dora/database/init/: {leftover} — "
-            "00-create-databases.sh and 02-dora-roles.sql are intentionally excluded"
-        )
-
-
-# ---------------------------------------------------------------------------
 # compose.yaml dora-compute + pushgateway services (issue #205)
 # ---------------------------------------------------------------------------
 class TestComposeDoraCompute:
@@ -437,13 +249,6 @@ class TestComposeDoraCompute:
         svc = compose_data["services"]["dora-compute"]
         assert "./data/dora:/data/dora" in svc.get("volumes", []), (
             "dora-compute must mount ./data/dora for the SQLite database file"
-        )
-
-    def test_no_migration_dependency_by_default(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        assert "dora-db-init" not in svc.get("depends_on", {}), (
-            "dora-compute must not depend on dora-db-init in the base dora "
-            "profile — only compose.resource-plane.override.yaml adds that"
         )
 
     def test_pushgateway_url_points_at_pushgateway_service(

@@ -5,7 +5,7 @@
 # is what turns it into a long-running service (issue #205).
 set -eu
 
-: "${DATABASE_URL:?Set DORA_POSTGRES_URL in .env (see .env.example)}"
+: "${DATABASE_URL:?Set DATABASE_URL (see .env.example)}"
 : "${PUSHGATEWAY_URL:?Set PUSHGATEWAY_URL}"
 
 WINDOW_DAYS="${DORA_COMPUTE_WINDOW_DAYS:-30}"

@@ -157,17 +157,16 @@ policy and field reference.
 
 ```
 ┌─────────────┐     ┌──────────────────────┐     ┌───────────────┐
-│  Your Repo  │────▶│  uFawkesObs dora-api  │────▶│  SQLite or    │
-│  (workflow)  │     │  POST /event          │     │  Postgres     │
-│              │     │  :8088                │     │  (raw_events) │
-│  uses: ...   │     │                        │     │  DORA metrics │
+│  Your Repo  │────▶│  uFawkesObs dora-api  │────▶│  SQLite       │
+│  (workflow)  │     │  POST /event          │     │  (raw_events) │
+│              │     │  :8088                │     │  DORA metrics │
+│  uses: ...   │     │                        │     │               │
 └─────────────┘     └──────────────────────┘     └───────────────┘
 ```
 
 `dora-api` is this repo's own ingestion service (`dora/ingestion/`), not
 a separate product — the standalone uFawkesDORA repo was archived and
-folded in here (see `AGENTS.md` §10). Backend is SQLite by default, or
-Postgres when the `resource-plane` profile is active. The collectors act
-as adapters between GitHub webhook payloads and the canonical event
-schemas in `dora/events/`. They require no changes to your existing
-CI/CD pipelines.
+folded in here (see `AGENTS.md` §10). The backend is SQLite only. The
+collectors act as adapters between GitHub webhook payloads and the
+canonical event schemas in `dora/events/`. They require no changes to
+your existing CI/CD pipelines.

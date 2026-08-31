@@ -142,14 +142,10 @@ prose summary:
 
 ### Queueing (implementation detail, not part of the wire contract)
 
-`dora/ingestion/api/queue.py` is a backend-selecting facade: it enqueues to
-SQLite (`queue_sqlite.py`, the `dora` profile default) or Postgres
-(`queue_postgres.py`, the `resource-plane` profile) based on whether
-`DATABASE_URL` starts with `postgresql://`. Either way, `POST /event`
-enqueues synchronously and returns immediately — `dora/compute/` processes
-the queue asynchronously to compute the five DORA metrics. Callers don't
-need to know which backend is active; the endpoint and payload shape are
-identical either way.
+`dora/ingestion/api/queue.py` is a thin facade over `queue_sqlite.py` —
+SQLite is the only backend. `POST /event` enqueues synchronously and
+returns immediately — `dora/compute/` processes the queue asynchronously
+to compute the five DORA metrics.
 
 ---
 
