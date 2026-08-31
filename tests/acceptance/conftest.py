@@ -163,15 +163,18 @@ def stack(request) -> Iterator[ObservabilityStack]:
                 we_started_it = True
                 health = stack_instance.start()
                 print(health.summary())
+                we_started_it = True
         except requests.RequestException:
             print("🚀 Starting stack (no existing stack detected)...")
             we_started_it = True
             health = stack_instance.start()
             print(health.summary())
+            we_started_it = True
 
     yield stack_instance
 
     if mode == "auto" and we_started_it:
+        # Only stop if we started the stack this session
         print("🛑 Stopping stack (auto mode cleanup)...")
         stack_instance.stop()
 
