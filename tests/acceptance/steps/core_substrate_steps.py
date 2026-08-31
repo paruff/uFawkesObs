@@ -37,14 +37,23 @@ def no_service_uses_latest(tag: str, stack: ObservabilityStack) -> None:
 def all_services_have_healthcheck(stack: ObservabilityStack) -> None:
     """Assert all services have healthcheck definitions.
 
-    Some services (e.g., Tempo) use distroless images without shell tools
-    and cannot have traditional healthchecks. These are documented exemptions.
+    Some services (e.g., Tempo, otel-collector, otel-collector-dora,
+    alertmanager-discord) use distroless images without shell tools and
+    cannot have traditional healthchecks. These are documented exemptions
+    (#272) -- verified empirically (no sh/wget/curl in any of these
+    images; no health-query subcommand available either). See compose.yaml's
+    NOTE comments on each service for the alternative approach used.
     """
     compose_path = Path(stack.compose_dir) / "compose.yaml"
     content = yaml.safe_load(compose_path.read_text())
 
     # Services that are exempt from healthcheck requirement due to distroless images
-    exempt_services = {"tempo"}
+    exempt_services = {
+        "tempo",
+        "otel-collector",
+        "otel-collector-dora",
+        "alertmanager-discord",
+    }
 
     services = content.get("services", {})
     for service_name, service_def in services.items():
