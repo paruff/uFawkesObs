@@ -1,4 +1,7 @@
 ---
+# LB-04 (#182) connectivity probe: trivial comment-only change to trigger
+# deploy.yml's config-reload path and confirm the SSH connection to
+# DEPLOY_HOST actually works before running the real rollback drill.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
