@@ -141,6 +141,8 @@ jobs:
           COMMIT_SHA: ${{ inputs.commit_sha || steps.pr-details.outputs.merge_commit_sha }}
           OCCURRED_AT: ${{ steps.pr-details.outputs.merged_at }}
           FIRST_COMMIT_AT: ${{ steps.pr-details.outputs.first_commit_at }}
+          STATUS: ${{ inputs.status }}
+          AI_ASSISTED: ${{ inputs.ai_assisted }}
         run: |
           set -euo pipefail
 
@@ -163,21 +165,30 @@ jobs:
             FIRST_COMMIT_AT="$OCCURRED_AT"
           fi
 
-          # Build the canonical PR event payload
-          PAYLOAD=$(cat <<EOF
-          {
-            "schema_version": "1.0",
-            "event_type": "pr",
-            "repo": "${REPO}",
-            "pr_number": ${PR_NUMBER},
-            "commit_sha": "${COMMIT_SHA}",
-            "status": "${{ inputs.status }}",
-            "occurred_at": "${OCCURRED_AT}",
-            "first_commit_at": "${FIRST_COMMIT_AT}",
-            "ai_assisted": ${{ inputs.ai_assisted }}
-          }
-          EOF
-          )
+          # Build the canonical PR event payload via jq, not string
+          # interpolation — inputs.* are consumed through env: above (not
+          # ${{ }} inside this script), so an attacker-controlled status
+          # value can't break out of the script at template-expansion time
+          # (GitHub Actions script injection).
+          PAYLOAD=$(jq -n \
+            --arg repo "$REPO" \
+            --argjson pr_number "$PR_NUMBER" \
+            --arg commit_sha "$COMMIT_SHA" \
+            --arg status "$STATUS" \
+            --arg occurred_at "$OCCURRED_AT" \
+            --arg first_commit_at "$FIRST_COMMIT_AT" \
+            --argjson ai_assisted "$AI_ASSISTED" \
+            '{
+              schema_version: "1.0",
+              event_type: "pr",
+              repo: $repo,
+              pr_number: $pr_number,
+              commit_sha: $commit_sha,
+              status: $status,
+              occurred_at: $occurred_at,
+              first_commit_at: $first_commit_at,
+              ai_assisted: $ai_assisted
+            }')
 
           # POST to the ingestion API
           echo "Sending PR event to ${INGESTION_URL}/event ..."
