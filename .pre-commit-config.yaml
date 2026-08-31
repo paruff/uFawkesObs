@@ -61,6 +61,12 @@ repos:
       - id: markdownlint
         name: Lint Markdown files
         args: ["--config", ".markdownlint.json", "--fix"]
+        # release-please's fixed changelog template uses dash-style bullets
+        # and double-blank-lines between sections -- permanently
+        # incompatible with MD004 (this repo's hand-written entries are
+        # asterisk-style) and MD012. Machine-generated, not hand-authored;
+        # excluding rather than fighting a tool's fixed output format.
+        exclude: ^CHANGELOG\.md$
 
   # ============================================================================
   # Security Scanning
