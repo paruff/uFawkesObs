@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora down logs status grafana-folder-descriptions test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -49,6 +49,11 @@ up-apps: check-env
 up-dora: check-env
 	docker compose --profile core --profile dora up -d
 
+## up-full: start core + apps + dora together -- matches Acceptance Full
+## (Post-Merge) in CI exactly; use this before 'make test-acceptance-full'
+up-full: check-env
+	docker compose --profile core --profile apps --profile dora up -d
+
 ## down: stop all services
 down:
 	docker compose down
@@ -75,14 +80,54 @@ status:
 grafana-folder-descriptions:
 	set -a && . ./.env && set +a && ./scripts/set-grafana-folder-descriptions.sh
 
+## validate-configs: validate Prometheus/OTel/Tempo config files with each
+##   tool's own binary via pinned Docker images -- mirrors Quality &
+##   Security Gates / Validate Configs in CI exactly. Requires Docker only,
+##   no stack needs to be running.
+validate-configs:
+	@echo "========================================"
+	@echo "🟡 Config Validation (Prometheus/OTel/Tempo)"
+	@echo "========================================"
+	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
+		--entrypoint promtool prom/prometheus:v3.5.4 \
+		check config /etc/prometheus/prometheus.yaml
+	docker run --rm -v $(PWD)/config/otel/collector.yaml:/etc/otel/config.yaml \
+		otel/opentelemetry-collector-contrib:0.120.0 \
+		validate --config=/etc/otel/config.yaml
+	docker run --rm -v $(PWD)/config/tempo/tempo.yaml:/etc/tempo.yaml \
+		grafana/tempo:2.4.1 \
+		-config.file=/etc/tempo.yaml -config.verify=true
+	@echo "✅ All configs valid"
+
 ## install-acceptance-deps: install acceptance test Python dependencies
 install-acceptance-deps:
 	pip install -q -r tests/acceptance/requirements.txt
+
+## install-integration-deps: install integration test Python dependencies
+install-integration-deps:
+	pip install -q -r tests/integration/requirements.txt
 
 ## test-unit: run unit tests only
 test-unit:
 	pip install -q -r tests/unit/requirements.txt
 	pytest tests/unit/
+
+## test-integration: run real component integration tests (Prometheus
+##   scraping, OTel Collector, Grafana, Tempo, Loki, dashboards) against a
+##   live stack -- mirrors Unit & Integration Tests / Integration Tests in
+##   CI. Requires 'make up' first.
+test-integration: install-integration-deps
+	@echo "========================================"
+	@echo "🟠 Integration Tests"
+	@echo "========================================"
+	PROMETHEUS_URL=http://localhost:9090 \
+	OTEL_METRICS_URL=http://localhost:8888 \
+	GRAFANA_URL=http://localhost:3000 \
+	GRAFANA_USER=admin \
+	GRAFANA_PASSWORD=admin \
+	TEMPO_URL=http://localhost:3200 \
+	LOKI_URL=http://localhost:3100 \
+	pytest tests/integration/ -v --tb=short
 
 ## test-acceptance-smoke: run smoke acceptance tests via pytest-bdd (fast, pre-merge)
 ##   Requires stack to be running (run 'make up' first)
@@ -94,13 +139,23 @@ test-acceptance-smoke: install-acceptance-deps
 	@pytest tests/acceptance/ -m "smoke" -v --tb=short --stack-mode=existing
 
 ## test-acceptance-full: run full acceptance tests via pytest-bdd (comprehensive, post-merge)
-##   Requires stack to be running (run 'make up-apps' first)
+##   Requires 'make up-full' first (core + apps + dora, matching CI exactly)
 test-acceptance-full: install-acceptance-deps
 	@echo "========================================"
 	@echo "🟣 Acceptance Full Tests (post-merge)"
 	@echo "========================================"
 	@pytest tests/acceptance/ -m "full" -v --tb=short --stack-mode=existing \
 		--evidence-dir=tests/acceptance/reports/full
+
+## test-acceptance-chaos: run chaos resilience tests via pytest-bdd
+##   Requires stack to be running (run 'make up' first) -- mirrors
+##   Chaos Resilience (Nightly) in CI. Kills/restarts real containers.
+test-acceptance-chaos: install-acceptance-deps
+	@echo "========================================"
+	@echo "🔴 Chaos Resilience Tests"
+	@echo "========================================"
+	@pytest tests/acceptance/ -m "chaos" -v --tb=short --stack-mode=existing \
+		--evidence-dir=tests/acceptance/reports/chaos
 
 ## test-acceptance: run all acceptance tests via pytest-bdd (manual/local use)
 ##   ⚠️  Legacy shell scripts are deprecated and will be removed in a future release
@@ -112,6 +167,17 @@ test-acceptance: install-acceptance-deps
 
 ## test: run unit tests then acceptance tests (requires stack to be running: make up)
 test: test-unit test-acceptance
+
+## ci-local: run the fast pyramid locally in CI order -- pre-commit, config
+##   validation, unit tests, integration tests, acceptance smoke. Requires
+##   'make up' first (integration/smoke need a live stack). Doesn't include
+##   Acceptance Full or Chaos (slow, deliberately post-merge/nightly only in
+##   CI) -- run those explicitly via test-acceptance-full/test-acceptance-chaos
+##   when you actually want them.
+ci-local: pre-commit-run validate-configs test-unit test-integration test-acceptance-smoke
+	@echo ""
+	@echo "✅ Local pyramid passed -- matches Repo Hygiene, Quality & Security"
+	@echo "   Gates, Unit & Integration Tests, and Acceptance Smoke in CI."
 
 # GitOps targets
 pre-commit-setup: ## Install pre-commit hooks
