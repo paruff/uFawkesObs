@@ -148,6 +148,55 @@ def dashboard_panels_have_real_data(
     )
 
 
+@then(parsers.parse('the dashboard "{uid}" panels should return non-empty data'))
+def dashboard_panels_have_nonempty_data(stack: ObservabilityStack, uid: str) -> None:
+    """Weaker sibling of dashboard_panels_have_real_data, for dashboards
+    whose recording rules deliberately aggregate away all labels (e.g.
+    org-wide `avg(...)`/`sum(...)` with no `by (...)` clause) — a
+    correctly-fed panel there produces the exact same label-less shape as
+    an `or vector(0)` fallback, so the label-count check would false-
+    positive. This only checks the query returns at least one series;
+    it can't distinguish "real single aggregate value" from "fallback"
+    the way the stricter step can for per-dimension dashboards.
+    """
+    grafana = stack.grafana()
+    dashboard_response = grafana.get_dashboard(uid)
+    assert dashboard_response is not None, f"Dashboard '{uid}' not found"
+    dashboard_json = dashboard_response.get("dashboard", {})
+    panels = dashboard_json.get("panels", [])
+    template_vars = _resolve_template_vars(dashboard_json)
+
+    promql = stack.promql()
+    checked = 0
+    problems: list[str] = []
+
+    for panel in panels:
+        title = panel.get("title")
+        for target in panel.get("targets", []):
+            expr = target.get("expr")
+            if not expr:
+                continue
+            for var_name, var_value in template_vars.items():
+                expr = expr.replace(f"${var_name}", var_value).replace(
+                    f"${{{var_name}}}", var_value
+                )
+            checked += 1
+            try:
+                result = promql.query(expr)
+            except Exception as e:
+                problems.append(f"{title!r}: query error: {e}")
+                continue
+            if not result.get("result"):
+                problems.append(f"{title!r}: {expr!r} -> no data")
+
+    assert checked > 0, f"Dashboard '{uid}' has no panel queries to check"
+    assert not problems, (
+        f"Dashboard '{uid}': {len(problems)}/{checked} panel queries returned "
+        f"no data:\n" + "\n".join(problems)
+    )
+    print(f"✅ Dashboard '{uid}': all {checked} panel queries return data")
+
+
 @then(parsers.parse('the dashboard "{uid}" should render successfully'))
 def dashboard_renders(stack: ObservabilityStack, uid: str) -> None:
     """Assert a dashboard can be fetched and has panels."""

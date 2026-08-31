@@ -20,14 +20,19 @@ Feature: DORA dashboard panels have real data (not just provisioned)
     # Failure Rate, and Rework Rate are all genuinely fed and asserted here.
     Then the dashboard "ufawkesobs-dora-overview" panels should return real, labeled data, except known gaps "Lead Time for Changes|Failed Deployment Recovery Time (FDRT)|Lead Time Trend|FDRT Trend"
 
-  # dora-metrics.json ("DORA 2026 — Five Key Metrics") is a KNOWN gap, not
-  # tested here on purpose: its panels query an OTel-native pipeline
-  # (dora_deployment_succeeded_total, dora_deployment_lead_time_hours_bucket,
-  # dora_incident_duration_hours_bucket) that nothing in this repo currently
-  # feeds — see issue #266. Its recording rules fall back to an unlabeled
-  # `or vector(0)`, which is exactly the failure mode this feature file
-  # exists to catch, so asserting against it here would just re-file #266
-  # as a permanently-red test. Add a scenario for it once #266 is resolved.
+  @dora
+  Scenario: DORA Metrics ("DORA 2026 — Five Key Metrics") shows data
+    # #266: the recording rules behind this dashboard used to query a
+    # never-fed OTel-native pipeline; now repointed at the same
+    # dora-compute/Pushgateway data dora-overview.json uses (see
+    # config/prometheus/rules/ufawkesobs-dora-metrics.yml). This dashboard
+    # has no team_id variable — its recording rules are org-wide
+    # avg()/sum() aggregates by design, which strips labels even when
+    # genuinely fed. That makes the stricter "real, labeled data" step
+    # unusable here (a correct org-wide "0.2" and a masked "0" fallback
+    # are shaped identically) — this uses the weaker non-empty check
+    # instead, which only proves the queries are wired correctly.
+    Then the dashboard "ufawkesobs-dora-metrics" panels should return non-empty data
 
   # No dashboard named "DORA AI report" or "DORA 2026 ROI report" exists in
   # this repo (confirmed: zero "ROI" mentions anywhere in dashboards/,

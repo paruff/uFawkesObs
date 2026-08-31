@@ -1,20 +1,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # DORA 2025/2026 Metrics Recording Rules
-# Computed from uFawkesObs telemetry (deployment spans, incident alerts, AI SDK)
-# Consumed by uFawkesDORA for DORA dashboard and alerting
+# Computed from dora-compute's Pushgateway output (dora-api -> dora-compute ->
+# Pushgateway -> Prometheus), the same pipeline dora-overview.json's panels
+# read directly. Consumed by the DORA dashboard and alerting.
+#
+# Previously computed from a separate, never-fed OTel-native pipeline
+# (dora.deployment.* / dora.incident.* spans via otel-collector-dora) —
+# nothing in this repo ever emitted those spans, so every rule here silently
+# evaluated to an unlabeled `vector(0)` fallback forever. See issue #266.
+# otel-collector-dora and its span-based config remain in place as dormant,
+# harmless infrastructure for if that path is ever built for real — these
+# rules just don't depend on it anymore.
 #
 # Metric naming: Uses "dora:" namespace per ADR-006.
-# Source metrics from OTel Collector dora pipeline:
-#   - dora.deployment.started (counter)
-#   - dora.deployment.succeeded (counter)
-#   - dora.deployment.failed (counter)
-#   - dora.deployment.lead_time_hours (histogram)
-#   - dora.incident.opened (counter)
-#   - dora.incident.resolved (counter)
-#   - dora.incident.duration_hours (histogram)
-# Source metrics from AI SDK:
-#   - gen_ai.suggestion.accepted (counter)
-#   - gen_ai.suggestion.total (counter)
+# Source metrics from dora-compute (dora/compute/metrics.py), pushed as
+# Pushgateway gauges labeled by team_id/tier:
+#   - dora_deployment_frequency_per_week
+#   - dora_lead_time_p50_hours
+#   - dora_cfr_pct       (0-1 ratio despite the name — see metrics.py:420)
+#   - dora_fdrt_p50_hours
+#   - dora_rework_rate_pct (0-1 ratio despite the name — see metrics.py:425)
 #
 # DORA 2025/2026 Five Key Metrics:
 # 1. Deployment Frequency
@@ -29,54 +34,43 @@ groups:
   - name: ufawkesobs_dora_metrics
     interval: 60s
     rules:
-      # Deployment Frequency: successful production deployments per 30 days
+      # Deployment Frequency: org-wide deployments/week, summed across teams.
+      # No team_id breakdown here (this dashboard has no team_id variable,
+      # unlike dora-overview.json) — that's the intentional, original design.
       - record: dora:deployment_frequency:rate30d
         expr: |
-          sum(rate(dora_deployment_succeeded_total{environment="production"}[30d]))
+          sum(dora_deployment_frequency_per_week)
           or vector(0)
 
-      # Lead Time for Changes: median hours from commit to production deployment
-      # Uses dora_deployment_lead_time_hours histogram from deployment spans
+      # Lead Time for Changes: org-wide average of each team's p50 lead time.
       - record: dora:lead_time_hours:p50_30d
         expr: |
-          histogram_quantile(0.50,
-            sum(rate(dora_deployment_lead_time_hours_bucket[30d]))
-              by (le)
-          )
+          avg(dora_lead_time_p50_hours)
           or vector(0)
 
-      # Change Failure Rate: ratio of failed to total production deployments (30d)
+      # Change Failure Rate: org-wide average CFR across teams (already a
+      # 0-1 ratio in dora_cfr_pct, matching this rule's own "ratio30d" name
+      # — do not multiply by 100 here, that's a display-time concern).
       - record: dora:change_failure_rate:ratio30d
         expr: |
-          sum(rate(dora_deployment_failed_total{environment="production"}[30d]))
-          /
-          (
-            sum(rate(dora_deployment_failed_total{environment="production"}[30d]))
-            +
-            sum(rate(dora_deployment_succeeded_total{environment="production"}[30d]))
-          )
+          avg(dora_cfr_pct)
           or vector(0)
 
-      # Failed Deployment Recovery Time (FDRT): median hours to resolve incidents (30d)
-      # Uses dora_incident_duration_hours histogram from incident resolved events
+      # Failed Deployment Recovery Time (FDRT): org-wide average of each
+      # team's p50 recovery time.
       - record: dora:fdrt_hours:p50_30d
         expr: |
-          histogram_quantile(0.50,
-            sum(rate(dora_incident_duration_hours_bucket[30d]))
-              by (le)
-          )
+          avg(dora_fdrt_p50_hours)
           or vector(0)
 
-      # Rework Rate: fraction of AI output requiring rework (5th DORA metric, DORA 2026)
-      # Derived from AI suggestion acceptance rate: rework = 1 - acceptance_rate
-      # ai:suggestion_acceptance_rate:ratio is defined in config/prometheus/rules/ai-rules.yml
+      # Rework Rate: org-wide average, sourced from dora-compute's own
+      # rework-rate computation (real merged-work-later-reverted data, not
+      # an AI-suggestion-acceptance proxy). Already a 0-1 ratio, matching
+      # this rule's "ratio" name.
       # DORA 2026 thresholds: Elite < 5%, High < 10%, Medium < 20%, Low >= 20%
       - record: dora:rework_rate:ratio
         expr: |
-          clamp_min(
-            1 - (ai:suggestion_acceptance_rate:ratio or vector(0)),
-            0
-          )
+          avg(dora_rework_rate_pct)
           or vector(0)
 
   # DORA alerting rules
