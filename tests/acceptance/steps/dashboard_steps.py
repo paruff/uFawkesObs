@@ -14,7 +14,7 @@ from tests.acceptance.runtime import ObservabilityStack
 
 
 @given("a real DORA deployment event has been sent")
-def seed_dora_deployment_event() -> None:
+def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
     """POST a failed deployment followed by a successful one, same source.
 
     Self-contained on purpose — this scenario must not depend on side
@@ -27,6 +27,16 @@ def seed_dora_deployment_event() -> None:
     success event's pr_merged_at is what Lead Time measures. #267: these
     were previously never fed by anything in this repo, and the schema
     rejected pr_merged_at outright (additionalProperties: false).
+
+    #290: even once the events are ingested, dora-compute only recomputes
+    on its own interval (DORA_COMPUTE_INTERVAL_SECONDS) and Prometheus
+    only picks up the pushed result on its own next scrape -- confirmed
+    live via CI container logs that this pipeline can take ~15-30s after
+    the POSTs below before the metric is actually queryable. The Then
+    step that follows this Background has no retry of its own, so this
+    step blocks until the metric is genuinely visible in Prometheus
+    (same poll_metric() helper OBS-SLI-006 already uses) instead of
+    returning the instant the ingestion API accepts the POST.
     """
     repo = "acceptance-test/dashboard-data-presence"
     resp = requests.post(
@@ -63,6 +73,18 @@ def seed_dora_deployment_event() -> None:
         timeout=10,
     )
     resp.raise_for_status()
+
+    promql = stack.promql()
+    found, elapsed, _ = promql.poll_metric(
+        f'dora_deployment_frequency_per_week{{team_id="{repo}"}}',
+        timeout=90,
+    )
+    assert found, (
+        f"dora_deployment_frequency_per_week for team_id={repo!r} not visible "
+        "in Prometheus within 90s of seeding -- dora-compute -> Pushgateway -> "
+        "Prometheus pipeline did not complete in time."
+    )
+    print(f"✅ Seeded DORA metric visible in Prometheus after {elapsed:.1f}s")
 
 
 def _resolve_template_vars(dashboard_json: dict) -> dict[str, str]:
