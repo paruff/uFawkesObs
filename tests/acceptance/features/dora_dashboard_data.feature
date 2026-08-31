@@ -12,13 +12,17 @@ Feature: DORA dashboard panels have real data (not just provisioned)
 
   @dora
   Scenario: DORA Overview ("DORA 2025 framework") shows real data
-    # Lead Time / FDRT panels are a real, tracked gap (issue #267), not a
-    # test bug: dora_lead_time_p50_hours and dora_fdrt_p50_hours have zero
-    # data anywhere in Prometheus, because computing them needs
-    # first_commit_at (PR-event data) and incident-duration events, and
-    # nothing in this repo sends either yet. Deployment Frequency, Change
-    # Failure Rate, and Rework Rate are all genuinely fed and asserted here.
-    Then the dashboard "ufawkesobs-dora-overview" panels should return real, labeled data, except known gaps "Lead Time for Changes|Failed Deployment Recovery Time (FDRT)|Lead Time Trend|FDRT Trend"
+    # #267: Lead Time and FDRT used to have zero data anywhere in
+    # Prometheus. Root cause was two-fold, not "needs incident data" as
+    # first assumed: (1) deploy.yml never emitted any deployment event at
+    # all, and (2) deployment-event.schema.json's additionalProperties:
+    # false rejected the pr_merged_at/first_commit_at fields Lead Time
+    # reads, and FDRT only ever needed a failed->success deployment gap
+    # for the same source (dora/compute/metrics_db_sqlite.py's fdrt()) —
+    # not incident events. Both are now genuinely fed: deploy.yml sends a
+    # real event on every deploy/rollback outcome, and the Background step
+    # above seeds a failed->success pair with pr_merged_at.
+    Then the dashboard "ufawkesobs-dora-overview" panels should return real, labeled data
 
   @dora
   Scenario: DORA Metrics ("DORA 2026 — Five Key Metrics") shows data

@@ -35,11 +35,15 @@ API_KEY="${DORA_API_KEY:-}"
 INCIDENT_ID=""
 SERVICE=""
 SEVERITY=""
+REPO=""
 
 # ── Flag parsing ────────────────────────────────────────────────────────────
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        --repo=*)
+            REPO="${1#*=}"
+            ;;
         --incident_id=*)
             INCIDENT_ID="${1#*=}"
             ;;
@@ -102,6 +106,14 @@ case "$SEVERITY" in
         ;;
 esac
 
+# ── Resolve repo (best-effort from git remote if not passed explicitly) ─────
+
+if [ -z "$REPO" ]; then
+    REPO=$(git remote get-url origin 2>/dev/null \
+        | sed -E 's#^(git@|https://)([^:/]+)[:/](.+)\.git$#\3#' || true)
+    [ -z "$REPO" ] && REPO="unknown/${SERVICE}"
+fi
+
 # ── Build payload ───────────────────────────────────────────────────────────
 
 OCCURRED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -110,7 +122,7 @@ PAYLOAD=$(cat <<EOF
 {
   "schema_version": "1.0",
   "event_type": "incident",
-  "repo": "unknown/${SERVICE}",
+  "repo": "${REPO}",
   "service": "${SERVICE}",
   "incident_id": "${INCIDENT_ID}",
   "status": "resolved",

@@ -15,24 +15,50 @@ from tests.acceptance.runtime import ObservabilityStack
 
 @given("a real DORA deployment event has been sent")
 def seed_dora_deployment_event() -> None:
-    """POST one real deployment event to dora-api.
+    """POST a failed deployment followed by a successful one, same source.
 
     Self-contained on purpose — this scenario must not depend on side
     effects left behind by other scenarios' event traffic, or it becomes
     order-dependent and flaky.
+
+    The failed->success pair is what FDRT actually measures (the gap
+    between a failed deploy and the next successful one of the same
+    source — see dora/compute/metrics_db_sqlite.py's fdrt()), and the
+    success event's pr_merged_at is what Lead Time measures. #267: these
+    were previously never fed by anything in this repo, and the schema
+    rejected pr_merged_at outright (additionalProperties: false).
     """
+    repo = "acceptance-test/dashboard-data-presence"
     resp = requests.post(
         "http://localhost:8088/event",
         json={
             "schema_version": "1.0",
             "event_type": "deployment",
-            "repo": "acceptance-test/dashboard-data-presence",
+            "repo": repo,
             "service": "acceptance-test-service",
             "environment": "production",
             "commit_sha": "1" * 40,
             "deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "status": "failed",
+            "pipeline_url": "https://example.com/ci/acceptance-test",
+        },
+        timeout=10,
+    )
+    resp.raise_for_status()
+
+    resp = requests.post(
+        "http://localhost:8088/event",
+        json={
+            "schema_version": "1.0",
+            "event_type": "deployment",
+            "repo": repo,
+            "service": "acceptance-test-service",
+            "environment": "production",
+            "commit_sha": "2" * 40,
+            "deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "status": "success",
             "pipeline_url": "https://example.com/ci/acceptance-test",
+            "pr_merged_at": "2026-01-01T00:00:00Z",
         },
         timeout=10,
     )

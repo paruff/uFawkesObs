@@ -58,6 +58,16 @@
     "ai_assisted": {
       "description": "Whether AI tooling was involved in the deployment process.",
       "type": "boolean"
+    },
+    "first_commit_at": {
+      "description": "ISO 8601 timestamp of the first commit in the deployed change set. Used for exact Lead Time for Changes; preferred over pr_merged_at when both are present.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "pr_merged_at": {
+      "description": "ISO 8601 timestamp the pull request was merged. Used as a proxy for Lead Time for Changes when first_commit_at is unavailable.",
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

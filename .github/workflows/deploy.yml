@@ -161,6 +161,9 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           DEPLOY_TAG: ${{ needs.tag-candidate.outputs.tag }}
+          DORA_REPO: ${{ github.repository }}
+          DORA_PIPELINE_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DORA_PR_MERGED_AT: ${{ github.event.workflow_run.created_at }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
@@ -192,7 +195,7 @@ jobs:
               exit 1
               ;;
           esac
-          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' bash -s" <<'REMOTE'
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' DORA_REPO='${DORA_REPO}' DORA_PIPELINE_URL='${DORA_PIPELINE_URL}' DORA_PR_MERGED_AT='${DORA_PR_MERGED_AT}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -231,7 +234,14 @@ jobs:
             exit 1
           fi
 
-          ./scripts/wait-healthy.sh
+          if ./scripts/wait-healthy.sh; then
+            DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="success" \
+              DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
+          else
+            DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="failed" \
+              DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
+            exit 1
+          fi
           REMOTE
 
       - name: Set deployment summary outputs
@@ -313,6 +323,9 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           DEPLOY_TAG: ${{ needs.tag-candidate.outputs.tag }}
+          DORA_REPO: ${{ github.repository }}
+          DORA_PIPELINE_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DORA_PR_MERGED_AT: ${{ github.event.workflow_run.created_at }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
@@ -344,7 +357,7 @@ jobs:
               exit 1
               ;;
           esac
-          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' bash -s" <<'REMOTE'
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_TAG='${DEPLOY_TAG}' DORA_REPO='${DORA_REPO}' DORA_PIPELINE_URL='${DORA_PIPELINE_URL}' DORA_PR_MERGED_AT='${DORA_PR_MERGED_AT}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -375,7 +388,14 @@ jobs:
             exit 1
           fi
 
-          ./scripts/wait-healthy.sh
+          if ./scripts/wait-healthy.sh; then
+            DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="success" \
+              DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
+          else
+            DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="failed" \
+              DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
+            exit 1
+          fi
           REMOTE
 
       - name: Set deployment summary outputs
@@ -449,16 +469,24 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DORA_REPO: ${{ github.repository }}
+          DORA_PIPELINE_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+            "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DORA_REPO='${DORA_REPO}' DORA_PIPELINE_URL='${DORA_PIPELINE_URL}' bash -s" <<'REMOTE'
             set -euo pipefail
             REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
             if [ -x "${REPO_DIR}/scripts/wait-healthy.sh" ]; then
               cd "${REPO_DIR}"
-              ./scripts/wait-healthy.sh
+              if ! ./scripts/wait-healthy.sh; then
+                # Failed candidate — pairs with the "success" recovery event
+                # rollback sends once it restores deploy-latest-good (#267).
+                DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="failed" \
+                  DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
+                exit 1
+              fi
             else
               # Fallback: basic endpoint checks
               for ep in \
@@ -553,6 +581,8 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DORA_REPO: ${{ github.repository }}
+          DORA_PIPELINE_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           REPO_NAME="${GITHUB_REPOSITORY##*/}"
@@ -577,7 +607,7 @@ jobs:
                 ;;
             esac
           fi
-          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' bash -s" <<'REMOTE'
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "REPO_NAME='${REPO_NAME}' DEPLOY_PATH='${DEPLOY_PATH}' DORA_REPO='${DORA_REPO}' DORA_PIPELINE_URL='${DORA_PIPELINE_URL}' bash -s" <<'REMOTE'
           set -euo pipefail
 
           REPO_DIR="${DEPLOY_PATH:-$HOME/${REPO_NAME}}"
@@ -609,6 +639,12 @@ jobs:
           fi
 
           ./scripts/wait-healthy.sh
+
+          # Recovery deploy — pairs with the "failed" event sent when
+          # post-deploy-verify rejected the candidate, closing the gap FDRT
+          # measures (#267).
+          DORA_SERVICE="ufawkesobs" DORA_ENVIRONMENT="production" DORA_STATUS="success" \
+            DORA_COMMIT_SHA="$(git rev-parse HEAD)" ./scripts/send-dora-deployment-event.sh
           REMOTE
           echo "result=success" >> "$GITHUB_OUTPUT"
 
