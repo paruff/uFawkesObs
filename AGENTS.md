@@ -233,4 +233,5 @@ When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
 - `docs/MODEL_POLICY.md` — model selection, routing, and budget guardrails
 - `docs/DEPLOYMENT_STRATEGY.md` — progressive delivery plan
 - `docs/PR_STANDARD.md` — PR title and body format rules
+- `docs/RELEASE_PROCESS.md` — automated release cadence (release-please, issue #264)
 - `paruff/ufawkespipe` reusable workflows — `reusable-main-ci-guard.yml`, `reusable-rollback.yml` (`@v1.2.0`)
