@@ -139,6 +139,19 @@ def stack(request) -> Iterator[ObservabilityStack]:
     if evidence_dir:
         stack_instance.set_evidence_dir(Path(evidence_dir))
 
+    # Tracks whether *this session* actually started the stack, so
+    # teardown only stops what it started. Previously this comment's
+    # claim ("Only stop if we started the stack") wasn't backed by any
+    # check -- teardown called stack_instance.stop() unconditionally
+    # whenever mode == "auto", tearing down a stack a developer had
+    # already brought up manually just because they ran pytest without
+    # --stack-mode=existing. docker compose --profile core down then
+    # removed every core-profile container while apps/dora profiles
+    # (not in ObservabilityStack()'s default profile list) were
+    # untouched -- exactly the asymmetric "core keeps disappearing,
+    # dora stays up" pattern this was root-caused from.
+    we_started_it = False
+
     if mode == "auto":
         # Check if stack is already running or needs to be started
         try:
@@ -147,17 +160,18 @@ def stack(request) -> Iterator[ObservabilityStack]:
                 print("✅ Stack appears to be running (Prometheus healthy)")
             else:
                 print("⚠️  Stack may not be running — starting...")
+                we_started_it = True
                 health = stack_instance.start()
                 print(health.summary())
         except requests.RequestException:
             print("🚀 Starting stack (no existing stack detected)...")
+            we_started_it = True
             health = stack_instance.start()
             print(health.summary())
 
     yield stack_instance
 
-    if mode == "auto":
-        # Only stop if we started the stack
+    if mode == "auto" and we_started_it:
         print("🛑 Stopping stack (auto mode cleanup)...")
         stack_instance.stop()
 
