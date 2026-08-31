@@ -139,6 +139,7 @@ def stack(request) -> Iterator[ObservabilityStack]:
     if evidence_dir:
         stack_instance.set_evidence_dir(Path(evidence_dir))
 
+    we_started_it = False
     if mode == "auto":
         # Check if stack is already running or needs to be started
         try:
@@ -149,15 +150,17 @@ def stack(request) -> Iterator[ObservabilityStack]:
                 print("⚠️  Stack may not be running — starting...")
                 health = stack_instance.start()
                 print(health.summary())
+                we_started_it = True
         except requests.RequestException:
             print("🚀 Starting stack (no existing stack detected)...")
             health = stack_instance.start()
             print(health.summary())
+            we_started_it = True
 
     yield stack_instance
 
-    if mode == "auto":
-        # Only stop if we started the stack
+    if mode == "auto" and we_started_it:
+        # Only stop if we started the stack this session
         print("🛑 Stopping stack (auto mode cleanup)...")
         stack_instance.stop()
 
