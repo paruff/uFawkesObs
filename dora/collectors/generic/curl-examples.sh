@@ -93,7 +93,7 @@
 #     "service": "'"${CI_REPO_NAME:-my-service}"'",
 #     "incident_id": "INC-'"$(date +%s)"'",
 #     "status": "opened",
-#     "reported_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+#     "occurred_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
 #     "severity": "critical"
 #   }'
 
@@ -113,7 +113,7 @@
 #     "service": "'"${CI_REPO_NAME:-my-service}"'",
 #     "incident_id": "INC-1743206400",
 #     "status": "resolved",
-#     "resolved_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+#     "occurred_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
 #     "severity": "critical"
 #   }'
 
@@ -130,12 +130,10 @@
 #     "schema_version": "1.0",
 #     "event_type": "rework",
 #     "repo": "'"${CI_REPO:-unknown}/${CI_REPO_NAME:-unknown}"'",
-#     "service": "'"${CI_REPO_NAME:-unknown}"'",
-#     "rework_type": "hotfix",
-#     "user_visible": true,
 #     "deployment_sha": "'"${CI_COMMIT_SHA:-unknown}"'",
-#     "deployed_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
-#     "description": "Hotfix deployed"
+#     "rework_type": "hotfix",
+#     "triggered_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
+#     "user_visible": true
 #   }'
 
 # ============================================================================
@@ -151,29 +149,45 @@
 #     "schema_version": "1.0",
 #     "event_type": "pr",
 #     "repo": "'"${CI_REPO:-unknown}/${CI_REPO_NAME:-unknown}"'",
-#     "service": "'"${CI_REPO_NAME:-unknown}"'",
 #     "pr_number": 42,
 #     "status": "merged",
 #     "commit_sha": "'"${CI_COMMIT_SHA:-unknown}"'",
 #     "occurred_at": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",
-#     "first_commit_at": "2026-06-22T10:00:00Z",
-#     "source": "curl-examples"
+#     "first_commit_at": "2026-06-22T10:00:00Z"
 #   }'
 
 # ============================================================================
 # Verifying events reached the database
 # ============================================================================
-# After sending events, verify they arrived by querying the raw_events table:
+# DORA's datastore is SQLite only (dora-api's default DATABASE_URL) -- see
+# AGENTS.md. After sending events, verify they arrived by querying the
+# raw_events table directly inside the dora-api container:
 #
-#   docker compose -f docker-compose.dev.yml exec -T timescaledb \
-#     psql -U postgres -d dora_metrics \
-#     -c "SELECT event_type, status, COUNT(*) FROM raw_events GROUP BY event_type, status;"
+#   docker compose exec dora-api python3 -c "
+#     import sqlite3
+#     conn = sqlite3.connect('/data/dora/dora.db')
+#     conn.row_factory = sqlite3.Row
+#     cur = conn.execute(
+#         'SELECT event_type, outcome, COUNT(*) FROM raw_events '
+#         'GROUP BY event_type, outcome'
+#     )
+#     for row in cur.fetchall():
+#         print(dict(row))
+#   "
 #
 # Or for the latest events:
 #
-#   docker compose -f docker-compose.dev.yml exec -T timescaledb \
-#     psql -U postgres -d dora_metrics \
-#     -c "SELECT recorded_at, event_type, status FROM raw_events ORDER BY recorded_at DESC LIMIT 10;"
+#   docker compose exec dora-api python3 -c "
+#     import sqlite3
+#     conn = sqlite3.connect('/data/dora/dora.db')
+#     conn.row_factory = sqlite3.Row
+#     cur = conn.execute(
+#         'SELECT recorded_at, event_type, outcome FROM raw_events '
+#         'ORDER BY recorded_at DESC LIMIT 10'
+#     )
+#     for row in cur.fetchall():
+#         print(dict(row))
+#   "
 
 # ============================================================================
 # Troubleshooting

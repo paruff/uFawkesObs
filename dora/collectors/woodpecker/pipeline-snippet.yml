@@ -19,8 +19,19 @@ steps:
     image: curlimages/curl:latest
     pull: true
     commands:
+      # Map Woodpecker's native pipeline status to the canonical schema's
+      # status enum (success, failed, rollback) -- Woodpecker's own value
+      # is "failure", not "failed" (#279).
+      - |
+        case "${CI_PIPELINE_STATUS}" in
+          success) DORA_STATUS="success" ;;
+          failure) DORA_STATUS="failed" ;;
+          *) DORA_STATUS="${CI_PIPELINE_STATUS}" ;;
+        esac
       # Build JSON payload from Woodpecker CI environment variables.
       # Uses a heredoc to avoid shell quoting issues in the JSON body.
+      # No "source" field -- deployment-event.schema.json's
+      # additionalProperties: false rejects it outright (#279).
       - |
         PAYLOAD=$(cat <<EOF
         {
@@ -31,9 +42,8 @@ steps:
           "environment": "production",
           "commit_sha": "${CI_COMMIT_SHA}",
           "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-          "status": "${CI_PIPELINE_STATUS}",
-          "pipeline_url": "${CI_PIPELINE_URL}",
-          "source": "woodpecker"
+          "status": "${DORA_STATUS}",
+          "pipeline_url": "${CI_PIPELINE_URL}"
         }
         EOF
         )
