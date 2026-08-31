@@ -5,6 +5,7 @@ Produces metrics, logs, and traces for testing observability stack
 
 import logging
 import random
+import threading
 import time
 from flask import Flask, jsonify
 from opentelemetry import trace, metrics
@@ -152,6 +153,31 @@ def slow_request():
         return jsonify({"duration": duration})
 
 
+def _self_traffic_loop() -> None:
+    """Periodically exercise all three routes so every dashboard panel has
+    real, continuously-flowing data (#274) -- nothing external ever calls
+    /error or /slow otherwise. The only traffic this app used to receive
+    was Docker's own healthcheck hitting / every 30s, so the 5xx-rate and
+    latency-percentile panels on Service - Error Analysis / Service -
+    Latency Analysis had zero data by construction, not by a pipeline bug.
+
+    Uses Flask's own test_client() rather than a real HTTP call to itself
+    -- it runs the full WSGI app in-process (same OTel instrumentation
+    fires), with no extra dependency and no self-networking edge cases.
+    """
+    client = app.test_client()
+    while True:
+        roll = random.random()
+        if roll < 0.15:
+            client.get("/error")
+        elif roll < 0.25:
+            client.get("/slow")
+        else:
+            client.get("/generate")
+        time.sleep(random.uniform(1.0, 3.0))
+
+
 if __name__ == "__main__":
     logger.info(f"{SERVICE_NAME} starting up")
+    threading.Thread(target=_self_traffic_loop, daemon=True).start()
     app.run(host="0.0.0.0", port=5000, debug=False)
