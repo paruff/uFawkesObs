@@ -119,3 +119,20 @@ a human decision per the task brief's ground rules.
 A human should decide between (a)/(b)/(c) (or a variant), then a follow-up
 PR can update the README family table, `catalog-info.yaml`, and
 optionally ufawkes.dev to match.
+
+## Resolution (2026-08-31)
+
+Decided, superseding the "opt-in, still works" framing above: DORA's
+datastore is SQLite only, permanently, for the uFawkes (Compose-tier)
+suite. The `resource-plane` Compose profile, `compose.resource-plane.override.yaml`,
+`dora/database/` (Postgres/TimescaleDB migrations), `metrics_db_postgres.py`,
+and `queue_postgres.py` have been fully removed (issue #275) — not just
+made optional. This was reinforced by a code review
+(`.claude/reviews/dora-consolidation-review.md`) that found the
+Postgres-only path carried real bugs (hardcoded default migration
+password, SQL injection, a duplicate-event `ON CONFLICT` clause that
+didn't match its own partial unique index) with zero behavioral test
+coverage. Anyone who wants a shared resource plane going forward should
+target Fawkes (the Kubernetes track) — see `docs/fawkes-migration.md` —
+not resurrect Compose-tier Postgres here. `README.md`, `AGENTS.md` §10,
+and `catalog-info.yaml` have been updated to reflect this.

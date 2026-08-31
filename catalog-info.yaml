@@ -38,8 +38,9 @@ metadata:
     # separate system dependency.
     # uFawkesRes retired from the active uFawkes (Compose-tier) suite —
     # 2026-08-18 product decision, see docs/notes/res-status.md. The
-    # optional resource-plane Compose profile still exists in this repo
-    # for teams that want it, but it is no longer a promoted dependency.
+    # resource-plane Compose profile has since been fully removed from this
+    # repo; DORA's datastore is SQLite only. See docs/fawkes-migration.md
+    # for the Kubernetes-track path to a resource plane.
 spec:
   type: observability
   owner: paruff

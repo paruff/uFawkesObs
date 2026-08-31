@@ -31,10 +31,7 @@ COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/pytho
 # Keeps the `compute.*` import namespace so `python -m compute.metrics` works
 COPY dora/compute/__init__.py ./compute/__init__.py
 COPY dora/compute/metrics.py ./compute/metrics.py
-COPY dora/compute/metrics_db_postgres.py ./compute/metrics_db_postgres.py
 COPY dora/compute/metrics_db_sqlite.py ./compute/metrics_db_sqlite.py
-COPY dora/compute/archetype.py ./compute/archetype.py
-COPY dora/compute/vsi.py ./compute/vsi.py
 COPY dora/compute/run.sh ./run.sh
 
 RUN chown -R ufawkes:ufawkes /app

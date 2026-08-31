@@ -534,42 +534,9 @@ services:
       - observability
     profiles: ["core"]
 
-# DORA database migration (resource-plane profile only) — one-shot job that
-# applies dora/database/*.sql against the existing DORA_POSTGRES_URL database
-# (owned by uFawkesRes; see AGENTS.md §10). Not needed for the base `dora`
-# profile, which is self-contained SQLite by default — see
-# dora/compute/metrics_db_sqlite.py and dora/ingestion/api/queue_sqlite.py.
-# Does not create databases/roles — that's the shared Postgres server's own
-# provisioning. Runs and exits on every `up`; every SQL file is idempotent so
-# re-running is safe.
-  dora-db-init:
-    image: postgres:17.2-alpine
-    container_name: ufawkesdora-db-init
-    restart: "no"
-    environment:
-      - DORA_POSTGRES_URL=${DORA_POSTGRES_URL:-}
-    volumes:
-      - ./dora/database:/migrations:ro
-    entrypoint: ["/bin/sh", "/migrations/migrate.sh"]
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        tag: "dora-db-init"
-    labels:
-      - "plane=obstackd"
-      - "component=dora-db-init"
-      - "managed-by=fawkes"
-      - "profile=dora"
-    networks:
-      - observability
-    profiles: ["resource-plane"]
-
-# DORA event ingestion API — accepts events from CI/CD systems, validates against
-# the dora/events schemas, and enqueues to SQLite by default (dora profile,
-# self-contained) or uFawkesRes Postgres when DATABASE_URL is overridden
-# (resource-plane profile — see compose.resource-plane.override.yaml)
+# DORA event ingestion API — accepts events from CI/CD systems, validates
+# against the dora/events schemas, and enqueues to SQLite (the only backend
+# — self-contained, see dora/ingestion/api/queue_sqlite.py).
   dora-api:
     build:
       context: .
@@ -669,9 +636,8 @@ services:
     profiles: ["dora"]
 
 # DORA metrics compute — periodic batch job computing DORA metrics from
-# SQLite by default (dora profile) or DORA_POSTGRES_URL (resource-plane
-# profile), pushing results to pushgateway (issue #205; metrics.py is a
-# one-shot CLI, so run.sh loops it — see ADR-007 amendment).
+# SQLite (the only backend), pushing results to pushgateway (issue #205;
+# metrics.py is a one-shot CLI, so run.sh loops it — see ADR-007 amendment).
   dora-compute:
     build:
       context: .

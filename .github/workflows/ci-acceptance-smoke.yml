@@ -28,10 +28,6 @@ jobs:
     env:
       GRAFANA_ADMIN_USER: admin
       # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
-      # Satisfies compose.yaml's required-var interpolation for the
-      # dora-profiled otel-collector-dora service (Compose evaluates it even
-      # under --profile core). Never actually used here.
-      DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
       # Compose's `secrets: slack_webhook_url: environment:` source requires
       # this var to exist (even empty) or `docker compose up` refuses to
       # start ANY service under core, not just alertmanager. Empty is fine —

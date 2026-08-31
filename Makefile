@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-dora-resource-plane down logs status grafana-folder-descriptions test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
+.PHONY: help init check-env up up-apps up-dora down logs status grafana-folder-descriptions test-unit test-acceptance test-acceptance-smoke test-acceptance-full install-acceptance-deps test pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -45,14 +45,9 @@ up: check-env
 up-apps: check-env
 	docker compose --profile core --profile apps up -d
 
-## up-dora: start the core stack plus DORA metrics (self-contained, SQLite-backed)
+## up-dora: start the core stack plus DORA metrics (self-contained, SQLite-only)
 up-dora: check-env
 	docker compose --profile core --profile dora up -d
-
-## up-dora-resource-plane: start core + DORA metrics backed by shared uFawkesRes Postgres
-up-dora-resource-plane: check-env
-	docker compose --profile core --profile dora --profile resource-plane \
-		-f compose.yaml -f compose.resource-plane.override.yaml up -d
 
 ## down: stop all services
 down:

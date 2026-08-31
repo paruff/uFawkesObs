@@ -1,9 +1,8 @@
 """Shared idempotency-key computation for event_queue writes.
 
-Used by both queue_sqlite.py and queue_postgres.py so a retried submission
-hashes identically regardless of backend — the whole point is that a client
-retry (same payload, resent after a timeout) dedupes instead of
-double-counting DORA metrics.
+Used by queue_sqlite.py so a retried submission hashes identically — the
+whole point is that a client retry (same payload, resent after a timeout)
+dedupes instead of double-counting DORA metrics.
 """
 
 import hashlib

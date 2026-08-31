@@ -55,7 +55,7 @@ uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com
 
 **Retired from the active uFawkes suite** (2026-08-18 product decision):
 
-- **uFawkesRes** — was the resources plane (ingress, SSO, Postgres, Valkey). The [repo](https://github.com/paruff/uFawkesRes) is still real and active, and this repo's optional `resource-plane` Compose profile (`compose.resource-plane.override.yaml`) still works if you want shared Postgres — but it's no longer a promoted dependency of the small-team uFawkes tier; the `dora` profile is self-contained (SQLite) by default. See [docs/notes/res-status.md](docs/notes/res-status.md) for the full rationale.
+- **uFawkesRes** — was the resources plane (ingress, SSO, Postgres, Valkey). The [repo](https://github.com/paruff/uFawkesRes) is still real and active, but this repo's `resource-plane` Compose profile has been removed — DORA's datastore is SQLite only, permanently. Anyone wanting a resource plane should target Fawkes (the Kubernetes track) — see [docs/fawkes-migration.md](docs/fawkes-migration.md). See [docs/notes/res-status.md](docs/notes/res-status.md) for the full rationale.
 - **DORA metrics** — was uFawkesDORA; merged into uFawkesObs's `dora/` directory. [uFawkesDORA](https://github.com/paruff/ufawkesdora) is archived. See `AGENTS.md` §10.
 - **Security — policy-as-code, supply chain, guardrails** — was uFawkesSec; merged into uFawkesPipe's `security` Compose profile (DefectDojo, Infisical, Trivy server, Falco). Per uFawkesPipe's README, this is "formerly the standalone uFawkesSec repo." Note: unlike uFawkesDORA, the [uFawkesSec](https://github.com/paruff/ufawkessec) repo itself has not been archived as of this writing (still receiving dependabot updates) — the merge is confirmed functionally, but the source repo's own lifecycle status is unresolved.
 
@@ -195,8 +195,7 @@ The system uses Docker Compose profiles to control which services run:
 | `core`  | otel-collector, tempo, loki, alloy, alertmanager, prometheus, grafana | Base observability stack |
 | `apps`  | telemetry-generator                                                   | Demo telemetry generator |
 | `notifications` | alertmanager-discord                                          | Slack/Discord notification bridge (needs `DISCORD_WEBHOOK_URL` in `.env`) |
-| `dora` | dora-api, dora-compute, pushgateway, otel-collector-dora | DORA metrics — self-contained, SQLite-backed by default |
-| `resource-plane` | dora-db-init | Swaps the `dora` profile's SQLite backend for shared uFawkesRes Postgres |
+| `dora` | dora-api, dora-compute, pushgateway, otel-collector-dora | DORA metrics — self-contained, SQLite-only |
 
 **To start with a specific profile:**
 
@@ -211,10 +210,6 @@ docker compose --profile core --profile notifications up -d
 
 # To also compute DORA metrics (self-contained, no external DB required):
 make up-dora
-
-# Same, but backed by the shared uFawkesRes Postgres instance instead of
-# SQLite — requires DORA_POSTGRES_URL in .env (see .env.example):
-make up-dora-resource-plane
 ```
 
 ---

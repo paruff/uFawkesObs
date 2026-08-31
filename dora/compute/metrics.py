@@ -25,9 +25,11 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from urllib.parse import quote
+
+from .metrics_db_sqlite import MetricsDB
 
 logger = logging.getLogger("ufawkesdora.metrics")
 
@@ -89,14 +91,6 @@ def classify_tier(metric_name: str, value: float | None) -> str:
         if thresholds[tier](value):
             return tier
     return "unknown"
-
-
-# ── Database backend ───────────────────────────────────────────────────────
-
-if os.environ.get("DATABASE_URL", "").startswith("postgresql"):
-    from .metrics_db_postgres import MetricsDB  # noqa: F401
-else:
-    from .metrics_db_sqlite import MetricsDB  # noqa: F401
 
 
 # ── Metric computation orchestrator ────────────────────────────────────────────
@@ -251,6 +245,16 @@ async def _write_snapshots(
         await db.write_snapshot(record, window_start, window_end)
 
 
+def _escape_label_value(value: str) -> str:
+    """Escape a string for use as a Prometheus text-exposition label value.
+
+    Per the exposition format spec, backslash, double-quote, and newline
+    must be backslash-escaped. ``team_id`` originates from ingested webhook
+    payloads and is therefore untrusted input.
+    """
+    return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
 async def _push_metrics(
     results: list[dict[str, Any]],
     pushgateway_url: str,
@@ -277,9 +281,9 @@ async def _push_metrics(
         ) -> None:
             if value is None:
                 return
-            labels = f'team_id="{_tid}"'
+            labels = f'team_id="{_escape_label_value(_tid)}"'
             if tier_label:
-                labels += f',tier="{tier_label}"'
+                labels += f',tier="{_escape_label_value(tier_label)}"'
             _lines.append(f"# HELP {name} DORA metric")
             _lines.append(f"# TYPE {name} gauge")
             _lines.append(f"{name}{{{labels}}} {value}")
@@ -312,7 +316,7 @@ async def _push_metrics(
         )
 
         payload = "\n".join(lines) + "\n"
-        job_name = f"ufawkesdora_{tid.replace('/', '_')}"
+        job_name = f"ufawkesdora_{quote(tid, safe='')}"
 
         try:
             async with aiohttp.ClientSession() as session:
