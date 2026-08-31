@@ -36,8 +36,15 @@ services:
         reservations:
           cpus: "0.25"
           memory: 256M
-    # NOTE: healthcheck removed — otel-collector uses distroless image without wget/curl/sh.
+    # NOTE: no healthcheck (#272) — otel/opentelemetry-collector-contrib:0.120.0
+    # is distroless: no sh/wget/curl, and the otelcol-contrib binary itself has
+    # no health-query subcommand (verified: `docker run --entrypoint sh/wget/curl`
+    # all fail with "executable file not found"; `otelcol-contrib --help` lists
+    # only completion/components/featuregate/help/validate).
     # See: https://github.com/open-telemetry/opentelemetry-collector/issues/8181
+    # Alternative approach: external polling of the :8888 metrics endpoint —
+    # see scripts/wait-healthy.sh and ci-*.yml's "Wait for all services
+    # healthy" steps, both already do this.
     logging:
       driver: json-file
       options:
@@ -344,6 +351,13 @@ services:
       - VERBOSE=OFF
     # No host ports published — Alertmanager reaches it on the internal
     # observability network only (consistent with the localhost-bind posture).
+    # NOTE: no healthcheck (#272) — rogerrum/alertmanager-discord:1.0.7 is
+    # distroless: no sh/wget/curl (verified: `docker run --entrypoint sh/wget`
+    # both fail with "executable file not found"), and it's a single-purpose
+    # binary with no health-query mode. No alternative external check is
+    # currently wired up for this one (no published port to poll) — an
+    # acknowledged gap, not a solved one; Alertmanager's own delivery
+    # success/failure to this relay is the only present signal.
     deploy:
       resources:
         limits:
@@ -714,8 +728,12 @@ services:
         reservations:
           cpus: "0.1"
           memory: 128M
-    # NOTE: healthcheck removed — same distroless image as otel-collector above,
-    # which has no wget/curl/sh. See that service's NOTE for details.
+    # NOTE: no healthcheck (#272) — same distroless image as otel-collector
+    # above (see that service's NOTE for the verified details). Alternative
+    # approach: this service publishes no host ports, so external polling
+    # happens indirectly — dora-compute's own successful metric pushes and
+    # Prometheus scraping the pushgateway are the effective liveness signal
+    # for this collector's config being loaded and its pipeline running.
     logging:
       driver: json-file
       options:
