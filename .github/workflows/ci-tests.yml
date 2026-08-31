@@ -17,6 +17,12 @@ env:
   # --profile core is requested. Never actually used: the dora profile is not
   # activated by any job in this file.
   DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
+  # Compose's `secrets: slack_webhook_url: environment:` source requires this
+  # var to exist (even empty) or `docker compose up` refuses to start ANY
+  # service under core, not just alertmanager. Empty is fine — the Slack
+  # receiver that reads the secret stays commented out by default (see
+  # config/alertmanager/alertmanager.yml, LB-03/#181).
+  SLACK_WEBHOOK_URL: ""
 
 jobs:
   # ─── Unit Tests ───────────────────────────────────────────────────────────

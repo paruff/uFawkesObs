@@ -27,6 +27,12 @@ jobs:
       # dora-profiled otel-collector-dora service (Compose evaluates it even
       # under --profile core/--profile apps). Never actually used here.
       DORA_POSTGRES_URL: postgresql://ci-unused:ci-unused@localhost:5432/ci-unused # pragma: allowlist secret
+      # Compose's `secrets: slack_webhook_url: environment:` source requires
+      # this var to exist (even empty) or `docker compose up` refuses to
+      # start ANY service under core, not just alertmanager. Empty is fine —
+      # the Slack receiver that reads the secret stays commented out by
+      # default (see config/alertmanager/alertmanager.yml, LB-03/#181).
+      SLACK_WEBHOOK_URL: ""
       # Short recompute interval so dora-compute picks up the deployment
       # event OBS-SLI-006 seeds within the existing steady-state window,
       # instead of only computing once at container start (default: 3600s).
