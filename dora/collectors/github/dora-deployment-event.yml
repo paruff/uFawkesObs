@@ -81,6 +81,11 @@ jobs:
           SERVICE: ${{ inputs.service || github.event.repository.name || github.repository }}
           COMMIT_SHA: ${{ github.sha }}
           DEPLOYED_AT: ${{ github.event.head_commit.timestamp }}
+          STATUS: ${{ inputs.status }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          PIPELINE_URL: ${{ inputs.pipeline_url }}
+          AI_ASSISTED: ${{ inputs.ai_assisted }}
+          DEPLOY_DURATION_SECONDS: ${{ inputs.deploy_duration_seconds }}
         run: |
           set -euo pipefail
 
@@ -95,27 +100,38 @@ jobs:
             DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           fi
 
-          # Build the canonical deployment event payload
-          PAYLOAD=$(cat <<EOF
-          {
-            "schema_version": "1.0",
-            "event_type": "deployment",
-            "repo": "${REPO}",
-            "service": "${SERVICE}",
-            "environment": "${{ inputs.environment }}",
-            "commit_sha": "${COMMIT_SHA}",
-            "deployed_at": "${DEPLOYED_AT}",
-            "status": "${{ inputs.status }}",
-            "pipeline_url": "${{ inputs.pipeline_url }}",
-            "ai_assisted": ${{ inputs.ai_assisted }}
-          }
-          EOF
-          )
+          # Build the canonical deployment event payload via jq, not string
+          # interpolation — inputs.* are consumed through env: above (not
+          # ${{ }} inside this script), so an attacker-controlled
+          # status/environment/pipeline_url value can't break out of the
+          # script at template-expansion time (GitHub Actions script
+          # injection).
+          PAYLOAD=$(jq -n \
+            --arg repo "$REPO" \
+            --arg service "$SERVICE" \
+            --arg environment "$ENVIRONMENT" \
+            --arg commit_sha "$COMMIT_SHA" \
+            --arg deployed_at "$DEPLOYED_AT" \
+            --arg status "$STATUS" \
+            --arg pipeline_url "$PIPELINE_URL" \
+            --argjson ai_assisted "$AI_ASSISTED" \
+            '{
+              schema_version: "1.0",
+              event_type: "deployment",
+              repo: $repo,
+              service: $service,
+              environment: $environment,
+              commit_sha: $commit_sha,
+              deployed_at: $deployed_at,
+              status: $status,
+              pipeline_url: $pipeline_url,
+              ai_assisted: $ai_assisted
+            }')
 
           # Add optional deploy_duration_seconds if provided
-          if [ -n "${{ inputs.deploy_duration_seconds }}" ]; then
+          if [ -n "$DEPLOY_DURATION_SECONDS" ]; then
             PAYLOAD=$(echo "$PAYLOAD" | jq \
-              --argjson dur "${{ inputs.deploy_duration_seconds }}" \
+              --argjson dur "$DEPLOY_DURATION_SECONDS" \
               '.deploy_duration_seconds = $dur')
           fi
 
