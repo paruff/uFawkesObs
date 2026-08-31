@@ -58,7 +58,7 @@ jobs:
           docker run --rm \
             -v $PWD/config/prometheus:/etc/prometheus \
             --entrypoint promtool \
-            prom/prometheus:v2.55.1 \
+            prom/prometheus:v3.5.4 \
             check config /etc/prometheus/prometheus.yaml
 
       - name: Validate OTel config
