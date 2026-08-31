@@ -116,13 +116,22 @@ DISCORD_WEBHOOK_URL=REPLACE_ME
 ### Slack Notifications
 
 Alertmanager supports Slack natively via `slack_configs`. The `slack-notifications`
-receiver in `config/alertmanager/alertmanager.yml` is the tested recipe.
+receiver in `config/alertmanager/alertmanager.yml` is the tested recipe — confirmed
+against a real Slack workspace, see [issue #181](https://github.com/paruff/uFawkesObs/issues/181).
+
+**Important**: Alertmanager does **not** expand `${VAR}` inside its own config
+file — that substitution only applies to `compose.yaml` itself, not to files
+mounted into a container and read directly by the app inside it. The recipe
+instead uses Alertmanager's native `api_url_file`, backed by a Docker Compose
+secret (`secrets:` → `environment: "SLACK_WEBHOOK_URL"` in `compose.yaml`),
+which materializes the webhook as a real file at
+`/run/secrets/slack_webhook_url` inside the container.
 
 **Setup steps:**
 
-1. **Create an incoming webhook** for your Slack workspace and channel:
-   `https://api.slack.com/messaging/webhooks` → *Create an Incoming Webhook* →
-   choose the channel (e.g. `#alerts`).
+1. **Create an incoming webhook** for your Slack workspace and channel at
+   `https://my.slack.com/services/new/incoming-webhook/` — pick the channel
+   there; Slack ties the webhook to that one channel permanently.
 2. **Set the webhook URL** in `.env`:
 
    ```bash
@@ -131,8 +140,7 @@ receiver in `config/alertmanager/alertmanager.yml` is the tested recipe.
 
 3. **Uncomment** the `slack-notifications` receiver and its catch-all route in
    `config/alertmanager/alertmanager.yml` (search for `[RECIPE] Slack notifications`).
-4. **Restart Alertmanager** so it picks up the new environment variable, then
-   reload the config:
+4. **Recreate Alertmanager** so Compose mounts the new secret, then reload:
 
    ```bash
    docker compose up -d --force-recreate alertmanager
@@ -140,7 +148,15 @@ receiver in `config/alertmanager/alertmanager.yml` is the tested recipe.
    ```
 
 5. **Verify** (see [Sending a Test Alert](#sending-a-test-alert) below): fire a
-   test alert and confirm the message lands in the Slack channel.
+   test alert and confirm the message lands in the Slack channel. Use an alert
+   with no `severity`/`alert_domain`/`category` label, or it'll match an
+   earlier, more specific route (`continue: false`) before ever reaching the
+   Slack catch-all.
+
+**Do not add a `channel:` field** to the `slack_configs` block. An incoming
+webhook is bound to one fixed channel at creation time; specifying a
+different channel name causes Slack to reject the message with
+`channel_not_found` (confirmed live) rather than redirecting it.
 
 ### Discord Notifications
 
@@ -192,6 +208,10 @@ default `core` stack is unchanged.
 Fire a single firing alert directly into Alertmanager and watch it route to your
 enabled channel:
 
+Deliberately **no** `severity`, `alert_domain`, or `category` label — any of
+those would match an earlier, more specific route (`continue: false`) before
+the alert ever reaches the Slack/Discord catch-all route.
+
 ```bash
 curl -s -X POST http://localhost:9093/api/v2/alerts \
   -H "Content-Type: application/json" \
@@ -199,7 +219,6 @@ curl -s -X POST http://localhost:9093/api/v2/alerts \
     {
       "labels": {
         "alertname": "Lb03TestAlert",
-        "severity": "warning",
         "service": "ufawkesobs"
       },
       "annotations": {
@@ -218,7 +237,7 @@ Then confirm the alert was received and routed:
 # Alert is active in Alertmanager
 curl -s http://localhost:9093/api/v2/alerts | jq '.[] | select(.labels.alertname=="Lb03TestAlert")'
 
-# Slack: check the #alerts channel (or your chosen channel)
+# Slack: check your chosen channel (the one picked when the webhook was created)
 # Discord: check the channel — embed titled "[FIRING:1] LB-03 Slack/Discord test alert"
 
 # Discord bridge delivery log

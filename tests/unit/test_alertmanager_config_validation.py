@@ -87,9 +87,18 @@ class TestDefaultRoutingUnchanged:
 class TestSlackRecipe:
     """The documented Slack recipe must exist and avoid hardcoded secrets."""
 
-    def test_slack_recipe_uses_env_substitution(self, alertmanager_raw: str) -> None:
-        assert 'api_url: "${SLACK_WEBHOOK_URL}"' in alertmanager_raw, (
-            "Slack recipe must reference ${SLACK_WEBHOOK_URL} (env substitution)"
+    def test_slack_recipe_uses_secret_file(self, alertmanager_raw: str) -> None:
+        """Alertmanager doesn't expand ${VAR} in its own config file — that
+        substitution only applies to compose.yaml. The recipe must use
+        api_url_file against the Compose-managed secret instead (confirmed
+        live against a real Slack workspace, LB-03/#181)."""
+        assert "api_url_file: /run/secrets/slack_webhook_url" in alertmanager_raw, (
+            "Slack recipe must reference api_url_file, not ${SLACK_WEBHOOK_URL} "
+            "substitution (which Alertmanager does not perform)"
+        )
+        assert 'api_url: "${SLACK_WEBHOOK_URL}"' not in alertmanager_raw, (
+            "Slack recipe must not use the broken ${SLACK_WEBHOOK_URL} "
+            "substitution pattern — confirmed non-functional live"
         )
 
     def test_slack_recipe_is_fully_commented(self, alertmanager_raw: str) -> None:
@@ -183,11 +192,20 @@ class TestEnvExample:
                 return
         pytest.fail(f"{var} is missing from .env.example")
 
-    def test_alertmanager_env_passes_slack_webhook(self, compose_data: dict) -> None:
-        env = compose_data["services"]["alertmanager"].get("environment", [])
-        env_str = "\n".join(str(item) for item in env)
-        assert "SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}" in env_str, (
-            "alertmanager container must receive SLACK_WEBHOOK_URL (with a safe default)"
+    def test_alertmanager_gets_slack_webhook_secret(self, compose_data: dict) -> None:
+        """The webhook reaches Alertmanager as a Compose secret file
+        (api_url_file), not a container env var Alertmanager can't read
+        into its own config — see test_slack_recipe_uses_secret_file."""
+        secrets = compose_data.get("secrets", {})
+        assert "slack_webhook_url" in secrets, (
+            "compose.yaml must declare a slack_webhook_url secret"
+        )
+        assert secrets["slack_webhook_url"].get("environment") == "SLACK_WEBHOOK_URL", (
+            "slack_webhook_url secret must source from the SLACK_WEBHOOK_URL env var"
+        )
+        service_secrets = compose_data["services"]["alertmanager"].get("secrets", [])
+        assert "slack_webhook_url" in service_secrets, (
+            "alertmanager service must mount the slack_webhook_url secret"
         )
 
     def test_dora_slack_var_replaced(self, alertmanager_raw: str) -> None:

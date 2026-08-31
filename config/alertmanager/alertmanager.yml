@@ -126,7 +126,7 @@ receivers:
     # Uncomment for Slack integration (add under critical-alerts):
     #   Requires SLACK_WEBHOOK_URL in .env — never hardcode a webhook URL.
     #   slack_configs:
-    #     - api_url: "${SLACK_WEBHOOK_URL}"
+    #     - api_url_file: /run/secrets/slack_webhook_url
     #       channel: "#alerts-critical"
     #       title: '{{ .GroupLabels.alertname }}'
     #       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
@@ -166,10 +166,10 @@ receivers:
       - url: "http://host.docker.internal:5001/webhook/dora"
         send_resolved: true
         max_alerts: 0
-    # Uncomment for Slack integration (uses the same SLACK_WEBHOOK_URL as the
-    # recipe below — no hardcoded secret):
+    # Uncomment for Slack integration (uses the same slack_webhook_url secret
+    # as the recipe below — no hardcoded secret):
     # slack_configs:
-    #   - api_url: ${SLACK_WEBHOOK_URL}
+    #   - api_url_file: /run/secrets/slack_webhook_url
     #     channel: '#dora-alerts'
     #     title: '{{ .GroupLabels.alertname }}'
     #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
@@ -179,16 +179,22 @@ receivers:
   # Send every alert to a Slack channel via a Slack incoming webhook.
   #
   # Enable in 3 steps:
-  #   1. Create an incoming webhook for your Slack workspace/channel and set it
-  #      in .env:  SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T0000000/B0000000/XXXX
+  #   1. Create an incoming webhook for your Slack workspace/channel at
+  #      https://my.slack.com/services/new/incoming-webhook/ and set it in
+  #      .env:  SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T0000000/B0000000/XXXX
   #   2. Uncomment this receiver AND its catch-all route in `route:` above.
-  #   3. Reload Alertmanager:  curl -X POST http://localhost:9093/-/reload
+  #   3. Recreate Alertmanager so it picks up the new secret, then reload:
+  #        docker compose up -d --force-recreate alertmanager
+  #        curl -X POST http://localhost:9093/-/reload
+  #
+  # No `channel:` field here deliberately — an incoming webhook is bound to
+  # one fixed channel at creation time, and modern Slack rejects a mismatched
+  # override with channel_not_found (confirmed live, LB-03/#181).
   #
   # Walkthrough with a live test: docs/alertmanager-operations.md
   # - name: "slack-notifications"
   #   slack_configs:
-  #     - api_url: "${SLACK_WEBHOOK_URL}"
-  #       channel: "#alerts"
+  #     - api_url_file: /run/secrets/slack_webhook_url
   #       title: '{{ .GroupLabels.alertname }}'
   #       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
   #       send_resolved: true

@@ -277,10 +277,11 @@ services:
       - "127.0.0.1:9093:9093"
     environment:
       - TZ=UTC
-      # Passed into the container so Alertmanager can expand ${SLACK_WEBHOOK_URL}
-      # in the (commented-out) Slack receiver. Empty by default — the stack runs
-      # without it. See .env.example and docs/alertmanager-operations.md.
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+    secrets:
+      # Mounted at /run/secrets/slack_webhook_url regardless of whether the
+      # Slack receiver in alertmanager.yml is enabled — harmless either way,
+      # since api_url_file is only read when that receiver is active.
+      - slack_webhook_url
     deploy:
       resources:
         limits:
@@ -763,6 +764,15 @@ services:
     networks:
       - observability
     profiles: ["dora"]
+
+secrets:
+  # Alertmanager does not expand ${VAR} inside its own config file — that
+  # substitution only applies to compose.yaml itself. api_url_file (native
+  # to Alertmanager since v0.25) reads the webhook from a real file instead,
+  # which this secret materializes from SLACK_WEBHOOK_URL at container start.
+  # See config/alertmanager/alertmanager.yml and docs/alertmanager-operations.md.
+  slack_webhook_url:
+    environment: "SLACK_WEBHOOK_URL"
 
 networks:
   observability:
