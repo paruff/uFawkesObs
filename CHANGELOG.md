@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.3-alpha.1...v0.3.4-alpha.1) (2026-08-31)
+
+
+### Fixed
+
+* **acceptance:** only stop stack in auto mode if we started it ([2033328](https://github.com/paruff/uFawkesObs/commit/20333286ae490c212b6f6a5d202007f7f734ac5b))
+* **acceptance:** only stop stack in auto mode if we started it ([#310](https://github.com/paruff/uFawkesObs/issues/310)) ([523c95c](https://github.com/paruff/uFawkesObs/commit/523c95c2b1743cb60022a66e27b90e99d916ea8f))
+* **acceptance:** only tear down the stack if this session started it ([c4ed384](https://github.com/paruff/uFawkesObs/commit/c4ed38484b15f5a08909093dd9448e745269a2fc))
+* **acceptance:** only tear down the stack if this session started it ([ae774c0](https://github.com/paruff/uFawkesObs/commit/ae774c03226ba6ef0d0018429b97e7ef82ad6e6f)), closes [#310](https://github.com/paruff/uFawkesObs/issues/310)
+* **deploy:** pin detect-changes diff base explicitly for workflow_run ([acbdeae](https://github.com/paruff/uFawkesObs/commit/acbdeaea2664a52e8605b044bfab469a2248618b))
+* **deploy:** pin detect-changes diff base explicitly for workflow_run ([eb5cf8c](https://github.com/paruff/uFawkesObs/commit/eb5cf8c77b7fab0befad5d2a788b9e88f9e05656)), closes [#301](https://github.com/paruff/uFawkesObs/issues/301)
+* **observability:** seed telemetry-generator traffic and wait for propagation ([5122b6e](https://github.com/paruff/uFawkesObs/commit/5122b6e660d1a1e9bebd7dcf7714af5da4dd2d8e))
+
 ## [0.3.3-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.2-alpha.1...v0.3.3-alpha.1) (2026-08-31)
 
 
