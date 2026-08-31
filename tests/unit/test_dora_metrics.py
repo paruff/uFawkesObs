@@ -13,6 +13,7 @@ Tests cover:
 - Prometheus pushgateway output format
 """
 
+import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -284,13 +285,22 @@ class TestPushMetrics:
 
     @pytest.mark.asyncio
     async def test_push_metrics_job_name_has_no_slash_in_url(self):
-        """Regression test: job_name previously included a literal '/'
-        (f"ufawkesdora/{tid}") embedded directly in the pushgateway URL
-        path (.../metrics/job/{job_name}). Pushgateway parses path segments
-        after /job/<name> as alternating grouping-key label/value pairs, so
-        an embedded '/' produces a dangling unpaired segment and a 400
-        Bad Request -- confirmed live against a running pushgateway
-        (2026-08-18). The job name segment of the URL must not contain '/'.
+        """Regression test, now covering two incidents against the same
+        invariant. Originally (2026-08-18): job_name included a literal
+        '/' (f"ufawkesdora/{tid}") embedded directly in the pushgateway
+        URL path (.../metrics/job/{job_name}) -- Pushgateway parses path
+        segments after /job/<name> as alternating grouping-key label/value
+        pairs, so an embedded '/' produces a dangling unpaired segment and
+        a 400 Bad Request. That was "fixed" by string-replacing '/', then
+        later regressed a different way (#276, 2026-08-31): switching to
+        urllib.parse.quote(tid, safe='') percent-encoded '/' as '%2F', but
+        Pushgateway's HTTP router decodes %2F back to a literal '/' before
+        parsing the path -- same 400, different-looking cause. Both
+        confirmed live against a running Pushgateway. Fixed for real via
+        Pushgateway's documented job@base64/<value> path convention (#290)
+        -- verify the job name segment, once base64-decoded, is never
+        parsed as containing a raw '/' by Pushgateway's router (i.e. no
+        literal '/' reaches the URL path outside the base64 blob).
         """
         record = {
             "team_id": "paruff/uFawkesObs",
@@ -312,7 +322,10 @@ class TestPushMetrics:
                 mock_session.put.call_args.kwargs.get("url")
                 or mock_session.put.call_args.args[0]
             )
-            job_segment = called_url.split("/metrics/job/", 1)[1]
+            assert "/metrics/job@base64/" in called_url, (
+                f"expected the job@base64 pushgateway path convention: {called_url!r}"
+            )
+            job_segment = called_url.split("/metrics/job@base64/", 1)[1]
             assert "/" not in job_segment, (
                 f"pushgateway job name segment must not contain '/': {called_url!r}"
             )
@@ -395,12 +408,19 @@ class TestPushMetrics:
             assert len(metric_lines) == 1
 
     @pytest.mark.asyncio
-    async def test_push_metrics_url_encodes_job_name(self):
-        """Security regression (#276): team_id is only partially sanitized
-        (only '/' stripped) before being spliced into the pushgateway
-        job-name URL path segment. Unusual characters (space, '"', etc.)
-        can malform the HTTP request path -- the segment must be
-        URL-encoded, not naively string-replaced.
+    async def test_push_metrics_base64_encodes_job_name(self):
+        """Security + correctness regression (#276, #290): team_id was
+        first only partially sanitized (just '/' stripped), then briefly
+        percent-encoded via urllib.parse.quote -- but Pushgateway's HTTP
+        router decodes %2F back to a literal '/' before parsing the URL
+        path into job/grouping-key segments, so percent-encoding a '/'
+        broke every real "org/repo" team_id with HTTP 400 ("odd number of
+        components in label string"), confirmed live against a real
+        Pushgateway instance (#290). Pushgateway's own documented fix for
+        job names containing arbitrary characters is the job@base64/<val>
+        path convention -- verify the URL uses that path, and that the
+        base64 segment round-trips to the exact expected job name (no
+        raw '/', ' ', '?', or '&' ever reaching the URL path itself).
         """
         record = {
             "team_id": "org/repo with spaces?and&stuff",
@@ -422,11 +442,16 @@ class TestPushMetrics:
                 mock_session.put.call_args.kwargs.get("url")
                 or mock_session.put.call_args.args[0]
             )
-            job_segment = called_url.split("/metrics/job/", 1)[1]
+            assert "/metrics/job@base64/" in called_url
+            job_segment = called_url.split("/metrics/job@base64/", 1)[1]
             assert " " not in job_segment
             assert "/" not in job_segment
             assert "?" not in job_segment
             assert "&" not in job_segment
+
+            padded = job_segment + "=" * (-len(job_segment) % 4)
+            decoded = base64.urlsafe_b64decode(padded).decode()
+            assert decoded == "ufawkesdora_org/repo with spaces?and&stuff"
 
     @pytest.mark.asyncio
     async def test_push_metrics_handles_pushgateway_error(self):
