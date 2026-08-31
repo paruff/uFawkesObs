@@ -1,4 +1,4 @@
-name: Chaos Nightly
+name: Chaos Resilience (Nightly)
 
 on:
   schedule:

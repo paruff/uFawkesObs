@@ -1,4 +1,4 @@
-name: CI
+name: Repo Hygiene
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate
+    name: Pre-commit Hooks
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
