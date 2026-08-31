@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0-alpha.1] — 2026-08-31
+
+Checkpoint release ahead of the LB-04 live rollback drill — 25 PRs merged
+since v0.2.0. Marked alpha because the drill itself (the thing this release
+exists to precede) hasn't run yet; the deploy/rollback mechanism it will
+exercise is implemented and unit-tested but not yet live-verified.
+
+### Added
+
+- **Tag-based deploy/rollback redesign** (LB-04, #248): deploy now targets an
+  immutable `deploy-<ts>-<sha>` tag instead of `main`'s moving HEAD; rollback
+  checks out `deploy-latest-good` instead of reverting and pushing to
+  `main` — neither path touches `main`'s branch protection anymore
+- Acceptance Full health guard and explicit deploy-skip summaries (#261)
+- Service Error/Latency/SLO dashboards (#250, #256)
+- Beta feedback channel (#243)
+- Regression guards for the rollback SSH credential model (#239)
+
+### Fixed
+
+- **Slack notification recipe for Alertmanager, verified live** (LB-03,
+  #262): the previously-merged recipe never actually worked — Alertmanager
+  doesn't expand `${VAR}` inside its own config file. Rebuilt on
+  `api_url_file` + a Docker Compose secret, confirmed delivering real
+  alerts to a real Slack channel
+- SLO summary print always showed FAIL for non-latency SLIs (#257)
+- DORA Overview dashboard empty in fresh CI (#259); unwired DORA stub
+  dashboards removed (#258)
+- OBS-SLI-006's 17-day-red gate root-caused and fixed (#252)
+- DORA `event_queue` duplicate writes on identical payload (#249)
+- Public-release doc audit: broken link, stale Prometheus version, blocked
+  LB-04 status corrected (#260)
+- CI: opencode `external_directory` write permissions (#247); uFawkesPipe
+  reusable workflows bumped to v1.3.0-beta.1 (#241)
+
+### Docs
+
+- LB-02, LB-05, LB-06 marked done in Path to Late Beta (#246, #245)
+- `pr-review-block` skill relocated (#244)
+- Pre-release cruft removed, stale media-refinery references fixed (#238)
+
 ## [0.2.0] — 2026-08-18
 
 ### Added
@@ -129,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   0.9.0→0.10.0, `aquasecurity/trivy-action` 0.35.0→0.36.0, `dorny/paths-filter` 3→4,
   `actions/dependency-review-action` 4→5
 
-[Unreleased]: https://github.com/paruff/uFawkesObs/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/paruff/uFawkesObs/compare/v0.3.0-alpha.1...HEAD
+[0.3.0-alpha.1]: https://github.com/paruff/uFawkesObs/compare/v0.2.0...v0.3.0-alpha.1
 [0.2.0]: https://github.com/paruff/uFawkesObs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/paruff/uFawkesObs/releases/tag/v0.1.0
