@@ -197,7 +197,7 @@ for the exact template.
 
 ### Deployment Lifecycle Gates
 
-- **Main CI must be green before any PR merges.** If the latest run of `CI Pipeline` on `main` is not `success`, all PRs are blocked until it is fixed. Enforced by `main-ci-guard.yml` which calls `paruff/ufawkespipe/.github/workflows/reusable-main-ci-guard.yml@v1.2.0`.
+- **Main CI must be green before any PR merges.** What actually blocks a merge is GitHub branch protection's required-status-checks list on `main`: `Pre-commit Hooks`, `Security`, `Validate Configs`, `Unit Tests`, `Integration Tests`, `Acceptance Smoke`, `🛡️ Main CI Health`, `🛡️ Acceptance Full Health`. A PR cannot merge until every one of those checks is green on the PR itself. The last two are `main-ci-guard.yml`'s two jobs (calling `paruff/ufawkespipe/.github/workflows/reusable-main-ci-guard.yml@v1.3.0-beta.1`), which look at the most recent run of `Pre-Merge Pipeline` and `Acceptance Full (Post-Merge)` on `main` and fail the PR if either was not `success` — this is what closes the gap where `main` could look "green" while Acceptance Full was actually failing.
 - **Every push to `main` that changes config, compose, or dashboards triggers a deploy.** The deploy must include:
   1. The deploy operation itself (SSH pull + reload/restart).
   2. **Post-deployment verification** — smoke tests against the live deployed instance (health endpoints, data flow checks), not just against the CI build. This runs as a separate job after the deploy.
