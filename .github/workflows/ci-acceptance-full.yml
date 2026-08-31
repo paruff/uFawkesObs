@@ -111,7 +111,7 @@ jobs:
         if: always()
         run: |
           docker compose logs --no-color --timestamps \
-            dora-api dora-compute dora-pushgateway \
+            dora-api dora-compute pushgateway \
             > reports/dora-container-logs.txt 2>&1 || true
 
       - name: Generate runbook snippets
