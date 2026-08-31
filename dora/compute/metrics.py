@@ -23,11 +23,11 @@ Usage:
 
 import argparse
 import asyncio
+import base64
 import json
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from urllib.parse import quote
 
 from .metrics_db_sqlite import MetricsDB
 
@@ -316,11 +316,19 @@ async def _push_metrics(
         )
 
         payload = "\n".join(lines) + "\n"
-        job_name = f"ufawkesdora_{quote(tid, safe='')}"
+        job_name = f"ufawkesdora_{tid}"
+        # Pushgateway's HTTP router decodes %2F back to a literal '/' before
+        # parsing the URL path into job/grouping-key segments, so a plain
+        # percent-encoded job name (as urllib.parse.quote produces) breaks
+        # on any team_id containing '/' — i.e. every real "org/repo" value —
+        # with HTTP 400 ("odd number of components in label string").
+        # Pushgateway's own fix for this is the documented job@base64/<val>
+        # path convention: https://github.com/prometheus/pushgateway#url
+        job_name_b64 = base64.urlsafe_b64encode(job_name.encode()).decode().rstrip("=")
 
         try:
             async with aiohttp.ClientSession() as session:
-                url = f"{pushgateway_url.rstrip('/')}/metrics/job/{job_name}"
+                url = f"{pushgateway_url.rstrip('/')}/metrics/job@base64/{job_name_b64}"
                 async with session.put(url, data=payload) as resp:
                     if resp.status not in (200, 202):
                         logger.warning(
