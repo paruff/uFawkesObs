@@ -137,9 +137,14 @@ jobs:
               previousBody
                 .split('\n')
                 .find((line) => line.startsWith(markerPrefix)) || '';
+            // trackingIssue is undefined the first time this ever alerts (or
+            // any time the previous tracking issue was closed and none is
+            // open) -- isNewAlert is only read below inside the `else`
+            // branch where trackingIssue is confirmed truthy, but it must
+            // not throw when computed eagerly here for that undefined case.
             const isNewAlert =
               shouldAlert &&
-              (trackingIssue.state !== 'open' ||
+              (trackingIssue?.state !== 'open' ||
                 !previousMarkerLine.includes(`latest-run=${latestRunId}`) ||
                 !previousMarkerLine.includes('state=alert'));
 
