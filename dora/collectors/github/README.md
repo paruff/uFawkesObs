@@ -1,12 +1,20 @@
-# uFawkesDORA — GitHub Actions Collectors
+# uFawkesObs DORA — GitHub Actions Collectors
 
-Emit deployment and pull request events from any GitHub repo to the
-uFawkesDORA ingestion API. Zero new tooling — just add one `uses:` line to
-your workflows.
+Emit deployment and pull request events from any GitHub repo to
+uFawkesObs's `dora-api` ingestion service. Zero new tooling — just add one
+`uses:` line to your workflows.
+
+> These reusable workflows hardcode `runs-on: ubuntu-latest`, so they can
+> only reach a `DORA_INGESTION_URL` that's publicly routable. If your
+> `dora-api` is only reachable on the deploy host itself (the default —
+> see `compose.yaml`'s `dora-api` service), wire the event send directly
+> into your deploy pipeline's SSH step instead, the way `deploy.yml` and
+> `scripts/send-dora-deployment-event.sh` do in this repo (#267).
 
 ## Prerequisites
 
-1. You have access to a uFawkesDORA ingestion API endpoint.
+1. You have access to a `dora-api` ingestion endpoint reachable from
+   GitHub-hosted runners.
 2. Set `DORA_INGESTION_URL` as a [repository variable][gh-vars] in your repo:
 
    ```
@@ -148,14 +156,18 @@ policy and field reference.
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────────────────┐     ┌──────────────┐
-│  Your Repo  │────▶│  uFawkesDORA          │────▶│  TimescaleDB  │
-│  (workflow)  │     │  Ingestion API        │     │  (raw_events) │
-│              │     │  POST /event          │     │               │
-│  uses: ...   │     │  8088                 │     │  DORA metrics │
-└─────────────┘     └──────────────────────┘     └──────────────┘
+┌─────────────┐     ┌──────────────────────┐     ┌───────────────┐
+│  Your Repo  │────▶│  uFawkesObs dora-api  │────▶│  SQLite or    │
+│  (workflow)  │     │  POST /event          │     │  Postgres     │
+│              │     │  :8088                │     │  (raw_events) │
+│  uses: ...   │     │                        │     │  DORA metrics │
+└─────────────┘     └──────────────────────┘     └───────────────┘
 ```
 
-The collectors act as adapters between GitHub webhook payloads and the
-uFawkesDORA canonical event schemas. They require no changes to your
-existing CI/CD pipelines.
+`dora-api` is this repo's own ingestion service (`dora/ingestion/`), not
+a separate product — the standalone uFawkesDORA repo was archived and
+folded in here (see `AGENTS.md` §10). Backend is SQLite by default, or
+Postgres when the `resource-plane` profile is active. The collectors act
+as adapters between GitHub webhook payloads and the canonical event
+schemas in `dora/events/`. They require no changes to your existing
+CI/CD pipelines.
