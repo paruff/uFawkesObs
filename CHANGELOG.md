@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.0-alpha.1...v0.3.1-alpha.1) (2026-08-31)
+
+
+### Added
+
+* **ci:** add Acceptance Full to main-ci-guard, document real gate ([38b23b0](https://github.com/paruff/uFawkesObs/commit/38b23b0b0110650b36e716a42e049c874d7199c9))
+
+
+### Fixed
+
+* **acceptance:** resolve remaining Acceptance Full failure + add diagnostics ([60f135b](https://github.com/paruff/uFawkesObs/commit/60f135b1a40218da3a92fe7cf8d409e39b24c86c))
+* **acceptance:** wait for seeded DORA metric before asserting ([5f2afd5](https://github.com/paruff/uFawkesObs/commit/5f2afd5e2a6bf0a8150b089e1acb1219ab98e8d8))
+* **ci:** exclude CHANGELOG.md from markdownlint ([c3e65b3](https://github.com/paruff/uFawkesObs/commit/c3e65b358cd6c71b59f4823082258da44d46daba))
+* **ci:** exclude CHANGELOG.md from markdownlint ([db74c9e](https://github.com/paruff/uFawkesObs/commit/db74c9efb33126df4fe995525974c9f6e2380d03))
+* **ci:** guard undefined trackingIssue in health-guard script ([0943102](https://github.com/paruff/uFawkesObs/commit/09431024389b8d2ff9c3c3d23edbc8b68b6d4b76))
+* **ci:** guard undefined trackingIssue in health-guard script ([e37d643](https://github.com/paruff/uFawkesObs/commit/e37d643fe8e548f8732b32a710330f7653652d3e))
+* **ci:** remove duplicate acceptance-smoke job, run smoke standalone ([4e531a5](https://github.com/paruff/uFawkesObs/commit/4e531a53086cd974f2b81e952e0353a57f623ddf))
+* **ci:** unblock Release Please with a PAT-capable token ([092bb99](https://github.com/paruff/uFawkesObs/commit/092bb99cfc3d00d6d2c7480e978b665e918e3e76))
+* **ci:** unblock Release Please with a PAT-capable token ([ba63659](https://github.com/paruff/uFawkesObs/commit/ba63659dd5656b4e29f86cc42f1f9e1e298cb255))
+* **ci:** use the real pushgateway compose service name ([d9ac27e](https://github.com/paruff/uFawkesObs/commit/d9ac27ea065e4c4e035a9531788b2b2e8d0db347))
+* **dora:** attribute manual incident events to the real repo ([f2a8697](https://github.com/paruff/uFawkesObs/commit/f2a8697a4a000607442c7e7e17cf4c391f5fc66d))
+* **dora:** break FDRT deployment-order ties with row id ([e3adfce](https://github.com/paruff/uFawkesObs/commit/e3adfce92a3bfb8277ab4060f9f52a3eea4e05c7))
+* **dora:** close GHA script injection in collectors ([7dc6eb4](https://github.com/paruff/uFawkesObs/commit/7dc6eb4df6593ff11e922f2b35fd08434aa6d40d))
+* **dora:** close GHA script injection in reusable collector workflows ([1e18051](https://github.com/paruff/uFawkesObs/commit/1e180514bda02dcfeaabc102d4fb946181a4960a))
+* **dora:** close remaining HIGH-severity review findings ([#278](https://github.com/paruff/uFawkesObs/issues/278), [#279](https://github.com/paruff/uFawkesObs/issues/279), [#280](https://github.com/paruff/uFawkesObs/issues/280)) ([417966c](https://github.com/paruff/uFawkesObs/commit/417966cb6399a96d59975e16b454ba1d976e9c36))
+* **dora:** close the six MEDIUM review findings ([#281](https://github.com/paruff/uFawkesObs/issues/281)-286) ([342911e](https://github.com/paruff/uFawkesObs/commit/342911ea12af8d36bc2571537cc11c8bf2d8b4d0))
+* **dora:** curl-examples.sh doesn't match its own event schemas ([#280](https://github.com/paruff/uFawkesObs/issues/280)) ([e177d5e](https://github.com/paruff/uFawkesObs/commit/e177d5e16da86511cac78f3c4e88ab5deb6f6e10))
+* **dora:** escape team_id in Prometheus label/URL output ([#276](https://github.com/paruff/uFawkesObs/issues/276)) ([dc015c8](https://github.com/paruff/uFawkesObs/commit/dc015c8d489848a7e7f8b4c453343fb351a96c7c))
+* **dora:** feed Lead Time and FDRT from real deployment events ([ae26c15](https://github.com/paruff/uFawkesObs/commit/ae26c153a9fda91608da57bca7450ef3f1c7e44d))
+* **dora:** feed Lead Time and FDRT from real deployment events ([#267](https://github.com/paruff/uFawkesObs/issues/267)) ([4ea41f4](https://github.com/paruff/uFawkesObs/commit/4ea41f4ed2ea356e8ad2268708839b5f86fc4f26))
+* **dora:** repoint dora-metrics.json's recording rules at the fed pipeline ([c94d257](https://github.com/paruff/uFawkesObs/commit/c94d257165f937ccc5e62409456ee4afbfdaa020))
+* **dora:** repoint dora-metrics.json's recording rules at the fed pipeline ([5a26e20](https://github.com/paruff/uFawkesObs/commit/5a26e206d4b0d6b084a5c185f8edf580e3b68043))
+* **dora:** scale regression alert thresholds to the real ratio range ([55ba6bb](https://github.com/paruff/uFawkesObs/commit/55ba6bbe2dec44e44bc3964c4cd86b4e8493edc5))
+* **dora:** send DORA_API_KEY from the deploy-event script ([00af213](https://github.com/paruff/uFawkesObs/commit/00af213d764f72ab0b7e589e1f47c4e26be2c37d))
+* **dora:** use Pushgateway job@base64 path for team_id ([b36eefc](https://github.com/paruff/uFawkesObs/commit/b36eefcbfb1a3b9bd8a2127ac41022236a7c4d77))
+* **dora:** use Pushgateway job@base64 path for team_id ([bb86756](https://github.com/paruff/uFawkesObs/commit/bb86756cb96468f26ec91754fdf80698c9b2f84a))
+* **dora:** Woodpecker collector snippet fails schema validation ([#279](https://github.com/paruff/uFawkesObs/issues/279)) ([7f98734](https://github.com/paruff/uFawkesObs/commit/7f98734072f5d898783e8f1493d3dc2f8441e989))
+
+
+### Docs
+
+* **ci:** correct required-check names to what PR [#298](https://github.com/paruff/uFawkesObs/issues/298) actually shows ([939b240](https://github.com/paruff/uFawkesObs/commit/939b2407712c427283cb268640615c04c72e60ca))
+* **ci:** rename Chaos Nightly workflow to Chaos Resilience (Nightly) ([d83e46e](https://github.com/paruff/uFawkesObs/commit/d83e46e181531115efd0ffdd2be882af997e5a52))
+* **ci:** rename CI Quality workflow to Quality & Security Gates ([c5fafb4](https://github.com/paruff/uFawkesObs/commit/c5fafb4d3e14b346aa1fe1939ea42f6bdcd332c4))
+* **ci:** rename Repo Hygiene workflow and Pre-commit Hooks job ([44452e0](https://github.com/paruff/uFawkesObs/commit/44452e06edcd418c2cf01d6ab746afe3b4107095))
+* **dora:** amend ADR-006, the OTLP ingestion model was never built ([ff73c04](https://github.com/paruff/uFawkesObs/commit/ff73c04366da78f1efe87878f1247c0d777aeb21))
+* **dora:** document dora-api's fail-open auth default ([a7bc727](https://github.com/paruff/uFawkesObs/commit/a7bc72764bb52800e9bff58ee90b7b1b7c03b20e))
+
+
+### Changed
+
+* **dora:** collapse _merge_team_results' 5x duplicated logic ([ef8a7bc](https://github.com/paruff/uFawkesObs/commit/ef8a7bc19c553e2220a39c82f517e1759326afdb))
+
+
+### Chores
+
+* **ci:** consolidate workflow naming into a clear test pyramid ([8100373](https://github.com/paruff/uFawkesObs/commit/81003739b6891d68f481fd5c8093ff2e70074e10))
+* **deploy:** comment-only change to prove deploy.yml SSH connectivity ([#182](https://github.com/paruff/uFawkesObs/issues/182)) ([27c1eea](https://github.com/paruff/uFawkesObs/commit/27c1eea65b552fe7c3df54a15c125e6acf04957a))
+* **deploy:** prove deploy.yml SSH connectivity before the LB-04 drill ([8c64f0d](https://github.com/paruff/uFawkesObs/commit/8c64f0d1bba75c48823eba553ee72d0700b3623f))
+* **dora:** decommission Postgres/resource-plane backend, SQLite only ([ac28c95](https://github.com/paruff/uFawkesObs/commit/ac28c95d70c09e1d1a4137960b9762ba76d76e27))
+* **dora:** decommission Postgres/resource-plane backend, SQLite only ([#275](https://github.com/paruff/uFawkesObs/issues/275)) ([08cf915](https://github.com/paruff/uFawkesObs/commit/08cf915ddbf95d5b909345c8c954770a42abf395))
+* **make:** align Makefile with the consolidated CI pyramid ([b14347f](https://github.com/paruff/uFawkesObs/commit/b14347ff6362f8759b98d56a49abe0b59cbc8afd))
+* **make:** align Makefile with the consolidated CI pyramid ([c1c320f](https://github.com/paruff/uFawkesObs/commit/c1c320fd9e6a50ac532215b548fbab7c1b315362))
+* merge main into chore/ci-pyramid-consolidation ([2c160d0](https://github.com/paruff/uFawkesObs/commit/2c160d0debd29502b31682b9c3e842cb948bb9e3))
+* **release:** automate releases off the Acceptance Full gate ([e68bae3](https://github.com/paruff/uFawkesObs/commit/e68bae32a23f3dd70f14c932bc6a7bf47293f3df))
+* **release:** automate releases off the Acceptance Full gate ([6b491e7](https://github.com/paruff/uFawkesObs/commit/6b491e7cf731bd374c72289925e9b124e1171a64))
+
 ## [Unreleased]
 
 ## [0.3.0-alpha.1] — 2026-08-31
