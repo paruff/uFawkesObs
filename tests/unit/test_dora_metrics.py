@@ -359,6 +359,80 @@ class TestPushMetrics:
             )
 
     @pytest.mark.asyncio
+    async def test_push_metrics_escapes_label_value_injection(self):
+        """Security regression (#276): team_id originates from ingested
+        webhook payloads (the `repo` field) and is therefore untrusted.
+        A value containing '"', '\\', or a newline must not be able to
+        inject extra Prometheus metric lines/labels into the pushed
+        payload -- it must come back escaped per the text-exposition spec.
+        """
+        record = {
+            "team_id": 'evil"} extra_metric{foo="bar',
+            "deployment_frequency": 1.0,
+            "proxy_metrics": False,
+            "dora_tier_deployment_frequency": "elite",
+        }
+
+        with patch("aiohttp.ClientSession") as mock_client_session:
+            mock_session = MagicMock()
+            mock_client_session.return_value.__aenter__.return_value = mock_session
+
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_session.put.return_value.__aenter__.return_value = mock_resp
+
+            await _push_metrics([record], "http://localhost:9091")
+
+            sent_payload = (
+                mock_session.put.call_args.kwargs.get("data")
+                or mock_session.put.call_args.args[1]
+            )
+            # The raw unescaped quote must never appear unescaped inside a
+            # label value -- every '"' in team_id must be preceded by '\'.
+            assert 'team_id="evil\\"} extra_metric{foo=\\"bar"' in sent_payload
+            # Only the intended two metric lines exist -- no injected line.
+            metric_lines = [
+                line
+                for line in sent_payload.splitlines()
+                if line and not line.startswith("#")
+            ]
+            assert len(metric_lines) == 1
+
+    @pytest.mark.asyncio
+    async def test_push_metrics_url_encodes_job_name(self):
+        """Security regression (#276): team_id is only partially sanitized
+        (only '/' stripped) before being spliced into the pushgateway
+        job-name URL path segment. Unusual characters (space, '"', etc.)
+        can malform the HTTP request path -- the segment must be
+        URL-encoded, not naively string-replaced.
+        """
+        record = {
+            "team_id": "org/repo with spaces?and&stuff",
+            "deployment_frequency": 1.0,
+            "proxy_metrics": False,
+        }
+
+        with patch("aiohttp.ClientSession") as mock_client_session:
+            mock_session = MagicMock()
+            mock_client_session.return_value.__aenter__.return_value = mock_session
+
+            mock_resp = MagicMock()
+            mock_resp.status = 200
+            mock_session.put.return_value.__aenter__.return_value = mock_resp
+
+            await _push_metrics([record], "http://localhost:9091")
+
+            called_url = (
+                mock_session.put.call_args.kwargs.get("url")
+                or mock_session.put.call_args.args[0]
+            )
+            job_segment = called_url.split("/metrics/job/", 1)[1]
+            assert " " not in job_segment
+            assert "/" not in job_segment
+            assert "?" not in job_segment
+            assert "&" not in job_segment
+
+    @pytest.mark.asyncio
     async def test_push_metrics_handles_pushgateway_error(self):
         """Pushgateway failure should log warning, not crash."""
         record = {
