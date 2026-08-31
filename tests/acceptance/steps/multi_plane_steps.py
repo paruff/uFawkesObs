@@ -69,16 +69,25 @@ def send_contract_trace(stack: ObservabilityStack) -> None:
     }
 
 
-@then("the trace should be queryable via Tempo API within 15 seconds")
+@then("the trace should be queryable via Tempo API within 30 seconds")
 def trace_queryable_in_tempo(stack: ObservabilityStack) -> None:
-    """Poll Tempo until the trace appears."""
+    """Poll Tempo until the trace appears.
+
+    #273: was timeout=15, flaky specifically on CI's resource-constrained
+    ubuntu-latest runners (2 CPU/7GB) -- 5/5 local reproduction attempts
+    passed, including a genuine near-cold-start attempt with zero extra
+    buffer beyond service health checks, so this isn't a logic bug. Bumped
+    to 30s to match slo_steps.py's identical tempo.poll_trace() usage
+    elsewhere in this suite, which was already timeout=30 -- 15s here was
+    an unexplained outlier for the same operation, not a deliberate choice.
+    """
     ctx = getattr(pytest, "_step_context", {})
     trace_id = ctx.get("contract_trace_id")
     assert trace_id is not None, "No contract_trace_id in step context"
 
     tempo = stack.tempo()
-    found, elapsed, data = tempo.poll_trace(trace_id, timeout=15)
-    assert found, f"Contract trace {trace_id} not found in Tempo within 15s"
+    found, elapsed, data = tempo.poll_trace(trace_id, timeout=30)
+    assert found, f"Contract trace {trace_id} not found in Tempo within 30s"
     print(f"✅ Contract trace found in Tempo after {elapsed:.1f}s")
     pytest._step_context["contract_trace_data"] = data
 

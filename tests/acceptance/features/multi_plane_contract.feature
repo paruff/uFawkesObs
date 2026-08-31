@@ -10,7 +10,7 @@ Feature: Multi-Plane Telemetry Contract (OBS-CONTRACT-001-004)
   @smoke @contract
   Scenario: OBS-CONTRACT-001 — External OTLP trace ingested by Tempo
     When an external plane sends a synthetic OTLP trace via gRPC
-    Then the trace should be queryable via Tempo API within 15 seconds
+    Then the trace should be queryable via Tempo API within 30 seconds
     And the trace should have at least 3 spans preserved
 
   @smoke @contract
