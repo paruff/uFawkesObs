@@ -1,0 +1,38 @@
+name: Release Please
+
+# Automates the release cadence (issue #264): a green "Acceptance Full
+# (Post-Merge)" run — the same gate deploy.yml uses — lets release-please
+# scan Conventional Commits since the last release and update a standing
+# "release PR" with the next version bump + CHANGELOG entry. Nothing is
+# actually released until a human merges that PR: this does NOT release on
+# every merge, only proposes the next release, batching accumulated commits.
+
+on:
+  workflow_run:
+    workflows: ["Acceptance Full (Post-Merge)"]
+    types:
+      - completed
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: job-start
+        run: echo "job-start workflow=release-please job=release-please sha=${{ github.event.workflow_run.head_sha }} time=$(date -u +%FT%TZ)"
+
+      - uses: googleapis/release-please-action@v4
+        with:
+          target-branch: main
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish workflow=release-please job=release-please sha=${{ github.event.workflow_run.head_sha }} time=$(date -u +%FT%TZ)"
