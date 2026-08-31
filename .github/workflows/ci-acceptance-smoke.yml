@@ -1,11 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-name: Acceptance Smoke (Pre-Merge)
+name: Acceptance Smoke
 
 on:
-  # NOTE: pull_request trigger removed — ci-pipeline.yml calls this
-  # workflow via workflow_call. The direct pull_request trigger caused
-  # a concurrency collision (two runs in the same group cancelling
-  # each other) because ci-pipeline.yml also triggers on pull_request.
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:

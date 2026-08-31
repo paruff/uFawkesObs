@@ -1,4 +1,4 @@
-name: CI Tests
+name: Unit & Integration Tests
 
 on:
   pull_request:
@@ -49,58 +49,11 @@ jobs:
           path: tests/unit/reports/
           if-no-files-found: ignore
 
-  # ─── Acceptance Smoke Tests (replaces compose-smoke) ─────────────────────
-  acceptance-smoke:
-    name: Acceptance Smoke
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r tests/acceptance/requirements.txt
-
-      - name: Build and start core
-        run: |
-          mkdir -p data/{tempo,loki,alloy,prometheus,alertmanager,grafana}
-          chmod -R 777 data/
-          docker compose --profile core up -d --build
-
-      - name: Wait for services to stabilize
-        run: sleep 90
-
-      - name: Run acceptance smoke tests
-        run: |
-          pytest tests/acceptance/ -m "smoke" -v --tb=short \
-            --stack-mode=existing \
-            --junit-xml=reports/acceptance-smoke.xml \
-            --evidence-dir=reports/acceptance-smoke-evidence
-
-      - name: Upload smoke test evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: acceptance-smoke-evidence
-          path: reports/acceptance-smoke-evidence/
-          if-no-files-found: ignore
-
-      - name: Shutdown
-        if: always()
-        run: docker compose down -v
-
   # ─── Integration Tests ───────────────────────────────────────────────────
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [acceptance-smoke]
     steps:
       - uses: actions/checkout@v7
 
@@ -190,7 +143,6 @@ jobs:
     name: Golden Path App
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [acceptance-smoke]
     steps:
       - uses: actions/checkout@v7
 
