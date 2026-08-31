@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.1-alpha.1...v0.3.2-alpha.1) (2026-08-31)
+
+
+### Fixed
+
+* **compose:** document and correctly exempt distroless healthchecks ([e23984f](https://github.com/paruff/uFawkesObs/commit/e23984fe9402ac9d39937886d4a41db945590c59))
+
 ## [0.3.1-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.0-alpha.1...v0.3.1-alpha.1) (2026-08-31)
 
 
