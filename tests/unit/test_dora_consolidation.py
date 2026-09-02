@@ -203,8 +203,9 @@ class TestComposeDoraApi:
 
     def test_container_name_matches_otlp_target(self, dora_api: dict) -> None:
         assert dora_api.get("container_name") == "ufawkesdora-ingestion", (
-            "container_name must stay ufawkesdora-ingestion — otel-collector-dora "
-            "forwards OTLP to that hostname"
+            "container_name must stay ufawkesdora-ingestion — collectors and "
+            "docs reference that hostname (the otel-collector-dora container "
+            "that formerly targeted it has been removed)"
         )
 
 

@@ -194,7 +194,18 @@ Traces always export to Tempo (`otlp/tempo`, insecure gRPC on `tempo:4317`)
 and logs always export to Loki (`loki`, HTTP push to
 `loki:3100/loki/api/v1/push`) — no filtering on either.
 
-### `otel-collector-dora` (`config/otel/collector-dora.yaml`)
+### `otel-collector-dora` (`config/otel/collector-dora.yaml`) — not deployed
+
+> **The container was removed.** Nothing in this repo ever emitted the
+> `dora.*` / `cicd.*` signals it filtered on (issue #266), Prometheus never
+> scraped it, and it crash-looped on an unresolvable `tempo:4317` — Tempo is
+> in the `core` profile while this service was in `dora`. Those errors were
+> being collected into Loki by Alloy.
+>
+> The config below is **retained as inert configuration**, not running
+> infrastructure, so the OTLP-native DORA path described in ADR-006 can be
+> rebuilt without redesigning it. DORA ingestion today is REST-only via
+> `dora-api` (`POST /event`).
 
 Same receiver/exporter shape as the main collector, plus a DORA-specific
 metrics pipeline:

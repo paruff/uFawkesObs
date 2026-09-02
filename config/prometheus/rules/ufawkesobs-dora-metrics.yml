@@ -8,9 +8,12 @@
 # (dora.deployment.* / dora.incident.* spans via otel-collector-dora) —
 # nothing in this repo ever emitted those spans, so every rule here silently
 # evaluated to an unlabeled `vector(0)` fallback forever. See issue #266.
-# otel-collector-dora and its span-based config remain in place as dormant,
-# harmless infrastructure for if that path is ever built for real — these
-# rules just don't depend on it anymore.
+# The otel-collector-dora *container* was removed (issue #266 follow-up): it
+# received nothing, was scraped by nothing, and crash-looped on an
+# unresolvable tempo:4317 (Tempo is in the core profile, it was in dora),
+# spamming those errors into Loki via Alloy. config/otel/collector-dora.yaml
+# is retained as inert config so the span-based path in ADR-006 can be
+# rebuilt without redesigning it. These rules don't depend on either.
 #
 # Metric naming: Uses "dora:" namespace per ADR-006.
 # Source metrics from dora-compute (dora/compute/metrics.py), pushed as

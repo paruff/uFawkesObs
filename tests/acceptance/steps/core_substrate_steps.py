@@ -51,7 +51,6 @@ def all_services_have_healthcheck(stack: ObservabilityStack) -> None:
     exempt_services = {
         "tempo",
         "otel-collector",
-        "otel-collector-dora",
         "alertmanager-discord",
     }
 
