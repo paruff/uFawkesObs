@@ -638,6 +638,30 @@ jobs:
 
           cd "${REPO_DIR}"
           git fetch --tags --force origin
+          # deploy-latest-good is created by post-deploy-verify's promote step,
+          # which only runs after a deploy has succeeded at least once. Until
+          # then the tag does not exist and this checkout fails with a bare
+          # "pathspec did not match" -- during an incident, on the rollback
+          # path, which is the worst possible time to debug a cryptic git
+          # error. Verified absent on 2026-09-02: the tag existed neither
+          # locally nor on origin, and every deploy job in recent history was
+          # skipped, so no promotion had ever run (LB-04 drill, #182).
+          if ! git rev-parse -q --verify refs/tags/deploy-latest-good >/dev/null; then
+            # Deliberately describes the recovery rather than quoting the
+            # commands. test_rollback_never_pushes_git_state scans every step
+            # of this job for the push and revert verbs, enforcing that
+            # rollback stays read-only from git's perspective -- the property
+            # that makes it immune to main's branch protection. That scan
+            # cannot tell an echoed example from an executed command, and its
+            # strictness is worth more than an inline snippet here.
+            echo "::error::Cannot roll back: tag deploy-latest-good does not exist."
+            echo "No deploy has been verified yet, so there is no known-good revision to return to."
+            echo "Recover manually on the host: check out the last revision known healthy,"
+            echo "run 'make up', then create the deploy-latest-good tag at that revision"
+            echo "and publish it to origin. See docs/ROLLBACK_DRILL.md and issue #323."
+            exit 1
+          fi
+
           git checkout --detach deploy-latest-good
 
           make up
