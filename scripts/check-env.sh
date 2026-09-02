@@ -66,8 +66,14 @@ fi
 
 export GRAFANA_ADMIN_PASSWORD
 
+# REPLACE_ME* rather than an enumerated sentinel: this list previously held
+# only REPLACE_ME_set_a_real_password_here while .env.example shipped
+# REPLACE_ME, so `cp .env.example .env` -- the step both the README and this
+# script's own remediation text below tell users to take -- produced a Grafana
+# admin account whose password is published in this repository. Matching the
+# prefix keeps the guard correct if the placeholder wording changes again.
 case "${GRAFANA_ADMIN_PASSWORD}" in
-  ''|admin|changeme|REPLACE_ME_set_a_real_password_here)
+  ''|admin|changeme|REPLACE_ME*)
   cat <<'EOF'
 ❌ Refusing to start: GRAFANA_ADMIN_PASSWORD is missing or insecure.
 Set a non-default Grafana admin password before starting the stack.

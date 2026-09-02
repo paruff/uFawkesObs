@@ -178,13 +178,27 @@ delete `./data/alloy` while containers are running.
 
 ### Default Credentials
 
-**Limitation:** The default Grafana admin credentials are `admin`/`admin` (configurable via
-`.env`). If `.env` is not present, these weak defaults apply.
+**Limitation:** `compose.yaml` falls back to `admin`/`admin` when
+`GRAFANA_ADMIN_PASSWORD` is unset. The `make up` family of targets blocks this:
+`scripts/check-env.sh` refuses to start when the password is empty, `admin`,
+`changeme`, or still a `REPLACE_ME*` placeholder. Starting the stack with a raw
+`docker compose --profile core up -d` bypasses that guard entirely and applies
+the weak default.
 
-**Impact:** Anyone with access to port 3000 can log in as admin.
+**Impact:** Anyone who can reach port 3000 — which is published on all
+interfaces, not just localhost — can log in as admin on a stack started outside
+`make up`.
 
-**Workaround:** Always set `GRAFANA_ADMIN_PASSWORD` in `.env` before first run. The `.env`
-file is gitignored and will not be committed.
+**Workaround:** Set `GRAFANA_ADMIN_PASSWORD` in `.env` before first run and
+start the stack with `make up` (or `up-apps` / `up-dora` / `up-full`), never a
+bare `docker compose up`. The `.env` file is gitignored and will not be
+committed.
+
+**Note:** until 2026-09-02 the guard's rejection list held only
+`REPLACE_ME_set_a_real_password_here` while `.env.example` shipped
+`REPLACE_ME`, so `cp .env.example .env` passed the check and produced an admin
+password that is public in this repository. Anyone who ran the stack before
+that fix should rotate the Grafana admin password.
 
 ---
 
