@@ -43,13 +43,24 @@ fi
 readonly SERVICES
 
 # Mutable readiness state tracked across polling iterations.
-if (( BASH_VERSINFO[0] < 4 )); then
-  echo "❌ scripts/wait-healthy.sh requires Bash 4+."
-  echo "On macOS, install a newer Bash (e.g., 'brew install bash') and run '/opt/homebrew/bin/bash ./scripts/wait-healthy.sh'."
-  exit 1
-fi
+#
+# A space-delimited string used as a set, not `declare -A`. The associative
+# array was this script's only Bash 4 dependency, and it made the script
+# refuse to run on macOS, whose system Bash is 3.2 -- including on the deploy
+# host itself (DEPLOY_PATH is a /Users/... path). deploy.yml gates every
+# deploy and every rollback on this script, so on such a host the health check
+# could never pass and every deploy would roll back. It exits 1 when it cannot
+# run, so this failed safe rather than silently reporting healthy, but the
+# deploy path was unusable. Service names are single tokens, so the
+# surrounding-space membership test is unambiguous.
+SERVICE_READY_NAMES=""
 
-declare -A SERVICE_READY=()
+service_is_marked_ready() {
+  case " ${SERVICE_READY_NAMES} " in
+    *" $1 "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 is_service_ready() {
   local url="$1"
@@ -75,13 +86,13 @@ main() {
       name="${service%%|*}"
       url="${service#*|}"
 
-      if [[ "${SERVICE_READY[$name]:-false}" == "true" ]]; then
+      if service_is_marked_ready "${name}"; then
         continue
       fi
 
       service_now_ready=false
       if is_service_ready "${url}"; then
-        SERVICE_READY["$name"]=true
+        SERVICE_READY_NAMES="${SERVICE_READY_NAMES} ${name}"
         service_now_ready=true
       else
         all_ready=false
@@ -114,7 +125,7 @@ main() {
       echo "========================================"
       for service in "${SERVICES[@]}"; do
         name="${service%%|*}"
-        if [[ "${SERVICE_READY[$name]:-false}" != "true" ]]; then
+        if ! service_is_marked_ready "${name}"; then
           echo "❌ ${name} not healthy (${elapsed}s)"
         fi
       done
