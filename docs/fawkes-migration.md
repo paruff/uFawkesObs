@@ -4,6 +4,19 @@
 > repo's observability config is portable to Fawkes (the Kubernetes track).
 > Findings only — no migration has been attempted or tested here.
 
+> **Framing (decided 2026-09-02):** Fawkes **replaces uFawkesObs wholesale**.
+> It is not a hosting change for the same stack, and it does not consume
+> uFawkesObs. Fawkes runs kube-prometheus-stack, Tempo, OpenSearch and
+> DevLake; uFawkesObs is the Compose-tier stepping stone you run until
+> Kubernetes earns its operational cost.
+>
+> Read the portability findings below as **"what you can carry over"**, not
+> as a port plan. Two things do not carry: **logs** (Loki → OpenSearch — a
+> query-language and dashboard rewrite, see the comparison below) and
+> **DORA** (this repo's own pipeline → DevLake). Everything else is either
+> identical (Tempo, PromQL rule content) or a delivery-mechanism change
+> (static config → Helm values and CRDs).
+
 ## What was actually checked
 
 Fetched `docs/ARCHITECTURE.md` from `paruff/fawkes` (`main` branch,
@@ -214,6 +227,77 @@ Fawkes side), so rollback is simply "stop migrating, keep running Compose
 as before" — there's no uFawkesObs-side state to revert. The only
 irreversible step is #7 (decommissioning Compose); don't take it until
 Fawkes-side validation is genuinely done, not just "looks right."
+
+## Log backends: Loki (Compose) vs OpenSearch (Kubernetes)
+
+This is the only part of the stack that is genuinely *different software*,
+not the same software delivered differently — so it is the part that
+actually costs you on graduation.
+
+### Why each tier picked what it picked
+
+**Loki suits a single Docker host.** It indexes only labels, not log
+content, and stores compressed chunks on the filesystem. That means small
+memory footprint, no JVM, no cluster to operate, and storage that grows
+roughly with log volume rather than with a full-text index. On one host with
+a handful of services, that is close to free — which is exactly the budget a
+Compose-tier stack has.
+
+**OpenSearch suits a cluster.** It builds a full inverted index, which costs
+memory and disk but buys real full-text search, aggregations over log
+*content*, and horizontal sharding across nodes. It expects to be a
+multi-node stateful service with dedicated resources — reasonable when you
+already run Kubernetes and have node capacity to schedule against, and
+unreasonable as one more container on a developer's laptop.
+
+Neither is the better product. They are the correct answers to two different
+resource budgets.
+
+| | Loki (uFawkesObs / Compose) | OpenSearch (Fawkes / Kubernetes) |
+|---|---|---|
+| Index model | Labels only | Full inverted index on content |
+| Query language | **LogQL** (Prometheus-like) | **Lucene / Query DSL** (or PPL/SQL) |
+| Footprint | Small; no JVM | JVM heap; sized per node |
+| Full-text search | Grep-like filter after label selection | Native, ranked, aggregatable |
+| Scaling | Vertical, single-node in this stack | Horizontal sharding + replicas |
+| Trace correlation | Native `lokiSearch` from Tempo in Grafana | Needs a Grafana OpenSearch datasource; not the built-in Tempo↔Loki path |
+| Visualization | Grafana | Grafana **or** OpenSearch Dashboards |
+| Operational load | Low | Real — capacity, shards, ILM/retention policies |
+
+### What that means for migration
+
+- **Dashboard panels do not port.** A LogQL panel
+  (`{job="x"} |= "error" | json`) has no mechanical translation to Lucene.
+  Every log panel is rewritten by hand.
+- **Alert rules over logs do not port** for the same reason.
+- **Trace→log correlation changes shape.** Grafana ships a first-class
+  Tempo↔Loki integration; pointing Tempo at OpenSearch instead is a
+  different, less turnkey configuration. (Fawkes's Grafana datasource still
+  carries a leftover `lokiSearch` block for a Loki it does not run.)
+- **Retention semantics differ.** Loki retention is a compactor setting;
+  OpenSearch uses index lifecycle management policies. Both are fine, but
+  "keep 30 days" is configured in unrelated places.
+- **What *does* carry:** the log *shape*. Both ingest structured JSON, and
+  both are fed by OTLP collectors. Emitters do not change — only the queries
+  do.
+
+### The choice this leaves you
+
+1. **Accept the rewrite** — treat log dashboards as tier-specific and
+   rebuild the handful that matter on graduation. Lowest engineering cost,
+   as long as the number of log panels stays small.
+2. **Converge on one backend** — run Loki in Fawkes too (cheap for
+   dashboards, gives up OpenSearch's search/aggregation), or run OpenSearch
+   in uFawkesObs (portable dashboards, but a JVM and index overhead that a
+   3–15 person Compose stack should not be paying).
+3. **Keep both, port nothing** — accept that logs are the one signal that
+   does not follow you across tiers, and say so in the graduation checklist.
+
+**Recommendation: option 1**, and keep log dashboards deliberately few.
+Option 2's convergence cost lands on the tier that can least afford it
+(uFawkesObs) or gives up the capability that justified Kubernetes in the
+first place (Fawkes). Metrics and traces already port cleanly; logs are
+worth an explicit, bounded rewrite rather than a stack-wide compromise.
 
 ## When to graduate to Fawkes
 

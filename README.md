@@ -59,7 +59,9 @@ uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com
 - **DORA metrics** — was uFawkesDORA; merged into uFawkesObs's `dora/` directory. [uFawkesDORA](https://github.com/paruff/ufawkesdora) is archived. See `AGENTS.md` §10.
 - **Security — policy-as-code, supply chain, guardrails** — was uFawkesSec; merged into uFawkesPipe's `security` Compose profile (DefectDojo, Infisical, Trivy server, Falco). Per uFawkesPipe's README, this is "formerly the standalone uFawkesSec repo." Note: unlike uFawkesDORA, the [uFawkesSec](https://github.com/paruff/ufawkessec) repo itself has not been archived as of this writing (still receiving dependabot updates) — the merge is confirmed functionally, but the source repo's own lifecycle status is unresolved.
 
-In this architecture, uFawkesObs provides the telemetry substrate consumed by all other planes. The OTLP API (`otel-collector:4317`/`4318`) is how every plane ships metrics, logs, and traces to uFawkesObs for centralized observability.
+In this architecture, uFawkesObs provides the telemetry substrate consumed by the other **uFawkes (Compose-tier)** planes. The OTLP API (`otel-collector:4317`/`4318`) is how Pipe, DevX and Dojo ship metrics, logs, and traces to uFawkesObs for centralized observability.
+
+**Fawkes is not one of those consumers.** Fawkes is the Kubernetes-track graduation target and runs its own observability stack — kube-prometheus-stack, Tempo, OpenSearch and DevLake — which **replaces uFawkesObs wholesale** rather than consuming it. uFawkesObs is the Compose-tier stepping stone: the stack you run until Kubernetes is worth its operational cost. See [When to Graduate to Fawkes](docs/fawkes-migration.md) for what carries over and what does not.
 
 ---
 
