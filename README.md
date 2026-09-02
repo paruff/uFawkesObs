@@ -442,12 +442,26 @@ This automated test validates that the complete observability pipeline is functi
 
 ### Quick Start
 
+The primary acceptance suite is pytest-bdd (15 feature files, 94 scenarios) and
+is what CI runs:
+
+```bash
+make up                      # stack must be running first
+make test-acceptance-smoke   # fast, pre-merge
+make test-acceptance-full    # comprehensive, post-merge (SLOs and contracts)
+```
+
+The script below is a narrower, complementary check (OBS-ACCEPTANCE-001): it
+walks the OTel → Prometheus → Grafana chain using plain `curl`, with no Python
+client library in the path, so it catches breakage the suite's clients would
+mask. It also runs in CI as part of Acceptance Smoke.
+
 ```bash
 # Ensure services are running
 make up
 sleep 30
 
-# Run the complete acceptance test
+# Run the OTel pipeline check
 ./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
 ```
 

@@ -23,7 +23,12 @@
 # Reference: events/incident-event.schema.json
 # ============================================================================
 
-set -u
+# set -euo pipefail, not bare `set -u`, per AGENTS.md §4. These scripts feed
+# MTTR and change-failure-rate: an unnoticed failure part-way through does not
+# just lose one event, it biases the metric the event exists to measure. The
+# POST response is already status-checked below; -e and -o pipefail close the
+# gap for everything that runs before it.
+set -euo pipefail
 
 # ── Defaults ────────────────────────────────────────────────────────────────
 
@@ -139,11 +144,15 @@ EOF
 
 echo "[dora] Declaring incident ${INCIDENT_ID} on ${SERVICE}..."
 
+# `|| HTTP_STATUS="000"` keeps set -e from killing the script when curl
+# itself fails (connection refused, DNS, timeout). Without it the script
+# aborts silently here and never reaches the status check below, which is
+# where the actionable diagnostic is printed.
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     -X POST "${INGESTION_URL}/event" \
     -H "Content-Type: application/json" \
     ${API_KEY:+-H "Authorization: Bearer ${API_KEY}"} \
-    -d "${PAYLOAD}")
+    -d "${PAYLOAD}") || HTTP_STATUS="000"
 
 if [ "${HTTP_STATUS}" = "201" ]; then
     echo "[dora] ✅ Incident ${INCIDENT_ID} declared successfully"

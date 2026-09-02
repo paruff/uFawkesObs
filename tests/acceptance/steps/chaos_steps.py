@@ -586,18 +586,39 @@ def new_queries_fail_gracefully(stack: ObservabilityStack) -> None:
     add_chaos_event("metric", "grafana", "Grafana responsive during datasource loss")
 
 
-# ── Evidence Generation Steps ────────────────────────────────────────
+# ── Evidence Generation ──────────────────────────────────────────────
 
 
-@then("chaos evidence report should be generated")
-def generate_chaos_evidence_report() -> None:
-    """Generate the chaos evidence report after all scenarios."""
+DEFAULT_CHAOS_EVIDENCE_DIR = Path("reports") / "chaos-evidence"
+
+
+def write_chaos_evidence_report(reports_dir: Path = DEFAULT_CHAOS_EVIDENCE_DIR) -> None:
+    """Write the chaos evidence artifacts collected during this session.
+
+    Called from the session-scoped chaos_evidence_report fixture in
+    conftest.py, not from a Gherkin step. It was previously a
+    `@then("chaos evidence report should be generated")` step that no
+    feature file referenced, so it never ran and chaos-events.json was
+    never written -- while ci-chaos-nightly.yml reads exactly that file
+    and hides its absence behind `|| echo "Could not generate report"`.
+    The nightly chaos evidence pipeline therefore produced nothing,
+    silently, for as long as it has existed.
+
+    Raises when there are no events rather than skipping: this is only
+    invoked after chaos scenarios actually ran, and chaos scenarios that
+    record nothing are indistinguishable from chaos scenarios that never
+    executed -- exactly the failure the evidence exists to catch.
+    """
     report = get_chaos_report()
     if not report.events:
-        pytest.skip("No chaos events recorded")
+        raise AssertionError(
+            "Chaos scenarios ran but recorded zero chaos events. The evidence "
+            "report cannot be generated, and ci-chaos-nightly.yml will fall "
+            "back to its no-events branch. Either the scenarios did not "
+            "execute their injection steps, or add_chaos_event() is no longer "
+            "being called by them."
+        )
 
-    # Ensure reports directory exists
-    reports_dir = Path("reports") / "chaos-evidence"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate markdown report
