@@ -3,6 +3,12 @@
 # ============================================================================
 # Reference: https://github.com/anomalyco/opencode (action lives in ./github)
 #
+# Pinned to the v1.18.x release series, matching paruff/fawkes,
+# uFawkesDevX and prei. An earlier pin here used the github-v1.2.x tag
+# series, whose newest tag (github-v1.2.25) is a June 2026 commit --
+# three months behind the action's actual releases. Both tag series are
+# live in anomalyco/opencode, and only v1.18.x tracks current.
+#
 # Repointed 2026-09-02: this workflow previously called the reusable workflow
 # `opencode-ai/opencode/.github/workflows/opencode.yml@v1`. That repository is
 # archived (last push 2025-09-18), never had a `v1` tag (its highest is
@@ -76,7 +82,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Run opencode
-        uses: anomalyco/opencode/github@a3b97d9090ccf4aa9ac32268486283e3131e36b4 # github-v1.2.25
+        uses: anomalyco/opencode/github@774cc7c1914e4329eefde5a669f938b0cf566661 # v1.18.26
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
