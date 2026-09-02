@@ -42,10 +42,20 @@ permissions:
 
 jobs:
   opencode-agent:
+    # Every path into this job must be gated on author_association, not just
+    # on labels. An issue's title and body are attacker-controlled on a public
+    # repo, and this job hands them to an agent holding contents/pull-requests
+    # write plus repository secrets. The issues path was previously label-only,
+    # so routine maintainer triage (applying `opencode` + `bug` to an outside
+    # report) was enough to feed untrusted text to that agent -- the
+    # issue_comment path below has always had the gate; the issues path did not.
     if: |
       github.repository == 'paruff/uFawkesObs' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event_name == 'issues' &&
+        (github.event.issue.author_association == 'OWNER' ||
+         github.event.issue.author_association == 'MEMBER' ||
+         github.event.issue.author_association == 'COLLABORATOR') &&
         contains(github.event.issue.labels.*.name, 'opencode') &&
         (contains(github.event.issue.labels.*.name, 'ready-for-dev') ||
          contains(github.event.issue.labels.*.name, 'good-first-issue') ||
