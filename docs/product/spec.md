@@ -114,7 +114,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 | Component | Version | Role | Mount / Vol Data | Configuration File |
 |---|---|---|---|---|
 | **OpenTelemetry Collector** | `0.120.0` | Telemetry processing and fanout | None | `config/otel/collector.yaml` |
-| **OpenTelemetry Collector (DORA)** | `0.120.0` | Second collector instance, `dora` profile only, forwards to uFawkesDORA ingestion | None | `config/otel/collector-dora.yaml` |
+| **OpenTelemetry Collector (DORA)** | _(removed)_ | Second collector instance, `dora` profile. Container removed — it received no traffic and crash-looped; config retained as inert for the ADR-006 span path | None | `config/otel/collector-dora.yaml` |
 | **Prometheus** | `v3.5.4` | Metrics TSDB & scrape engine | `./data/prometheus` | `config/prometheus/prometheus.yaml` |
 | **Alertmanager** | `v0.28.0` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
 | **Tempo** | `2.10.5` | Distributed trace database | `./data/tempo` | `config/tempo/tempo.yaml` |

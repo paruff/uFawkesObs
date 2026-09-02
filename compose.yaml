@@ -710,44 +710,6 @@ services:
 # incident.* OTLP metrics and exposes them via its own Prometheus exporter
 # (not currently scraped — see docs/notes for the otlp/dora removal history).
 # Actual DORA data flow is REST (POST /event to dora-api), not OTLP.
-  otel-collector-dora:
-    image: otel/opentelemetry-collector-contrib:0.120.0
-    container_name: otel-collector-dora
-    restart: unless-stopped
-    command: ["--config=/etc/otel/collector-dora.yaml"]
-    volumes:
-      - ./config/otel/collector-dora.yaml:/etc/otel/collector-dora.yaml:ro
-    environment:
-      - TZ=UTC
-    # NOTE: No depends_on for prometheus in dora profile - prometheus runs in core profile
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 512M
-        reservations:
-          cpus: "0.1"
-          memory: 128M
-    # NOTE: no healthcheck (#272) — same distroless image as otel-collector
-    # above (see that service's NOTE for the verified details). Alternative
-    # approach: this service publishes no host ports, so external polling
-    # happens indirectly — dora-compute's own successful metric pushes and
-    # Prometheus scraping the pushgateway are the effective liveness signal
-    # for this collector's config being loaded and its pipeline running.
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-        tag: "otel-collector-dora"
-    labels:
-      - "plane=obstackd"
-      - "component=otel-collector"
-      - "managed-by=fawkes"
-      - "profile=dora"
-    networks:
-      - observability
-    profiles: ["dora"]
 
 secrets:
   # Alertmanager does not expand ${VAR} inside its own config file — that
