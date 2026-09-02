@@ -33,6 +33,30 @@
 
 ---
 
+> **Amendment (2026-09-02, rework rate): the definition below is wrong.**
+> This ADR describes Rework Rate as "Fraction of AI-generated code requiring
+> rework (DORA 2026)", sourced from "AI SDK suggestion telemetry". DORA does
+> not define it that way. Rework Rate is **deployment-derived**: the
+> percentage of deployments that are unplanned work to fix user-facing bugs —
+> deployments triggered by a bug or production incident, outside the planned
+> release train. It was introduced in 2024 as a **stability** metric, grouped
+> under Software Delivery Instability alongside Change Failure Rate. See
+> References below.
+>
+> `dora/compute/metrics.py` already implements the correct, deployment-derived
+> definition ("user-visible rework deployments / total deployments"), so the
+> **code is right and this ADR is wrong** — not the other way round. Two
+> consequences follow:
+>
+> 1. Rework Rate needs **no AI telemetry**. It is computable from the same
+>    deployment events the other four metrics use.
+> 2. Any DORA engine that ingests deployments and incidents can compute it,
+>    which is why a DevLake-based pipeline remains viable despite DevLake
+>    shipping only the four core metrics.
+>
+> Sections 1-5's `dora:rework_rate:ratio` description and the alert-rule
+> thresholds are being corrected to match.
+
 ## Context
 
 uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the five DORA 2025/2026 key metrics:
@@ -227,6 +251,8 @@ The dashboard shows the five DORA indicators with DORA 2025/2026 performance ban
 
 - DORA 2025 Report: <https://dora.dev/reports/2025/>
 - DORA 2025 AI Capabilities Model: <https://services.google.com/fh/files/misc/2025_dora_ai_capabilities_model.pdf>
+- DORA 2025 State of AI-Assisted Software Development: <https://services.google.com/fh/files/misc/2025_state_of_ai_assisted_software_development.pdf>
+- DORA metrics history (metric set changes by year): <https://dora.dev/insights/dora-metrics-history/>
 - DORA 2026 ROI of AI-Assisted Development: <https://services.google.com/fh/files/misc/dora-roi-of-ai-assisted-software-development-2026.pdf>
 - OTel Semantic Conventions for CI/CD: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/ci-cd/README.md>
 - OTel Semantic Conventions for Alerts: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/alert/README.md>
