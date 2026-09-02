@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.6-alpha.1...v0.3.7-alpha.1) (2026-09-02)
+
+
+### Fixed
+
+* **ci:** align opencode pin to the v1.18.x series used across the family ([bb902d4](https://github.com/paruff/uFawkesObs/commit/bb902d4b569d15f861d19ef4a33230eaab577659))
+* **ci:** align opencode pin to the v1.18.x series used across the family ([04972af](https://github.com/paruff/uFawkesObs/commit/04972af0d70618bee22510a7e4d4e5ca80c952b9))
+* **dora:** use set -eu in POSIX sh collectors, add shellcheck pre-commit hook ([e795810](https://github.com/paruff/uFawkesObs/commit/e7958102c3a687faefed54b026d4a1659c074c03))
+* resolve audit medium findings M-1, M-2, M-3 ([1aef6de](https://github.com/paruff/uFawkesObs/commit/1aef6de3bc3a988042ff0487539cf17f1bc253a7))
+
 ## [0.3.6-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.5-alpha.1...v0.3.6-alpha.1) (2026-09-02)
 
 
