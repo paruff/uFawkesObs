@@ -1,12 +1,17 @@
 # Rollback Drill — uFawkesObs
 
-> **Status: BLOCKED** — runbook ready, but no deploy target exists to run it
-> against. As of 2026-08-30, `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_KEY`/
-> `DEPLOY_HOST_KEY` are not set as repo secrets or variables, and the
-> `compose-restart` GitHub Environment has zero secrets, zero variables, and
-> no required-reviewer protection rule. Precondition 1 below cannot be
-> satisfied until a non-prod SSH-reachable host is provisioned and its
-> credentials added. See [LB-04](https://github.com/paruff/uFawkesObs/issues/182).
+> **Status: PARTIALLY EXERCISED** — the rollback *mechanism* was demonstrated
+> working against the local Docker instance on 2026-09-02 (see
+> [Drill Results](#drill-results--2026-09-02-local-instance)). The full
+> procedure below — SSH transport, `compose-restart` environment approval,
+> `workflow_run` triggering — has **not** been run and LB-04 is not closed.
+>
+> The 2026-08-30 blocker has cleared: `DEPLOY_HOST`, `DEPLOY_USER`,
+> `DEPLOY_KEY` and `DEPLOY_HOST_KEY` are now set, and `DEPLOY_PATH` is
+> configured. Note that `DEPLOY_PATH` currently points at a path on the
+> maintainer's own machine, so Precondition 1's "throwaway / sandbox host,
+> not production" is still unsatisfied for the full drill.
+> See [LB-04](https://github.com/paruff/uFawkesObs/issues/182).
 >
 > Part of the Path to Late Beta plan — `docs/PATH_TO_LATE_BETA.md`.
 
@@ -256,6 +261,62 @@ Workflow run: https://github.com/paruff/uFawkesObs/actions/runs/<RUN_ID>
 
 **Timing:** note seconds from Step 2 push → Step 5 rollback start, and from
 Step 5 → Step 6 recovery. These go into the results table.
+
+---
+
+## Drill Results — 2026-09-02 (local instance)
+
+A reduced drill run against the **local Docker instance**, not over SSH.
+
+**What it exercised:** the same sequence the `deploy-*` and `rollback` jobs run
+on the host — check out a revision, `make up`, gate on `scripts/wait-healthy.sh`,
+emit a DORA deployment event.
+
+**What it did not exercise:** the SSH transport, the `compose-restart`
+environment approval, and `workflow_run` triggering. Those are the Actions
+plumbing *around* the sequence. The full procedure above remains to be run.
+
+**Failure recipe used:** invalid `config/prometheus/prometheus.yaml` plus
+`docker compose up -d --force-recreate prometheus`. Note this is *not* the
+recipe recommended above — and the warning there still stands: on the
+`deploy-config-reload` path, Prometheus `/-/reload` returns 200 even when the
+reload fails, so a bad Prometheus config does **not** exercise that path. Here
+the container was force-recreated and genuinely failed to start, which is the
+compose-restart failure mode.
+
+| # | Event | Expected | Observed | Pass/Fail |
+|---|---|---|---|---|
+| 1 | Baseline `wait-healthy.sh` | exit 0 | 7/7 core services healthy | **PASS** |
+| 2 | Bad config deployed, container recreated | Prometheus fails to start | crash-loop, `cannot unmarshal !!map into string` | **PASS** |
+| 3 | Post-deploy verification | exit 1 | `❌ Prometheus not healthy`, exit 1 | **PASS** |
+| 4 | DORA `failed` event | recorded | `deployment event sent (status=failed)` | **PASS** |
+| 5 | Roll back to known-good revision | config restored | hash matched baseline exactly | **PASS** |
+| 6 | Recovery `wait-healthy.sh` | exit 0 | Prometheus healthy in **2s** | **PASS** |
+| 7 | DORA recovery event | recorded | **dropped** — see gap 3 | **FAIL** |
+
+**Success criteria 1–3 from the runbook hold:** the bad deploy was caught, and
+the rollback returned the host to healthy. Criterion 2 ("rollback fired
+automatically") was not tested — the rollback was invoked directly rather than
+by `post-deploy-verify` failing.
+
+### Gaps found
+
+Each has its own follow-up issue, per the rules below.
+
+| # | Gap | Issue | Status |
+|---|---|---|---|
+| 1 | `wait-healthy.sh` required Bash 4; macOS deploy host has 3.2, so the health gate could never pass | [#322](https://github.com/paruff/uFawkesObs/issues/322) | Fixed |
+| 2 | `rollback` checks out `deploy-latest-good`, a tag that has never existed | [#323](https://github.com/paruff/uFawkesObs/issues/323) | Guarded; bootstrap still manual |
+| 3 | `send-dora-deployment-event.sh` silently drops failed events, unpairing rollback recovery | [#324](https://github.com/paruff/uFawkesObs/issues/324) | Open |
+
+Gaps 1 and 2 were **blocking** — the drill could not run until gap 1 was fixed,
+and a rollback could not have succeeded at all with gap 2 unaddressed.
+
+### Note for whoever runs the full drill
+
+Capture exit codes directly (`cmd; rc=$?`), never through a pipe.
+`PIPESTATUS` is not portable between bash and zsh and misreported a passing
+assertion as a failure on the first run of this drill.
 
 ---
 
