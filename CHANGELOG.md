@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.8-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.7-alpha.1...v0.3.8-alpha.1) (2026-09-02)
+
+
+### Docs
+
+* **deploy:** record LB-04 rollback drill results ([d12aae1](https://github.com/paruff/uFawkesObs/commit/d12aae19231250dbc2f44761617d61ee811d7994))
+* **deploy:** record LB-04 rollback drill results ([3a4a754](https://github.com/paruff/uFawkesObs/commit/3a4a754c58faaee49f2e52a5694f8bfa3a2f1cdd))
+
 ## [0.3.7-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.6-alpha.1...v0.3.7-alpha.1) (2026-09-02)
 
 
