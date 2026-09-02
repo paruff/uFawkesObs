@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.9-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.8-alpha.1...v0.3.9-alpha.1) (2026-09-02)
+
+
+### Fixed
+
+* **deploy:** make the health gate run on the deploy host, guard rollback bootstrap ([98b0937](https://github.com/paruff/uFawkesObs/commit/98b09377b11804683b5dbc963cf9ad17ec3d645f))
+
+
+### Changed
+
+* **dora:** remove the dormant otel-collector-dora container ([7164527](https://github.com/paruff/uFawkesObs/commit/71645276c49cf60e847e4177fefa8970f944b08b))
+* **dora:** remove the dormant otel-collector-dora container ([d854732](https://github.com/paruff/uFawkesObs/commit/d85473223844f9a2f10cf2dc5961afbd95d4d809))
+
 ## [0.3.8-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.7-alpha.1...v0.3.8-alpha.1) (2026-09-02)
 
 
