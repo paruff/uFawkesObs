@@ -251,6 +251,63 @@ def _escape_label_value(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
 
+# Every gauge this module emits, paired with the result keys holding its value
+# and its DORA tier. Declared once so the scrape renderer below and the legacy
+# Pushgateway push cannot drift apart.
+_GAUGES: tuple[tuple[str, str, str | None], ...] = (
+    (
+        "dora_deployment_frequency_per_week",
+        "deployment_frequency",
+        "dora_tier_deployment_frequency",
+    ),
+    ("dora_lead_time_p50_hours", "lead_time_p50_hours", "dora_tier_lead_time"),
+    ("dora_lead_time_p95_hours", "lead_time_p95_hours", None),
+    ("dora_fdrt_p50_hours", "fdrt_p50_hours", "dora_tier_fdrt"),
+    ("dora_cfr_pct", "change_failure_rate", "dora_tier_cfr"),
+    ("dora_rework_rate_pct", "rework_rate_pct", "dora_tier_rework_rate"),
+)
+
+
+def render_prometheus_text(results: list[dict[str, Any]]) -> str:
+    """Render all teams' DORA gauges as one Prometheus exposition document.
+
+    Serves dora-api's /metrics endpoint, which Prometheus scrapes directly.
+    This replaces pushing to a Pushgateway: dora-compute was a long-running
+    service, and Pushgateway is documented for ephemeral batch jobs -- pushing
+    cost the `up` liveness signal and left metrics alive after their producer
+    stopped.
+
+    Grouped by metric name, not by team. `# HELP`/`# TYPE` may appear only once
+    per metric name in a single exposition document; the push path emitted them
+    once per team, which was valid only because each team was a separate
+    Pushgateway group. Emitting that shape from a scrape endpoint would make
+    Prometheus reject the whole response.
+
+    The per-team dimension stays on the `team_id` label exactly as before. The
+    Pushgateway `job="ufawkesdora_<team>"` label duplicated it, and no
+    recording rule or dashboard referenced that job label -- which is what
+    makes this swap label-compatible with existing queries.
+    """
+    lines: list[str] = []
+    for name, value_key, tier_key in _GAUGES:
+        samples: list[str] = []
+        for record in results:
+            value = record.get(value_key)
+            if value is None:
+                continue
+            labels = f'team_id="{_escape_label_value(record["team_id"])}"'
+            tier = record.get(tier_key) if tier_key else None
+            if tier:
+                labels += f',tier="{_escape_label_value(tier)}"'
+            samples.append(f"{name}{{{labels}}} {value}")
+        if not samples:
+            continue
+        lines.append(f"# HELP {name} DORA metric")
+        lines.append(f"# TYPE {name} gauge")
+        lines.extend(samples)
+    return "\n".join(lines) + "\n" if lines else ""
+
+
 async def _push_metrics(
     results: list[dict[str, Any]],
     pushgateway_url: str,
