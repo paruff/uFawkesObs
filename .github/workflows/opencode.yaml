@@ -1,20 +1,19 @@
 # ============================================================================
 # OpenCode Agent CI — Dispatches agent sessions from GitHub Actions
 # ============================================================================
-# Reference: https://github.com/opencode-ai/opencode
+# Reference: https://github.com/anomalyco/opencode (action lives in ./github)
+#
+# Repointed 2026-09-02: this workflow previously called the reusable workflow
+# `opencode-ai/opencode/.github/workflows/opencode.yml@v1`. That repository is
+# archived (last push 2025-09-18), never had a `v1` tag (its highest is
+# v0.0.55), and does not contain that workflow file — so every run of this
+# workflow failed at reference resolution. opencode now ships a composite
+# *action* rather than a reusable workflow, so the job is expressed as steps.
 #
 # This workflow is triggered by:
-#   - Issues labeled with `opencode` + sizing labels
+#   - Issues labeled with `opencode` + sizing labels (maintainer-authored only)
 #   - Issue comments containing `/opencode` (from maintainers only)
 #   - Manual workflow_dispatch with issue number
-#
-# Convention: create issues with model labels + `ready-for-dev` to dispatch
-# agent sessions via CI. Supported models:
-#   - model:deepseek-v4-flash (free, opencode-zen) — default
-#   - model:gpt-4.1 (free)
-#   - model:gpt-5-mini (free)
-#   - model:gpt-5.1-codex (1× premium)
-#   - model:gemini-3-flash (0.33× trial)
 # ============================================================================
 
 name: OpenCode Agent
@@ -30,25 +29,27 @@ on:
         description: "Issue number to process"
         required: true
       model:
-        description: "Model override (default: deepseek-chat-v4-flash)"
+        description: "Model override"
         required: false
-        default: "deepseek-chat-v4-flash"
+        default: "opencode/claude-opus-4-5"
 
+# contents/issues/pull-requests write is what `use_github_token: true` below
+# needs to push a branch and open a PR. `actions: write` was dropped — it
+# allowed the agent to modify workflows and re-run jobs, which nothing here
+# uses.
 permissions:
   contents: write
   issues: write
   pull-requests: write
-  actions: write
 
 jobs:
   opencode-agent:
     # Every path into this job must be gated on author_association, not just
     # on labels. An issue's title and body are attacker-controlled on a public
-    # repo, and this job hands them to an agent holding contents/pull-requests
-    # write plus repository secrets. The issues path was previously label-only,
-    # so routine maintainer triage (applying `opencode` + `bug` to an outside
-    # report) was enough to feed untrusted text to that agent -- the
-    # issue_comment path below has always had the gate; the issues path did not.
+    # repo, and this job hands them to an agent holding write permissions and
+    # repository secrets. The issues path was previously label-only, so routine
+    # maintainer triage (applying `opencode` + `bug` to an outside report) was
+    # enough to feed untrusted text to that agent.
     if: |
       github.repository == 'paruff/uFawkesObs' &&
       (github.event_name == 'workflow_dispatch' ||
@@ -67,10 +68,29 @@ jobs:
          github.event.comment.author_association == 'MEMBER' ||
          github.event.comment.author_association == 'COLLABORATOR')
        ))
-    uses: opencode-ai/opencode/.github/workflows/opencode.yml@v1
-    with:
-      model: "${{ inputs.model || 'deepseek-chat-v4-flash' }}"
-      provider: "opencode-zen"
-    secrets:
-      opencode_api_key: ${{ secrets.OPENCODE_API_KEY }}
-      github_token: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+      - uses: actions/checkout@v7
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@a3b97d9090ccf4aa9ac32268486283e3131e36b4 # github-v1.2.25
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Deny shell execution. The agent still edits files and opens PRs;
+          # this removes arbitrary command execution from the blast radius of
+          # anything that reaches it through an issue or comment body.
+          OPENCODE_PERMISSION: '{"bash": "deny"}'
+        with:
+          model: "${{ inputs.model || 'opencode/claude-opus-4-5' }}"
+          # Use GITHUB_TOKEN directly rather than OIDC token exchange, which
+          # would additionally require the OpenCode GitHub App to be installed
+          # on this repository.
+          use_github_token: "true"
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'

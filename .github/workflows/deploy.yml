@@ -82,7 +82,7 @@ jobs:
       # pre-merge tip of main) instead of relying on that fallback.
       - name: Detect changed paths
         id: filter
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         with:
           base: ${{ github.event.workflow_run.head_sha }}^
           ref: ${{ github.event.workflow_run.head_sha }}
@@ -146,7 +146,7 @@ jobs:
           fi
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
@@ -308,7 +308,7 @@ jobs:
           fi
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
@@ -455,7 +455,7 @@ jobs:
           if [ "$missing" -ne 0 ]; then exit 1; fi
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
@@ -566,7 +566,7 @@ jobs:
           if [ "$missing" -ne 0 ]; then exit 1; fi
 
       - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.10.0
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
