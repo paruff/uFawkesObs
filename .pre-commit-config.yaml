@@ -69,6 +69,27 @@ repos:
         exclude: ^CHANGELOG\.md$
 
   # ============================================================================
+  # Shell Linting
+  # ============================================================================
+  # Local hook rather than the shellcheck-py mirror: CI's Pre-flight Checks
+  # already runs the real shellcheck binary, and matching it exactly means a
+  # clean commit locally is a clean Pre-flight. Requires shellcheck on PATH
+  # (`brew install shellcheck` / `apt install shellcheck`).
+  #
+  # This exists because SC3040 was caught only in CI: `set -o pipefail` was
+  # added to two #!/bin/sh scripts, which macOS /bin/sh (bash in POSIX mode)
+  # accepts and dash -- /bin/sh on Debian, Ubuntu and the deploy host --
+  # rejects outright, so the scripts would have died on every real run.
+  - repo: local
+    hooks:
+      - id: shellcheck
+        name: Lint shell scripts with shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+        exclude: ^\.claude/worktrees/
+
+  # ============================================================================
   # Security Scanning
   # ============================================================================
   - repo: https://github.com/gitleaks/gitleaks
