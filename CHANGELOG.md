@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.10-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.9-alpha.1...v0.3.10-alpha.1) (2026-09-02)
+
+
+### Docs
+
+* Fawkes replaces uFawkesObs wholesale, not consumes it ([2292b71](https://github.com/paruff/uFawkesObs/commit/2292b71393fcf6d1de473f8409327078949bdfbd))
+* Fawkes replaces uFawkesObs wholesale, not consumes it ([a435575](https://github.com/paruff/uFawkesObs/commit/a435575b55c3eb7f25d0e47e1c76d7deb3b7a916))
+
 ## [0.3.9-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.8-alpha.1...v0.3.9-alpha.1) (2026-09-02)
 
 
