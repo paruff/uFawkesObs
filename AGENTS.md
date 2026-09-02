@@ -227,7 +227,13 @@ Note: uFawkesDORA (the standalone repo) is archived — its collector patterns, 
 **Depended on by:**
 - **uFawkesPipe** — Pipeline lifecycle telemetry flows into uFawkesObs Tempo
 - **uFawkesDevX** — Developer environment metrics flow into uFawkesObs
-- **fawkes** — Full IDP deployment uses uFawkesObs as its observability layer
+- **fawkes** — **does not depend on uFawkesObs.** Fawkes runs its own
+  Kubernetes-native observability stack (kube-prometheus-stack, Tempo,
+  OpenSearch, DevLake) and **replaces uFawkesObs wholesale** when a team
+  graduates. uFawkesObs is the Compose-tier stepping stone, not a component
+  Fawkes consumes. Earlier revisions of this file and the README described
+  Fawkes as using uFawkesObs "as its observability layer" — that was never
+  true of the Fawkes implementation. See `docs/fawkes-migration.md`.
 
 When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
 
