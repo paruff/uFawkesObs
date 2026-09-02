@@ -100,6 +100,15 @@ jobs:
             --junit-xml=reports/acceptance-smoke.xml \
             -o junit_family=legacy 2>&1 | tee reports/acceptance-smoke-output.log
 
+      # OBS-ACCEPTANCE-001. Kept out of the pytest suite deliberately: it
+      # exercises the OTel -> Prometheus -> Grafana chain through plain curl,
+      # with no Python client library in the path, so it catches breakage the
+      # pytest clients would mask. It ran nowhere until now, and had silently
+      # rotted to a guaranteed FAIL against a healthy stack (a pipefail +
+      # `grep -q` SIGPIPE bug) precisely because nothing exercised it.
+      - name: Run OTel pipeline acceptance script
+        run: ./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
+
       - name: Generate runbook snippets (if evidence exists)
         if: always()
         run: |

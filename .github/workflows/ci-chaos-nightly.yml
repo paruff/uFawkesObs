@@ -99,9 +99,19 @@ jobs:
       - name: Generate chaos evidence report
         if: always()
         run: |
+          set -euo pipefail
+          # No `|| echo` fallback here. chaos-events.json was never actually
+          # written -- its writer was an orphaned Gherkin step no feature file
+          # referenced -- and this step's swallowed failure is what hid that
+          # for the life of the workflow. A missing events file now fails
+          # loudly, per AGENTS.md §4 on silently-caught failures.
+          if [ ! -f reports/chaos-evidence/chaos-events.json ]; then
+            echo "::error::reports/chaos-evidence/chaos-events.json was not produced by the chaos run"
+            exit 1
+          fi
           python tests/acceptance/evidence/chaos_report.py \
             --events reports/chaos-evidence/chaos-events.json \
-            --output reports/chaos-report.md || echo "⚠️ Could not generate report (no events file)"
+            --output reports/chaos-report.md
 
       - name: Upload chaos evidence
         if: always()

@@ -270,6 +270,42 @@ def evidence_collector(request) -> EvidenceCollector:
 
 
 @pytest.fixture(scope="session", autouse=True)
+def chaos_evidence_report(request) -> Iterator[None]:
+    """Write chaos evidence artifacts after chaos scenarios have run.
+
+    The writer used to be a Gherkin step no feature file referenced, so it
+    never executed and reports/chaos-evidence/chaos-events.json was never
+    produced — while ci-chaos-nightly.yml reads that exact file and masks
+    its absence with `|| echo`. Running it from session teardown means the
+    artifacts are written whenever chaos scenarios actually ran, without
+    inventing a scenario whose only job is writing a report.
+
+    Honours --evidence-dir, which ci-chaos-nightly.yml sets to the same
+    directory it later uploads.
+    """
+    yield
+
+    chaos_ran = any(
+        item.get_closest_marker("chaos")
+        for item in getattr(request.session, "items", [])
+    )
+    if not chaos_ran:
+        # Non-chaos sessions legitimately record no chaos events; writing
+        # (or failing) here would be noise.
+        return
+
+    from tests.acceptance.steps.chaos_steps import (
+        DEFAULT_CHAOS_EVIDENCE_DIR,
+        write_chaos_evidence_report,
+    )
+
+    evidence_dir = request.config.getoption("--evidence-dir")
+    write_chaos_evidence_report(
+        Path(evidence_dir) if evidence_dir else DEFAULT_CHAOS_EVIDENCE_DIR
+    )
+
+
+@pytest.fixture(scope="session", autouse=True)
 def chaos_cleanup() -> Iterator[None]:
     """Cleanup fixture for chaos tests - restores any modified files.
 

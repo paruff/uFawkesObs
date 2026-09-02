@@ -114,7 +114,14 @@ check_otel_collector_health() {
     fi
 
     # Verify self-metrics exist
-    if ! echo "${metrics_output}" | grep -q "otelcol_process_uptime"; then
+    # Herestring, not `echo ... | grep -q`. With `set -o pipefail` (line 6),
+    # grep -q exits on its first match and closes the pipe, echo then dies of
+    # SIGPIPE, and pipefail reports the whole pipeline as failed -- so a metric
+    # that IS present gets reported as missing. This was latent while the
+    # collector's /metrics payload was small enough for echo to finish first;
+    # at ~170 KB it fails every time, which is why this script had rotted to a
+    # guaranteed FAIL against a perfectly healthy stack.
+    if ! grep -q "otelcol_process_uptime" <<< "${metrics_output}"; then
         record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Missing otelcol_process_uptime metric"
         return 1
     fi
