@@ -26,12 +26,20 @@
 # Reference: events/incident-event.schema.json
 # ============================================================================
 
-# set -euo pipefail, not bare `set -u`, per AGENTS.md §4. These scripts feed
-# MTTR and change-failure-rate: an unnoticed failure part-way through does not
-# just lose one event, it biases the metric the event exists to measure. The
-# POST response is already status-checked below; -e and -o pipefail close the
-# gap for everything that runs before it.
-set -euo pipefail
+# `set -eu`, not `set -euo pipefail`. These scripts feed MTTR and
+# change-failure-rate: an unnoticed failure part-way through does not just lose
+# one event, it biases the metric the event exists to measure -- so -e matters.
+# But pipefail is deliberately absent: this is a #!/bin/sh script, and pipefail
+# is undefined in POSIX sh (shellcheck SC3040). On dash -- /bin/sh on Debian and
+# Ubuntu, including CI runners and the deploy host -- `set -o pipefail` aborts
+# with "Illegal option" before the script does anything at all. macOS /bin/sh is
+# bash in POSIX mode and accepts it, which is exactly how that breakage hides
+# during local testing. Portability is the point here: these collectors are
+# meant to drop into any CI image, including ones with no bash.
+#
+# Nothing is lost: the only pipeline in this script is the git|sed repo
+# derivation below, which is already guarded with `|| true`.
+set -eu
 
 # ── Defaults ────────────────────────────────────────────────────────────────
 
