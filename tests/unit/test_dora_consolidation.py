@@ -210,90 +210,63 @@ class TestComposeDoraApi:
 
 
 # ---------------------------------------------------------------------------
-# compose.yaml dora-compute + pushgateway services (issue #205)
+# compute + pushgateway fold-in (issue #205 pattern, extended)
 # ---------------------------------------------------------------------------
-class TestComposeDoraCompute:
-    """dora-compute is a periodic batch job (own Dockerfile, no
-    pyproject.toml) pushing metrics to pushgateway — see ADR-007 amendment.
+class TestComputeFoldIn:
+    """The DORA compute loop runs inside dora-api, and Pushgateway is gone.
+
+    Replaces TestComposeDoraCompute/TestComposePushgateway, which asserted the
+    two-container design this consolidation removed. The coverage is kept, not
+    dropped: these assert the architecture that replaced it, including guards
+    against either service being reintroduced by accident.
+
+    Why the containers went away:
+      - dora-compute was a `while true; sleep 3600` wrapper around one Python
+        command, writing dora_snapshots to the same SQLite file dora-api writes
+        events to. The DB runs in rollback-journal mode, where a writer takes
+        an exclusive lock that blocks readers too, so the split guaranteed
+        cross-process contention for no isolation benefit on a single node.
+      - Pushgateway is documented for ephemeral batch jobs. dora-compute was
+        long-running, so pushing cost the `up` liveness signal and left series
+        alive after their producer stopped.
     """
 
-    def test_service_present(self, compose_data: dict) -> None:
-        assert "dora-compute" in compose_data.get("services", {}), (
-            "compose.yaml missing dora-compute service"
+    def test_dora_compute_service_removed(self, compose_data: dict) -> None:
+        assert "dora-compute" not in compose_data["services"], (
+            "dora-compute was folded into dora-api's lifespan; a separate "
+            "container reintroduces the dual-writer SQLite contention"
         )
 
-    def test_own_dockerfile(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        assert svc.get("build", {}).get("dockerfile") == "dora/compute/Dockerfile", (
-            "dora-compute must build from its own Dockerfile, not share dora-api's"
+    def test_pushgateway_service_removed(self, compose_data: dict) -> None:
+        assert "pushgateway" not in compose_data["services"], (
+            "Pushgateway was replaced by Prometheus scraping dora-api:8088"
+            "/metrics directly — see config/prometheus/prometheus.yaml"
         )
 
-    def test_dora_profile(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        assert "dora" in svc.get("profiles", []), (
-            "dora-compute must be gated behind the dora profile"
+    def test_lifespan_starts_compute_loop(self) -> None:
+        src = (DORA_DIR / "ingestion" / "api" / "main.py").read_text(encoding="utf-8")
+        assert "run_compute_loop(shutdown_event)" in src, (
+            "dora-api's lifespan must start the compute loop as a background task"
         )
 
-    def test_healthcheck_defined(self, compose_data: dict) -> None:
-        assert "healthcheck" in compose_data["services"]["dora-compute"], (
-            "every service must define a healthcheck (AGENTS.md §4)"
+    def test_metrics_endpoint_exposed(self) -> None:
+        src = (DORA_DIR / "ingestion" / "api" / "main.py").read_text(encoding="utf-8")
+        assert '@app.get("/metrics"' in src, (
+            "dora-api must expose /metrics for Prometheus to scrape"
         )
 
-    def test_database_url_defaults_to_sqlite(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        env = svc.get("environment", [])
-        assert "DATABASE_URL=${DATABASE_URL:-sqlite:////data/dora/dora.db}" in env, (
-            "dora-compute must default DATABASE_URL to the self-contained SQLite path"
+    def test_compute_module_shipped_into_api_image(self) -> None:
+        dockerfile = (DORA_DIR / "ingestion" / "Dockerfile").read_text(encoding="utf-8")
+        assert "COPY dora/compute/metrics.py" in dockerfile, (
+            "the API image must ship the compute module now that the loop "
+            "runs in-process"
         )
 
-    def test_sqlite_volume_mount(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        assert "./data/dora:/data/dora" in svc.get("volumes", []), (
-            "dora-compute must mount ./data/dora for the SQLite database file"
-        )
-
-    def test_pushgateway_url_points_at_pushgateway_service(
-        self, compose_data: dict
-    ) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        env = svc.get("environment", [])
-        assert "PUSHGATEWAY_URL=http://pushgateway:9091" in env, (
-            "dora-compute must push to the pushgateway compose service by name"
-        )
-
-    def test_waits_for_pushgateway_healthy(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["dora-compute"]
-        depends_on = svc.get("depends_on", {})
-        assert depends_on.get("pushgateway", {}).get("condition") == (
-            "service_healthy"
-        ), "dora-compute must wait for pushgateway to be healthy before starting"
-
-
-class TestComposePushgateway:
-    """The pushgateway service receives dora-compute's batch-pushed metrics."""
-
-    def test_service_present(self, compose_data: dict) -> None:
-        assert "pushgateway" in compose_data.get("services", {}), (
-            "compose.yaml missing pushgateway service"
-        )
-
-    def test_dora_profile(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["pushgateway"]
-        assert "dora" in svc.get("profiles", []), (
-            "pushgateway must be gated behind the dora profile"
-        )
-
-    def test_healthcheck_defined(self, compose_data: dict) -> None:
-        assert "healthcheck" in compose_data["services"]["pushgateway"], (
-            "every service must define a healthcheck (AGENTS.md §4)"
-        )
-
-    def test_pinned_image(self, compose_data: dict) -> None:
-        svc = compose_data["services"]["pushgateway"]
-        image = svc.get("image", "")
-        assert image and ":latest" not in image, (
-            "pushgateway image must be pinned — no latest tags (AGENTS.md §4)"
-        )
+    def test_compute_env_configured_on_api(self, compose_data: dict) -> None:
+        env = compose_data["services"]["dora-api"].get("environment", [])
+        joined = " ".join(env)
+        assert "DORA_COMPUTE_INTERVAL_SECONDS" in joined
+        assert "DORA_COMPUTE_WINDOW_DAYS" in joined
 
 
 class TestDoraComputeFiles:
