@@ -149,16 +149,23 @@ scrape_configs:
     scrape_interval: 15s
     metrics_path: "/metrics"
 
-  # Pushgateway — scraped for batch-pushed DORA metrics from dora-compute
-  # (dora profile only; issue #204). honor_labels keeps the job/instance
-  # labels dora-compute pushed rather than overwriting them with this job's.
-  - job_name: "pushgateway"
-    honor_labels: true
+  # dora-api — scraped directly for computed DORA metrics (dora profile only).
+  #
+  # Replaces the Pushgateway job: dora-compute was a long-running service, and
+  # Pushgateway is documented for ephemeral batch jobs. Pushing cost the `up`
+  # liveness signal for the metrics producer and left series alive after their
+  # producer stopped — stale test jobs were still being served long after.
+  #
+  # No honor_labels here, deliberately. It existed to preserve the
+  # job="ufawkesdora_<team>" label dora-compute pushed, which duplicated the
+  # team_id label already on every sample. Nothing — no recording rule, no
+  # dashboard — referenced that job label, so dropping it changes no query.
+  - job_name: "dora-api"
     static_configs:
-      - targets: ["pushgateway:9091"]
+      - targets: ["dora-api:8088"]
         labels:
           plane: "obstackd"
-          component: "pushgateway"
+          component: "dora-api"
     scrape_interval: 15s
     metrics_path: "/metrics"
     scheme: "http"
