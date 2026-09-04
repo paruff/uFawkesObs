@@ -36,6 +36,13 @@ COPY dora/ingestion/__init__.py ./ingestion/__init__.py
 COPY dora/ingestion/api/ ./ingestion/api/
 COPY dora/ingestion/processor/ ./ingestion/processor/
 COPY dora/events/ ./events/
+# The DORA compute loop runs inside this service now (issue #205 pattern,
+# extended from the queue worker to metrics computation), so its module
+# ships here. No extra dependencies: compute only pulled in aiohttp for the
+# Pushgateway push, which is lazily imported and no longer on the runtime path.
+COPY dora/compute/__init__.py ./compute/__init__.py
+COPY dora/compute/metrics.py ./compute/metrics.py
+COPY dora/compute/metrics_db_sqlite.py ./compute/metrics_db_sqlite.py
 
 # Ensure non-root user owns everything
 RUN chown -R ufawkes:ufawkes /app
