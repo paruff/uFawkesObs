@@ -33,6 +33,94 @@ that carries production traffic.**
 Before starting, confirm all of the following. If any is missing, **stop** and
 resolve it before running the drill.
 
+### 0. Provisioning a drill host on a Synology NAS
+
+The maintainer's own workstation cannot satisfy Precondition 1 ("throwaway /
+sandbox host, not production") — `DEPLOY_PATH` currently points at a working
+clone on a daily-driver machine. A LAN Synology is a reasonable drill host.
+Work through this section before Precondition 1.
+
+#### 0a. The reachability problem — solve this first
+
+`deploy.yml` runs on **GitHub-hosted runners**, which cannot reach a NAS on
+your LAN. There are four ways out, in preference order:
+
+1. **Self-hosted runner on the LAN (recommended).** Register a runner on the
+   Synology itself (or any LAN machine) and set `runs-on` for the deploy jobs
+   accordingly. Nothing inbound is exposed, and the SSH hop becomes local.
+   Note: a self-hosted runner on a **public** repo is a known risk — restrict
+   it to this workflow and require approval for fork PRs.
+2. **Tailscale / WireGuard.** Add a `tailscale` step to the deploy jobs and
+   reach the NAS over the tailnet. No inbound firewall rules.
+3. **Cloudflare Tunnel** for SSH — works, but adds a dependency in the path
+   the drill is meant to exercise.
+4. **Port-forwarding SSH from the internet — do not.** It exposes the NAS to
+   internet-wide credential scanning to run a rehearsal.
+
+Whichever you choose, the drill only proves what it exercises: with a
+self-hosted runner you are testing the deploy logic and SSH hop, not
+GitHub-hosted egress.
+
+#### 0b. Synology prerequisites (DSM 7.x)
+
+- **SSH:** Control Panel → Terminal & SNMP → Enable SSH service. Create a
+  dedicated deploy user; add its public key to
+  `/var/services/homes/<user>/.ssh/authorized_keys` (chmod `700` on `.ssh`,
+  `600` on the file — DSM is strict about this and fails silently otherwise).
+- **Container Manager** package installed (provides Docker plus Compose v2).
+  Verify: `docker compose version`.
+- **Git** — available via Package Center (Git Server) or Entware.
+- **`make` is NOT installed on stock DSM.** The remote deploy script runs
+  `make up`. Either install it (Entware: `opkg install make`) or the deploy
+  will fail on a missing binary. Confirm with `command -v make` **before**
+  running the drill — this is the single most likely cause of a first
+  attempt dying immediately.
+- **Bash:** DSM 7 ships bash 4.x, so `scripts/wait-healthy.sh` runs. It is
+  POSIX-safe since #322 regardless.
+
+#### 0c. Port conflict — DSM owns 5000/5001
+
+`compose.yaml` publishes `telemetry-generator` on host port **5001**, which is
+**DSM's own HTTPS web UI**. Starting the `apps` profile will collide with it.
+
+Either omit the `apps` profile on this host (the drill only needs `core`), or
+remap the port. Also sanity-check `3000` (Grafana) and `9100` (node-exporter)
+against whatever else the NAS runs.
+
+Note that `node-exporter` in a container on a NAS reports **container**
+metrics, not true host metrics, unless given host namespaces — fine for a
+drill, misleading if you keep the stack there.
+
+#### 0d. Storage and permissions
+
+- Put the clone on a data volume, e.g. `/volume1/docker/uFawkesObs`, and set
+  `DEPLOY_PATH` to that absolute path.
+- `make init` creates `data/` directories; Synology user UIDs differ from a
+  typical Linux host, so expect to `chown` them to the deploy user before the
+  containers can write.
+- Give the volume headroom: Prometheus retains 30 days by default.
+
+#### 0e. Verify before drilling
+
+Run these on the NAS as the deploy user. Every one must pass, or the drill
+will fail for environmental reasons and tell you nothing about rollback:
+
+```sh
+command -v make docker git          # all three present
+docker compose version              # Compose v2
+cd "${DEPLOY_PATH}" && git fetch --tags origin   # clone + fetch works
+make up && ./scripts/wait-healthy.sh             # baseline healthy
+```
+
+Then seed the tag the rollback path needs — it does not exist yet (#323):
+
+```sh
+git tag -f deploy-latest-good <sha-verified-healthy-here>
+git push -f origin deploy-latest-good
+```
+
+Only then start at Precondition 1.
+
 ### 1. A non-prod target host
 
 - `DEPLOY_HOST` / `DEPLOY_USER` / `DEPLOY_KEY` / `DEPLOY_HOST_KEY` repo
