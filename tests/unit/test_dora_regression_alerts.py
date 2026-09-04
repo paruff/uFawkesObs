@@ -133,34 +133,58 @@ class TestDoraRegressionRulesReferencedInPrometheusConfig:
         )
 
 
-class TestPushgatewayScrapeJob:
-    """Test the Prometheus scrape job added for pushgateway (issue #204)."""
+class TestDoraApiScrapeJob:
+    """Prometheus scrapes dora-api directly for computed DORA metrics.
 
-    def test_pushgateway_job_exists(self, prometheus_config_path):
+    Replaces TestPushgatewayScrapeJob (issue #204). Pushgateway is documented
+    for ephemeral batch jobs; dora-compute was long-running, so pushing cost
+    the `up` liveness signal and left series alive after their producer
+    stopped. The compute loop now runs inside dora-api, which exposes
+    /metrics for a normal scrape.
+    """
+
+    def test_dora_api_job_exists(self, prometheus_config_path):
         with open(prometheus_config_path, "r") as f:
             config = yaml.safe_load(f)
 
         job_names = [sc["job_name"] for sc in config["scrape_configs"]]
-        assert "pushgateway" in job_names
+        assert "dora-api" in job_names
 
-    def test_pushgateway_job_honors_labels(self, prometheus_config_path):
-        """honor_labels must be true so pushed job/instance labels survive scraping."""
+    def test_pushgateway_job_removed(self, prometheus_config_path):
+        with open(prometheus_config_path, "r") as f:
+            config = yaml.safe_load(f)
+
+        job_names = [sc["job_name"] for sc in config["scrape_configs"]]
+        assert "pushgateway" not in job_names, (
+            "the Pushgateway scrape job was replaced by the dora-api job"
+        )
+
+    def test_dora_api_job_does_not_honor_labels(self, prometheus_config_path):
+        """honor_labels existed to preserve the pushed job label.
+
+        That label (job="ufawkesdora_<team>") duplicated team_id, which is on
+        every sample, and no recording rule or dashboard referenced it. With a
+        direct scrape there is nothing to preserve, so honor_labels must stay
+        off — leaving it on would let a scraped target overwrite this job's
+        own identifying labels.
+        """
         with open(prometheus_config_path, "r") as f:
             config = yaml.safe_load(f)
 
         for sc in config["scrape_configs"]:
-            if sc["job_name"] == "pushgateway":
-                assert sc.get("honor_labels") is True
+            if sc["job_name"] == "dora-api":
+                assert sc.get("honor_labels") is not True
                 return
-        raise AssertionError("pushgateway scrape job not found")
+        raise AssertionError("dora-api scrape job not found")
 
-    def test_pushgateway_job_targets_container(self, prometheus_config_path):
+    def test_dora_api_job_targets_container(self, prometheus_config_path):
         with open(prometheus_config_path, "r") as f:
             config = yaml.safe_load(f)
 
         for sc in config["scrape_configs"]:
-            if sc["job_name"] == "pushgateway":
+            if sc["job_name"] == "dora-api":
                 targets = sc["static_configs"][0]["targets"]
-                assert "pushgateway:9091" in targets
+                assert "dora-api:8088" in targets
+                assert sc.get("metrics_path") == "/metrics"
                 return
-        raise AssertionError("pushgateway scrape job not found")
+        raise AssertionError("dora-api scrape job not found")
