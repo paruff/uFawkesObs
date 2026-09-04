@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.11-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.10-alpha.1...v0.3.11-alpha.1) (2026-09-04)
+
+
+### Fixed
+
+* **ci:** fail the readiness gate when a service never becomes healthy ([8d8fc3d](https://github.com/paruff/uFawkesObs/commit/8d8fc3da6ab7e29a3e1bcf6cbbd93afdf819b08e))
+* **ci:** fail the readiness gate when a service never becomes healthy ([da9cc40](https://github.com/paruff/uFawkesObs/commit/da9cc40e50848a28452fdb5e5f1ecc0469bd9e53))
+
+
+### Docs
+
+* **deploy:** add Synology drill-host provisioning for LB-04 ([9aaaef9](https://github.com/paruff/uFawkesObs/commit/9aaaef98cc0ce70a317032395a26d2c289648a36))
+* **deploy:** add Synology drill-host provisioning for LB-04 ([ac72c9a](https://github.com/paruff/uFawkesObs/commit/ac72c9a09d71df293e3c821a0a344124e6b9d486))
+
+
+### Changed
+
+* **dora:** fold the compute loop into dora-api, drop Pushgateway ([124b79d](https://github.com/paruff/uFawkesObs/commit/124b79da823cf037c769ea7bf7faab4887639846))
+
+
+### Chores
+
+* **deps:** bump googleapis/release-please-action from 4.4.1 to 5.0.0 ([d45a9b6](https://github.com/paruff/uFawkesObs/commit/d45a9b6592f39c4ded10aa599cf637b754d9f8a5))
+* **deps:** bump googleapis/release-please-action from 4.4.1 to 5.0.0 ([74e122d](https://github.com/paruff/uFawkesObs/commit/74e122de36e34ba8e1f6b7b4e5729deed4070c9b))
+
 ## [0.3.10-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.9-alpha.1...v0.3.10-alpha.1) (2026-09-02)
 
 
