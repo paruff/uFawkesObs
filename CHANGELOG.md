@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.12-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.11-alpha.1...v0.3.12-alpha.1) (2026-09-12)
+
+
+### Fixed
+
+* **deploy:** resolve the diff base to a SHA instead of a caret ref ([e14e558](https://github.com/paruff/uFawkesObs/commit/e14e55865f97929f9fbb3bdba99ea1f947278326))
+* **deploy:** resolve the diff base to a SHA instead of a caret ref ([1a777ce](https://github.com/paruff/uFawkesObs/commit/1a777ce0d86c85371b1ac6a82402f043ff8a9db0))
+
+
+### Chores
+
+* **deps:** bump anomalyco/opencode/github from 1.18.26 to 1.18.29 ([bbfd7aa](https://github.com/paruff/uFawkesObs/commit/bbfd7aa21d29d47feb77450b65cbf353d0426d15))
+* **deps:** bump anomalyco/opencode/github from 1.18.26 to 1.18.29 ([bd2e762](https://github.com/paruff/uFawkesObs/commit/bd2e7623df623a31014b4720dd5f97607a9b1652))
+
 ## [0.3.11-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.10-alpha.1...v0.3.11-alpha.1) (2026-09-04)
 
 
