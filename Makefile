@@ -129,6 +129,14 @@ test-integration: install-integration-deps
 	LOKI_URL=http://localhost:3100 \
 	pytest tests/integration/ -v --tb=short
 
+# Match CI's DORA compute cadence. compose.yaml defaults
+# DORA_COMPUTE_INTERVAL_SECONDS to 3600, while ci-acceptance-full.yml sets 15 --
+# so a locally-run acceptance suite waited up to an hour for a seeded DORA event
+# to reach the dashboard where CI waited fifteen seconds, making the documented
+# local path quietly racier than the gate it is meant to rehearse (#359).
+# Exported, not passed inline: the value has to reach the dora-api container.
+export DORA_COMPUTE_INTERVAL_SECONDS ?= 15
+
 ## test-acceptance-smoke: run smoke acceptance tests via pytest-bdd (fast, pre-merge)
 ##   Requires stack to be running (run 'make up' first)
 ##   Use --stack-mode=existing to skip lifecycle management
