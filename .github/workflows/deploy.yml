@@ -78,13 +78,37 @@ jobs:
       # dorny/paths-filter's automatic base detection falls back to
       # comparing against "the last commit" -- which silently produced
       # `Filter compose = false` for PR #304's compose.yaml change (#301).
-      # Pin the diff base explicitly to head_sha's first parent (the
-      # pre-merge tip of main) instead of relying on that fallback.
+      # The diff base is therefore pinned explicitly to head_sha's first
+      # parent (the pre-merge tip of main).
+      #
+      # It must be resolved to a concrete SHA *here* rather than handed to
+      # paths-filter as `<sha>^`. Caret notation is resolved locally against
+      # an object database; a remote has no idea what it means. paths-filter
+      # turns its `base` into `git fetch origin <base> <ref>`, so a caret ref
+      # fails with exit 128 every time -- which is what broke every deploy
+      # between #309 and #341. The checkout above uses fetch-depth: 0, so the
+      # parent commit is already present locally and rev-parse cannot miss.
+      - name: Resolve diff base
+        id: base
+        run: |
+          set -euo pipefail
+          sha="${{ github.event.workflow_run.head_sha }}"
+          if parent="$(git rev-parse --verify --quiet "${sha}^")"; then
+            echo "Diff base: ${parent} (first parent of ${sha})"
+          else
+            # Root commit: no parent exists. Diff against the empty tree so
+            # every path counts as added, rather than letting the deploy
+            # conclude nothing changed -- a first commit changes everything.
+            parent="$(git hash-object -t tree /dev/null)"
+            echo "Diff base: ${parent} (empty tree -- ${sha} is a root commit)"
+          fi
+          echo "sha=${parent}" >> "$GITHUB_OUTPUT"
+
       - name: Detect changed paths
         id: filter
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         with:
-          base: ${{ github.event.workflow_run.head_sha }}^
+          base: ${{ steps.base.outputs.sha }}
           ref: ${{ github.event.workflow_run.head_sha }}
           filters: |
             compose:
