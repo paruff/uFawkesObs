@@ -2,7 +2,7 @@
 
 **Version:** 1.1.0
 **Date:** 2026-06-28
-**Last reconciled:** 2026-08-12 (LB-07, #185) — status column refreshed against `gh issue list --state all`
+**Last reconciled:** 2026-09-13 (LB-07, #185) — status column refreshed against `gh issue view`
 **Repo:** paruff/uFawkesObs
 **Status:** Active
 
@@ -328,18 +328,19 @@
 ### Task M3-05: Create docker-compose.integration.yml and Multi-Stack Network Join Docs
 
 - **Description:** Document how uFawkesObs connects to uFawkesDORA, uFawkesPipe, and uFawkesSec over a shared Docker network. Create the compose-them-all file.
-- **Backlog Issue:** #54 (OBS-DORA-05)
+- **Backlog Issue:** #54 (OBS-DORA-05) — **CLOSED 2026-08-10 as superseded** (M4 rework, LB-07 #185). Work delivered under M3-04/#79 and PR #138.
 - **Status:** 🟡 MOSTLY DONE (PR #138) — core deliverables shipped under a
   lowercase filename (`docs/multi-stack-integration.md`, not the
   `MULTI_STACK_INTEGRATION.md` the issue names); Makefile integration targets
-  not found. Issue #54 closed 2026-08-10 as superseded (M4 rework, LB-07 #185).
+  not found. `docker-compose.integration.yml` relocated to
+  `config/docker-compose.integration.yml` (#351).
 - **Tasks:**
   1. Create `docs/MULTI_STACK_INTEGRATION.md` with sections for each sister stack
-  2. Create `docker-compose.integration.yml` at repo root
+  2. Create `docker-compose.integration.yml` at repo root (now `config/docker-compose.integration.yml`)
   3. Add `make integration-up` and `make integration-down` targets
 - **Acceptance Criteria:**
   - [x] `docs/multi-stack-integration.md` exists with architecture diagram, step-by-step network join, and troubleshooting (lowercase filename, not `MULTI_STACK_INTEGRATION.md`)
-  - [x] `docker-compose.integration.yml` wires all active stacks via shared network
+  - [x] `config/docker-compose.integration.yml` wires all active stacks via shared network
   - [ ] Makefile targets (`integration-up`/`integration-down`) — not present in `Makefile`
   - [ ] README updated — not verified
 
@@ -446,42 +447,25 @@
 
 - **Description:** Author an ADR specifying the K8s migration path and architectural requirements.
 - **Backlog Issue:** #84
-- **Status:** 🔲 PENDING
-- **Tasks:**
-  1. Create `docs/adr/ADR-005-kubernetes-migration.md`.
-- **Acceptance Criteria:**
-  - ADR-005 exists.
+- **Status:** ✅ DONE (closed 2026-09-02)
 
 ### Task M5-02: Create Helm Chart for uFawkesObs Core Stack
 
 - **Description:** Create an umbrella Helm chart to deploy OTel, Prometheus, Loki, Tempo, Alloy, and Grafana.
 - **Backlog Issue:** #85
 - **Dependencies:** M5-01
-- **Status:** 🔲 PENDING
-- **Tasks:**
-  1. Scaffold umbrella chart in `helm/ufawkes-obs/`.
-  2. Compile core observability dependencies as pinned Helm sub-charts.
-- **Acceptance Criteria:**
-  - `helm lint helm/ufawkes-obs/` passes with 0 warnings.
+- **Status:** ✅ DONE (closed 2026-09-02)
 
 ### Task M5-03: Create k3d Local Simulator and Makefile Targets
 
 - **Description:** Add Makefile helpers to quickly spin up a local cluster and deploy uFawkesObs.
 - **Backlog Issue:** #86
 - **Dependencies:** M5-02
-- **Status:** 🔲 PENDING
-- **Tasks:**
-  1. Add `make k3d-up`, `make k3d-down`, and `make helm-deploy` targets.
-- **Acceptance Criteria:**
-  - Running `make k3d-up` correctly boots k3d and deploys the Helm chart.
+- **Status:** ✅ DONE (closed 2026-09-02)
 
 ### Task M5-04: Create Kubernetes Acceptance Testing Workflow
 
 - **Description:** Configure GitHub Actions workflows to verify Helm installations in a simulated cluster.
 - **Backlog Issue:** #87
 - **Dependencies:** M5-03
-- **Status:** 🔲 PENDING
-- **Tasks:**
-  1. Configure GHA pipeline to boot a KinD/k3d cluster, install the Helm chart, and run verification probes.
-- **Acceptance Criteria:**
-  - GitHub Action parses cleanly and tests pass.
+- **Status:** ✅ DONE (closed 2026-09-02)

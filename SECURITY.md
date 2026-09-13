@@ -112,6 +112,6 @@ docker compose pull --dry-run
 
 ## AI-generated code policy
 
-See [AI_STANCE.md](./AI_STANCE.md). AI-generated Prometheus alerting rules
+See [AI_STANCE.md](./docs/AI_STANCE.md). AI-generated Prometheus alerting rules
 and Grafana provisioning configs require human review before merge — alerts
 trigger real pagers, and false positives have real cost.
