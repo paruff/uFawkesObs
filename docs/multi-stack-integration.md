@@ -163,14 +163,14 @@ networks:
 
 ## 5. Reference: docker-compose.integration.yml
 
-uFawkesObs provides a reference template at [`docker-compose.integration.yml`](../docker-compose.integration.yml):
+uFawkesObs provides a reference template at [`config/docker-compose.integration.yml`](../config/docker-compose.integration.yml):
 
 ```bash
 # View the template
-cat docker-compose.integration.yml
+cat config/docker-compose.integration.yml
 
 # Validate syntax (requires --profile placeholder since no default services)
-docker compose -f docker-compose.integration.yml --profile placeholder config
+docker compose -f config/docker-compose.integration.yml --profile placeholder config
 ```
 
 **Key sections:**
@@ -270,7 +270,7 @@ curl -s "http://localhost:3100/loki/api/v1/label/service/values"
 |---|---|
 | [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) | Full component topology and data flows |
 | [`docs/product/spec.md`](../docs/product/spec.md) | Functional requirements and interface contracts |
-| [`docker-compose.integration.yml`](../docker-compose.integration.yml) | Reference network configuration template |
+| [`config/docker-compose.integration.yml`](../config/docker-compose.integration.yml) | Reference network configuration template |
 | [`compose.yaml`](../compose.yaml) | uFawkesObs core stack definition |
 
 ---

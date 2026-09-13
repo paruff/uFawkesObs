@@ -21,7 +21,7 @@ Two new planes now exist that impact M4-02's scope:
 
 The original M4-02 issue (#81) was written before uFawkesDORA existed as a separate repo. Now that the DORA plane has its own:
 
-- `docker-compose.integration.yml`
+- `config/docker-compose.integration.yml`
 - PostgreSQL/TimescaleDB database (for event storage)
 - Ingestion API + async worker + compute engine
 - GitHub Actions collectors and webhook receivers
