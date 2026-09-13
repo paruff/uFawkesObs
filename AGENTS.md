@@ -69,6 +69,31 @@ steps another agent calls directly.
 | 5.5      | `docs/DEPLOYMENT_STRATEGY.md` | Progressive delivery model — must exist before production traffic  |
 | 5.6      | `docs/PR_STANDARD.md`        | PR title and body format rules                                     |
 | 5.7      | `docs/PATH_TO_LATE_BETA.md`  | Beta readiness bar and open gaps — do not close as "beta ready" until these clear |
+| 6        | `VISION.md`                  | North Star, core principles, explicit non-goals (years horizon)   |
+| 6.1      | `MILESTONES.md`              | Horizons (H1/H2/H3), release gates, epic sequencing (months)     |
+| 6.2      | `EXECUTION_QUEUE.md`         | Prioritized tasks ready for work (weeks)                          |
+| 6.3      | `plan-for-the-day.md`        | Daily execution: single goal, TDD cycle, session learnings        |
+
+### Planning Cascade
+
+The four planning documents form a strictly nested cascade:
+
+```
+VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+```
+
+- **Strict Top-Down Traceability:** Every task in `plan-for-the-day.md` originates from `EXECUTION_QUEUE.md`, which fulfills a delivery gate in `MILESTONES.md`, moving toward `VISION.md`.
+- **Scope Drift Protection:** Before adding a feature to `EXECUTION_QUEUE.md`, check it against `VISION.md` non-goals.
+- **Controlled Bottom-Up Feedback:** Learnings from `plan-for-the-day.md` route back to `EXECUTION_QUEUE.md` for reprioritization.
+
+### Product Artifacts
+
+| File | Purpose |
+|---|---|
+| `docs/product/discovery-draft.md` | JTBD, riskiest assumption, acceptance criterion |
+| `docs/product/spec.md` | Functional requirements (OBS-F##, OBS-N##), interface contracts |
+| `docs/product/design.md` | Architecture principles, repo structure, component topology |
+| `docs/product/tasks.json` | Reserved for future product-level task output |
 
 If any of these don't exist for this repo, agents proceed with what's
 available and note the gap — they don't invent the missing content.

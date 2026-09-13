@@ -1,4 +1,7 @@
-# OpenCode workflow — triggered by issue comments containing /opencode or /oc
+# ============================================================================
+# OpenCode Agent CI — Dispatches agent sessions from GitHub Actions
+# ============================================================================
+# Reference: https://github.com/anomalyco/opencode
 #
 # Providers (in fallback order):
 #   1. NVIDIA NIM — free models via nim-proxy (rate-limit pacing, multi-key LB)
@@ -15,12 +18,29 @@
 # Docker container that listens on localhost:8000, paces requests to ≤40 RPM,
 # and distributes load across all provided keys.  OpenCode is pointed at the
 # proxy so all NVIDIA requests go through it.
+#
+# This workflow is triggered by:
+#   - Issues labeled with `opencode` + sizing labels (maintainer-authored only)
+#   - Issue comments containing `/opencode` or `/oc` (from maintainers only)
+#   - Manual workflow_dispatch with issue number
+# ============================================================================
 
 name: OpenCode
 
 on:
+  issues:
+    types: [labeled, opened]
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to process"
+        required: true
+      model:
+        description: "Model override"
+        required: false
+        default: "opencode/claude-opus-4-5"
 
 permissions:
   contents: write
@@ -29,23 +49,41 @@ permissions:
 
 jobs:
   opencode:
-    # Only run for trusted actors when the comment body starts with
-    # /opencode or /oc. The comment body is untrusted input (any user can
+    # Every path into this job must be gated on author_association, not just
+    # on labels. An issue's title and body are attacker-controlled on a public
+    # repo, and this job hands them to an agent holding write permissions and
+    # repository secrets. The comment body is untrusted input (any user can
     # comment on an issue), so it must never be evaluated as shell code —
     # it is passed to the Run OpenCode step via an env var, not interpolated
     # into the run: script.
     if: |
-      github.event.issue.pull_request == null &&
-      (github.event.comment.author_association == 'OWNER' ||
-       github.event.comment.author_association == 'MEMBER' ||
-       github.event.comment.author_association == 'COLLABORATOR') &&
-      (startsWith(github.event.comment.body, '/opencode') ||
-       startsWith(github.event.comment.body, '/oc'))
+      github.repository == 'paruff/uFawkesObs' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'issues' &&
+        (github.event.issue.author_association == 'OWNER' ||
+         github.event.issue.author_association == 'MEMBER' ||
+         github.event.issue.author_association == 'COLLABORATOR') &&
+        contains(github.event.issue.labels.*.name, 'opencode') &&
+        (contains(github.event.issue.labels.*.name, 'ready-for-dev') ||
+         contains(github.event.issue.labels.*.name, 'good-first-issue') ||
+         contains(github.event.issue.labels.*.name, 'feature') ||
+         contains(github.event.issue.labels.*.name, 'bug'))) ||
+       (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request == null &&
+        (github.event.comment.author_association == 'OWNER' ||
+         github.event.comment.author_association == 'MEMBER' ||
+         github.event.comment.author_association == 'COLLABORATOR') &&
+        (startsWith(github.event.comment.body, '/opencode') ||
+         startsWith(github.event.comment.body, '/oc'))
+       ))
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -62,7 +100,6 @@ jobs:
         id: nim_proxy
         continue-on-error: true  # workflow continues even if proxy fails
         env:
-          # Accept either a single key or a comma-separated list of keys
           NIM_API_KEYS: ${{ secrets.NVIDIA_API_KEYS || secrets.NVIDIA_API_KEY }}
         run: |
           if [ -z "${NIM_API_KEYS}" ]; then
@@ -92,7 +129,6 @@ jobs:
           echo "::warning::nim-proxy did not become healthy in 20 s — falling back to Gemini/OpenCode Zen."
           docker logs nim-proxy || true
           echo "nim_available=false" >> "$GITHUB_OUTPUT"
-          # Non-zero exit would skip the step but continue-on-error=true keeps the job alive
 
       # ── 3. Write opencode.json ───────────────────────────────────────────────
       # Dynamically writes the model config so that:
@@ -102,12 +138,9 @@ jobs:
       - name: Write opencode.json
         env:
           NIM_AVAILABLE: ${{ steps.nim_proxy.outputs.nim_available }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
           # Build model list depending on proxy availability
           if [ "${NIM_AVAILABLE}" = "true" ]; then
-            # NVIDIA models via nim-proxy on localhost:8000
             MODELS=$(cat <<'EOF'
           [
             {
@@ -139,7 +172,6 @@ jobs:
           EOF
           )
           else
-            # No proxy — go straight to Gemini then OpenCode Zen
             MODELS=$(cat <<'EOF'
           [
             {
@@ -183,33 +215,33 @@ jobs:
           curl -fsSL https://opencode.ai/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      # ── 5. (Optional) Install agent skills ───────────────────────────────────
-      # Uncomment to install shared agent skills before running OpenCode.
-      # - name: Install agent skills
-      #   run: |
-      #     mkdir -p ~/.config/opencode/agents
-      #     cp -r .agents/* ~/.config/opencode/agents/ 2>/dev/null || true
-
-      # ── 6. Run OpenCode ───────────────────────────────────────────────────────
-      # Extracts the user's prompt from the comment (everything after the slash
-      # command) and passes it to opencode run.
+      # ── 5. Run OpenCode ───────────────────────────────────────────────────────
+      # For issue triggers: uses the issue body as the prompt
+      # For comment triggers: extracts the prompt from the comment (everything
+      # after the slash command)
       - name: Run OpenCode
         env:
-          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
           # Untrusted input: passed via env var, never interpolated into the
-          # run: script, so shell metacharacters in a comment body cannot
-          # execute on the runner.
+          # run: script, so shell metacharacters cannot execute on the runner.
+          ISSUE_BODY: ${{ github.event.issue.body }}
           COMMENT: ${{ github.event.comment.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          # Strip the trigger command (/opencode or /oc) to get the prompt
-          PROMPT="${COMMENT#/opencode}"
-          PROMPT="${PROMPT#/oc}"
-          PROMPT="$(echo "${PROMPT}" | sed 's/^[[:space:]]*//')"
+          # Determine the prompt source
+          if [ "${{ github.event_name }}" = "issue_comment" ]; then
+            # Comment trigger — strip the trigger command
+            PROMPT="${COMMENT#/opencode}"
+            PROMPT="${PROMPT#/oc}"
+            PROMPT="$(echo "${PROMPT}" | sed 's/^[[:space:]]*//')"
+          else
+            # Issue or workflow_dispatch — use issue body
+            PROMPT="${ISSUE_BODY}"
+          fi
 
           if [ -z "${PROMPT}" ]; then
-            echo "::error::No prompt found after trigger command. Usage: /opencode <your request>"
+            echo "::error::No prompt found. Usage: /opencode <your request>"
             exit 1
           fi
 
@@ -217,10 +249,14 @@ jobs:
 
           opencode run \
             --config opencode.json \
-            --issue "${{ github.event.issue.number }}" \
+            --issue "${ISSUE_NUMBER}" \
             -- "${PROMPT}"
 
-      # ── 7. Tear down nim-proxy ────────────────────────────────────────────────
+      # ── 6. Tear down nim-proxy ────────────────────────────────────────────────
       - name: Stop nim-proxy
         if: always()
         run: docker rm -f nim-proxy 2>/dev/null || true
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'

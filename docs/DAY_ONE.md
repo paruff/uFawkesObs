@@ -90,7 +90,7 @@ reachable at:
 
 Configure your OTel SDK exporter to point there. For cross-stack Docker Compose
 setups (your application in a separate `compose.yaml`), see
-[docs/multi-stack-integration.md](./docs/multi-stack-integration.md) — it
+[multi-stack-integration.md](./multi-stack-integration.md) — it
 covers the network configuration needed to connect across compose projects.
 
 ---
@@ -125,9 +125,9 @@ pytest tests/unit/
   live in [uFawkesDORA](https://github.com/paruff/ufawkesdora), which wires in
   deployment and commit events from [uFawkesPipe](https://github.com/paruff/ufawkespipe).
 - **Multi-tenancy**: All telemetry shares one instance. See
-  [docs/KNOWN_LIMITATIONS.md](./docs/KNOWN_LIMITATIONS.md).
+  [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md).
 - **TLS**: Default config is localhost-only plaintext. See
-  [docs/production-hardening.md](./docs/production-hardening.md) before
+  [production-hardening.md](./production-hardening.md) before
   exposing any port.
 
 ---
@@ -136,14 +136,14 @@ pytest tests/unit/
 
 | I want to… | Go here |
 |---|---|
-| Connect another Docker Compose app | [docs/multi-stack-integration.md](./docs/multi-stack-integration.md) |
-| Harden for a shared environment | [docs/production-hardening.md](./docs/production-hardening.md) |
-| Understand the architecture | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) |
-| Add a Prometheus alert rule | [config/prometheus/](./config/prometheus/) + run `pytest tests/unit/test_prometheus_config_validation.py` |
+| Connect another Docker Compose app | [multi-stack-integration.md](./multi-stack-integration.md) |
+| Harden for a shared environment | [production-hardening.md](./production-hardening.md) |
+| Understand the architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Add a Prometheus alert rule | [config/prometheus/](../config/prometheus/) + run `pytest tests/unit/test_prometheus_config_validation.py` |
 | Add DORA metrics | [uFawkesDORA](https://github.com/paruff/ufawkesdora) |
 | Report a bug | [GitHub Issues](https://github.com/paruff/uFawkesObs/issues) |
 | Ask a question | [GitHub Discussions](https://github.com/paruff/uFawkesObs/discussions) |
-| Contribute a change | [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| Contribute a change | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 
 ---
 

@@ -1,75 +1,89 @@
 # Model Selection Policy — uFawkesObs
 
-> Budget-aware model routing for uFawkesObs. This file is referenced from `AGENTS.md §3` and `.agents/agents/otel-collector.md`.
+> Grade-based model routing for uFawkesObs. This file is referenced from `AGENTS.md §3` and `.agents/agents/otel-collector.md`.
+>
+> **Design principle:** Task routing uses stable *grade definitions* (which rarely change). The *current model mapping* updates frequently as models improve. When a model updates or a new one appears, only the mapping table changes.
 
 ---
 
-## Budget Context
+## Grade Definitions
 
-uFawkesObs operates within the **shared uFawkesAI Copilot Pro budget**: **300 premium requests/month across all repos**.
+Grades are defined by minimum benchmark requirements, not specific model names. Any model meeting the thresholds qualifies for that grade.
 
-> **Cost model:** The coding agent uses exactly 1 premium request per session × the model multiplier. GPT-4.1 has 0× multiplier — completely free and is the default for all tasks.
+| Grade | Name | Min SWE-bench Verified | Min Context Window | When to Use |
+|-------|------|------------------------|-------------------|-------------|
+| **S** | Critical | ≥90% | ≥128k | High-stakes, complex reasoning: PromQL rules, OTEL pipeline changes, architectural decisions |
+| **A** | Production | ≥70% | ≥64k | Standard development: Docker Compose edits, Alloy config, version upgrades |
+| **B** | Routine | ≥50% | ≥32k | Simple tasks: YAML edits, markdown, documentation, runbooks |
+| **C** | Lightweight | Any | Any | Trivial edits: label changes, typo fixes, whitespace |
+| **F** | Fallback | Free tier only | Any | Emergency: when all other providers are unavailable |
 
----
+### Benchmark References
 
-## Model Ladder
+| Benchmark | What It Tests | Source | Update Frequency |
+|-----------|---------------|--------|------------------|
+| [SWE-bench Verified](https://www.swebench.com/) | Real GitHub bugs (500 problems) | vals.ai leaderboard | Monthly |
+| [SWE-bench Pro](https://www.swebench.com/) | Harder enterprise bugs (1,865 problems) | Scale AI | Quarterly |
+| [HumanEval](https://github.com/openai/human-eval) | Code generation (164 problems) | OpenAI | Static |
+| [LiveCodeBench](https://livecodebench.github.io/) | Dynamic coding ( contamination-resistant) | Academic | Monthly |
 
-| Level | Model | Multiplier | Rule |
-|-------|-------|------------|------|
-| L0 — Free default | GPT-4.1 | 0× | Use for ALL tasks unless explicitly listed otherwise |
-| L0 — Free lightweight | GPT-5 mini | 0× | Single-file YAML edits: version bumps, label changes, one-line additions |
-| L1 — Trial (Grafana only) | Gemini 3 Flash | 0.33× | Trial ONLY for Grafana dashboard JSON — see trial note below |
-| L2 — Justified premium | GPT-5.1-Codex | 1× | PromQL rules, Grafana JSON if Gemini trial fails; requires `model:gpt-5.1-codex` label |
-| PROHIBITED | Claude Opus 4.6 fast | 30× | Never — 30× multiplier. Blocked without explicit written budget approval |
-| AVOID | Claude Opus / Sonnet | 1–3× | No uFawkesObs task type justifies these models |
-
----
-
-## Task → Model Routing Table
-
-| Task type | Model | Cost | Notes |
-|-----------|-------|------|-------|
-| Single YAML edit (version bump, label, port) | GPT-5 mini | 0 | |
-| Docker Compose multi-service edit | GPT-4.1 | 0 | |
-| Alloy River syntax (cAdvisor, node-exporter) | GPT-4.1 | 0 | Specify River config syntax explicitly — not Prometheus config syntax |
-| Prometheus scrape config addition | GPT-5 mini | 0 | Simple YAML block addition; provide existing scrape config as reference |
-| DevLake Docker Compose integration | GPT-4.1 | 0 | Large block but known pattern; provide DevLake docs link in issue |
-| OTEL Collector standard pipeline edit | GPT-4.1 | 0 | Standard receiver/processor/exporter changes only |
-| **OTEL Collector AI/LLM pipeline (`gen_ai.*`)** | **GPT-5.1-Codex** | **1** | **Adding new AI exporters risks breaking existing pipelines; free models miss guard clauses** |
-| Version upgrade (Prometheus / Loki / Tempo) | GPT-5 mini | 0 | Single version string in compose.yaml; must include breaking change notes in issue body |
-| Version upgrade (Grafana) | GPT-4.1 | 0 | Grafana upgrades sometimes require dashboard JSON migration; GPT-4.1 handles this |
-| **PromQL recording rules** | **GPT-5.1-Codex** | **1** | **Free models produce `vector()` arithmetic errors and missing `or vector(0)` guards** |
-| **PromQL alerting rules (DORA)** | **GPT-5.1-Codex** | **1** | **Same — vector arithmetic and threshold logic requires Codex** |
-| **Grafana dashboard JSON — DORA panels** | **Gemini 3 Flash** | **0.33** | **Trial: measure PR revision count over first 3 uses before committing** |
-| **Grafana dashboard JSON — AI/LLM panels** | **GPT-5.1-Codex** | **1** | **AI dashboard JSON is more complex than DORA; start with Codex not Gemini** |
-| Cross-plane documentation (Markdown) | GPT-5 mini | 0 | |
-| Observability runbooks | GPT-5 mini | 0 | Must include exact LogQL queries, kubectl commands, Grafana dashboard links in issue body |
-| Interactive IDE chat (VS Code) | Claude Haiku 4.5 | 0.33 | Chat only — do not assign agent tasks to Haiku |
-| Manual PR comment invocation | GPT-4.1 | 0 | Use `@copilot` with no `+model` suffix — omitting the selector defaults to GPT-4.1 free |
+> **Why SWE-bench Verified?** It's the best predictor of real-world coding ability (source: [SOTA progression](https://www.codesota.com/browse/computer-code/code-generation/swe-bench)). Scores ≥90% indicate frontier reasoning; ≥70% indicates production-grade; ≥50% indicates competent for simple tasks.
 
 ---
 
-## Gemini 3 Flash Trial Note (Grafana Dashboard JSON)
+## Current Model Mapping
 
-Gemini 3 Flash scores 63.8% on SWE-bench vs GPT-5.1-Codex at a higher level, but costs **0.33× vs 1×**. For Grafana dashboard JSON specifically, the structured output quality may be sufficient at lower cost.
+> **⚠️ Update this table when models change.** The grade definitions above are stable; only this mapping updates.
 
-**Trial protocol:**
+| Grade | Primary Model | Provider | Fallbacks | Notes |
+|-------|---------------|----------|-----------|-------|
+| **S** | nvidia/qwen3-coder-480b-a35b-instruct | NVIDIA NIM (local proxy) | nvidia/nemotron-3-ultra-550b-a55b | Largest available model; use for critical paths |
+| **A** | google/gemini-2.5-pro | Google | opencode-zen/deepseek-v4 | Strong reasoning, good for standard dev work |
+| **B** | google/gemini-2.5-flash | Google | opencode-zen/deepseek-v4-flash-free | Fast, sufficient for simple tasks |
+| **C** | opencode-zen/deepseek-v4-flash-free | OpenCode Zen | — | Trivial edits only |
+| **F** | (same as C) | — | — | Emergency fallback |
 
-1. Assign the first 3 Grafana JSON issues to Gemini 3 Flash
-2. Record PR revision count for each (target: ≤1 revision per PR)
-3. If revision count ≤1 across all 3: adopt Gemini 3 Flash for DORA dashboards
-4. If revision count >1 on any PR: switch to GPT-5.1-Codex and update this table
+### Fallback Chain
 
-**Until the trial is complete, GPT-5.1-Codex remains the safe default for all Grafana JSON.**
+```
+Grade S (NVIDIA NIM primary) → Grade S (NVIDIA NIM secondary) → Grade A (Gemini Pro) → Grade B (Gemini Flash) → Grade F (OpenCode Zen)
+```
+
+Triggers: `rate_limit`, `timeout`, `server_error`
+
+---
+
+## Task → Grade Routing
+
+> **Stable — rarely changes.** This table defines which grade is required for each task type.
+
+| Task Type | Grade | Reason |
+|-----------|-------|--------|
+| **PromQL recording rules** | S | Vector arithmetic, missing `or vector(0)` guards require strong reasoning |
+| **PromQL alerting rules (DORA)** | S | Threshold logic and edge cases require frontier reasoning |
+| **OTEL Collector AI/LLM pipeline (`gen_ai.*`)** | S | Breaking changes risk production; requires careful guard clauses |
+| **Grafana dashboard JSON — DORA panels** | S | Complex panel math, datasource references, template variables |
+| **Grafana dashboard JSON — AI/LLM panels** | S | Same as DORA — structured output quality matters |
+| Docker Compose multi-service edit | A | Multi-file coordination, known patterns |
+| Alloy River syntax (cAdvisor, node-exporter) | A | Domain-specific config, needs accuracy |
+| OTEL Collector standard pipeline edit | A | Standard receiver/processor/exporter changes |
+| Version upgrade (Prometheus / Loki / Tempo) | B | Single version string, but needs breaking change notes |
+| Version upgrade (Grafana) | B | Sometimes requires dashboard JSON migration |
+| Prometheus scrape config addition | B | Simple YAML block addition |
+| Cross-plane documentation (Markdown) | B | Text generation |
+| Observability runbooks | B | Must include exact LogQL queries, kubectl commands |
+| Single YAML edit (version bump, label, port) | C | Trivial, any model works |
+| Label changes | C | Trivial |
+| Typo fixes | C | Trivial |
 
 ---
 
 ## Required Issue Body Format
 
-Every issue assigned to the Copilot coding agent **must** include this block:
+Every issue assigned to the coding agent **must** include this block:
 
 ```
-**Suggested model:** [GPT-4.1 / GPT-5 mini / Gemini 3 Flash / GPT-5.1-Codex]
+**Grade:** [S / A / B / C]
 **Task type:** [YAML edit / Docker Compose / PromQL / Grafana JSON / OTEL / docs]
 **Files to edit:** [explicit list — agent must not create new files unless listed here]
 **Reference file:** [path to existing config to use as pattern]
@@ -84,37 +98,43 @@ Every issue assigned to the Copilot coding agent **must** include this block:
 
 ## Escalation Rule
 
-If rework rate for a task type exceeds **20% after 5 completed PRs** with the recommended model:
+If rework rate for a task type exceeds **20% after 5 completed PRs** with the recommended grade:
 
 1. **First** — improve the issue body: add file targets, reference configs, breaking change notes
-2. **If still above 20%** — escalate to the next model tier
+2. **If still above 20%** — escalate to the next grade tier
 3. **Document** the decision in this section with date and evidence
 
 ---
 
-## Budget Guardrails
+## Grade Update Process
 
-- **Never** use `@copilot +modelname` in PR comments unless GPT-4.1 has already failed on the same task
-- Expected premium spend for uFawkesObs: **~8 requests/month** at 20 issues/week:
-  - PromQL rules: ~4 sessions at 1× = 4 requests
-  - Grafana AI dashboard JSON: ~2 sessions at 1× = 2 requests
-  - Grafana DORA JSON (Gemini trial): ~3 sessions at 0.33× = ~1 request
-  - IDE chat: ~220 messages/month at 0.33× = ~73 requests (shared with other repos)
-- If Gemini 3 Flash trial succeeds, uFawkesObs premium agent spend drops to **~3 requests/month**
+When a model updates or a new model appears:
+
+1. **Check benchmarks:** Verify the model meets grade thresholds at [swebench.com](https://www.swebench.com/) or [vals.ai](https://vals.ai/benchmarks/swebench)
+2. **Update mapping:** Change only the "Current Model Mapping" table above
+3. **Test:** Run 3 issues through the new model at the intended grade
+4. **Validate:** Check PR revision count (target: ≤1 revision per PR)
+5. **Document:** Add entry to escalation log below if grade changed
+
+### Escalation Log
+
+| Date | Task Type | Old Grade | New Grade | Reason | Evidence |
+|------|-----------|-----------|-----------|--------|----------|
+| 2026-09-13 | All | Copilot-specific | OpenCode grade-based | Initial migration from Copilot model ladder | — |
 
 ---
 
 ## Model Policy Enforcement
 
-- `.github/copilot-instructions.md` enforces default model as GPT-4.1
-- Agent YAML files specify `model: claude-sonnet-4-6` for operational agents (test, review, etc.) — these are separate from the Copilot coding agent budget
-- Premium model usage requires the `model:gpt-5.1-codex` label on the issue/PR
+- `opencode.json` configures the fallback chain and default model
+- Agent YAML files specify grades for operational agents (test, review, etc.)
+- The NVIDIA NIM proxy (`nim-proxy` service in compose.yaml) must be running for Grade S models
 
 ---
 
 ## See Also
 
 - `AGENTS.md` §3 — Context Files (references this file)
-- `AGENTS.md` §4 — Architecture Rules (OTEL AI pipeline changes require GPT-5.1-Codex)
+- `AGENTS.md` §4 — Architecture Rules (OTEL AI pipeline changes require Grade S)
 - `.agents/agents/otel-collector.md` — OTel agent constraints
 - `docs/ai-observability-guide.md` — AI pipeline architecture and instrumentation
