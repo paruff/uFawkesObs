@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.14-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.13-alpha.1...v0.3.14-alpha.1) (2026-09-13)
+
+
+### Chores
+
+* **main:** release 0.3.13-alpha.1 ([55eed1d](https://github.com/paruff/uFawkesObs/commit/55eed1d8c4453c4fd1d9068ab08c1ff43824493c))
+* **main:** release 0.3.13-alpha.1 ([6e3094c](https://github.com/paruff/uFawkesObs/commit/6e3094c99c443aaf0a140444db9045f108f76a83))
+
 ## [0.3.13-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.12-alpha.1...v0.3.13-alpha.1) (2026-09-13)
 
 
