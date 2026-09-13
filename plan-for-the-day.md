@@ -1,97 +1,122 @@
-# plan-for-the-day.md — uFawkesObs
+# Daily Plan: 2026-09-13
 
-> **Horizon:** Today | **Owner:** Active contributor | **Review:** End of session
-> **Feeds into:** [`EXECUTION_QUEUE.md`](EXECUTION_QUEUE.md) ← source
+## 🎯 Primary Goal (`/goal`)
 
----
-
-## Today's Goal
-
-*Pull 1–3 items from [`EXECUTION_QUEUE.md`](EXECUTION_QUEUE.md) for focused daily execution.*
+- **Focus:** Close P1 documentation and CI cleanup items to clear the path toward H2 late-beta readiness.
 
 ---
 
-## Session Log
+## 📋 Open Issue Inventory
 
-<!-- Fill this in at the start of each session -->
+### P0 — Release Blockers
 
-**Date:** YYYY-MM-DD
-**Contributor:** (name or agent)
-**Starting from:** EXECUTION_QUEUE.md P0/P1 items
+| Issue | Title | Labels | Status |
+|---|---|---|---|
+| #353 | RELEASE_PLEASE_TOKEN missing in all five repos | `release-blocker` | 🔲 Blocked (requires manual GitHub secret provisioning) |
 
----
+### P1 — High Value, Aligned with H2 Late Beta
 
-## Tasks for Today
+| Issue | Title | Labels | Status |
+|---|---|---|---|
+| #350 | Consolidate the two opencode workflow files | `enhancement` | ⬜ Ready |
+| #352 | Required merge gate depends on a beta-tagged reusable workflow | `enhancement` | ⬜ Ready |
+| #346 | MODEL_POLICY.md describes a Copilot ladder that no longer matches the OpenCode setup | `documentation` | ⬜ Ready |
+| #359 | Flaky test: local compute interval is 240x CI's | `bug` | ⬜ Ready |
+| #345 | README is 602 lines — restructure for a public landing page | `documentation` | ⬜ Ready |
+| #343 | No test coverage measurement despite an 80% mandate | `enhancement` | ⬜ Ready |
 
-| # | Task | Source | Status | TDD Cycle |
-|---|---|---|---|---|
-| 1 | | | ⬜ Not started | RED → GREEN → REFACTOR |
-| 2 | | | ⬜ Not started | RED → GREEN → REFACTOR |
-| 3 | | | ⬜ Not started | RED → GREEN → REFACTOR |
+### P2 — Valuable, Not Urgent
 
----
+| Issue | Title | Labels | Status |
+|---|---|---|---|
+| #335 | LB-02 is recorded as done, but only the HTTP ports were localhost-bound | — | ⬜ Ready |
+| #334 | Prometheus /-/reload returns 200 without applying the new config | — | ⬜ Ready |
+| #331 | Align Rework Rate with DORA's actual (deployment-derived) definition | — | ⬜ Ready |
+| #324 | send-dora-deployment-event.sh silently drops failed events | — | ⬜ Ready |
+| #357 | Harden the opencode agent before allowing test execution | `enhancement` | ⬜ Ready |
 
-## TDD Cycle Log
+### Already Resolved (in PR #362)
 
-For each task, record:
+| Issue | Title | Resolution |
+|---|---|---|
+| #342 | LB-04 status in PATH_TO_LATE_BETA contradicts ROLLBACK_DRILL.md | ✅ Fixed |
+| #344 | Document the test pyramid and marker taxonomy | ✅ Created tests/README.md |
+| #347 | Doc-reality sweep: aspirational and TODO markers | ✅ Created inventory |
+| #348 | Reconcile docs/plan.md status drift | ✅ Reconciled |
+| #349 | Rename DAY ONE.md to docs/DAY_ONE.md | ✅ Renamed |
+| #351 | Relocate top-level clutter | ✅ Moved |
 
-### Task 1: [title]
+### Active Beta Gate (H2)
 
-**RED — Write failing test:**
-```bash
-# Command run and output
-```
-- [ ] Test fails for expected reason
-
-**GREEN — Minimal implementation:**
-```bash
-# Command run and output
-```
-- [ ] Test passes
-- [ ] Other tests still pass
-
-**REFACTOR — Clean up:**
-```bash
-# Command run and output
-```
-- [ ] Tests still pass
-- [ ] No new warnings
-
----
-
-## Session Learnings
-
-Capture anything discovered during today's work that should feed back into [`EXECUTION_QUEUE.md`](EXECUTION_QUEUE.md):
-
-- **Tech debt discovered:** (new issues to file)
-- **Assumptions invalidated:** (what we thought was true but isn't)
-- **Scope drift detected:** (work that crept beyond the task boundary)
-- **Blockers hit:** (what stopped progress)
+| Issue | Title | Status |
+|---|---|---|
+| #182 | LB-04: Run and document a live rollback drill | 🟡 In Progress — Synology NAS at 192.168.1.10 available |
 
 ---
 
-## End-of-Day Checklist
+## 📋 Today's Target Issues
 
-- [ ] All tasks marked complete or explicitly deferred
-- [ ] Tests pass locally (`make test-unit`, `make test-acceptance-smoke`)
-- [ ] Pre-commit hooks pass (`pre-commit run --all-files`)
-- [ ] Changes committed with conventional commit messages
-- [ ] Learnings captured above
-- [ ] New tasks (if any) added to EXECUTION_QUEUE.md
+- [ ] **Issue #346:** MODEL_POLICY.md describes a Copilot ladder that no longer matches the OpenCode setup — *Acceptance Criteria:* MODEL_POLICY.md updated to reflect current OpenCode tool routing; Copilot references removed or updated; file passes markdownlint
+- [ ] **Issue #350:** Consolidate the two opencode workflow files — *Acceptance Criteria:* Single `.github/workflows/opencode.yml` file; duplicate triggers removed; `opencode.yaml` deleted; workflow validates with `actionlint`
+- [ ] **Issue #352:** Required merge gate depends on a beta-tagged reusable workflow — *Acceptance Criteria:* Merge gate references stable workflow version (not beta tag); PR #362's main-ci-guard check updated
 
 ---
 
-## Traceability
+## ⚡ Execution Protocol
 
-Every task in this file must originate from [`EXECUTION_QUEUE.md`](EXECUTION_QUEUE.md), which fulfills a specific delivery gate in [`MILESTONES.md`](MILESTONES.md), moving the project toward [`VISION.md`](VISION.md).
+### 1. Test-Driven Development (`superpower:test-driven-development`)
+
+#### Issue #346 — MODEL_POLICY.md
+
+- [ ] **RED:** Write a test that validates MODEL_POLICY.md does not contain "Copilot" references that mislead agents
+- [ ] **GREEN:** Update MODEL_POLICY.md to reflect current OpenCode setup
+- [ ] **REFACTOR:** Clean up formatting, ensure consistency with other docs
+
+#### Issue #350 — Consolidate opencode workflows
+
+- [ ] **RED:** Verify both workflows currently exist and have overlapping triggers
+- [ ] **GREEN:** Merge into single `opencode.yml`, remove `opencode.yaml`
+- [ ] **REFACTOR:** Validate with `actionlint`, ensure no broken references
+
+#### Issue #352 — Merge gate beta dependency
+
+- [ ] **RED:** Check current main-ci-guard.yml for beta-tagged references
+- [ ] **GREEN:** Update to stable workflow version
+- [ ] **REFACTOR:** Verify all required status checks still pass
+
+### 2. Verification & Code Review (`request-code-review`)
+
+- [ ] Run `pre-commit run --all-files` — all hooks pass
+- [ ] Run `make test-unit` — unit tests pass
+- [ ] Run `npx markdownlint-cli` on modified .md files — no errors
+- [ ] Review `git diff` against existing repository patterns
+- [ ] Trigger `request-code-review` before committing
+
+---
+
+## 🧠 Session Retrospective (`ecc:learn`)
+
+*(Fill in at end of session)*
+
+- **Key Insights & Architecture:** [Patterns discovered, API decisions, or system behavior observed]
+- **Edge Cases & Pitfalls:** [Unexpected issues, tool constraints, or debugging lessons]
+- **Backlog Delta:** [New tasks, refactoring ideas, or technical debt to push to EXECUTION_QUEUE.md]
+
+---
+
+## 📊 Traceability
+
+Every task traces up the cascade:
 
 ```
 VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
 ```
 
-**Scope Drift Protection:** Before adding work not in the queue, check it against VISION.md non-goals. If it violates core principles, reject it.
-
-**Bottom-Up Feedback:** Learnings above route back to EXECUTION_QUEUE.md for reprioritization — they bypass MILESTONES.md and VISION.md.
+| Today's Task | EXECUTION_QUEUE | MILESTONES | VISION Principle |
+|---|---|---|---|
+| #346 MODEL_POLICY.md | P1 Documentation Reconciliation | H2 Late Beta | Discovery Before Build |
+| #350 opencode workflows | P1 Documentation Reconciliation | H2 Late Beta | GitOps Reconciliation |
+| #352 merge gate | P1 Active Beta Gates | H2 Late Beta | GitOps Reconciliation |
 
 ---
 
