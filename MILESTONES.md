@@ -48,6 +48,24 @@
 | **LB-06** | Feedback channel | Beta feedback discussion | ✅ Done | [#184](https://github.com/paruff/uFawkesObs/issues/184) |
 | **LB-07** | Plan reconciliation | Reconcile docs/plan.md status drift | ✅ Done | [#185](https://github.com/paruff/uFawkesObs/issues/185) |
 
+### H2 Documentation Reconciliation (PR #362 — Merged)
+
+| Task | Issue | Status | Commit |
+|---|---|---|---|
+| Doc-reality sweep: classify aspirational markers | [#347](https://github.com/paruff/uFawkesObs/issues/347) | ✅ Done | `docs/doc-reality-sweep-inventory.md` |
+| Reconcile docs/plan.md status drift | [#348](https://github.com/paruff/uFawkesObs/issues/348) | ✅ Done | `docs/plan.md` |
+| Document test pyramid and marker taxonomy | [#344](https://github.com/paruff/uFawkesObs/issues/344) | ✅ Done | `tests/README.md` |
+| Rename DAY ONE.md to docs/DAY_ONE.md | [#349](https://github.com/paruff/uFawkesObs/issues/349) | ✅ Done | `docs/DAY_ONE.md` |
+| Relocate top-level clutter | [#351](https://github.com/paruff/uFawkesObs/issues/351) | ✅ Done | `docs/AI_STANCE.md`, `config/docker-compose.integration.yml` |
+| Fix LB-04 status in PATH_TO_LATE_BETA.md | [#342](https://github.com/paruff/uFawkesObs/issues/342) | ✅ Done | `docs/PATH_TO_LATE_BETA.md` |
+| Update MODEL_POLICY.md to grade-based system | [#346](https://github.com/paruff/uFawkesObs/issues/346) | ✅ Done | `docs/MODEL_POLICY.md` |
+| Consolidate opencode workflow files | [#350](https://github.com/paruff/uFawkesObs/issues/350) | ✅ Done | `.github/workflows/opencode.yml` |
+| Update main-ci-guard to stable version | [#352](https://github.com/paruff/uFawkesObs/issues/352) | ✅ Done | `.github/workflows/main-ci-guard.yml` |
+| Make DORA acceptance test deterministic | [#359](https://github.com/paruff/uFawkesObs/issues/359) | ✅ Done | `tests/acceptance/steps/dashboard_steps.py` |
+| Restructure README to ~150 lines | [#345](https://github.com/paruff/uFawkesObs/issues/345) | ✅ Done | `README.md`, `docs/TROUBLESHOOTING.md` |
+| Add test coverage measurement | [#343](https://github.com/paruff/uFawkesObs/issues/343) | ✅ Done | `pytest.ini`, `Makefile` |
+| Close stale RELEASE_PLEASE_TOKEN issue | [#353](https://github.com/paruff/uFawkesObs/issues/353) | ✅ Done | Closed — release-please works with fallback token |
+
 **H2 exit criteria (remaining):**
 - [ ] LB-04: Full rollback drill completed over SSH with sandbox host
 - [ ] All docs pass reality sweep (no stale aspirational markers)
