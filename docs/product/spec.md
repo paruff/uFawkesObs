@@ -78,11 +78,11 @@ Rather than having each repository or plane provision its own isolated, custom t
 - Apache DevLake — now owned by uFawkesDORA as optional complementary visualization
 - MySQL database — DevLake uses uFawkesRes's shared PostgreSQL instead
 
-### 4.4 Backlog — Kubernetes & Helm Deployment (M5)
+### 4.4 Backlog — Fawkes K8s Migration (M5)
 
-- **OBS-F30:** Formulate an Architecture Decision Record (ADR-004) specifying the migration path from Docker Compose orchestration to native Kubernetes resources.
-- **OBS-F31:** Author a Helm umbrella chart (`helm/ufawkes-obs`) compiling Prometheus, Loki, Tempo, Grafana, Alloy, and OTel Collector as standard sub-charts.
-- **OBS-F32:** Provide a local k3d Kubernetes bootstrap script/Makefile command to run acceptance verification in-cluster.
+- **OBS-F30:** Formulate an Architecture Decision Record (ADR-004) specifying the migration path from Docker Compose orchestration to the Fawkes K8s track.
+- **OBS-F31:** Author a Helm umbrella chart (`helm/ufawkes-obs`) compiling Prometheus, Loki, Tempo, Grafana, Alloy, and OTel Collector as standard sub-charts, targeting Fawkes deployment.
+- **OBS-F32:** Provide a local k3d Kubernetes bootstrap script/Makefile command to run acceptance verification, Fawkes-integrated.
 
 ---
 
