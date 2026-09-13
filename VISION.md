@@ -35,7 +35,7 @@ These are out of scope for the current maturity stage. They may become goals lat
 
 - **Multi-tenancy.** All telemetry shares one instance. Single-team, single-cluster only.
 - **Horizontal scaling.** Single-instance deployment. No sharding, no federation, no load-balanced read replicas.
-- **Kubernetes-native deployment.** M5 (Helm charts, k3d simulator) is backlog, not active. Docker Compose is the target runtime.
+- **Kubernetes-native deployment.** M5 is a migration path to the Fawkes K8s track — not an active uFawkesObs gate. Docker Compose is the target runtime for late beta.
 - **Production TLS between internal services.** Localhost-only plaintext is the default. TLS is a production-hardening concern documented in `docs/production-hardening.md`, not a beta requirement.
 - **Multi-host progressive delivery.** Canary/staging/load-balanced production is aspirational (`docs/DEPLOYMENT_STRATEGY.md`), not a beta gate.
 - **Secret management substrate.** Vault/uFawkesSec owns root credentials. uFawkesObs consumes secrets via `.env` injection only.

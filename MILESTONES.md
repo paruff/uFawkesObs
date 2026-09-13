@@ -72,25 +72,26 @@
 
 ---
 
-## H3 — Kubernetes & Scale (Backlog)
+## H3 — Fawkes K8s Migration (Backlog)
 
-**Goal:** Scale from Docker Compose to cloud-native Kubernetes environments.
+**Goal:** Migrate from Docker Compose to Fawkes Kubernetes track.
 
 | Milestone | Theme | Deliverables | Status | Issue |
 |---|---|---|---|---|
-| **M5-01** | K8s Strategy ADR | Architecture Decision Record for K8s migration | ✅ Done | [#84](https://github.com/paruff/uFawkesObs/issues/84) |
-| **M5-02** | Helm Chart | Umbrella chart for core stack | ✅ Done | [#85](https://github.com/paruff/uFawkesObs/issues/85) |
-| **M5-03** | k3d Simulator | Local K8s bootstrap + Makefile targets | ✅ Done | [#86](https://github.com/paruff/uFawkesObs/issues/86) |
-| **M5-04** | K8s Acceptance CI | GitHub Actions workflow for K8s acceptance tests | ✅ Done | [#87](https://github.com/paruff/uFawkesObs/issues/87) |
+| **M5-01** | K8s Strategy ADR | Architecture Decision Record for K8s migration to Fawkes track | ✅ Done | [#84](https://github.com/paruff/uFawkesObs/issues/84) |
+| **M5-02** | Helm Chart | Umbrella chart for core stack, targeting Fawkes deployment | ✅ Done | [#85](https://github.com/paruff/uFawkesObs/issues/85) |
+| **M5-03** | k3d Simulator | Local K8s bootstrap + Makefile targets, Fawkes-compatible | ✅ Done | [#86](https://github.com/paruff/uFawkesObs/issues/86) |
+| **M5-04** | K8s Acceptance CI | GitHub Actions workflow for K8s acceptance tests, Fawkes-integrated | ✅ Done | [#87](https://github.com/paruff/uFawkesObs/issues/87) |
 
 **H3 exit criteria:**
 - [ ] Helm chart passes `helm lint` with 0 warnings
 - [ ] `make k3d-up` boots a local cluster and deploys the chart
 - [ ] K8s acceptance tests pass in CI
+- [ ] Fawkes integration validated (not just local K8s)
 
 ---
 
-## Release Gates
+**Rationale:** uFawkesObs is the Compose-tier stepping stone. Teams graduating to production-grade observability target Fawkes (Kubernetes track), not uFawkesObs. This milestone documents the migration path, not an in-place upgrade.
 
 Every release requires:
 

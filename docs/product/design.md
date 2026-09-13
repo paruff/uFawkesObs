@@ -180,18 +180,36 @@ uFawkesObs is the observability substrate for DORA metrics. This section previou
 - Apache DevLake → uFawkesDORA (optional, complementary to native ingestion)
 - MySQL database → removed; DevLake uses uFawkesRes PostgreSQL
 
-### 6.2 Milestone 5: Kubernetes & Helm Migration Design (Forward-Looking, Backlog)
+### 6.2 Milestone 5: Fawkes K8s Migration Design (Forward-Looking, Backlog)
 
-- **Helm chart structure:** An umbrella Helm chart `helm/ufawkes-obs` containing separate sub-charts:
+- **Helm chart structure:** An umbrella Helm chart `helm/ufawkes-obs` containing separate sub-charts targeting the Fawkes K8s track:
   - `prometheus-community/prometheus`
   - `grafana/grafana`
   - `grafana/loki`
   - `grafana/tempo`
   - `grafana/alloy`
-- **NetworkPolicies:** Standard Kubernetes network segregation enforcing `restricted` security context.
+- **NetworkPolicies:** Standard Kubernetes network segregation enforcing `restricted` security context, as designed in Fawkes.
 - **Secret Integration:** Map External Secrets Operator (ESO) resources pointing to Vault paths rather than local Compose environment variable bindings.
+- **Migration Path Document:** ADR-004 specifies the migration path from Docker Compose (uFawkesObs) to Fawkes K8s, including data volume migration, DNS transition, and cutover procedure.
 
 ---
+
+**What moved to Fawkes (Kubernetes track):**
+- Full K8s-native deployment with Helm charts
+- External Secrets Operator integration
+- NetworkPolicies and security contexts
+- Horizontal HPA/VPA scaling
+- Multi-AZ deployment patterns
+
+### 6.3 Expert Feedback Integration (Late Beta → Fawkes Transition)
+
+| Feedback Area | Action | Owner | Linked Issue |
+|---|---|---|---|
+| **Single-host hard ceiling** | Documented in VISION.md non-goals; M5 explicitly maps to Fawkes K8s track | Maintainer | — |
+| **TLS gap** | Add production-hardening section to DEPLOYMENT_STRATEGY.md; not a beta gate | Maintainer | — |
+| **DORA computed, not actioned** | Add SLO burn alerts + automated rollback on CFR regression to acceptance suite | Maintainer | #331 |
+| **Capacity planning missing** | Add resource budgeting, HPA, VPA to M5 Helm chart spec | Maintainer | — |
+| **Alloy/OTel mixing** | Decide: River DSL OR OTel YAML, not both; document choice in ADR | Maintainer | — |
 
 ## How This Connects
 
