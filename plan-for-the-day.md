@@ -96,11 +96,19 @@
 
 ## 🧠 Session Retrospective (`ecc:learn`)
 
-*(Fill in at end of session)*
+- **Key Insights & Architecture:**
+  - Grade-based model policy is more resilient than specific model names — only the mapping table updates when models change
+  - SWE-bench Verified ≥90% for Grade S (critical), ≥70% for Grade A (production), ≥50% for Grade B (routine)
+  - opencode.yaml and opencode.yml had different purposes (composite action vs nim-proxy); consolidated into single workflow with both trigger types
 
-- **Key Insights & Architecture:** [Patterns discovered, API decisions, or system behavior observed]
-- **Edge Cases & Pitfalls:** [Unexpected issues, tool constraints, or debugging lessons]
-- **Backlog Delta:** [New tasks, refactoring ideas, or technical debt to push to EXECUTION_QUEUE.md]
+- **Edge Cases & Pitfalls:**
+  - markdownlint auto-fixed trailing whitespace in MODEL_POLICY.md — run pre-commit twice after large rewrites
+  - v1.3.0-beta.1 was the only version available in ufawkespipe releases — had to check tags list to find v1.2.0 stable
+  - opencode.json is dynamically written by the workflow at runtime, so the static fallback file at root is just a safety net
+
+- **Backlog Delta:**
+  - New: Consider adding a "model update notification" workflow that checks SWE-bench leaderboard monthly
+  - New: #353 (RELEASE_PLEASE_TOKEN) is P0 but blocked on manual secret provisioning — needs human action
 
 ---
 
