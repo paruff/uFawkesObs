@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.15-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.14-alpha.1...v0.3.15-alpha.1) (2026-09-13)
+
+
+### Docs
+
+* consolidate planning cascade from PATH_TO_LATE_BETA.md ([382361b](https://github.com/paruff/uFawkesObs/commit/382361bfefea79d17391234d592b9a75d7cade55))
+* consolidate planning cascade from PATH_TO_LATE_BETA.md ([bd43142](https://github.com/paruff/uFawkesObs/commit/bd43142138622b240663037b9b5eaf5e03784826))
+
 ## [0.3.14-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.13-alpha.1...v0.3.14-alpha.1) (2026-09-13)
 
 
