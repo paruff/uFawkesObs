@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.13-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.12-alpha.1...v0.3.13-alpha.1) (2026-09-13)
+
+
+### Fixed
+
+* **test:** match CI's DORA compute interval in local acceptance runs ([33a68b1](https://github.com/paruff/uFawkesObs/commit/33a68b116110e9147532025ff479334b096deaf0))
+* **test:** match CI's DORA compute interval in local acceptance runs ([e3e6980](https://github.com/paruff/uFawkesObs/commit/e3e6980b08b65f1e8cf1a48425b8a5526ddd5897))
+
 ## [0.3.12-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.11-alpha.1...v0.3.12-alpha.1) (2026-09-12)
 
 
