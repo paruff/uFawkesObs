@@ -90,3 +90,13 @@ Late beta is reached when all seven issues above are closed and
 `docs/KNOWN_LIMITATIONS.md` / `docs/DEPLOYMENT_STRATEGY.md` are updated to
 reflect the new defaults. At that point, update this doc's status header and
 announce readiness via the LB-06 feedback channel.
+
+## How This Connects
+
+This document is part of the H2 horizon in [`../MILESTONES.md`](../MILESTONES.md). Each LB-## task feeds into the planning cascade:
+
+```
+VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+```
+
+LB-## tasks that are ✅ DONE are checked off in `MILESTONES.md` § H2. Tasks that are 🔲 PENDING appear in `EXECUTION_QUEUE.md` as scheduled work.

@@ -190,3 +190,20 @@ uFawkesObs is the observability substrate for DORA metrics. This section previou
   - `grafana/alloy`
 - **NetworkPolicies:** Standard Kubernetes network segregation enforcing `restricted` security context.
 - **Secret Integration:** Map External Secrets Operator (ESO) resources pointing to Vault paths rather than local Compose environment variable bindings.
+
+---
+
+## How This Connects
+
+This design feeds the planning cascade:
+
+```
+discovery-draft.md (why) → spec.md (what) → design.md (how)
+                              ↓
+                      VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+```
+
+- **Architecture principles** set constraints for every task in `EXECUTION_QUEUE.md`
+- **Repository structure** is validated by `docs/ARCHITECTURE.md`
+- **Component topology** is validated by the acceptance test suite
+- **K8s migration path** is tracked in `MILESTONES.md` § H3

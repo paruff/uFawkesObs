@@ -1,10 +1,22 @@
 # uFawkesObs — Implementation Plan
 
+> **⚠️ Superseded by the Planning Cascade.** This document is retained for
+> historical reference but is no longer the primary planning artifact. The
+> authoritative planning cascade is:
+>
+> ```
+> VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+> ```
+>
+> Milestone-level tracking now lives in `MILESTONES.md`. Weekly task
+> prioritization lives in `EXECUTION_QUEUE.md`. This file's task-level detail
+> is preserved for audit purposes but should not be updated going forward.
+
 **Version:** 1.1.0
 **Date:** 2026-06-28
 **Last reconciled:** 2026-09-13 (LB-07, #185) — status column refreshed against `gh issue view`
 **Repo:** paruff/uFawkesObs
-**Status:** Active
+**Status:** Historical (superseded by planning cascade)
 
 ---
 

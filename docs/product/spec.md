@@ -123,3 +123,21 @@ Rather than having each repository or plane provision its own isolated, custom t
 | **Grafana** | `12.3.7` | Metrics, logs, & trace dashboard UI | `./data/grafana` | `config/grafana/grafana.ini` |
 | **Node Exporter** | `v1.8.1` | Host system exporter | Host read mounts | None |
 | **telemetry-generator** | n/a (in-repo Go app) | Demo instrumented app; emits OTLP metrics/logs/traces for stack verification | None | `apps/telemetry-generator/` |
+
+---
+
+## 8. How This Connects
+
+This spec feeds the planning cascade:
+
+```
+discovery-draft.md (why) → spec.md (what) → design.md (how)
+                              ↓
+                      VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+```
+
+- **Functional requirements** (OBS-F##) map to milestone tasks in `MILESTONES.md`
+- **Non-functional requirements** (OBS-N##) map to acceptance criteria in `EXECUTION_QUEUE.md`
+- **Interface contracts** are documented in `docs/CONTRACTS.md`
+- **Known limitations** that affect the spec are in `docs/KNOWN_LIMITATIONS.md`
+- **Cross-service impact** of changes is in `docs/CHANGE_IMPACT_MAP.md`

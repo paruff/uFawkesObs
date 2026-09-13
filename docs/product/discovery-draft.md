@@ -182,3 +182,18 @@ first:
   treat that file as the running list of ways this assumption could fail in
   practice, and revisit this brief if any of them get worse rather than
   better in a small-team deployment.
+
+## How This Connects
+
+This discovery brief feeds the planning cascade:
+
+```
+discovery-draft.md (why) → spec.md (what) → design.md (how)
+                              ↓
+                      VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → plan-for-the-day.md (today)
+```
+
+- The **JTBD** in this brief sets the north star in `VISION.md`
+- The **riskiest assumption** is checked against every new feature in `EXECUTION_QUEUE.md` (scope drift protection)
+- The **acceptance criterion** validates the onboarding promise measured in `MILESTONES.md` § H2 (LB-01)
+- **Known limitations** that could invalidate the assumption are tracked in `docs/KNOWN_LIMITATIONS.md`
