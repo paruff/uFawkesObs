@@ -37,8 +37,30 @@ def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
     step blocks until the metric is genuinely visible in Prometheus
     (same poll_metric() helper OBS-SLI-006 already uses) instead of
     returning the instant the ingestion API accepts the POST.
+
+    #359: To make this deterministic rather than eventually-consistent,
+    we record the initial metric value before seeding, then wait for the
+    value to INCREASE by the expected amount (1 successful deployment).
+    This prevents the test from passing on stale data from a previous run.
     """
     repo = "acceptance-test/dashboard-data-presence"
+    promql = stack.promql()
+
+    # Record initial metric value before seeding to detect stale data
+    initial_query = f'dora_deployment_frequency_per_week{{team_id="{repo}"}}'
+    try:
+        initial_result = promql.query(initial_query)
+        initial_results = initial_result.get("result", [])
+        if initial_results and initial_results[0].get("value"):
+            initial_value = float(initial_results[0]["value"][1])
+            print(f"📊 Initial dora_deployment_frequency_per_week: {initial_value}")
+        else:
+            initial_value = 0.0
+            print("📊 No existing dora_deployment_frequency_per_week (fresh stack)")
+    except Exception:
+        initial_value = 0.0
+        print("📊 Could not query initial metric (assuming fresh stack)")
+
     resp = requests.post(
         "http://localhost:8088/event",
         json={
@@ -74,17 +96,23 @@ def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
     )
     resp.raise_for_status()
 
-    promql = stack.promql()
+    # Wait for the metric to INCREASE by 1 (one successful deployment),
+    # not just for it to exist. This prevents passing on stale data. (#359)
+    expected_value = initial_value + 1.0
     found, elapsed, _ = promql.poll_metric(
         f'dora_deployment_frequency_per_week{{team_id="{repo}"}}',
+        expected_value=expected_value,
         timeout=90,
     )
     assert found, (
-        f"dora_deployment_frequency_per_week for team_id={repo!r} not visible "
-        "in Prometheus within 90s of seeding -- dora-compute -> Pushgateway -> "
-        "Prometheus pipeline did not complete in time."
+        f"dora_deployment_frequency_per_week for team_id={repo!r} did not reach "
+        f"{expected_value} within 90s of seeding (initial={initial_value}). "
+        "dora-compute -> Pushgateway -> Prometheus pipeline did not complete in time."
     )
-    print(f"✅ Seeded DORA metric visible in Prometheus after {elapsed:.1f}s")
+    print(
+        f"✅ Seeded DORA metric visible in Prometheus after {elapsed:.1f}s "
+        f"(value increased from {initial_value} to {expected_value})"
+    )
 
 
 def _resolve_template_vars(dashboard_json: dict) -> dict[str, str]:
