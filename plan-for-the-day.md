@@ -58,7 +58,7 @@
 
 - [x] **Issue #346:** MODEL_POLICY.md describes a Copilot ladder that no longer matches the OpenCode setup — *Acceptance Criteria:* MODEL_POLICY.md updated to reflect current OpenCode tool routing; Copilot references removed or updated; file passes markdownlint
 - [x] **Issue #350:** Consolidate the two opencode workflow files — *Acceptance Criteria:* Single `.github/workflows/opencode.yml` file; duplicate triggers removed; `opencode.yaml` deleted; workflow validates with `actionlint`
-- [ ] **Issue #352:** Required merge gate depends on a beta-tagged reusable workflow — *Acceptance Criteria:* Merge gate references stable workflow version (not beta tag); PR #362's main-ci-guard check updated
+- [x] **Issue #352:** Required merge gate depends on a beta-tagged reusable workflow — *Acceptance Criteria:* Merge gate references stable workflow version (not beta tag); PR #362's main-ci-guard check updated
 
 ---
 
