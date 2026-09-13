@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.16-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.15-alpha.1...v0.3.16-alpha.1) (2026-09-13)
+
+
+### Docs
+
+* cross-link governance docs and add late-beta closeout week plan ([29b7daf](https://github.com/paruff/uFawkesObs/commit/29b7daf656edf640d2f2be47293c586425a2999a))
+
 ## [0.3.15-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.14-alpha.1...v0.3.15-alpha.1) (2026-09-13)
 
 
