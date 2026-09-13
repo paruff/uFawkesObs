@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **test:** match CI's DORA compute interval in local acceptance runs ([33a68b1](https://github.com/paruff/uFawkesObs/commit/33a68b116110e9147532025ff479334b096deaf0))
 * **test:** match CI's DORA compute interval in local acceptance runs ([e3e6980](https://github.com/paruff/uFawkesObs/commit/e3e6980b08b65f1e8cf1a48425b8a5526ddd5897))
 
+
+### Docs
+
+* add 4-tier planning cascade and link product artifacts ([5eea7f1](https://github.com/paruff/uFawkesObs/commit/5eea7f1e709c2f4a5d7d69b0d9894da67f1ad6ae))
+* consolidate opencode workflows, fix issue [#350](https://github.com/paruff/uFawkesObs/issues/350) ([68bf1a0](https://github.com/paruff/uFawkesObs/commit/68bf1a0100cfb5eefe1521cc4178a8acd5557408))
+* reconcile docs drift, relocate files, document test pyramid ([872ebd2](https://github.com/paruff/uFawkesObs/commit/872ebd2d2d02817ef4b2eccbccd2de0b0c0eae1e))
+* reconcile docs drift, relocate files, document test pyramid ([#342](https://github.com/paruff/uFawkesObs/issues/342)-[#351](https://github.com/paruff/uFawkesObs/issues/351)) ([fc503b3](https://github.com/paruff/uFawkesObs/commit/fc503b35f17a85408d0d00cb63512cbb41e212ba))
+* refactor MODEL_POLICY.md to grade-based system with benchmark thresholds ([bb3db75](https://github.com/paruff/uFawkesObs/commit/bb3db759b34144cdd6d4f28a31dcfe4c3485acd0))
+* update main-ci-guard to stable workflow version, fix issue [#352](https://github.com/paruff/uFawkesObs/issues/352) ([30d0b30](https://github.com/paruff/uFawkesObs/commit/30d0b30caa2e29ce6190b38469b1bd67fad69608))
+* update MODEL_POLICY.md to reflect OpenCode setup, fix issue [#346](https://github.com/paruff/uFawkesObs/issues/346) ([79d241d](https://github.com/paruff/uFawkesObs/commit/79d241d232866437de6439ce449fda9b5765eeb2))
+* update plan-for-the-day.md with completed tasks ([d403052](https://github.com/paruff/uFawkesObs/commit/d403052b571a3191dde807c43007e52c0315933f))
+* update session retrospective with learnings ([60fc307](https://github.com/paruff/uFawkesObs/commit/60fc307dfc7be200caf29ec9f1a83661a928ed11))
+
 ## [0.3.12-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.11-alpha.1...v0.3.12-alpha.1) (2026-09-12)
 
 
