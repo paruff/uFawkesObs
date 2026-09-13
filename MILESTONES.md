@@ -96,9 +96,10 @@ Every release requires:
 
 1. **All milestone tasks complete** — checked against this document
 2. **CI green** — all required status checks pass on `main`
-3. **Docs updated** — ARCHITECTURE.md, KNOWN_LIMITATIONS.md, CHANGE_IMPACT_MAP.md reflect the release
-4. **CHANGELOG.md updated** — release-please automates this from conventional commits
+3. **Docs updated** — ARCHITECTURE.md, KNOWN_LIMITATIONS.md, CHANGE_IMPACT_MAP.md, CONTRACTS.md reflect the release
+4. **CHANGELOG.md updated** — release-please automates this from conventional commits, per [`docs/RELEASE_PROCESS.md`](docs/RELEASE_PROCESS.md)
 5. **Tag applied** — `v<semver>` annotated tag
+6. **Deployed and verified** — per [`docs/DEPLOYMENT_STRATEGY.md`](docs/DEPLOYMENT_STRATEGY.md): SSH push, post-deploy smoke verification, automatic rollback on failure
 
 ---
 

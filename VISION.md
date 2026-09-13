@@ -66,3 +66,6 @@ These are out of scope for the current maturity stage. They may become goals lat
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Topology | How do services connect and depend on each other? |
 | [`docs/CHANGE_IMPACT_MAP.md`](docs/CHANGE_IMPACT_MAP.md) | Impact | What breaks when a service config changes? |
 | [`docs/CONTRACTS.md`](docs/CONTRACTS.md) | Contracts | What does uFawkesObs receive from other planes? |
+| [`docs/AI_STANCE.md`](docs/AI_STANCE.md) | Governance | What's this repo's stance on AI-assisted development? |
+| [`docs/RELEASE_PROCESS.md`](docs/RELEASE_PROCESS.md) | Release | How do merged commits become a versioned release? |
+| [`docs/DEPLOYMENT_STRATEGY.md`](docs/DEPLOYMENT_STRATEGY.md) | Deployment | How does a release reach the running stack, and what's the target model? |
