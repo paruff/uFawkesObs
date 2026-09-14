@@ -28,8 +28,8 @@
 
 | Task | Source | Acceptance Criteria | Status |
 |---|---|---|---|
-| LB-04: Full rollback drill over SSH | [#182](https://github.com/paruff/uFawkesObs/issues/182) | Drill completed on sandbox host, evidence captured | 🟡 In Progress |
-| Harden opencode agent (OIDC + egress) | [#357](https://github.com/paruff/uFawkesObs/issues/357) | Agent cannot execute tests without approval | 🔲 Pending |
+| LB-04: Full rollback drill over SSH | [#182](https://github.com/paruff/uFawkesObs/issues/182) | Drill completed on sandbox host, evidence captured | 🟡 In Progress — NAS confirmed reachable 2026-09-14, drill run itself still pending |
+| Harden opencode agent (OIDC + egress) | [#357](https://github.com/paruff/uFawkesObs/issues/357) | Agent cannot execute tests without approval | 🟡 In Progress — interim `bash:deny` fix in [#371](https://github.com/paruff/uFawkesObs/pull/371) (pending merge); OIDC token exchange + egress-policy still open |
 
 ### Documentation Reconciliation (All Done)
 
@@ -56,6 +56,7 @@
 | Task | Source | Acceptance Criteria | Status |
 |---|---|---|---|
 | Align Rework Rate with DORA definition | [#331](https://github.com/paruff/uFawkesObs/issues/331) | Metric uses deployment-derived calculation | 🔲 Pending |
+| LB-02: ports audit — decide which to close | [#335](https://github.com/paruff/uFawkesObs/issues/335) | Port-closure decision documented (needs maintainer sign-off per AGENTS.md §5) | 🟡 Audited 2026-09-14, awaiting decision |
 | **Add SLO burn alerts + automated rollback on CFR regression** | Expert feedback | Acceptance suite includes CFR-triggered rollback | 🔲 Pending |
 | **Add resource budgeting, HPA, VPA to M5 Helm chart spec** | Expert feedback | Helm chart includes HPA/VPA configs | 🔲 Pending |
 | **Decide River DSL vs OTel YAML and document in ADR** | Expert feedback | Design decision documented, one paradigm chosen | 🔲 Pending |
@@ -70,15 +71,12 @@
 |---|---|---|
 | Prometheus /-/reload returns 200 without applying config | [#334](https://github.com/paruff/uFawkesObs/issues/334) | Silent failure; needs investigation |
 | send-dora-deployment-event.sh drops failed events | [#324](https://github.com/paruff/uFawkesObs/issues/324) | Unpairs rollback recovery |
-| LB-02: ports were only localhost-bound partially | [#335](https://github.com/paruff/uFawkesObs/issues/335) | Needs audit |
 
 ---
 
 ## Blocked Items
 
-| Task | Blocked By | Resolution |
-|---|---|---|
-| LB-04 full drill | Need sandbox host (Synology NAS at 192.168.1.10 available) | Run drill on NAS |
+*No blocked items — Synology NAS (192.168.1.10) confirmed reachable 2026-09-14; LB-04 drill just needs scheduling.*
 
 ---
 
