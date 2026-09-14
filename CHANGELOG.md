@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.17-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.16-alpha.1...v0.3.17-alpha.1) (2026-09-13)
+
+
+### Docs
+
+* integrate expert feedback — M5 migration to Fawkes track ([ce4e4f0](https://github.com/paruff/uFawkesObs/commit/ce4e4f0c6449acd15332da65210733bf9dc9c52e))
+* integrate expert feedback — M5 migration to Fawkes, non-goals updated ([37742b1](https://github.com/paruff/uFawkesObs/commit/37742b16f2ddbf1abf132e01816fadb54dd84926))
+
 ## [0.3.16-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.15-alpha.1...v0.3.16-alpha.1) (2026-09-13)
 
 
