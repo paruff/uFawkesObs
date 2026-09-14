@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.18-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.17-alpha.1...v0.3.18-alpha.1) (2026-09-14)
+
+
+### Fixed
+
+* **ci:** restore bash:deny on opencode.yml, dropped during [#350](https://github.com/paruff/uFawkesObs/issues/350) consolidation ([2cfc8a3](https://github.com/paruff/uFawkesObs/commit/2cfc8a39e74694a00ffd3808acc3f3450ec19b72))
+* **ci:** restore bash:deny on opencode.yml, dropped during [#350](https://github.com/paruff/uFawkesObs/issues/350) consolidation ([b62e99e](https://github.com/paruff/uFawkesObs/commit/b62e99e8b16ef14085ff8863beb18d4b72a0630b))
+
 ## [0.3.17-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.16-alpha.1...v0.3.17-alpha.1) (2026-09-13)
 
 
