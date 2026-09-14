@@ -223,6 +223,12 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
+          # Deny shell execution. The agent still edits files and opens PRs;
+          # this removes arbitrary command execution from the blast radius of
+          # anything that reaches it through an issue or comment body. Lost
+          # when opencode.yaml (which had this) was consolidated into this
+          # file for #350 — see #357 for the fuller OIDC + egress-policy fix.
+          OPENCODE_PERMISSION: '{"bash": "deny"}'
           # Untrusted input: passed via env var, never interpolated into the
           # run: script, so shell metacharacters cannot execute on the runner.
           ISSUE_BODY: ${{ github.event.issue.body }}
