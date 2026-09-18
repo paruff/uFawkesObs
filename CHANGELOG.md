@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.19-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.18-alpha.1...v0.3.19-alpha.1) (2026-09-18)
+
+
+### Chores
+
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-build.yml ([65b6e2a](https://github.com/paruff/uFawkesObs/commit/65b6e2aed4c801511386b18c5abe4dd4ba19a453))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-build.yml from 1.3.0.pre.beta.1 to 1.4.0.pre.beta.1 ([eee648d](https://github.com/paruff/uFawkesObs/commit/eee648dda76bfa06960250610a14198c3da5dd94))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml ([483eda6](https://github.com/paruff/uFawkesObs/commit/483eda6827ef5eb1b0dc399b43b2dfd9fb865560))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml from 1.3.0.pre.beta.1 to 1.4.0.pre.beta.1 ([9b5e96d](https://github.com/paruff/uFawkesObs/commit/9b5e96deb3cee2f09a694d710c10ebcaa0fbd040))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-lint.yml ([4917bfd](https://github.com/paruff/uFawkesObs/commit/4917bfdaf8c8a1b658cf40303b6215b0c1770516))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-lint.yml from 1.3.0.pre.beta.1 to 1.4.0.pre.beta.1 ([4adc0e4](https://github.com/paruff/uFawkesObs/commit/4adc0e4ffe130b547ec3428aab7e5b48e40e3496))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-preflight.yml ([07446a5](https://github.com/paruff/uFawkesObs/commit/07446a5158bf10a66eb665ae04dde2e6df189a50))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-preflight.yml from 1.3.0.pre.beta.1 to 1.4.0.pre.beta.1 ([b181937](https://github.com/paruff/uFawkesObs/commit/b181937a26cbf4bfa9a44426aa7e254afc92fb57))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml ([855b020](https://github.com/paruff/uFawkesObs/commit/855b020f3c420ecc97fbea27ee894264374e6bf2))
+* **deps:** bump paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml from 1.3.0.pre.beta.1 to 1.4.0.pre.beta.1 ([ddd1076](https://github.com/paruff/uFawkesObs/commit/ddd10767a57acb14cb4ffcace2e226e4844595e7))
+
 ## [0.3.18-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.17-alpha.1...v0.3.18-alpha.1) (2026-09-14)
 
 
