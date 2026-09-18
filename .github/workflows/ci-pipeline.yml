@@ -33,7 +33,7 @@ jobs:
   lint:
     name: Static Analysis
     needs: [preflight]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@v1.3.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@v1.4.0-beta.1
 
   # ─── Stage 2: Security Scanning ─────────────────────────────────────────
   # Static security: secrets (Gitleaks), vulnerabilities (Trivy), dependencies
