@@ -14,7 +14,7 @@ FROM python:3.13-slim AS builder
 WORKDIR /build
 
 # Install only the dependencies needed at runtime
-COPY dora/ingestion/requirements-ingestion.lock.txt requirements-ingestion.txt
+COPY dora/ingestion/requirements-ingestion.lock requirements-ingestion.txt
 RUN pip install --no-cache-dir -r requirements-ingestion.txt
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────────
