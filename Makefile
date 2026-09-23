@@ -101,11 +101,11 @@ validate-configs:
 
 ## install-acceptance-deps: install acceptance test Python dependencies
 install-acceptance-deps:
-	pip install -q -r tests/acceptance/requirements.txt
+	pip install -q -r tests/acceptance/requirements.lock.txt
 
 ## install-integration-deps: install integration test Python dependencies
 install-integration-deps:
-	pip install -q -r tests/integration/requirements.txt
+	pip install -q -r tests/integration/requirements.lock.txt
 
 ## test-unit: run unit tests only
 test-unit:

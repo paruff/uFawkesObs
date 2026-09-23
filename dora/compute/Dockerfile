@@ -15,7 +15,7 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
-COPY dora/compute/requirements.txt requirements.txt
+COPY dora/compute/requirements.lock.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────────
