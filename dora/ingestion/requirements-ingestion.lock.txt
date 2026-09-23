@@ -1,0 +1,33 @@
+# Generated lock file — DO NOT hand-edit.
+#
+# Full resolved dependency set for dora/ingestion/requirements-ingestion.txt,
+# pinned exact for reproducible container builds. See
+# tests/unit/requirements.lock.txt (PR #392) for the rationale.
+#
+# Regenerate after changing dora/ingestion/requirements-ingestion.txt:
+#   python3 -m venv /tmp/relock && source /tmp/relock/bin/activate
+#   pip install -q --upgrade pip
+#   pip install -q -r dora/ingestion/requirements-ingestion.txt
+#   pip freeze | grep -viE '^pip==|^setuptools==|^wheel==' | sort > dora/ingestion/requirements-ingestion.lock.txt
+#   deactivate && rm -rf /tmp/relock
+#
+# Generated: 2026-09-23
+aiosqlite==0.22.1
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+attrs==26.1.0
+click==8.5.0
+fastapi==0.141.1
+h11==0.16.0
+idna==3.20
+jsonschema-specifications==2025.9.1
+jsonschema==4.26.0
+pydantic_core==2.46.5
+pydantic==2.13.5
+referencing==0.37.0
+rpds-py==2026.6.3
+starlette==1.7.0
+typing_extensions==4.16.0
+typing-inspection==0.4.4
+uvicorn==0.53.0

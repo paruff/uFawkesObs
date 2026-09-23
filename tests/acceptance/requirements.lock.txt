@@ -1,0 +1,44 @@
+# Generated lock file — DO NOT hand-edit.
+#
+# Full resolved dependency set for tests/acceptance/requirements.txt,
+# pinned exact for CI determinism. See tests/unit/requirements.lock.txt
+# (PR #392) for the rationale.
+#
+# Regenerate after changing tests/acceptance/requirements.txt:
+#   python3 -m venv /tmp/relock && source /tmp/relock/bin/activate
+#   pip install -q --upgrade pip
+#   pip install -q -r tests/acceptance/requirements.txt
+#   pip freeze | grep -viE '^pip==|^setuptools==|^wheel==' | sort > tests/acceptance/requirements.lock.txt
+#   deactivate && rm -rf /tmp/relock
+#
+# Generated: 2026-09-23
+certifi==2026.7.22
+charset-normalizer==3.5.1
+gherkin-official==29.0.0
+googleapis-common-protos==1.75.3
+grpcio==1.84.0
+idna==3.20
+iniconfig==2.3.0
+Mako==1.4.3
+MarkupSafe==3.0.3
+opentelemetry-api==1.44.0
+opentelemetry-exporter-otlp-proto-common==1.44.0
+opentelemetry-exporter-otlp-proto-grpc==1.44.0
+opentelemetry-exporter-otlp-proto-http==1.44.0
+opentelemetry-proto==1.44.0
+opentelemetry-sdk==1.44.0
+opentelemetry-semantic-conventions==0.65b0
+packaging==26.3
+parse_type==0.6.6
+parse==1.22.2
+pluggy==1.6.0
+protobuf==7.36.2
+Pygments==2.21.0
+pytest-bdd==8.1.0
+pytest==9.1.1
+python-dotenv==1.2.3
+PyYAML==6.0.3
+requests==2.34.2
+six==1.17.0
+typing_extensions==4.16.0
+urllib3==2.8.0
