@@ -54,6 +54,13 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      GRAFANA_ADMIN_USER: admin
+      # Ephemeral CI-only stack, torn down at job end — not a real credential,
+      # so a plain value here (not a GitHub secret) is fine. Required since
+      # compose.yaml stopped defaulting this to "admin" (#380/PR #386); this
+      # job never set it at all before, unlike the other CI workflows.
+      GRAFANA_ADMIN_PASSWORD: ci-integration-tests-not-a-real-secret
     steps:
       - uses: actions/checkout@v7
 
