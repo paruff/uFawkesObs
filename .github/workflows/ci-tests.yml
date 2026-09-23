@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r tests/unit/requirements.lock.txt
+          pip install -r tests/unit/requirements.lock
 
       - name: Run unit tests
         run: pytest tests/unit/ -v --tb=short
@@ -76,7 +76,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r tests/integration/requirements.lock.txt
+          pip install -r tests/integration/requirements.lock
 
       - name: Create data directories
         run: |

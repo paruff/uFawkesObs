@@ -49,7 +49,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r tests/acceptance/requirements.lock.txt
+          pip install -r tests/acceptance/requirements.lock
           pip install pytest pytest-bdd requests opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
 
       - name: Create data directories

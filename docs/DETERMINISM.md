@@ -12,7 +12,7 @@
   (enforced by `AGENTS.md` §4).
 - Third-party GitHub Actions are SHA-pinned (`webfactory/ssh-agent@e838...`,
   `dorny/paths-filter@ceb8...`), not floating version tags.
-- `tests/unit/requirements.lock.txt` — exact pins for the highest-traffic
+- `tests/unit/requirements.lock` — exact pins for the highest-traffic
   test path (PR #392, 2026-09-23).
 - DORA compute interval already made consistent between local and CI
   (#359) — was previously racier locally than in CI with identical code.
