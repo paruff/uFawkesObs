@@ -299,6 +299,9 @@ jobs:
       )
     runs-on: ubuntu-latest
     environment: compose-restart
+    permissions:
+      contents: write
+      issues: write
     outputs:
       deployment_mode: ${{ steps.summary.outputs.deployment_mode }}
       services_action: ${{ steps.summary.outputs.services_action }}
@@ -330,6 +333,19 @@ jobs:
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
+
+      - name: Resolve deploy target address (diagnostic for #381)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          # DEPLOY_HOST itself is auto-masked by Actions in any output below.
+          # The resolved IP is not the secret, so it prints in full — comparing
+          # it across runs tells us whether the *target itself* changes (a
+          # different IP each time) vs. the same machine presenting a new SSH
+          # host key each time (unpersisted host keys) — see #381.
+          echo "Resolved address(es) for the deploy target this run:"
+          getent hosts "${DEPLOY_HOST}" || echo "(resolution failed or getent unavailable)"
 
       - name: Start SSH agent
         uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
@@ -437,6 +453,32 @@ jobs:
           echo "deployment_mode=compose-restart" >> "$GITHUB_OUTPUT"
           echo "services_action=Ran make up (check-env + docker compose up -d)" >> "$GITHUB_OUTPUT"
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
+
+      # Nothing previously alerted when this job failed to even connect (#381
+      # — two failed deploys went unnoticed for days). Uses the built-in
+      # GITHUB_TOKEN, no new secret required. Comments on an existing open
+      # tracking issue if one matches by title, otherwise files a new one —
+      # avoids spamming a fresh issue on every repeated failure.
+      - name: Alert on deploy failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TITLE="Deploy (compose restart) failed"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="Automated alert: the \"Deploy (compose restart)\" job failed.
+
+          Run: ${RUN_URL}
+          Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          Check the run log for the exact cause (SSH host-key mismatch, connection failure, \`make up\` failure, etc.). If this is a host-identity mismatch, see #381 before re-pinning \`DEPLOY_HOST_KEY\`."
+          existing="$(gh issue list --repo "${{ github.repository }}" --search "in:title \"${TITLE}\"" --state open --json number --jq '.[0].number // empty')"
+          if [ -n "${existing}" ]; then
+            gh issue comment "${existing}" --repo "${{ github.repository }}" --body "${BODY}"
+          else
+            gh issue create --repo "${{ github.repository }}" --title "${TITLE}" --body "${BODY}" --label bug
+          fi
 
       - name: "job-finish"
         if: always()
