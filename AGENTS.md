@@ -71,6 +71,7 @@ steps another agent calls directly.
 | 5.7      | `docs/PATH_TO_LATE_BETA.md`  | Beta readiness bar and open gaps — do not close as "beta ready" until these clear |
 | 5.8      | `docs/PREPARE_FOR_PUBLIC_RELEASE.md` | Public-release blockers (strangers, no maintainer present) — separate bar from late beta |
 | 5.9      | `docs/DETERMINISM.md`        | Build/CI reproducibility gaps and roadmap (now/should/future) |
+| 5.10     | `docs/TESTING_PYRAMID.md`    | Testcontainers + InSpec plan — catching more per run, not just reproducibility |
 | 6        | `VISION.md`                  | North Star, core principles, explicit non-goals (years horizon)   |
 | 6.1      | `MILESTONES.md`              | Horizons (H1/H2/H3), release gates, epic sequencing (months)     |
 | 6.2      | `EXECUTION_QUEUE.md`         | Prioritized tasks ready for work (weeks)                          |

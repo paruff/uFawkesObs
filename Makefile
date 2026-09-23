@@ -101,18 +101,18 @@ validate-configs:
 
 ## install-acceptance-deps: install acceptance test Python dependencies
 install-acceptance-deps:
-	pip install -q -r tests/acceptance/requirements.lock.txt
+	pip install -q -r tests/acceptance/requirements.lock
 
 ## install-integration-deps: install integration test Python dependencies
 install-integration-deps:
-	pip install -q -r tests/integration/requirements.lock.txt
+	pip install -q -r tests/integration/requirements.lock
 
 ## test-unit: run unit tests only
 test-unit:
-	pip install -q -r tests/unit/requirements.lock.txt
+	pip install -q -r tests/unit/requirements.lock
 	pytest tests/unit/ --cov=dora --cov-report=term-missing --cov-report=html:reports/coverage
 
-## relock: regenerate every requirements.lock.txt from its source
+## relock: regenerate every requirements.lock from its source
 ##   requirements*.txt in a clean venv. Run after editing any source file;
 ##   commit the regenerated lock alongside it. See docs/DETERMINISM.md.
 relock:
@@ -120,15 +120,15 @@ relock:
 	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt; do \
 		out="$${src%.txt}"; \
 		if [ "$$src" = "dora/ingestion/requirements-ingestion.txt" ]; then out="dora/ingestion/requirements-ingestion"; fi; \
-		echo "🔒 Relocking $$src -> $$out.lock.txt"; \
+		echo "🔒 Relocking $$src -> $$out.lock"; \
 		venv=$$(mktemp -d); \
 		python3 -m venv "$$venv"; \
 		"$$venv/bin/pip" install -q --upgrade pip; \
 		"$$venv/bin/pip" install -q -r "$$src"; \
-		"$$venv/bin/pip" freeze | grep -viE '^pip==|^setuptools==|^wheel==' | sort > "$$out.lock.txt.new"; \
-		{ head -n $$(grep -n '^# Generated:' "$$out.lock.txt" | head -1 | cut -d: -f1) "$$out.lock.txt" | sed "s/^# Generated:.*/# Generated: $$(date -u +%Y-%m-%d)/"; cat "$$out.lock.txt.new"; } > "$$out.lock.txt.tmp"; \
-		mv "$$out.lock.txt.tmp" "$$out.lock.txt"; \
-		rm -f "$$out.lock.txt.new"; \
+		"$$venv/bin/pip" freeze | grep -viE '^pip==|^setuptools==|^wheel==' | sort > "$$out.lock.new"; \
+		{ head -n $$(grep -n '^# Generated:' "$$out.lock" | head -1 | cut -d: -f1) "$$out.lock" | sed "s/^# Generated:.*/# Generated: $$(date -u +%Y-%m-%d)/"; cat "$$out.lock.new"; } > "$$out.lock.tmp"; \
+		mv "$$out.lock.tmp" "$$out.lock"; \
+		rm -f "$$out.lock.new"; \
 		rm -rf "$$venv"; \
 	done; \
 	echo "✅ All lock files regenerated — review the diff and commit"
