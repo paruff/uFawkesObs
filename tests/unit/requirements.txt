@@ -1,5 +1,10 @@
 # Unit Testing Requirements
 # Python dependencies for configuration validation tests
+#
+# This file expresses intent (loose ranges). `make test-unit` and CI actually
+# install from requirements.lock.txt (exact pins) for determinism — edit this
+# file, then regenerate the lock per the header comment in
+# requirements.lock.txt.
 
 pytest>=7.4.3
 pytest-asyncio>=1.4.0

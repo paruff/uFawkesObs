@@ -36,6 +36,10 @@ Thumbs.db
 tests/acceptance/observability-pipeline/reports/*
 !tests/acceptance/observability-pipeline/reports/.gitkeep
 
+# Coverage artifacts (make test-unit --cov, #343)
+.coverage
+reports/coverage/
+
 # Python
 __pycache__/
 *.py[cod]
