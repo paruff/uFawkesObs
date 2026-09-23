@@ -69,6 +69,7 @@ steps another agent calls directly.
 | 5.5      | `docs/DEPLOYMENT_STRATEGY.md` | Progressive delivery model — must exist before production traffic  |
 | 5.6      | `docs/PR_STANDARD.md`        | PR title and body format rules                                     |
 | 5.7      | `docs/PATH_TO_LATE_BETA.md`  | Beta readiness bar and open gaps — do not close as "beta ready" until these clear |
+| 5.8      | `docs/PREPARE_FOR_PUBLIC_RELEASE.md` | Public-release blockers (strangers, no maintainer present) — separate bar from late beta |
 | 6        | `VISION.md`                  | North Star, core principles, explicit non-goals (years horizon)   |
 | 6.1      | `MILESTONES.md`              | Horizons (H1/H2/H3), release gates, epic sequencing (months)     |
 | 6.2      | `EXECUTION_QUEUE.md`         | Prioritized tasks ready for work (weeks)                          |
@@ -270,6 +271,7 @@ When making changes, check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact.
 - `docs/CHANGE_IMPACT_MAP.md` — cross-service and cross-plane impact
 - `docs/MODEL_POLICY.md` — model selection, routing, and budget guardrails
 - `docs/DEPLOYMENT_STRATEGY.md` — progressive delivery plan
+- `docs/PREPARE_FOR_PUBLIC_RELEASE.md` — public-release blockers, separate from late-beta readiness
 - `docs/PR_STANDARD.md` — PR title and body format rules
 - `docs/RELEASE_PROCESS.md` — automated release cadence (release-please, issue #264)
 - `paruff/ufawkespipe` reusable workflows — `reusable-main-ci-guard.yml`, `reusable-rollback.yml` (`@v1.2.0`)

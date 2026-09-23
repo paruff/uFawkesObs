@@ -93,6 +93,10 @@ announce readiness via the LB-06 feedback channel.
 
 ## How This Connects
 
+See also [`PREPARE_FOR_PUBLIC_RELEASE.md`](PREPARE_FOR_PUBLIC_RELEASE.md) —
+a separate readiness bar for a stranger cloning the repo with no maintainer
+present, as opposed to a trusted team relying on it for real.
+
 This document is part of the H2 horizon in [`../MILESTONES.md`](../MILESTONES.md). Each LB-## task feeds into the planning cascade:
 
 ```

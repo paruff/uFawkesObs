@@ -8,26 +8,7 @@
 
 uFawkesObs is for small-to-medium engineering teams (3–15 people) running Docker Compose workloads who want production-grade metrics, logs, and traces without a SaaS observability bill.
 
-It is a Docker Compose-based observability platform that provides the OpenTelemetry, Prometheus, Loki, Tempo, Alertmanager, Alloy, and Grafana infrastructure needed to collect, store, and query telemetry in one place.
-
-uFawkesObs provides the observability substrate required for DORA measurement — DORA dashboard integration is on the roadmap.
-
-**Tech Stack:**
-
-- **OpenTelemetry Collector** (v0.120.0) - Telemetry data collection and routing
-- **Prometheus** (v3.5.4) - Metrics storage and querying
-- **Alertmanager** (v0.28.0) - Alert management and routing
-- **Tempo** (v2.10.5) - Distributed tracing backend
-- **Loki** (v3.3.2) - Log aggregation and querying
-- **Alloy** (v1.12.2) - Log and telemetry collection agent
-- **Grafana** (v12.3.7) - Visualization and dashboards
-- **Docker Compose** - Service orchestration
-
-**Primary Use Case:** Provides a self-hosted observability foundation deployable with `make up`. Configure secure Grafana credentials in `.env` first. Startup validation blocks insecure deployments.
-
-**Multi-Stack Support:** Designed to serve as a centralized observability platform for multiple Docker Compose applications. See [Multi-Stack Integration Guide](docs/multi-stack-integration.md) for connecting other applications.
-
----
+It's a Docker Compose stack — OpenTelemetry, Prometheus, Loki, Tempo, Alertmanager, Alloy, and Grafana — that collects, stores, and queries telemetry in one place, deployable with `make up`.
 
 ## What This Is Not
 
@@ -35,6 +16,48 @@ uFawkesObs provides the observability substrate required for DORA measurement �
 - Not a replacement for Grafana Cloud or Datadog for teams with >50 engineers or multi-region deployments.
 - Not horizontally scalable in this release — single-instance only.
 - Not multi-tenant — all telemetry shares one Prometheus, Loki, and Tempo instance.
+
+---
+
+## Quick Start
+
+**Prerequisites:** Docker 20.10+, Docker Compose v2.0+, 4GB free RAM, and the ports listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#ports--access) available.
+
+```bash
+git clone https://github.com/paruff/uFawkesObs.git
+cd uFawkesObs
+
+cp .env.example .env
+$EDITOR .env   # set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD
+
+make init && make up   # make init sets up data/ dirs with correct permissions
+./scripts/wait-healthy.sh
+```
+
+Open Grafana at http://localhost:3000. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#ports--access) for every port,
+credential, and health-check command, and
+[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if something doesn't
+come up cleanly.
+
+To run additional profiles (demo telemetry generator, Discord alerts, DORA
+metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles).
+
+---
+
+## Where to Go Next
+
+| Document                                                           | Description                                                            |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)                       | Services, ports, profiles, config file layout, data flow diagram       |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                 | Port conflicts, permission errors, resetting the stack                 |
+| [docs/production-hardening.md](docs/production-hardening.md)       | Correct permissions, TLS, secret management, when NOT to use this tool |
+| [docs/multi-stack-integration.md](docs/multi-stack-integration.md) | Connecting other Docker Compose applications                           |
+| [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)             | Known issues and workarounds                                           |
+| [docs/CHANGE_IMPACT_MAP.md](docs/CHANGE_IMPACT_MAP.md)             | What breaks when configs change                                        |
+| [tests/README.md](tests/README.md)                                 | Test pyramid, marker taxonomy, and which suite runs when               |
+| [tests/acceptance/README.md](tests/acceptance/README.md)           | How to run the acceptance suite, E2E runner, and unit tests            |
+| [docs/PROMPT_LIBRARY.md](docs/PROMPT_LIBRARY.md)                   | Tested prompt templates for common tasks                               |
 
 ---
 
@@ -49,533 +72,21 @@ uFawkesObs is the **observability plane** in the [Fawkes IDP](https://github.com
 | **uFawkesDevX** | Developer experience — golden paths, IDP templates | [GitHub](https://github.com/paruff/ufawkesdevx) |
 | **uFawkesDojo** | Learning — belt-level curriculum for uFawkes and Fawkes | [GitHub](https://github.com/paruff/uFawkesDojo) |
 
-**Not a suite plane — the template used to build all of the above:**
+Scaffolding template (not a suite plane): **uFawkesAI** — an `AGENTS.md`/agent-instruction template implementing the DORA AI Capabilities Model, used to build every repo above. See [uFawkesAI](https://github.com/paruff/uFawkesAI).
 
-- **uFawkesAI** — an `AGENTS.md`/agent-instruction template (Copilot, Claude Code, Cursor, Codex, etc.) implementing the DORA AI Capabilities Model, not a deployable service. Every repo in the uFawkes/Fawkes family — including this one — is scaffolded from it, which is what "part of the uFawkesAI suite" means in `AGENTS.md` §1: not a runtime dependency, a shared starting template. See [uFawkesAI](https://github.com/paruff/uFawkesAI).
+Retired from the active suite (2026-08-18): **uFawkesRes** (resources plane — see [docs/notes/res-status.md](docs/notes/res-status.md)) and standalone **DORA metrics**/**Security** repos, both merged into uFawkesObs/uFawkesPipe respectively. See `AGENTS.md` §10 for detail.
 
-**Retired from the active uFawkes suite** (2026-08-18 product decision):
-
-- **uFawkesRes** — was the resources plane (ingress, SSO, Postgres, Valkey). The [repo](https://github.com/paruff/uFawkesRes) is still real and active, but this repo's `resource-plane` Compose profile has been removed — DORA's datastore is SQLite only, permanently. Anyone wanting a resource plane should target Fawkes (the Kubernetes track) — see [docs/fawkes-migration.md](docs/fawkes-migration.md). See [docs/notes/res-status.md](docs/notes/res-status.md) for the full rationale.
-- **DORA metrics** — was uFawkesDORA; merged into uFawkesObs's `dora/` directory. [uFawkesDORA](https://github.com/paruff/ufawkesdora) is archived. See `AGENTS.md` §10.
-- **Security — policy-as-code, supply chain, guardrails** — was uFawkesSec; merged into uFawkesPipe's `security` Compose profile (DefectDojo, Infisical, Trivy server, Falco). Per uFawkesPipe's README, this is "formerly the standalone uFawkesSec repo." Note: unlike uFawkesDORA, the [uFawkesSec](https://github.com/paruff/ufawkessec) repo itself has not been archived as of this writing (still receiving dependabot updates) — the merge is confirmed functionally, but the source repo's own lifecycle status is unresolved.
-
-In this architecture, uFawkesObs provides the telemetry substrate consumed by the other **uFawkes (Compose-tier)** planes. The OTLP API (`otel-collector:4317`/`4318`) is how Pipe, DevX and Dojo ship metrics, logs, and traces to uFawkesObs for centralized observability.
-
-**Fawkes is not one of those consumers.** Fawkes is the Kubernetes-track graduation target and runs its own observability stack — kube-prometheus-stack, Tempo, OpenSearch and DevLake — which **replaces uFawkesObs wholesale** rather than consuming it. uFawkesObs is the Compose-tier stepping stone: the stack you run until Kubernetes is worth its operational cost. See [When to Graduate to Fawkes](docs/fawkes-migration.md) for what carries over and what does not.
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- **Docker** 20.10+ installed
-- **Docker Compose** v2.0+ installed
-- At least 4GB of free RAM
-- Ports 3000, 3100, 3200, 4317, 4318, 8888, 8889, 9090, 9093, 9095, 9096, 9411, 12345, 14250, 14268 available
-
-### Installation
-
-1. **Clone and enter:**
-
-   ```bash
-   git clone https://github.com/paruff/uFawkesObs.git
-   cd uFawkesObs
-   ```
-
-2. **Create and configure environment variables:**
-
-   ```bash
-   cp .env.example .env
-   $EDITOR .env
-   ```
-
-   Set both `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` in `.env`.
-
-3. **Create data directories and start the stack:**
-
-   ```bash
-   make init && make up
-   ```
-
-   `make init` creates each `data/` directory with `755` permissions and prints
-   the correct `chown` commands for your OS if a container cannot write to a
-   directory. See [docs/production-hardening.md](docs/production-hardening.md)
-   for details.
-
-4. **Wait for services to become healthy:**
-   ```bash
-   ./scripts/wait-healthy.sh
-   ```
-
----
-
-## Ports
-
-| Service                 | Port  | Purpose                     | Access URL                    |
-| ----------------------- | ----- | --------------------------- | ----------------------------- |
-| **Grafana**             | 3000  | Visualization UI            | http://localhost:3000         |
-| **Loki**                | 3100  | Log aggregation HTTP API    | http://localhost:3100         |
-| **Tempo**               | 3200  | Tempo HTTP API              | http://localhost:3200         |
-| **OpenTelemetry**       | 4317  | OTLP gRPC receiver          | localhost:4317                |
-| **OpenTelemetry**       | 4318  | OTLP HTTP receiver          | localhost:4318                |
-| **OpenTelemetry**       | 8888  | Collector telemetry metrics | http://localhost:8888/metrics |
-| **OpenTelemetry**       | 8889  | App metrics (Prometheus)    | http://localhost:8889/metrics |
-| **Prometheus**          | 9090  | Metrics storage & query UI  | http://localhost:9090         |
-| **Alertmanager**        | 9093  | Alert management UI         | http://localhost:9093         |
-| **Tempo**               | 9095  | Tempo gRPC                  | localhost:9095                |
-| **Loki**                | 9096  | Loki gRPC                   | localhost:9096                |
-| **Tempo**               | 9411  | Zipkin receiver             | http://localhost:9411         |
-| **Alloy**               | 12345 | Alloy HTTP/metrics          | http://localhost:12345        |
-| **Tempo**               | 14250 | Jaeger gRPC receiver        | localhost:14250               |
-| **Tempo**               | 14268 | Jaeger HTTP receiver        | http://localhost:14268        |
-| **Telemetry Generator** | 5001  | Demo app (apps profile)     | http://localhost:5001         |
-
----
-
-## Access & Credentials
-
-### Grafana Dashboard
-
-- **URL:** http://localhost:3000
-- **Username:** `GRAFANA_ADMIN_USER` from `.env` (default in `.env.example`: `admin`)
-- **Password:** `GRAFANA_ADMIN_PASSWORD` from `.env` (validated by `make check-env`)
-
-The Prometheus, Tempo, Loki, and Alertmanager datasources are pre-configured and ready to use.
-
-**New to Grafana?** Explore (compass icon, left sidebar) → pick a datasource → query directly — the fastest way to check if data for a specific service exists before building a dashboard, and the right first stop when a dashboard shows "No data" and you're not sure why.
-
-### Alertmanager
-
-- **URL:** http://localhost:9093
-- Pre-configured with webhook receivers for testing
-- Alert rules automatically loaded from Prometheus
-
----
-
-## Health Checks
-
-Verify that all services are operational:
-
-```bash
-# Check Prometheus
-curl -f http://localhost:9090/-/ready
-
-# Check Tempo
-curl -f http://localhost:3200/ready
-
-# Check Grafana
-curl -f http://localhost:3000/api/health
-
-# Check OpenTelemetry Collector telemetry
-curl -f http://localhost:8888/metrics
-
-# Check OpenTelemetry Collector app metrics endpoint
-curl -f http://localhost:8889/metrics
-
-# Check Loki
-curl -f http://localhost:3100/ready
-
-# Check Alloy
-curl -f http://localhost:12345/-/ready
-
-# Check Alertmanager
-curl -f http://localhost:9093/-/healthy
-
-# View active alerts
-curl -s http://localhost:9093/api/v2/alerts | jq .
-```
-
----
-
-## Profiles
-
-The system uses Docker Compose profiles to control which services run:
-
-| Profile | Services                                                              | Purpose                  |
-| ------- | --------------------------------------------------------------------- | ------------------------ |
-| `core`  | otel-collector, tempo, loki, alloy, alertmanager, prometheus, grafana | Base observability stack |
-| `apps`  | telemetry-generator                                                   | Demo telemetry generator |
-| `notifications` | alertmanager-discord                                          | Slack/Discord notification bridge (needs `DISCORD_WEBHOOK_URL` in `.env`) |
-| `dora` | dora-api, dora-compute, pushgateway, otel-collector-dora | DORA metrics — self-contained, SQLite-only |
-
-**To start with a specific profile:**
-
-```bash
-make up
-
-# To also run the demo telemetry generator:
-make up-apps
-
-# To also run the Discord notification bridge:
-docker compose --profile core --profile notifications up -d
-
-# To also compute DORA metrics (self-contained, no external DB required):
-make up-dora
-```
-
----
-
-## Configuration
-
-All configuration is file-based and located in the `config/` directory:
-
-```
-config/
-├── otel/
-│   └── collector.yaml          # OpenTelemetry Collector config
-├── tempo/
-│   └── tempo.yaml              # Tempo distributed tracing config
-├── loki/
-│   └── loki.yaml               # Loki log aggregation config
-├── alloy/
-│   └── config.river            # Alloy log collection config (River format)
-├── alertmanager/
-│   └── alertmanager.yml        # Alertmanager routing config
-├── prometheus/
-│   └── prometheus.yaml         # Prometheus scrape config
-└── grafana/
-    └── provisioning/
-        └── datasources/
-            └── datasources.yaml # Pre-configured datasources
-```
-
-All runtime data is stored in `./data/` and is excluded from version control.
-
----
-
-## Stopping the Stack
-
-```bash
-# Stop all services
-docker compose down
-
-# Stop and remove volumes (clean slate)
-docker compose down -v
-```
-
----
-
-## Architecture
-
-```
-┌─────────────────┐
-│  Applications   │
-│  (Send OTLP)    │
-└────────┬────────┘
-         │ :4317/:4318
-         ▼
-┌─────────────────────┐
-│ OpenTelemetry       │
-│ Collector           │──────┬──────┬──────┐
-└──────────┬──────────┘      │      │      │
-           │                 │      │      │
-           │ metrics         │      │      │ logs
-           ▼                 │      │      ▼
-   ┌──────────────┐          │      │  ┌──────────────┐
-   │  Prometheus  │          │      │  │     Loki     │◄─────┐
-   │   :9090      │◄────────►│      │  │    :3100     │      │
-   └──────┬───────┘  alerts  │      │  └──────┬───────┘      │
-          │                  │      │         │               │
-          │ datasource       │traces│         │ datasource    │
-          ▼                  ▼      ▼         ▼               │
-     ┌──────────────────────────────────┐                     │
-     │          Grafana                 │                     │
-     │           :3000                  │                     │
-     └──────────────────────────────────┘                     │
-                                                              │
-┌─────────────────┐                                           │
-│ Docker Engine   │                                           │
-│ Container Logs  │────────────────────────────────────────┐  │
-└─────────────────┘                                        │  │
-                                                           ▼  │
-                                                    ┌──────────────┐
-                                                    │    Alloy     │
-                                                    │   :12345     │
-                                                    └──────────────┘
-```
-
----
-
-## Documentation
-
-| Document                                                           | Description                                                            |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)                       | How services connect and depend on each other                          |
-| [docs/production-hardening.md](docs/production-hardening.md)       | Correct permissions, TLS, secret management, when NOT to use this tool |
-| [docs/multi-stack-integration.md](docs/multi-stack-integration.md) | Connecting other Docker Compose applications                           |
-| [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)             | Known issues and workarounds                                           |
-| [docs/CHANGE_IMPACT_MAP.md](docs/CHANGE_IMPACT_MAP.md)             | What breaks when configs change                                        |
-| [docs/PROMPT_LIBRARY.md](docs/PROMPT_LIBRARY.md)                   | Tested prompt templates for common tasks                               |
-
----
-
----
-
-## Troubleshooting
-
-### Ports Already in Use
-
-If you see port binding errors:
-
-```bash
-# Check what's using the ports
-lsof -i :3000
-lsof -i :9090
-
-# Either stop the conflicting service or modify compose.yaml port mappings
-```
-
-### Permission Denied on Data Directories
-
-Run `make init` first — it creates each directory with `755` permissions and
-prints the correct `chown` commands for your OS:
-
-```bash
-make init
-```
-
-If a container still cannot write (common on Linux when the host UID differs
-from the container UID), apply the `chown` commands printed by `make init`, for
-example:
-
-```bash
-sudo chown -R 472 data/grafana          # Grafana UID
-sudo chown -R 65534 data/prometheus data/alertmanager  # nobody UID
-sudo chown -R 10001 data/loki data/tempo               # Loki/Tempo UID
-```
-
-> **⚠️ Last resort — security warning:** `chmod -R 777 data/` makes every data
-> directory world-writable. This exposes Prometheus TSDB, Grafana SQLite,
-> datasource credentials, and trace data to any process on the host. Only use
-> this on a single-user localhost machine and never in any shared or networked
-> environment. See [docs/production-hardening.md](docs/production-hardening.md)
-> for secure alternatives.
-
-### Containers Won't Start
-
-```bash
-# Check logs
-docker compose logs
-
-# Check specific service
-docker compose logs grafana
-```
-
-### Reset Everything
-
-```bash
-# Stop and remove everything
-docker compose down -v
-
-# Clean data directories
-rm -rf data/prometheus/* data/grafana/* data/tempo/* data/loki/* data/alertmanager/* data/alloy/*
-
-# Recreate with correct permissions
-make init
-
-# Start fresh
-make up
-```
-
-> **⚠️ Last resort only:** If `make init` is insufficient due to a UID mismatch,
-> you may temporarily use `chmod -R 777 data/` on a single-user localhost machine.
-> This is a security risk — see [docs/production-hardening.md](docs/production-hardening.md).
-
----
-
-## Testing
-
-### Unit Tests for Configuration Validation
-
-The repository includes comprehensive unit tests that validate configuration files for all observability components. These tests catch configuration errors early in the development cycle, before deployment.
-
-**Validated components:**
-
-- OpenTelemetry Collector
-- Prometheus
-- Grafana
-- Tempo
-- Loki
-
-**Running unit tests:**
-
-```bash
-# Install dependencies
-pip install -r tests/unit/requirements.txt
-
-# Run all unit tests
-pytest tests/unit/
-
-# Run tests for a specific component
-pytest tests/unit/test_otel_config_validation.py
-pytest tests/unit/test_prometheus_config_validation.py
-pytest tests/unit/test_grafana_config_validation.py
-pytest tests/unit/test_tempo_config_validation.py
-pytest tests/unit/test_loki_config_validation.py
-```
-
-**What is validated:**
-
-- Valid YAML syntax
-- Required sections and fields
-- Port numbers in valid range
-- URL formats
-- Time duration formats
-- Component references
-- Pipeline configurations
-- Common misconfigurations
-
-**Test coverage:** 239 tests covering all configuration aspects
-
-For detailed documentation, see [tests/unit/README.md](tests/unit/README.md)
-
----
-
-## Observability Acceptance Test
-
-### Purpose
-
-This automated test validates that the complete observability pipeline is functioning correctly:
-
-1. **OpenTelemetry Collector** → Exports self-telemetry metrics
-2. **Prometheus** → Scrapes and stores OTel Collector metrics
-3. **Grafana** → Queries and visualizes metrics
-
-### Quick Start
-
-The primary acceptance suite is pytest-bdd (15 feature files, 94 scenarios) and
-is what CI runs:
-
-```bash
-make up                      # stack must be running first
-make test-acceptance-smoke   # fast, pre-merge
-make test-acceptance-full    # comprehensive, post-merge (SLOs and contracts)
-```
-
-The script below is a narrower, complementary check (OBS-ACCEPTANCE-001): it
-walks the OTel → Prometheus → Grafana chain using plain `curl`, with no Python
-client library in the path, so it catches breakage the suite's clients would
-mask. It also runs in CI as part of Acceptance Smoke.
-
-```bash
-# Ensure services are running
-make up
-sleep 30
-
-# Run the OTel pipeline check
-./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
-```
-
-### Expected Output
-
-```
-✅ OTel Collector healthy (0s)
-✅ Prometheus scraping OTel metrics (1s, 1 metrics)
-✅ Grafana datasource configured (0s)
-✅ SUCCESS: OTel metrics visible in Grafana
-  Data points: 15
-  Sample value: 123.456
-========================================
-✅ ACCEPTANCE TEST PASSED
-========================================
-```
-
-### Manual Verification
-
-If you prefer to verify manually:
-
-1. **Open Grafana**: http://localhost:3000 (credentials from `.env`)
-2. **Navigate to**: Explore → Prometheus datasource
-3. **Run Query**: `otelcol_process_uptime`
-4. **Expected**: Graph showing uptime increasing over time
-
-### Using the E2E Runner
-
-The E2E runner provides additional control over test execution:
-
-```bash
-# Run with automatic service detection
-./tests/acceptance/e2e-runner.sh
-
-# Force start services before testing
-./tests/acceptance/e2e-runner.sh --start-services
-
-# Run test and clean up after
-./tests/acceptance/e2e-runner.sh --cleanup
-
-# Quick health check only
-./tests/acceptance/e2e-runner.sh --scenario quick-check
-```
-
-### Test Results
-
-Test results are saved in `tests/acceptance/observability-pipeline/reports/` with timestamped directories containing:
-
-- `summary.md` - Human-readable test report
-- `report.json` - Machine-readable results for CI/CD
-- `e2e-test-evidence.md` - Detailed test evidence
-- `grafana-query-response.json` - Raw Grafana API response
-- `test-execution.log` - Complete execution log
-
-### Troubleshooting
-
-If tests fail, check:
-
-1. **Services Running**: `docker compose ps`
-2. **OTel Metrics**: `curl http://localhost:8888/metrics | grep otelcol`
-3. **Prometheus Target**: http://localhost:9090/targets
-4. **Grafana Health**: `curl http://localhost:3000/api/health`
-
-### Integration with CI/CD
-
-> **Note:** Add a repository secret named `GRAFANA_ADMIN_PASSWORD` in **GitHub → Settings → Secrets and variables → Actions** before running this workflow. Use a secure non-default value (not `admin`, `changeme`, or `REPLACE_ME_set_a_real_password_here`).
-
-```yaml
-# GitHub Actions example
-jobs:
-  observability-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run acceptance test
-        env:
-          GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
-        run: |
-          mkdir -p data/prometheus data/grafana
-          chmod -R 777 data/
-          make up
-          sleep 30
-          ./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: acceptance-test-report
-          path: tests/acceptance/observability-pipeline/reports/**/summary.md
-```
-
----
-
-## Next Steps
-
-- **DORA data integration:** wire deployment and commit event sources from uFawkesPipe so DORA metrics can be computed from reliable data.
-- **Production hardening:** add stronger authentication/TLS posture, storage backends, and operational safeguards for longer-lived deployments.
-- **Kubernetes deployment option:** provide a Helm + ArgoCD track for pull-based reconciliation and multi-node operations.
+**Fawkes is not a consumer of this repo.** It runs its own Kubernetes-native observability stack and **replaces uFawkesObs wholesale** when a team graduates — see [When to Graduate to Fawkes](docs/fawkes-migration.md) for what carries over.
 
 ---
 
 ## Development Philosophy
 
-This project follows these principles:
-
-- ✅ **GitOps at the configuration layer:** all desired state is in version control and applied declaratively. In this release, deployment reconciliation is push-triggered (via `make up` or CI). Pull-based reconciliation (continuous sync from git to runtime state) requires the Helm + ArgoCD track.
-- ✅ **Reproducible:** Can be rebuilt from zero with `git clone` + `make up`
-- ✅ **No manual steps:** Zero UI clicks or CLI wizardry required
-- ✅ **Declarative:** All configuration is explicit and file-based
-- ✅ **Boring technology:** Reliable, well-documented, production-ready tools
-
----
+- ✅ **GitOps at the configuration layer** — desired state lives in version control; deployment is currently push-triggered (`make up` or CI). Pull-based reconciliation needs the future Helm + ArgoCD track.
+- ✅ **Reproducible** — rebuildable from zero with `git clone` + `make up`
+- ✅ **No manual steps** — zero UI clicks or CLI wizardry required
+- ✅ **Declarative** — all configuration is explicit and file-based
+- ✅ **Boring technology** — reliable, well-documented, production-ready tools
 
 ## License
 
@@ -584,8 +95,8 @@ This project follows these principles:
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report bugs, suggest
-features, and submit pull requests (branch naming, test requirements, and
-PR description format).
+features, and submit pull requests. For paid help beyond free community
+support, see [SUPPORT.md](SUPPORT.md#work-with-me).
 
 ## Beta Feedback
 
@@ -594,9 +105,3 @@ users first — especially if you starred/forked this repo but never
 actually ran it, or you tried it and got stuck. Tell us what happened in
 [**Beta Feedback discussion**](https://github.com/paruff/uFawkesObs/discussions/242)
 — a sentence is enough.
-
-## uFawkes Stack Ecosystem
-
-See [Part of the Fawkes IDP](#part-of-the-fawkes-idp) above for the current suite family table — this section used to duplicate it with stale entries (uFawkesDORA, uFawkesSec still shown active, no uFawkesDojo) and has been removed rather than kept in sync in two places.
-
-**Product Suite Roadmap**: [fawkes/ROADMAP.md](https://github.com/paruff/fawkes/blob/main/ROADMAP.md)
