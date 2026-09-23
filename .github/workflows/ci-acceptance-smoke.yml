@@ -25,7 +25,12 @@ jobs:
     timeout-minutes: 10
     env:
       GRAFANA_ADMIN_USER: admin
-      # GRAFANA_ADMIN_PASSWORD will be populated from GitHub Secrets
+      # Ephemeral CI-only stack, torn down at job end — not a real credential,
+      # so a plain value here (not a GitHub secret) is fine. Required since
+      # compose.yaml stopped defaulting this to "admin" (#380/PR #386);
+      # previously this comment claimed secrets would populate it but nothing
+      # ever wired that up, silently masked by the old default until now.
+      GRAFANA_ADMIN_PASSWORD: ci-acceptance-smoke-not-a-real-secret
       # Compose's `secrets: slack_webhook_url: environment:` source requires
       # this var to exist (even empty) or `docker compose up` refuses to
       # start ANY service under core, not just alertmanager. Empty is fine —
