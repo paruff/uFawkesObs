@@ -149,6 +149,52 @@ jobs:
             pytest-report.xml
           if-no-files-found: ignore
 
+  # ─── Conformance Tests (InSpec) ──────────────────────────────────────────
+  # AGENTS.md §4: checks the actually-running containers against declared
+  # compose.yaml (healthcheck status, image digest, port bindings, no
+  # anonymous volumes) via inspec/ufawkesobs-conformance (#414). Not yet a
+  # required branch-protection check (#415) -- runs and reports on every PR
+  # so its false-positive rate can be observed before gating merges on it.
+  conformance-tests:
+    name: Conformance Tests (InSpec)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GRAFANA_ADMIN_USER: admin
+      GRAFANA_ADMIN_PASSWORD: admin
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create data directories
+        run: |
+          mkdir -p data/prometheus data/grafana data/tempo data/loki data/alertmanager data/alloy
+          chmod -R 777 data/
+
+      - name: Start observability stack
+        run: docker compose --profile core up -d --build
+
+      - name: Wait for services
+        run: |
+          timeout 90 bash -c 'until curl -sf http://localhost:9090/-/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3200/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3100/ready; do sleep 2; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:8888/metrics; do sleep 2; done'
+          sleep 20
+
+      - name: Run InSpec conformance profile
+        run: make test-conformance
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=50 prometheus grafana otel-collector tempo loki alloy
+
+      - name: Shutdown
+        if: always()
+        run: docker compose --profile core down -v
+
   # ─── Golden Path App ─────────────────────────────────────────────────────
   apps-test:
     name: Golden Path App
