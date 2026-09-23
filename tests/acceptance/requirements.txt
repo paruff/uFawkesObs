@@ -5,7 +5,7 @@ pytest>=8.0
 pytest-bdd>=7.0
 requests>=2.31.0
 python-dotenv>=1.0.0
-PyYAML>=6.0
+PyYAML>=6.0.3
 
 # OpenTelemetry SDK for sending test telemetry
 opentelemetry-api>=1.22.0
