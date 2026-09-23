@@ -14,7 +14,7 @@
 # Generated: 2026-09-23
 certifi==2026.7.22
 charset-normalizer==3.5.1
-gherkin-official==29.0.0
+gherkin-official==42.0.1
 googleapis-common-protos==1.75.3
 grpcio==1.84.0
 idna==3.20
