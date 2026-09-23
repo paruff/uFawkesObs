@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.21-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.20-alpha.1...v0.3.21-alpha.1) (2026-09-23)
+
+
+### Fixed
+
+* **compose:** restrict internal/scrape-only ports to localhost ([#335](https://github.com/paruff/uFawkesObs/issues/335)) ([f8c9f2e](https://github.com/paruff/uFawkesObs/commit/f8c9f2eac73b9349f2049fdd8e4e093861731c74))
+* **compose:** restrict internal/scrape-only ports to localhost ([#335](https://github.com/paruff/uFawkesObs/issues/335)) ([1637652](https://github.com/paruff/uFawkesObs/commit/1637652e6092d96039a7bb95fe5f137dc1fce694))
+* **deploy:** alert on failure, log target IP for [#381](https://github.com/paruff/uFawkesObs/issues/381) diagnosis ([63aa964](https://github.com/paruff/uFawkesObs/commit/63aa9649e4e4d1e455cc1ad5cd369cceed80279b))
+* **deploy:** alert on failure, log target IP for [#381](https://github.com/paruff/uFawkesObs/issues/381) diagnosis ([462f086](https://github.com/paruff/uFawkesObs/commit/462f0865e426a3e4ddd49bc1e326cc6b6becf039))
+
+
+### Docs
+
+* update blocker status in public-release tracker ([0c03396](https://github.com/paruff/uFawkesObs/commit/0c033968d9b8338a835fcb46b4f59b2a91b11647))
+* update blocker status, PR-01/PR-03 fixed, PR-02 finding worse ([e03d0b4](https://github.com/paruff/uFawkesObs/commit/e03d0b4445257f51e6c1616047b2e59b33c9a1d4))
+
 ## [0.3.20-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.19-alpha.1...v0.3.20-alpha.1) (2026-09-23)
 
 
