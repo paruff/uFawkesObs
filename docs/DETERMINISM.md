@@ -85,6 +85,43 @@
    recurring source of red CI rather than a one-off. A pinned runner image
    tag (Now #3, above) is the lighter-weight fix to try first.
 
+## Test Suite Determinism (audit, 2026-09-23)
+
+Findings from auditing `tests/` itself, separate from the build/CI
+determinism above — coverage was 75% on `dora/` at audit time (`make
+test-unit`; see `tests/README.md` for the pyramid, `tests/acceptance/README.md`
+for how to run each tier).
+
+**Now-tier finding, already filed:**
+
+- `find_repo_root()` in `tests/unit/test_dora_event_schemas.py` hardcodes
+  the checkout directory name (`#383`) — fails from any clone/worktree not
+  literally named `uFawkesObs`. Confirmed live: reproduced by running the
+  suite from a differently-named worktree.
+
+**Should:**
+
+1. **No coverage threshold enforced.** 75% is measured (#343/PR #382) but
+   nothing fails CI if it drops — a future PR could silently regress
+   coverage with no signal. Add a `--cov-fail-under=<threshold>` to `make
+   test-unit` / `ci-tests.yml`'s Unit Tests job once a sensible floor is
+   picked (75% itself, or slightly below to leave room, given `main.py`'s
+   0% is a legitimate gap covered at a different test tier, not a bug to
+   chase in unit tests specifically).
+
+**Future (lower priority, no live bug found):**
+
+1. **Coverage scope is narrow** — only `dora/` is instrumented. `scripts/`,
+   `apps/telemetry-generator/`, and the acceptance step-definitions have no
+   coverage visibility. Plausibly correct as-is (much of that surface is
+   bash/config, not amenable to `--cov`), but worth naming as a known blind
+   spot rather than an assumed non-issue.
+2. **No test-order randomization** (e.g. `pytest-randomly`). Pytest here
+   runs in file-discovery order by default. No evidence of an order-
+   dependent test today, so this isn't chasing a real bug — it's an absent
+   safety net that would otherwise catch a future test that only passes
+   because an earlier one mutated shared state.
+
 ## Why This Matters Here Specifically
 
 Two real incidents this session motivated this audit, not a hypothetical:
