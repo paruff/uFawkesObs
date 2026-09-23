@@ -109,8 +109,8 @@ install-integration-deps:
 
 ## test-unit: run unit tests only
 test-unit:
-	pip install -q -r tests/unit/requirements.txt
-	pytest tests/unit/
+	pip install -q -r tests/unit/requirements.lock.txt
+	pytest tests/unit/ --cov=dora --cov-report=term-missing --cov-report=html:reports/coverage
 
 ## test-integration: run real component integration tests (Prometheus
 ##   scraping, OTel Collector, Grafana, Tempo, Loki, dashboards) against a

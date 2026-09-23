@@ -67,6 +67,16 @@ troubleshooting section. The next person with the same issue will thank you.
 
 ---
 
+## Work with me
+
+Free community support (above) covers bugs, features, and general questions.
+If you want hands-on help beyond that — a custom deployment, integrating
+uFawkesObs into an existing stack, or paid consulting — start a thread in
+the [Work With Me](https://github.com/paruff/uFawkesObs/discussions/categories/work-with-me)
+Discussions category. This is separate from Issues/Discussions support
+above: it's for engagements a maintainer would take on as paid work, not
+something the community is expected to answer for free.
+
 ## Security issues
 
 Do not report security vulnerabilities in Discussions or Issues.

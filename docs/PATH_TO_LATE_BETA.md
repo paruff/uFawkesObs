@@ -51,47 +51,38 @@ Concretely, late beta requires:
 
 ## Exit Criteria
 
-| ID | Task | Issue | Status |
-|----|------|-------|--------|
-| LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) | ✅ DONE (93s, PASS) |
-| LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) | ✅ DONE — `compose.yaml` binds Loki (3100), Tempo (3200), Prometheus (9090), and Alertmanager (9093) to `127.0.0.1:` |
-| LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) | ✅ DONE — verified live against a real Slack workspace 2026-08-31; fixed a real bug in the process (Alertmanager doesn't expand `${VAR}` in its own config — recipe now uses `api_url_file` + a Compose secret) |
-| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🟡 IN PROGRESS — secrets are set (`DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_KEY`/`DEPLOY_HOST_KEY`), but `DEPLOY_PATH` currently points at a maintainer workstation rather than the sandbox host the runbook requires (per `docs/ROLLBACK_DRILL.md` Precondition 0). The drill mechanism is proven locally (2026-09-02); SSH transport, environment approval and automatic triggering remain untested. |
-| LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) | ✅ DONE — root cause was a dead `push` trigger (deploy secrets unavailable in that context, 100% failure rate); removed in PR #196. 55/55 `workflow_run`-triggered deploys since have succeeded. |
-| LB-06 | Add a beta feedback channel | [#184](https://github.com/paruff/uFawkesObs/issues/184) | ✅ DONE — [discussion #242](https://github.com/paruff/uFawkesObs/discussions/242) posted, linked from README (PR #243, merged) |
-| LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185) | 🟡 IN PROGRESS (plan.md reconciled 2026-08-12; superseded issues #51–#54, #80–#83 closed) |
+> **Live status lives in [`EXECUTION_QUEUE.md`](../EXECUTION_QUEUE.md) now**,
+> not here — this table used to carry its own status and drifted from the
+> queue (e.g. LB-04 was marked "just needs scheduling" here after the queue
+> had already found the harder blocker). This table defines *what each gate
+> requires*; go to the queue for *is it done*.
+
+| ID | Task | Issue |
+|----|------|-------|
+| LB-01 | Measure `time_to_first_signal_minutes` onboarding baseline | [#179](https://github.com/paruff/uFawkesObs/issues/179) |
+| LB-02 | Restrict Loki/Tempo/Prometheus/Alertmanager ports to localhost by default | [#180](https://github.com/paruff/uFawkesObs/issues/180) (follow-up: [#335](https://github.com/paruff/uFawkesObs/issues/335)) |
+| LB-03 | Add a tested Slack notification channel for Alertmanager | [#181](https://github.com/paruff/uFawkesObs/issues/181) |
+| LB-04 | Run and document a live rollback drill | [#182](https://github.com/paruff/uFawkesObs/issues/182) — see `docs/ROLLBACK_DRILL.md` for the procedure |
+| LB-05 | Investigate GitOps Reconciliation Deploy transient failure | [#183](https://github.com/paruff/uFawkesObs/issues/183) |
+| LB-06 | Add a beta feedback channel | [#184](https://github.com/paruff/uFawkesObs/issues/184) |
+| LB-07 | Reconcile `docs/plan.md` status drift against real issue state | [#185](https://github.com/paruff/uFawkesObs/issues/185), ongoing via [#348](https://github.com/paruff/uFawkesObs/issues/348) |
 
 All issues are labeled `late-beta` for tracking:
 <https://github.com/paruff/uFawkesObs/issues?q=is%3Aissue+is%3Aopen+label%3Alate-beta>
 
-> LB-04: the executable drill is in `docs/ROLLBACK_DRILL.md` and linked from
-> `docs/DEPLOYMENT_STRATEGY.md`. The status in the table above reflects the
-> real current state (secrets provisioned but DEPLOY_PATH points at a
-> maintainer workstation). See ROLLBACK_DRILL.md for precondition details.
-> A suspected rollback-push gap (reusable-rollback `GITHUB_TOKEN`
-> permissions / missing checkout) is tracked as a follow-up issue — the
-> drill will confirm or refute it once a host exists.
-
-## Already Done (not re-tracked here)
-
-- `scripts/check-env.sh` already fail-fasts on default/weak
-  `GRAFANA_ADMIN_PASSWORD` — the "default credentials" gap in
-  `docs/KNOWN_LIMITATIONS.md` is enforced, not just documented.
-- PR #178 (merged) fixed Platform/Services dashboard variable plumbing that
-  referenced nonexistent `cluster`/`namespace`/`environment` labels.
-- LB-04: the executable drill is in `docs/ROLLBACK_DRILL.md` and linked from
-  `docs/DEPLOYMENT_STRATEGY.md`. The status in the table above reflects the
-  real current state (secrets provisioned but DEPLOY_PATH points at a
-  maintainer workstation). See ROLLBACK_DRILL.md for precondition details.
-
 ## Definition of Done
 
-Late beta is reached when all seven issues above are closed and
-`docs/KNOWN_LIMITATIONS.md` / `docs/DEPLOYMENT_STRATEGY.md` are updated to
-reflect the new defaults. At that point, update this doc's status header and
-announce readiness via the LB-06 feedback channel.
+Late beta is reached when all seven issues above are closed (see
+`EXECUTION_QUEUE.md` for current status) and `docs/KNOWN_LIMITATIONS.md` /
+`docs/DEPLOYMENT_STRATEGY.md` are updated to reflect the new defaults. At
+that point, update this doc's status header and announce readiness via the
+LB-06 feedback channel.
 
 ## How This Connects
+
+See also [`PREPARE_FOR_PUBLIC_RELEASE.md`](PREPARE_FOR_PUBLIC_RELEASE.md) —
+a separate readiness bar for a stranger cloning the repo with no maintainer
+present, as opposed to a trusted team relying on it for real.
 
 This document is part of the H2 horizon in [`../MILESTONES.md`](../MILESTONES.md). Each LB-## task feeds into the planning cascade:
 

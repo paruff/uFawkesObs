@@ -15,10 +15,10 @@ services:
     volumes:
       - ./config/otel/collector.yaml:/etc/otel/collector.yaml:ro
     ports:
-      - "4317:4317" # OTLP gRPC
-      - "4318:4318" # OTLP HTTP
-      - "8888:8888" # Collector's own telemetry metrics
-      - "8889:8889" # Prometheus exporter for app metrics
+      - "4317:4317" # OTLP gRPC — public: ingest endpoint for other uFawkes planes
+      - "4318:4318" # OTLP HTTP — public: ingest endpoint for other uFawkes planes
+      - "127.0.0.1:8888:8888" # Collector's own telemetry metrics — scraped internally by Prometheus, no host publication needed (#335)
+      - "127.0.0.1:8889:8889" # Prometheus exporter for app metrics — scraped internally by Prometheus, no host publication needed (#335)
     environment:
       - TZ=UTC
     depends_on:
@@ -71,10 +71,10 @@ services:
       - ./data/tempo:/var/tempo
     ports:
       - "127.0.0.1:3200:3200" # Tempo HTTP (localhost-only by default)
-      - "9095:9095" # Tempo gRPC
-      - "14250:14250" # Jaeger gRPC
-      - "14268:14268" # Jaeger HTTP
-      - "9411:9411" # Zipkin
+      - "127.0.0.1:9095:9095" # Tempo gRPC — internal (#335)
+      - "127.0.0.1:14250:14250" # Jaeger gRPC receiver — only needed if something external sends Jaeger format (#335)
+      - "127.0.0.1:14268:14268" # Jaeger HTTP receiver — only needed if something external sends Jaeger format (#335)
+      - "127.0.0.1:9411:9411" # Zipkin receiver — only needed if something external sends Zipkin format (#335)
     environment:
       - TZ=UTC
     deploy:
@@ -112,7 +112,7 @@ services:
       - ./data/loki:/loki
     ports:
       - "127.0.0.1:3100:3100" # Loki HTTP (localhost-only by default)
-      - "9096:9096" # Loki gRPC
+      - "127.0.0.1:9096:9096" # Loki gRPC — internal (#335)
     environment:
       - TZ=UTC
     deploy:
@@ -165,7 +165,7 @@ services:
       - ./config/alloy/config.river:/etc/alloy/config.river:ro
       - ./data/alloy:/var/lib/alloy
     ports:
-      - "12345:12345" # Alloy HTTP/metrics
+      - "127.0.0.1:12345:12345" # Alloy HTTP/metrics — unauthenticated UI, no host publication needed (#335)
     environment:
       - TZ=UTC
     depends_on:
@@ -511,7 +511,7 @@ services:
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100" # Host-level metrics — scraped internally by Prometheus, no host publication needed (#335)
     deploy:
       resources:
         limits:
