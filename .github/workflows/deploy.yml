@@ -257,6 +257,26 @@ jobs:
             exit 1
           }
 
+          # #334: /-/reload can return 200 and log success without the new
+          # config actually taking effect (observed on macOS Docker Desktop
+          # bind mounts; root cause on the Linux deploy target unconfirmed).
+          # A config-only deploy could silently no-op and still go green.
+          # Verify every scrape job in the local file actually shows up in
+          # what Prometheus reports loaded, and fail loudly if not — jq-free
+          # since this runs on the deploy target, not the GH runner.
+          local_jobs="$(grep -oE 'job_name:[[:space:]]*.*' config/prometheus/prometheus.yaml | sed -E 's/job_name:[[:space:]]*//' | tr -d "\"' " | sort -u)"
+          live_config="$(curl --fail --show-error --silent --connect-timeout 5 --max-time 10 http://localhost:9090/api/v1/status/config)"
+          missing=""
+          while IFS= read -r job; do
+            [ -z "${job}" ] && continue
+            echo "${live_config}" | grep -q "job_name.*${job}" || missing="${missing} ${job}"
+          done <<< "${local_jobs}"
+          if [ -n "${missing}" ]; then
+            echo "::error::Prometheus reload returned success but /-/status/config is missing job(s):${missing} - reload did not actually apply (#334). Falling back to a full restart."
+            docker compose up -d --force-recreate prometheus
+            ./scripts/wait-healthy.sh || exit 1
+          fi
+
           docker compose kill --signal HUP alloy || {
             echo "Failed to send SIGHUP to Alloy"
             exit 1

@@ -230,7 +230,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of AI output requiring rework. DORA 2025 thresholds: Elite < 5%, High < 10%, Medium < 20%, Low >= 20% (stop features).",
+      "description": "Percentage of deployments that are unplanned bug-fix work outside the release train (DORA Software Delivery Instability metric, not AI-derived). Thresholds: Elite < 5%, High < 10%, Medium < 20%, Low >= 20% (stop features). See #331 for why this appears here despite not being AI-specific.",
       "fieldConfig": {
         "defaults": {
           "color": {
