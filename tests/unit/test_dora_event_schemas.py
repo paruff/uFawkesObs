@@ -37,11 +37,19 @@ _format_checker.checks("date-time")(_check_date_time)
 
 
 def find_repo_root() -> Path:
-    """Walk up from this file's directory to find the repo root."""
+    """Walk up from this file's directory to find the repo root.
+
+    Looks for marker files unique to this repo (compose.yaml + AGENTS.md
+    both present) rather than matching the directory's own name — a clone,
+    fork, or `git worktree add` checked out under any other name broke the
+    old name-matching check (#383).
+    """
     current = Path(__file__).resolve().parent
-    while current.name != "uFawkesObs" and current.parent != current:
+    while not (
+        (current / "compose.yaml").is_file() and (current / "AGENTS.md").is_file()
+    ):
+        assert current.parent != current, f"Could not find repo root from {__file__}"
         current = current.parent
-    assert current.name == "uFawkesObs", f"Could not find repo root from {__file__}"
     return current
 
 
