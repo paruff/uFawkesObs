@@ -41,7 +41,7 @@ uFawkesObs is the observability plane of the Fawkes IDP platform. It provides th
 2. **Lead Time for Changes** — Time from commit to production
 3. **Change Failure Rate** — Percentage of deployments causing failures
 4. **Failed Deployment Recovery Time (FDRT)** — Time to recover from a failed deployment
-5. **Rework Rate** — Fraction of AI-generated code requiring rework (DORA 2026)
+5. **Rework Rate** — Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (DORA 2024, a Software Delivery Instability metric grouped with Change Failure Rate — not an AI-capabilities metric; see [#331](https://github.com/paruff/uFawkesObs/issues/331))
 
 uFawkesObs does not compute these metrics directly; it provides the raw telemetry (metrics, logs, traces) and derived recording rules that uFawkesDORA's ingestion API consumes. This ADR defines the data contract: what counts as a deployment, incident, and restoration within uFawkesObs telemetry, and the metric mappings uFawkesDORA expects.
 
@@ -123,7 +123,7 @@ uFawkesObs provides the following Prometheus recording rules that uFawkesDORA co
 | `dora:lead_time_hours:p50_30d` | Gauge | Median lead time (commit → production) over 30d | Deployment spans + commit timestamps |
 | `dora:change_failure_rate:ratio30d` | Gauge | Failed deployments / total deployments (30d) | Deployment spans + incidents |
 | `dora:fdrt_hours:p50_30d` | Gauge | Median failed deployment recovery time (hours) over 30d | Incident open/close times |
-| `dora:rework_rate:ratio` | Gauge | Fraction of AI output requiring rework (30d) | AI SDK suggestion telemetry |
+| `dora:rework_rate:ratio` | Gauge | User-visible rework deployments / total deployments (30d) — unplanned bug-fix deploys outside the release train | Deployment events + matched `rework` events (`user_visible=true`) |
 
 **Rule file location:** `config/prometheus/rules/ufawkesobs-dora-metrics.yml`
 
