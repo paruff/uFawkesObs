@@ -113,7 +113,7 @@ class TestComposeImageVersions:
         services = compose_data.get("services", {})
         if service not in services:
             pytest.skip(f"Service '{service}' not present — covered by other test")
-        actual_image = services[service].get("image", "")
+        actual_image = services[service].get("image", "").partition("@")[0]
         tag = actual_image.split(":")[-1] if ":" in actual_image else ""
         assert tag != "latest", (
             f"Service '{service}' uses ':latest' tag — pin to a specific version"
@@ -131,7 +131,7 @@ class TestComposeImageVersions:
         services = compose_data.get("services", {})
         if service not in services:
             pytest.skip(f"Service '{service}' not present — covered by other test")
-        actual_image = services[service].get("image", "")
+        actual_image = services[service].get("image", "").partition("@")[0]
         assert ":" in actual_image, (
             f"Service '{service}' image '{actual_image}' has no tag — "
             f"expected '{expected_image}'"
