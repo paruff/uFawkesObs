@@ -28,11 +28,11 @@ docs/marketing while either has open blockers below is not recommended.
 
 | Finding | Issue / Note |
 |---|---|
-| `docker compose up` (without `make up`) skips `scripts/check-env.sh`, so the default-credentials guard is opt-in, not structural. Making `GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?set in .env}` in `compose.yaml` would make Compose itself refuse to start without a password, independent of which entry point someone uses. | Not yet filed — raise with PM sign-off, since it changes startup behavior per AGENTS.md §5. |
+| `docker compose up` (without `make up`) skips `scripts/check-env.sh`, so the default-credentials guard is opt-in, not structural. Making `GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?set in .env}` in `compose.yaml` would make Compose itself refuse to start without a password, independent of which entry point someone uses. | **Awaiting PM sign-off** (AGENTS.md §5 — changing an env var default/startup behavior is a "must ask" change). Not yet filed as an issue. |
 | DORA ingestion API (`dora-api`, port 8088) accepts unauthenticated requests when `DORA_API_KEY` is unset (`dora/ingestion/api/auth.py`). Currently only reachable on localhost, so this is contingent on PR-03's port decision holding. | Tracked implicitly by #335; call out explicitly if 8088 binding ever changes. |
-| README is 602 lines — a stranger's first read, not a reference doc. | [#345](https://github.com/paruff/uFawkesObs/issues/345) |
-| No coverage measurement despite an 80% mandate in this repo's own testing rule. | [#343](https://github.com/paruff/uFawkesObs/issues/343) |
-| Chaos nightly hasn't run since 2026-08-28 (~4 weeks) — worth confirming the schedule trigger still fires before calling the pipeline stable. | Not yet filed — verify trigger config first; may be a non-issue if intentionally paused. |
+| ~~README is 602 lines — a stranger's first read, not a reference doc.~~ | ✅ **DONE** — [#345](https://github.com/paruff/uFawkesObs/issues/345), PR #384. README is now 107 lines; detail moved to `docs/ARCHITECTURE.md`, new `docs/TROUBLESHOOTING.md`, and new `tests/acceptance/README.md`, not deleted. |
+| ~~No coverage measurement despite an 80% mandate in this repo's own testing rule.~~ | ✅ **DONE** — [#343](https://github.com/paruff/uFawkesObs/issues/343), PR #382. The fix existed once already (commit `8af8619`) but was silently stranded — pushed to a branch *after* its PR (#362) had already merged, so it never reached `main` despite that PR claiming "Closes #343." Recovered via cherry-pick and verified: 595 unit tests pass, 75% coverage on `dora/`. See [#383](https://github.com/paruff/uFawkesObs/issues/383) for a related portability bug found while verifying this. |
+| ~~Chaos nightly hasn't run since 2026-08-28 (~4 weeks)~~ | **False alarm, corrected 2026-09-23** — re-checked directly by workflow ID rather than the branch-filtered run list used originally: it has run successfully every night through today. No action needed. |
 
 ## Already Resolved (verified, not re-tracked)
 
