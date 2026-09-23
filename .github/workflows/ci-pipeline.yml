@@ -77,7 +77,7 @@ jobs:
     name: Pipeline Complete
     needs: [preflight, lint, security, dependency-review, build]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check results
         run: |
