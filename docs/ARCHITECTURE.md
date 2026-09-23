@@ -148,30 +148,33 @@ docker compose --profile core --profile notifications up -d
 
 ## Ports & Access
 
-| Service                 | Port  | Purpose                     | Access URL                    |
-| ------------------------ | ----- | --------------------------- | ------------------------------ |
-| **Grafana**             | 3000  | Visualization UI            | http://localhost:3000         |
-| **Loki**                | 3100  | Log aggregation HTTP API    | http://localhost:3100         |
-| **Tempo**               | 3200  | Tempo HTTP API              | http://localhost:3200         |
-| **OpenTelemetry**       | 4317  | OTLP gRPC receiver          | localhost:4317                |
-| **OpenTelemetry**       | 4318  | OTLP HTTP receiver          | localhost:4318                |
-| **OpenTelemetry**       | 8888  | Collector telemetry metrics | http://localhost:8888/metrics |
-| **OpenTelemetry**       | 8889  | App metrics (Prometheus)    | http://localhost:8889/metrics |
-| **Prometheus**          | 9090  | Metrics storage & query UI  | http://localhost:9090         |
-| **Alertmanager**        | 9093  | Alert management UI         | http://localhost:9093         |
-| **Tempo**               | 9095  | Tempo gRPC                  | localhost:9095                |
-| **Loki**                | 9096  | Loki gRPC                   | localhost:9096                |
-| **node-exporter**       | 9100  | Host-level metrics          | http://localhost:9100/metrics |
-| **Tempo**               | 9411  | Zipkin receiver             | http://localhost:9411         |
-| **Alloy**               | 12345 | Alloy HTTP/metrics          | http://localhost:12345        |
-| **Tempo**               | 14250 | Jaeger gRPC receiver        | localhost:14250               |
-| **Tempo**               | 14268 | Jaeger HTTP receiver        | http://localhost:14268        |
-| **Telemetry Generator** | 5001  | Demo app (`apps` profile)   | http://localhost:5001         |
-| **DORA API**            | 8088  | DORA ingestion (`dora` profile), localhost-only | http://localhost:8088 |
+| Service                 | Port  | Purpose                     | Access URL                    | Published on |
+| ------------------------ | ----- | --------------------------- | ------------------------------ | ------------- |
+| **Grafana**             | 3000  | Visualization UI            | http://localhost:3000         | all interfaces |
+| **Loki**                | 3100  | Log aggregation HTTP API    | http://localhost:3100         | localhost only |
+| **Tempo**               | 3200  | Tempo HTTP API              | http://localhost:3200         | localhost only |
+| **OpenTelemetry**       | 4317  | OTLP gRPC receiver          | localhost:4317                | all interfaces |
+| **OpenTelemetry**       | 4318  | OTLP HTTP receiver          | localhost:4318                | all interfaces |
+| **OpenTelemetry**       | 8888  | Collector telemetry metrics | http://localhost:8888/metrics | localhost only |
+| **OpenTelemetry**       | 8889  | App metrics (Prometheus)    | http://localhost:8889/metrics | localhost only |
+| **Prometheus**          | 9090  | Metrics storage & query UI  | http://localhost:9090         | localhost only |
+| **Alertmanager**        | 9093  | Alert management UI         | http://localhost:9093         | localhost only |
+| **Tempo**               | 9095  | Tempo gRPC                  | localhost:9095                | localhost only |
+| **Loki**                | 9096  | Loki gRPC                   | localhost:9096                | localhost only |
+| **node-exporter**       | 9100  | Host-level metrics          | http://localhost:9100/metrics | localhost only |
+| **Tempo**               | 9411  | Zipkin receiver             | http://localhost:9411         | localhost only |
+| **Alloy**               | 12345 | Alloy HTTP/metrics          | http://localhost:12345        | localhost only |
+| **Tempo**               | 14250 | Jaeger gRPC receiver        | localhost:14250               | localhost only |
+| **Tempo**               | 14268 | Jaeger HTTP receiver        | http://localhost:14268        | localhost only |
+| **Telemetry Generator** | 5001  | Demo app (`apps` profile)   | http://localhost:5001         | all interfaces |
+| **DORA API**            | 8088  | DORA ingestion (`dora` profile) | http://localhost:8088     | localhost only |
 
-> See [#335](https://github.com/paruff/uFawkesObs/issues/335) — several of
-> these are published on all interfaces rather than localhost-only; that
-> issue tracks the keep/restrict decision per port.
+Only Grafana (3000) and the OTLP ingest endpoints (4317/4318 — other uFawkes
+planes ship telemetry here) are published on all interfaces by design. Every
+internal/scrape-only port was restricted to localhost per
+[#335](https://github.com/paruff/uFawkesObs/issues/335); on a shared or
+cloud host, put a reverse proxy with auth in front of Grafana rather than
+relying on port binding alone.
 
 **Grafana:** username/password from `GRAFANA_ADMIN_USER`/`GRAFANA_ADMIN_PASSWORD`
 in `.env` (validated by `make check-env`). Prometheus, Tempo, Loki, and
