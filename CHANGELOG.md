@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.24-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.23-alpha.1...v0.3.24-alpha.1) (2026-09-23)
+
+
+### Fixed
+
+* implement determinism Should items (relock, digests, dependabot) ([1165d94](https://github.com/paruff/uFawkesObs/commit/1165d942a00fc7780e1166a17921087b8624c884))
+* **test:** make image-version tests digest-aware ([254953b](https://github.com/paruff/uFawkesObs/commit/254953b6d1fa9d157adc43a46d58b8b32eab61f9))
+* **test:** strip digest suffix in the other two tag-extraction tests ([fca1078](https://github.com/paruff/uFawkesObs/commit/fca10781362fffccae1be0a36a08a59a18237122))
+
 ## [0.3.23-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.22-alpha.1...v0.3.23-alpha.1) (2026-09-23)
 
 
