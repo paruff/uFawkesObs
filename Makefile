@@ -112,6 +112,27 @@ test-unit:
 	pip install -q -r tests/unit/requirements.lock.txt
 	pytest tests/unit/ --cov=dora --cov-report=term-missing --cov-report=html:reports/coverage
 
+## relock: regenerate every requirements.lock.txt from its source
+##   requirements*.txt in a clean venv. Run after editing any source file;
+##   commit the regenerated lock alongside it. See docs/DETERMINISM.md.
+relock:
+	@set -e; \
+	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt; do \
+		out="$${src%.txt}"; \
+		if [ "$$src" = "dora/ingestion/requirements-ingestion.txt" ]; then out="dora/ingestion/requirements-ingestion"; fi; \
+		echo "🔒 Relocking $$src -> $$out.lock.txt"; \
+		venv=$$(mktemp -d); \
+		python3 -m venv "$$venv"; \
+		"$$venv/bin/pip" install -q --upgrade pip; \
+		"$$venv/bin/pip" install -q -r "$$src"; \
+		"$$venv/bin/pip" freeze | grep -viE '^pip==|^setuptools==|^wheel==' | sort > "$$out.lock.txt.new"; \
+		{ head -n $$(grep -n '^# Generated:' "$$out.lock.txt" | head -1 | cut -d: -f1) "$$out.lock.txt" | sed "s/^# Generated:.*/# Generated: $$(date -u +%Y-%m-%d)/"; cat "$$out.lock.txt.new"; } > "$$out.lock.txt.tmp"; \
+		mv "$$out.lock.txt.tmp" "$$out.lock.txt"; \
+		rm -f "$$out.lock.txt.new"; \
+		rm -rf "$$venv"; \
+	done; \
+	echo "✅ All lock files regenerated — review the diff and commit"
+
 ## test-integration: run real component integration tests (Prometheus
 ##   scraping, OTel Collector, Grafana, Tempo, Loki, dashboards) against a
 ##   live stack -- mirrors Unit & Integration Tests / Integration Tests in

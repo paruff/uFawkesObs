@@ -138,7 +138,14 @@ class TestDiscordRecipe:
     def test_bridge_service_present_and_pinned(self, compose_data: dict) -> None:
         services = compose_data["services"]
         assert "alertmanager-discord" in services
-        assert services["alertmanager-discord"]["image"] == EXPECTED_DISCORD_IMAGE
+        # Digest-pinned now too (docs/DETERMINISM.md): "repo:tag@sha256:...".
+        # Compare the tag portion, and separately require a digest.
+        actual_image = services["alertmanager-discord"]["image"]
+        actual_tag, _, digest = actual_image.partition("@")
+        assert digest, (
+            f"alertmanager-discord image '{actual_image}' has no @sha256:... digest pin"
+        )
+        assert actual_tag == EXPECTED_DISCORD_IMAGE
 
     def test_bridge_is_in_notifications_profile(self, compose_data: dict) -> None:
         profiles = compose_data["services"]["alertmanager-discord"].get("profiles", [])

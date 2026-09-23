@@ -84,10 +84,21 @@ class TestComposeImageVersions:
         assert actual_image is not None, (
             f"Service '{service}' has no 'image' field in compose.yaml"
         )
-        assert actual_image == expected_image, (
+        # compose.yaml pins every image by digest too (docs/DETERMINISM.md
+        # "Should" #2): "repo:tag@sha256:...". Compare the tag portion
+        # against EXPECTED_VERSIONS, and separately require a digest be
+        # present — that way this test still catches someone accidentally
+        # reverting to tag-only (the original drift it was written to catch)
+        # as well as a tag bump.
+        actual_tag, _, digest = actual_image.partition("@")
+        assert digest, (
+            f"Service '{service}' image '{actual_image}' has no @sha256:... "
+            f"digest pin — see docs/DETERMINISM.md"
+        )
+        assert actual_tag == expected_image, (
             f"Service '{service}' image mismatch:\n"
             f"  expected: {expected_image}\n"
-            f"  actual:   {actual_image}"
+            f"  actual:   {actual_tag}"
         )
 
     @pytest.mark.parametrize(
@@ -102,7 +113,7 @@ class TestComposeImageVersions:
         services = compose_data.get("services", {})
         if service not in services:
             pytest.skip(f"Service '{service}' not present — covered by other test")
-        actual_image = services[service].get("image", "")
+        actual_image = services[service].get("image", "").partition("@")[0]
         tag = actual_image.split(":")[-1] if ":" in actual_image else ""
         assert tag != "latest", (
             f"Service '{service}' uses ':latest' tag — pin to a specific version"
@@ -120,7 +131,7 @@ class TestComposeImageVersions:
         services = compose_data.get("services", {})
         if service not in services:
             pytest.skip(f"Service '{service}' not present — covered by other test")
-        actual_image = services[service].get("image", "")
+        actual_image = services[service].get("image", "").partition("@")[0]
         assert ":" in actual_image, (
             f"Service '{service}' image '{actual_image}' has no tag — "
             f"expected '{expected_image}'"

@@ -361,7 +361,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Fraction of AI output requiring rework (5th DORA metric, DORA 2026).\nDerived from AI suggestion acceptance rate: rework = 1 - acceptance_rate.\n\n**DORA 2026 Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
+      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric, DORA 2024, a Software Delivery Instability metric).\n\n**DORA Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -436,7 +436,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Fraction of AI output requiring rework (5th DORA metric, DORA 2026).\nDerived from AI suggestion acceptance rate: rework = 1 - acceptance_rate.\n\n**DORA 2026 Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
+      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric, DORA 2024, a Software Delivery Instability metric).\n\n**DORA Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
       "fieldConfig": {
         "defaults": {
           "color": {
