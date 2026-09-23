@@ -99,6 +99,27 @@ testing did.
    Testcontainers' per-test isolation may make some of the "Should"-tier
    `sleep`-audit findings moot rather than needing individual fixes.
 
+## Findings — InSpec Manual Run (2026-09-23)
+
+Per #414's own instruction, ran `make test-conformance` manually against a
+live `make up` (`core` profile) stack before wiring anything into CI:
+
+- **30 controls passed, 0 failures** across all 8 `core`-profile services
+  (otel-collector, tempo, loki, alloy, prometheus, alertmanager, grafana,
+  node-exporter) — every declared healthcheck reports `healthy`, every
+  running container's image matches its pinned `@sha256` digest exactly,
+  every declared port mapping is actually bound as declared, and no
+  anonymous volumes exist on any container.
+- **8 controls skipped**, not failed — `telemetry-generator` (`apps`
+  profile), `dora-api` (`dora` profile), and `alertmanager-discord`
+  (`notifications` profile) weren't running at check time, so their
+  controls' `only_if` guard skipped rather than reporting a false failure.
+- **Net finding: nothing found.** The `core` stack's actually-running
+  containers are fully conformant with AGENTS.md §4 as declared in
+  `compose.yaml` right now — no drift between declared and live state. That
+  itself is the useful signal: the profile is confirmed non-noisy against a
+  known-good stack, which is the precondition #415 sets for gating CI on it.
+
 ## Tracking
 
 - [ ] [#413](https://github.com/paruff/uFawkesObs/issues/413) — Testcontainers spike: migrate one integration test file

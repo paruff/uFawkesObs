@@ -40,6 +40,10 @@ tests/acceptance/observability-pipeline/reports/*
 .coverage
 reports/coverage/
 
+# InSpec regenerates this on every `make test-conformance` run; this
+# profile has no depends: so it's never more than an empty list (#414)
+inspec/*/inspec.lock
+
 # Python
 __pycache__/
 *.py[cod]
