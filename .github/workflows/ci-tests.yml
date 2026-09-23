@@ -60,7 +60,11 @@ jobs:
       # so a plain value here (not a GitHub secret) is fine. Required since
       # compose.yaml stopped defaulting this to "admin" (#380/PR #386); this
       # job never set it at all before, unlike the other CI workflows.
-      GRAFANA_ADMIN_PASSWORD: ci-integration-tests-not-a-real-secret
+      # Must be "admin" — the later "Run Grafana integration tests" and
+      # "Run dashboard tests" steps below hardcode GRAFANA_PASSWORD: admin
+      # for their API assertions (a *different* env var name than this one),
+      # so any other value here 401s against the stack this starts.
+      GRAFANA_ADMIN_PASSWORD: admin
     steps:
       - uses: actions/checkout@v7
 
