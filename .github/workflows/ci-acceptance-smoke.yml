@@ -21,7 +21,7 @@ concurrency:
 jobs:
   acceptance-smoke:
     name: Acceptance Smoke Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       GRAFANA_ADMIN_USER: admin
@@ -45,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.12.7"
 
       - name: Install dependencies
         run: |

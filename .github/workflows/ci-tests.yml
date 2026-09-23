@@ -23,7 +23,7 @@ jobs:
   # ─── Unit Tests ───────────────────────────────────────────────────────────
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -31,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.12.7"
 
       - name: Install dependencies
         run: |
@@ -52,7 +52,7 @@ jobs:
   # ─── Integration Tests ───────────────────────────────────────────────────
   integration-tests:
     name: Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       GRAFANA_ADMIN_USER: admin
@@ -71,7 +71,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.12.7"
 
       - name: Install Python dependencies
         run: |
@@ -152,7 +152,7 @@ jobs:
   # ─── Golden Path App ─────────────────────────────────────────────────────
   apps-test:
     name: Golden Path App
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
