@@ -124,6 +124,7 @@ alloy         → depends_on: loki (healthy)
 | `core`  | otel-collector, tempo, loki, alloy, prometheus, alertmanager, grafana, node-exporter |
 | `apps`  | telemetry-generator                                                                  |
 | `notifications` | alertmanager-discord (Alertmanager → Discord bridge)                    |
+| `dora`  | dora-api, dora-compute, pushgateway, otel-collector-dora (self-contained, SQLite-only) |
 
 Start the full stack:
 
@@ -142,6 +143,60 @@ Start with Discord notifications enabled (requires `DISCORD_WEBHOOK_URL` in `.en
 ```bash
 docker compose --profile core --profile notifications up -d
 ```
+
+---
+
+## Ports & Access
+
+| Service                 | Port  | Purpose                     | Access URL                    |
+| ------------------------ | ----- | --------------------------- | ------------------------------ |
+| **Grafana**             | 3000  | Visualization UI            | http://localhost:3000         |
+| **Loki**                | 3100  | Log aggregation HTTP API    | http://localhost:3100         |
+| **Tempo**               | 3200  | Tempo HTTP API              | http://localhost:3200         |
+| **OpenTelemetry**       | 4317  | OTLP gRPC receiver          | localhost:4317                |
+| **OpenTelemetry**       | 4318  | OTLP HTTP receiver          | localhost:4318                |
+| **OpenTelemetry**       | 8888  | Collector telemetry metrics | http://localhost:8888/metrics |
+| **OpenTelemetry**       | 8889  | App metrics (Prometheus)    | http://localhost:8889/metrics |
+| **Prometheus**          | 9090  | Metrics storage & query UI  | http://localhost:9090         |
+| **Alertmanager**        | 9093  | Alert management UI         | http://localhost:9093         |
+| **Tempo**               | 9095  | Tempo gRPC                  | localhost:9095                |
+| **Loki**                | 9096  | Loki gRPC                   | localhost:9096                |
+| **node-exporter**       | 9100  | Host-level metrics          | http://localhost:9100/metrics |
+| **Tempo**               | 9411  | Zipkin receiver             | http://localhost:9411         |
+| **Alloy**               | 12345 | Alloy HTTP/metrics          | http://localhost:12345        |
+| **Tempo**               | 14250 | Jaeger gRPC receiver        | localhost:14250               |
+| **Tempo**               | 14268 | Jaeger HTTP receiver        | http://localhost:14268        |
+| **Telemetry Generator** | 5001  | Demo app (`apps` profile)   | http://localhost:5001         |
+| **DORA API**            | 8088  | DORA ingestion (`dora` profile), localhost-only | http://localhost:8088 |
+
+> See [#335](https://github.com/paruff/uFawkesObs/issues/335) — several of
+> these are published on all interfaces rather than localhost-only; that
+> issue tracks the keep/restrict decision per port.
+
+**Grafana:** username/password from `GRAFANA_ADMIN_USER`/`GRAFANA_ADMIN_PASSWORD`
+in `.env` (validated by `make check-env`). Prometheus, Tempo, Loki, and
+Alertmanager datasources are pre-configured. New to Grafana? Explore
+(compass icon, left sidebar) → pick a datasource → query directly — the
+fastest way to check if data for a specific service exists before building
+a dashboard.
+
+**Alertmanager:** http://localhost:9093 — pre-configured with webhook
+receivers for testing; alert rules load automatically from Prometheus.
+
+**Health checks:**
+
+```bash
+curl -f http://localhost:9090/-/ready      # Prometheus
+curl -f http://localhost:3200/ready        # Tempo
+curl -f http://localhost:3000/api/health   # Grafana
+curl -f http://localhost:8888/metrics      # OTel Collector telemetry
+curl -f http://localhost:3100/ready        # Loki
+curl -f http://localhost:12345/-/ready     # Alloy
+curl -f http://localhost:9093/-/healthy    # Alertmanager
+curl -s http://localhost:9093/api/v2/alerts | jq .   # active alerts
+```
+
+Or use the one-shot script: `./scripts/wait-healthy.sh`.
 
 ---
 
