@@ -8,7 +8,7 @@ name: ufawkesobs
 
 services:
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.120.0
+    image: otel/opentelemetry-collector-contrib:0.120.0@sha256:85ac41c2db88d0df9bd6145e608a3cb023f5d8443868adbfbbf66efb51087917
     container_name: otel-collector
     restart: unless-stopped
     command: ["--config=/etc/otel/collector.yaml"]
@@ -60,7 +60,7 @@ services:
     profiles: ["core"]
 
   tempo:
-    image: grafana/tempo:2.10.5
+    image: grafana/tempo:2.10.5@sha256:ee21727732c7a7199cb71c3eee9153bbf23f9b0b87619f0555a0cf21a67f1a33
     container_name: tempo
     restart: unless-stopped
     command:
@@ -102,7 +102,7 @@ services:
     profiles: ["core"]
 
   loki:
-    image: grafana/loki:3.3.2
+    image: grafana/loki:3.3.2@sha256:8af2de1abbdd7aa92b27c9bcc96f0f4140c9096b507c77921ffddf1c6ad6c48f
     container_name: loki
     restart: unless-stopped
     command:
@@ -152,7 +152,7 @@ services:
     profiles: ["core"]
 
   alloy:
-    image: grafana/alloy:v1.12.2
+    image: grafana/alloy:v1.12.2@sha256:f94b1c82957accb77cd11385fd5e3600758ef1b1ab79557c97319ad28590735a
     container_name: alloy
     restart: unless-stopped
     command:
@@ -204,7 +204,7 @@ services:
     profiles: ["core"]
 
   prometheus:
-    image: prom/prometheus:v3.5.4
+    image: prom/prometheus:v3.5.4@sha256:a75c5a35bc21d7afe69551eefa3cb1e1fb1775fe759408007a66b54ec3de1f29
     container_name: prometheus
     restart: unless-stopped
     command:
@@ -267,7 +267,7 @@ services:
     profiles: ["core"]
 
   alertmanager:
-    image: prom/alertmanager:v0.28.0
+    image: prom/alertmanager:v0.28.0@sha256:d5155cfac40a6d9250ffc97c19db2c5e190c7bc57c6b67125c94903358f8c7d8
     container_name: alertmanager
     restart: unless-stopped
     command:
@@ -341,7 +341,7 @@ services:
   # subcommand, so there is nothing to run. Container health is observable via
   # `docker compose ps` (status) and the bridge's own startup/send logs.
   alertmanager-discord:
-    image: rogerrum/alertmanager-discord:1.0.7
+    image: rogerrum/alertmanager-discord:1.0.7@sha256:bb4bcb893dacca8735bd634b0796f0a1b3ef05e641f8a7b4921f7d0e5a17ee3e
     container_name: alertmanager-discord
     restart: unless-stopped
     environment:
@@ -382,7 +382,7 @@ services:
     profiles: ["notifications"]
 
   grafana:
-    image: grafana/grafana:12.3.7
+    image: grafana/grafana:12.3.7@sha256:f02eb8dfe2cd57c1d4cdfaa18394403e2df31e3150efc0fcd7981567958f8364
     container_name: grafana
     restart: unless-stopped
     environment:
@@ -497,7 +497,7 @@ services:
     profiles: ["apps"]
 
   node-exporter:
-    image: prom/node-exporter:v1.8.1
+    image: prom/node-exporter:v1.8.1@sha256:fa7fa12a57eff607176d5c363d8bb08dfbf636b36ac3cb5613a202f3c61a6631
     container_name: node-exporter
     restart: unless-stopped
     pid: "host"

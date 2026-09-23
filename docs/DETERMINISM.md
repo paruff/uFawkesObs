@@ -40,33 +40,35 @@
    (`python-version: "3.12"` → `"3.12.7"` or similar) — same class of gap
    as #3, same sign-off need, much smaller diff (2 files).
 
-## Should (needs more design, but no new dependency)
+## Should (implemented 2026-09-23)
 
-1. **A `make relock` target** that regenerates every lock file in one
-   command, so keeping locks current isn't a manual venv dance per file —
-   reduces the risk of a lock silently drifting from its source
-   `requirements.txt` (already noted as a gap in #392's own PR description).
-2. **Digest-pin Docker images**, not just version tags
-   (`prom/prometheus:v3.5.4` → `prom/prometheus:v3.5.4@sha256:...`). A
-   version tag is conventionally stable but not cryptographically
-   immutable — a registry-side re-push under the same tag (rare, but it
-   happens) would go undetected. This is the actual gold-standard fix for
-   "same tag, different image" risk, not a Now item because it's a much
-   larger diff (every service in `compose.yaml`) and needs a documented
-   process for updating digests when a version bumps.
-3. **Replace fixed `sleep N` waits with condition-based polling** in CI —
-   `ci-tests.yml` (7 occurrences), `ci-acceptance-full.yml`,
-   `ci-acceptance-smoke.yml`, `ci-chaos-nightly.yml`, `opencode.yml` each
-   have at least one. A fixed sleep is either too short (flaky under load)
-   or too long (wastes CI minutes every single run) — polling for the
-   actual ready-condition (already the pattern in most of `wait-healthy.sh`
-   and the "Wait for services" steps) is strictly better and is this
-   repo's own established pattern elsewhere; it just isn't used
-   everywhere yet.
-4. **A Dependabot/Renovate policy specifically for lock files** — pinning
-   without a renewal mechanism just freezes today's versions forever,
-   including their eventual known CVEs. Determinism and staying current
-   are in tension; this needs an explicit policy, not just the pins.
+1. ✅ **`make relock` target** — regenerates all 5 lock files from their
+   source `requirements*.txt` in one command. Verified: ran it against the
+   already-correct locks and diffed byte-identical output.
+2. ✅ **Digest-pinned every `compose.yaml` image** — all 9 services now use
+   `image:tag@sha256:...` instead of tag alone. A version tag is
+   conventionally stable but not cryptographically immutable; a
+   registry-side re-push under the same tag (rare, but it happens) would go
+   undetected without this. Verified live: `make up` + `wait-healthy.sh`,
+   all 7 core services healthy.
+3. ⚠️ **`sleep N` audit — mostly not a bug.** Re-read every occurrence
+   instead of trusting the grep count from the original audit. 5 of 6 are
+   deliberate fixed-duration "steady state" soak periods (`ci-chaos-nightly`,
+   `ci-acceptance-smoke`, `ci-acceptance-full`, plus one in `ci-tests.yml`) —
+   waiting for a *time* to elapse so metrics accumulate or the system
+   settles, which has no poll-able condition and is correctly a fixed sleep.
+   `opencode.yml`'s sleep is already inside a proper `for`-loop polling a
+   health endpoint — also correct. Only one occurrence
+   (`ci-tests.yml`'s `apps-test` job) was a genuine "wait for readiness"
+   case; fixed to poll the demo app's own endpoint instead. That job's
+   target port (`8080`) isn't even in `compose.yaml` currently, so it was
+   dead code either way — fixed correctly anyway rather than left broken
+   for whenever it's re-enabled.
+4. ✅ **Dependabot policy for the lock files' source files** — added `pip`
+   ecosystem entries for all 5 requirements directories. Dependabot bumps
+   the *source* `requirements.txt` (loose ranges); `make relock` still
+   needs a human/CI step afterward to regenerate the matching lock —
+   documented in the new dependabot.yml comment.
 
 ## Future (larger, aspirational — not a near-term ask)
 

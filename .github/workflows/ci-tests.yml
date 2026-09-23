@@ -173,9 +173,9 @@ jobs:
           chmod -R 777 data/
           docker compose --profile core --profile apps up -d --build
 
-      - name: Wait
+      - name: Wait for app to be ready
         if: steps.check_apps.outputs.has_apps == 'true'
-        run: sleep 30
+        run: timeout 30 bash -c 'until curl -sf http://localhost:8080/ > /dev/null; do sleep 2; done'
 
       - name: Hit endpoints
         if: steps.check_apps.outputs.has_apps == 'true'

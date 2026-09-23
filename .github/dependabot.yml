@@ -10,3 +10,28 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  # Bumps the source requirements*.txt files (loose ranges) that
+  # docs/DETERMINISM.md's *.lock.txt files pin against. Dependabot only
+  # edits the standard-named requirements.txt; after it merges a bump here,
+  # run `make relock` to regenerate the matching lock file — pinning without
+  # a renewal path just freezes today's versions, CVEs included.
+  - package-ecosystem: "pip"
+    directory: "/tests/unit"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/tests/integration"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/tests/acceptance"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/dora/compute"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/dora/ingestion"
+    schedule:
+      interval: "weekly"
