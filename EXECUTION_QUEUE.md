@@ -127,7 +127,8 @@ order — this is the condensed version:
 | Align Rework Rate with DORA definition | [#331](https://github.com/paruff/uFawkesObs/issues/331) | Metric uses deployment-derived calculation | 🔲 Pending |
 | `find_repo_root()` hardcodes checkout dir name `uFawkesObs` | [#383](https://github.com/paruff/uFawkesObs/issues/383) | Test passes from any clone/worktree name | 🔲 Pending |
 | Should `docs/plan.md` be deleted? | [#348](https://github.com/paruff/uFawkesObs/issues/348) | Maintainer decides keep-with-owner or delete | 🔲 Pending — mechanical reconciliation done, this is the one open question |
-| Extend dependency lock-file pattern (PR #392) to remaining `requirements*.txt` | Follow-up to #392 | `tests/integration/`, `tests/acceptance/`, `dora/compute/`, `dora/ingestion/`, `apps/telemetry-generator` all get lock files | 🔲 Pending |
+| Extend dependency lock-file pattern (PR #392) to remaining `requirements*.txt` | Follow-up to #392, see [`docs/DETERMINISM.md`](docs/DETERMINISM.md) | `tests/integration/`, `tests/acceptance/`, `dora/compute/`, `dora/ingestion/`, `apps/telemetry-generator` all get lock files | 🔲 Pending |
+| Pin GitHub Actions runner images (`ubuntu-latest` → e.g. `ubuntu-24.04`) and exact Python patch versions | [`docs/DETERMINISM.md`](docs/DETERMINISM.md) "Now" #3-4 | 22 workflow occurrences pinned; needs PM sign-off (AGENTS.md §5, CI/CD config) | 🔲 Pending — awaiting sign-off |
 | **Add SLO burn alerts + automated rollback on CFR regression** | Expert feedback | Acceptance suite includes CFR-triggered rollback | 🔲 Pending |
 | **Add resource budgeting, HPA, VPA to M5 Helm chart spec** | Expert feedback | Helm chart includes HPA/VPA configs | 🔲 Pending |
 | **Decide River DSL vs OTel YAML and document in ADR** | Expert feedback | Design decision documented, one paradigm chosen | 🔲 Pending |
