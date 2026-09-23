@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.20-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.19-alpha.1...v0.3.20-alpha.1) (2026-09-23)
+
+
+### Added
+
+* add test coverage measurement, fix [#343](https://github.com/paruff/uFawkesObs/issues/343) ([768c430](https://github.com/paruff/uFawkesObs/commit/768c430505de29e7cd551014914dc6ab758d9459))
+
+
+### Fixed
+
+* land stranded test coverage measurement ([#343](https://github.com/paruff/uFawkesObs/issues/343)) ([a22aab0](https://github.com/paruff/uFawkesObs/commit/a22aab052c3af88a2c71ee7a7cb76cff5c5d7c39))
+
+
+### Docs
+
+* mark [#343](https://github.com/paruff/uFawkesObs/issues/343)/[#345](https://github.com/paruff/uFawkesObs/issues/345) done, correct chaos-nightly false alarm ([6c5574d](https://github.com/paruff/uFawkesObs/commit/6c5574dab091df78b8bb94df6b32fe150d3bdee3))
+* restructure README for public release, close [#345](https://github.com/paruff/uFawkesObs/issues/345) ([63c6466](https://github.com/paruff/uFawkesObs/commit/63c6466197dca0633cd95892020ab1a3058fe84b))
+* restructure README for public release, close [#345](https://github.com/paruff/uFawkesObs/issues/345) ([ff26f1e](https://github.com/paruff/uFawkesObs/commit/ff26f1e30db04c4548d29695100e07bf84fe7dc0))
+
 ## [0.3.19-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.18-alpha.1...v0.3.19-alpha.1) (2026-09-18)
 
 
