@@ -1,24 +1,29 @@
-# Daily Plan: 2026-09-14
+# Daily Plan: 2026-09-23
 
 ## 🎯 Primary Goal (`/goal`)
 
-- **Focus:** P1 gates are in progress, not blocked — shift today's new work to P2 (`EXECUTION_QUEUE.md` "Scheduled Work (P2)").
+- **Focus:** PR-02 (#381) and PR-04 (#182) are the two remaining
+  public-release blockers, and both are blocked on maintainer action
+  (console access to the deploy host; a network-path decision for the
+  rollback drill) — see `EXECUTION_QUEUE.md`'s "Unblock Runbook" for the
+  exact steps. Neither is agent-executable today. Today's coding focus
+  shifts to the highest-priority P2 item that *is* executable: #383.
 
 ---
 
-## 🔁 P1 Carryover (in progress, not today's focus)
+## 🔁 Carryover (blocked on you, not today's coding focus)
 
-- **LB-04 Rollback Drill** ([#182](https://github.com/paruff/uFawkesObs/issues/182)) — Synology NAS (192.168.1.10) confirmed reachable over SSH 2026-09-14. The drill itself (induce failure → confirm → recover per `docs/ROLLBACK_DRILL.md`) is a live-infra operation deliberately deferred to a session with room to run it carefully end to end.
-- **#357 Harden opencode agent** — interim `bash:deny` fix open in [PR #371](https://github.com/paruff/uFawkesObs/pull/371), pending your review/merge. OIDC token exchange + `step-security/harden-runner` egress-policy still open behind it.
+- **Merge PR [#386](https://github.com/paruff/uFawkesObs/pull/386)** (require `GRAFANA_ADMIN_PASSWORD`, no default-admin fallback) and **PR [#392](https://github.com/paruff/uFawkesObs/pull/392)** (pin unit test deps for determinism) — both ready, awaiting your review.
+- **#381** — deploy host presented 4 different SSH fingerprints across 4 attempts. Needs you at the host console. Runbook in `EXECUTION_QUEUE.md`.
+- **#182** — rollback drill needs a network path from GitHub Actions to the LAN sandbox host (self-hosted runner / Tailscale / Cloudflare Tunnel). Runbook in `EXECUTION_QUEUE.md`.
 
 ---
 
 ## 📋 Today's Target (P2)
 
-- [ ] **#331 Align Rework Rate with DORA definition** — *Acceptance Criteria:* Metric uses deployment-derived calculation, not the current definition.
-- [ ] **#335 LB-02 ports — decision needed:** Audit was re-verified and posted 2026-09-14 ([comment](https://github.com/paruff/uFawkesObs/issues/335#issuecomment-5662905261)). Per AGENTS.md §5, closing any port requires your sign-off — this is a decision to bring to you, not an agent-executable task. Candidates to close: `8888`/`8889` (otel-collector, internal-scrape-only), `9095`/`9096` (tempo/loki grpc), `9100` (node-exporter), `12345` (alloy UI, unauthenticated), `14250`/`14268`/`9411` (jaeger/zipkin receivers, only needed if something sends those formats).
+- [ ] **#383 — `find_repo_root()` hardcodes the checkout directory name.** *Acceptance Criteria:* `tests/unit/test_dora_event_schemas.py` passes regardless of the clone/worktree directory name (verified by running it from a differently-named path, not just `uFawkesObs`).
 
-**Queued but not today** (larger design/spec work, each deserves its own session): SLO burn alerts + automated rollback on CFR regression; resource budgeting/HPA/VPA in the M5 Helm chart spec; River DSL vs OTel YAML ADR decision.
+**Queued but not today** (each deserves its own session): #331 Rework Rate DORA alignment; #348 keep-or-delete decision on `docs/plan.md` (needs your call, not mine); extending the PR #392 lock-file pattern to the other five `requirements*.txt` files; SLO burn alerts + CFR-triggered rollback; HPA/VPA in the M5 Helm spec; River DSL vs OTel YAML ADR.
 
 ---
 
@@ -26,16 +31,16 @@
 
 ### 1. Test-Driven Development (`superpower:test-driven-development`)
 
-#### #331 — Rework Rate DORA alignment
+#### #383 — repo-root detection portability
 
-- [ ] **RED:** Locate current Rework Rate calculation; write a failing test asserting deployment-derived semantics (matches DORA's definition: failed deployments requiring a fix / total deployments — not the current basis).
-- [ ] **GREEN:** Implement the deployment-derived calculation to pass the test.
-- [ ] **REFACTOR:** Update any dashboards/docs referencing the old definition.
+- [ ] **RED:** Reproduce in a worktree/clone not named `uFawkesObs` (e.g. `git worktree add /tmp/uFawkesObs-check2 <branch>`) — confirm `test_dora_event_schemas.py` fails there today.
+- [ ] **GREEN:** Replace the `current.name == "uFawkesObs"` assertion in `find_repo_root()` with a marker-file walk (e.g. look for `compose.yaml` + `AGENTS.md` both present in a candidate directory) instead of matching the directory's own name.
+- [ ] **REFACTOR:** Confirm the same helper isn't duplicated elsewhere in `tests/unit/` with the same hardcoded assumption.
 
 ### 2. Verification & Code Review (`request-code-review`)
 
 - [ ] Run `pre-commit run --all-files` — all hooks pass
-- [ ] Run `make test-unit` — unit tests pass
+- [ ] Run `make test-unit` — unit tests pass, from both `uFawkesObs` and a differently-named path
 - [ ] Review `git diff` against existing repository patterns
 
 ---
@@ -60,10 +65,9 @@ VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → 
 
 | Today's Task | EXECUTION_QUEUE | MILESTONES | VISION Principle |
 |---|---|---|---|
-| #331 Rework Rate alignment | P2 Next Sprint | H2 Late Beta | Deployment-derived DORA metrics |
-| #335 LB-02 ports decision | P2 Next Sprint | H2 Late Beta | Security First |
-| LB-04 Rollback Drill (carryover) | P1 This Sprint | H2 Late Beta | GitOps Reconciliation |
-| #357 Harden agent (carryover) | P1 This Sprint | H2 Late Beta | Security First |
+| #383 repo-root portability fix | P2 Next Sprint | H2 Late Beta / Public Release | Reproducible: works from any clone |
+| #381 deploy host identity (carryover, blocked on you) | P0 This Week | H2 Late Beta / Public Release | GitOps Reconciliation |
+| #182 rollback drill network path (carryover, blocked on you) | P0 This Week | H2 Late Beta / Public Release | GitOps Reconciliation |
 
 ---
 
