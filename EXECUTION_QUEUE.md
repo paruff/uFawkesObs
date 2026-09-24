@@ -29,88 +29,9 @@
 
 | Task | Source | Status |
 |---|---|---|
-| Merge: require `GRAFANA_ADMIN_PASSWORD`, no default-admin fallback | PR [#386](https://github.com/paruff/uFawkesObs/pull/386) | 🟡 Open, ready for review |
-| Merge: pin unit test deps with a lock file (determinism) | PR [#392](https://github.com/paruff/uFawkesObs/pull/392) | 🟡 Open, ready for review |
-| Deploy pipeline broken — host presented 4 different SSH fingerprints across 4 attempts | [#381](https://github.com/paruff/uFawkesObs/issues/381) | 🔴 **Blocked on you** — needs console access to the deploy host. Diagnostics + failure-alerting already shipped (PR #391, merged). **Exact steps: see "Unblock Runbook" below.** |
-| Rollback drill can't run end-to-end — GitHub-hosted runners can't reach the LAN sandbox host | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🔴 **Blocked on you** — needs one infra decision (self-hosted runner / Tailscale / Cloudflare Tunnel). **Exact steps: see "Unblock Runbook" below.** |
-
----
-
-## Unblock Runbook — #381 and #182
-
-Both items below are the *only* two things standing between this repo and
-public-release readiness (`docs/PREPARE_FOR_PUBLIC_RELEASE.md` PR-02/PR-04).
-Neither can be advanced further by an agent — both need you at physical
-hardware. This is the exact sequence.
-
-### #381 — deploy host's SSH identity keeps changing
-
-1. **Get physical/console access** to whatever `DEPLOY_HOST` points at — not
-   over SSH (that's the channel in question), the actual console/screen, or
-   a management interface you trust independently (IPMI, Synology DSM web
-   UI on the LAN, etc.).
-2. **Read the host's real current fingerprint at the console:**
-   ```bash
-   ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
-   ```
-3. **Check whether host keys persist across restarts** — this is the likely
-   root cause:
-   ```bash
-   ls -la /etc/ssh/ssh_host_ed25519_key
-   ```
-   If the file's mtime lines up with the host's last boot/restart time,
-   `/etc/ssh` isn't on persistent storage (common on containers, some NAS
-   OS images, or after an OS reinstall) and regenerates keys every restart.
-   **Fix that first** — move `/etc/ssh` host keys to a persistent volume —
-   before touching the GitHub secret, or you'll be back here after the next
-   restart.
-4. **Confirm `DEPLOY_HOST` itself is stable** — check the value you
-   originally set in GitHub → Settings → Secrets and variables → Actions →
-   `DEPLOY_HOST` (you can see it was set, not read it back) and confirm it's
-   not a dynamic-DNS name that could resolve to a different machine over
-   time.
-5. **Once you're confident the key is genuine and will stay stable**, get it
-   in the exact format the secret needs:
-   ```bash
-   ssh-keyscan -t ed25519 <the-host>
-   ```
-6. **Update the secret:**
-   ```bash
-   gh secret set DEPLOY_HOST_KEY --repo paruff/uFawkesObs
-   # paste the ssh-keyscan output line, Ctrl-D
-   ```
-7. **Re-run the deploy** (merge any PR, or re-run the last failed
-   `deploy.yml` run from the Actions tab) and confirm it connects.
-8. **If it fails again with yet another different fingerprint**, stop —
-   that confirms the target itself is changing, not just its host keys.
-   Don't re-pin again; investigate DNS/network routing to `DEPLOY_HOST`
-   instead. PR #391's diagnostic step logs the resolved IP each run now, so
-   compare that across the next few runs.
-
-### #182 — rollback drill needs a network path
-
-`docs/ROLLBACK_DRILL.md` §0a already lays out the decision and preference
-order — this is the condensed version:
-
-1. **Pick one:**
-   - **Self-hosted runner on the LAN (recommended)** — register a GitHub
-     Actions runner directly on the Synology NAS (or any always-on LAN
-     box): repo → Settings → Actions → Runners → New self-hosted runner,
-     follow the registration script it gives you. Nothing inbound exposed;
-     the SSH hop becomes local to that machine.
-   - **Tailscale/WireGuard** — join the NAS and (for the drill) a runner to
-     the same tailnet; no inbound firewall changes.
-   - **Cloudflare Tunnel** — works, but adds a dependency in the exact path
-     the drill exists to test.
-   - Avoid port-forwarding SSH from the internet (§0a explains why).
-2. **Point the drill at it:** update the `DEPLOY_PATH` repo variable and the
-   `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_KEY`/`DEPLOY_HOST_KEY` secrets to the
-   sandbox host, not the maintainer workstation they point at today.
-3. **Run `docs/ROLLBACK_DRILL.md` from Precondition 1 onward** — the
-   procedure itself is already written and ready; it was only ever blocked
-   on step 1.
-4. **Record the result** in that doc's "Drill Results" section, then close
-   [#182](https://github.com/paruff/uFawkesObs/issues/182).
+| Fix deploy pipeline — root cause was GitHub-hosted runners having no LAN route, not host-key regeneration | [#381](https://github.com/paruff/uFawkesObs/issues/381) | 🟡 **In progress, verification pending.** Self-hosted runner registered on the deploy target (Synology DS920+), `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_HOST_KEY`/`DEPLOY_KEY` updated to the LAN path (PR [#456](https://github.com/paruff/uFawkesObs/pull/456), merged), a stale `DEPLOY_PATH` repo variable fixed live, and a `make`-not-installed failure fixed (PR [#457](https://github.com/paruff/uFawkesObs/pull/457), merged). Waiting on the next full deploy run (triggered by #457's own merge) to confirm end-to-end success before closing. |
+| Recurring "Deploy (compose restart) failed" alert | [#393](https://github.com/paruff/uFawkesObs/issues/393) | 🟡 Symptom of #381 — close together once a deploy run succeeds cleanly. |
+| Rollback drill can't run end-to-end — GitHub-hosted runners can't reach the LAN sandbox host | [#182](https://github.com/paruff/uFawkesObs/issues/182) | 🟡 **Network path now exists** (same self-hosted runner as #381) — the actual drill (`docs/ROLLBACK_DRILL.md` from Precondition 1) hasn't been run yet. Do this once #381 is confirmed closed, so the drill isn't run against a still-unstable deploy path. |
 
 ---
 
@@ -128,7 +49,7 @@ order — this is the condensed version:
 | `find_repo_root()` hardcodes checkout dir name `uFawkesObs` | [#383](https://github.com/paruff/uFawkesObs/issues/383) | Test passes from any clone/worktree name | 🔲 Pending |
 | Extend dependency lock-file pattern (PR #392) to remaining `requirements*.txt` | Follow-up to #392, see [`docs/DETERMINISM.md`](docs/DETERMINISM.md) | `tests/integration/`, `tests/acceptance/`, `dora/compute/`, `dora/ingestion/`, `apps/telemetry-generator` all get lock files | 🔲 Pending |
 | Pin GitHub Actions runner images (`ubuntu-latest` → e.g. `ubuntu-24.04`) and exact Python patch versions | [`docs/DETERMINISM.md`](docs/DETERMINISM.md) "Now" #3-4 | 22 workflow occurrences pinned; needs PM sign-off (AGENTS.md §5, CI/CD config) | 🔲 Pending — awaiting sign-off |
-| Testing pyramid: Testcontainers + InSpec | [`docs/TESTING_PYRAMID.md`](docs/TESTING_PYRAMID.md), issues [#413](https://github.com/paruff/uFawkesObs/issues/413)-[#417](https://github.com/paruff/uFawkesObs/issues/417) | 5-issue rollout: spike → InSpec profile → CI-gate it → full migration → docs update | 🔲 Pending |
+| Testing pyramid: Testcontainers + InSpec | [`docs/TESTING_PYRAMID.md`](docs/TESTING_PYRAMID.md) | #413/#414 done (on `main`); #415's CI job done, required-check wiring still pending; #416 partial (otel-collector, Tempo, Loki migrated, Grafana/dashboards/rest remain); #417 partial (docs updated, marked honest-in-progress) | 🟡 In progress |
 | **Add SLO burn alerts + automated rollback on CFR regression** | Expert feedback | Acceptance suite includes CFR-triggered rollback | 🔲 Pending |
 | **Add resource budgeting, HPA, VPA to M5 Helm chart spec** | Expert feedback | Helm chart includes HPA/VPA configs | 🔲 Pending |
 | **Decide River DSL vs OTel YAML and document in ADR** | Expert feedback | Design decision documented, one paradigm chosen | 🔲 Pending |
@@ -157,13 +78,18 @@ status table here, so this doesn't drift again.
 removing the recurring reconciliation cost that made #348/LB-07 necessary
 in the first place.
 
----
+DORA acceptance test flakiness (#359) fixed — root cause was a fixed,
+reused `team_id` letting a stale Prometheus series from an earlier local
+run satisfy the readiness poll instantly instead of waiting for the
+current run's own event; confirmed live, not just reasoned about.
 
-## Blocked Items
+`MODEL_POLICY.md` migrated to platform/provider-agnostic (#346) — no more
+hardcoded model IDs or OpenCode-specific product names in the routing logic
+itself, only benchmark thresholds and dispatch-mode properties.
 
-**#381** (deploy host identity unstable) and **#182** (rollback drill needs
-a network path) — both blocked on maintainer action, not agent-executable.
-See the Unblock Runbook above for the exact steps on each.
+Project status moved from alpha to beta (`0.4.0-beta.1`) — 6 of 7 `LB-*`
+exit criteria closed; only LB-04 (#182) remains, now unblocked (network
+path exists) but not yet run.
 
 ---
 
