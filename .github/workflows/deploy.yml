@@ -450,7 +450,12 @@ jobs:
           git fetch --tags --force origin
           git checkout --detach "${DEPLOY_TAG}"
 
-          make up
+          # Inlined from `make up` (Makefile: check-env then compose up) --
+          # not every deploy target has GNU Make installed (confirmed:
+          # Synology DSM's BusyBox-based shell doesn't ship it), and this
+          # is the exact, only thing that target needs from it.
+          ./scripts/check-env.sh
+          docker compose --profile core up -d
 
           if [ ! -x ./scripts/wait-healthy.sh ]; then
             echo "Missing executable script: ./scripts/wait-healthy.sh"
@@ -743,14 +748,16 @@ jobs:
             echo "::error::Cannot roll back: tag deploy-latest-good does not exist."
             echo "No deploy has been verified yet, so there is no known-good revision to return to."
             echo "Recover manually on the host: check out the last revision known healthy,"
-            echo "run 'make up', then create the deploy-latest-good tag at that revision"
+            echo "run './scripts/check-env.sh && docker compose --profile core up -d',"
+            echo "then create the deploy-latest-good tag at that revision"
             echo "and publish it to origin. See docs/ROLLBACK_DRILL.md and issue #323."
             exit 1
           fi
 
           git checkout --detach deploy-latest-good
 
-          make up
+          ./scripts/check-env.sh
+          docker compose --profile core up -d
 
           if [ ! -x ./scripts/wait-healthy.sh ]; then
             echo "Missing executable script: ./scripts/wait-healthy.sh"

@@ -208,7 +208,7 @@ class TestTagBasedDeployRollback:
         joined = "\n".join(str(step) for step in job["steps"])
         assert "deploy-latest-good" in joined
         assert "git checkout" in joined
-        assert "make up" in joined
+        assert "docker compose --profile core up -d" in joined
 
     def test_rollback_never_pushes_git_state(
         self, deploy_workflow: dict[str, Any]
