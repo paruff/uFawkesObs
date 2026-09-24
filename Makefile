@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -149,6 +149,31 @@ test-integration: install-integration-deps
 	TEMPO_URL=http://localhost:3200 \
 	LOKI_URL=http://localhost:3100 \
 	pytest tests/integration/ -v --tb=short
+
+## test-conformance: run the InSpec profile (inspec/ufawkesobs-conformance)
+##   against the live stack's actually-running containers -- checks health
+##   status, port bindings, image digests, and volume types match
+##   compose.yaml (AGENTS.md §4). Requires 'make up' first. Not CI-gated yet
+##   (#414/#415) -- run manually; services from profiles you haven't started
+##   are reported skipped, not failed.
+test-conformance:
+	@echo "========================================"
+	@echo "🟤 Conformance Tests (InSpec, AGENTS.md §4)"
+	@echo "========================================"
+	@set -e; \
+	tmpbin=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpbin"' EXIT; \
+	cid=$$(docker create docker:27-cli@sha256:851f91d241214e7c6db86513b270d58776379aacc5eb9c4a87e5b47115e3065c); \
+	docker cp "$$cid:/usr/local/bin/docker" "$$tmpbin/docker"; \
+	docker rm "$$cid" > /dev/null; \
+	chmod +x "$$tmpbin/docker"; \
+	docker run --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v "$$tmpbin/docker:/usr/local/bin/docker:ro" \
+		-v $(PWD)/compose.yaml:/compose.yaml:ro \
+		-v $(PWD)/inspec/ufawkesobs-conformance:/profile \
+		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
+		exec /profile --chef-license=accept-silent --no-distinct-exit
 
 # Match CI's DORA compute cadence. compose.yaml defaults
 # DORA_COMPUTE_INTERVAL_SECONDS to 3600, while ci-acceptance-full.yml sets 15 --
