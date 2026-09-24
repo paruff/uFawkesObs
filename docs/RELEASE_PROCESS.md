@@ -81,7 +81,8 @@ ready to call itself stable.
 
 `release-please-config.json` currently sets `"prerelease": true` —
 every release this produces is marked a GitHub prerelease, matching the
-project's current alpha/pre-late-beta status. **Once late beta is
+project's current beta/pre-late-beta status (see
+`docs/PATH_TO_LATE_BETA.md`). **Once late beta is
 reached** (all seven `LB-*` items in `docs/PATH_TO_LATE_BETA.md` closed),
 flip this to `false` so releases stop being marked prerelease. This is a
 manual one-line config change, not automatic — release-please has no
