@@ -96,9 +96,10 @@ jobs:
           sleep 20
 
       - name: Run Prometheus scraping tests
+        # Migrated to Testcontainers (#416) -- self-provisions the whole
+        # `core` profile (test_all_configured_targets_are_up needs every
+        # scrape target up), doesn't read PROMETHEUS_URL.
         run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
-        env:
-          PROMETHEUS_URL: http://localhost:9090
 
       - name: Run OTel Collector tests
         run: pytest tests/integration/test_otel_collector.py -v --tb=short

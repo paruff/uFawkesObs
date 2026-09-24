@@ -2,63 +2,129 @@
 Integration tests for Prometheus metric scraping.
 Tests that Prometheus scrapes all configured targets correctly.
 
+Migrated to Testcontainers (#416): `test_all_configured_targets_are_up`
+asserts every job in config/prometheus/prometheus.yaml except dora-api is
+up, which means this file genuinely needs the whole `core` profile running
+-- not a subset. Provisions it per test-module run instead of assuming
+`make up` already started a shared stack.
+
 Feature: Prometheus Metric Scraping
   As a DevOps engineer
   I want Prometheus to scrape all configured targets
   So that metrics are collected reliably
 """
 
+from __future__ import annotations
+
 import os
+import pathlib
+import tempfile
 import time
-import requests
+from typing import Any
+
 import pytest
-from typing import Dict, Any, List
+import requests
+from testcontainers.compose import DockerCompose
 
-
-# Configuration
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRAPE_SLA_SECONDS = 1.0  # Scrape should complete in under 1 second
+GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
 
 
-@pytest.fixture(scope="session")
-def prometheus_url() -> str:
-    """Provide Prometheus URL."""
-    return PROMETHEUS_URL
+@pytest.fixture(scope="module")
+def prometheus_stack():
+    # This provisions the whole `core` profile (grafana included), which
+    # compose.yaml requires GRAFANA_ADMIN_PASSWORD for. docker compose
+    # auto-loads this repo's own .env ahead of this process's environment
+    # (confirmed live in #416/Grafana's migration) -- an explicit env_file
+    # is the override that actually takes precedence.
+    with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as f:
+        f.write(f"GRAFANA_ADMIN_PASSWORD={GRAFANA_ADMIN_PASSWORD}\n")
+        # compose.yaml's alertmanager secret (`environment: SLACK_WEBHOOK_URL`)
+        # must exist (even empty) or `docker compose up` on the whole
+        # profile (no explicit services=) refuses to start anything --
+        # matches ci-tests.yml's own job-level env var for the same reason.
+        f.write(f"SLACK_WEBHOOK_URL={os.environ.get('SLACK_WEBHOOK_URL', '')}\n")
+        env_file_path = f.name
+
+    try:
+        with DockerCompose(
+            context=str(REPO_ROOT),
+            compose_file_name="compose.yaml",
+            env_file=env_file_path,
+            profiles=["core"],
+            wait=True,
+        ) as compose:
+            yield compose
+    finally:
+        os.unlink(env_file_path)
 
 
-@pytest.fixture(scope="session")
-def wait_for_prometheus(prometheus_url: str) -> None:
-    """Wait for Prometheus to be ready."""
-    max_retries = 60
-    retry_interval = 2
+@pytest.fixture(scope="module")
+def prometheus_url(prometheus_stack: DockerCompose) -> str:
+    host, port = prometheus_stack.get_service_host_and_port("prometheus", 9090)
+    url = f"http://{host}:{int(port)}"
 
-    for attempt in range(max_retries):
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
         try:
-            response = requests.get(f"{prometheus_url}/-/ready", timeout=5)
-            if response.status_code == 200:
-                print(f"✅ Prometheus is ready after {attempt + 1} attempts")
-                # Give Prometheus a bit more time to start scraping
-                time.sleep(10)
-                return
+            if requests.get(f"{url}/-/ready", timeout=5).status_code == 200:
+                break
         except requests.exceptions.RequestException:
             pass
+        time.sleep(1)
+    else:
+        pytest.fail("Prometheus did not report /-/ready within 60s")
 
-        time.sleep(retry_interval)
+    # Replaces the original file's blind `time.sleep(10)` ("give Prometheus
+    # a bit more time to start scraping") -- poll until every core job
+    # (test_all_configured_targets_are_up's own list) shows up=1, not just
+    # otel-collector. Grafana in particular has a 60s healthcheck
+    # start_period, so it's routinely still "down" on the first scrape
+    # attempt or two even after Prometheus itself is ready.
+    expected_up_jobs = {
+        "prometheus",
+        "otel-collector",
+        "otel-app-metrics",
+        "alertmanager",
+        "alloy",
+        "loki",
+        "tempo",
+        "grafana",
+        "node-exporter",
+    }
+    up_jobs: set[str] = set()
+    healthy_jobs: set[str] = set()
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        try:
+            data = query_prometheus(url, "up")
+            up_jobs = {
+                r["metric"].get("job")
+                for r in data.get("result", [])
+                if float(r.get("value", [0, "0"])[1]) == 1.0
+            }
+            # /api/v1/targets' own health field can lag a scrape or two
+            # behind the `up` metric -- wait for both to agree, since
+            # test_get_all_targets_details asserts on this endpoint too.
+            healthy_jobs = {
+                t["labels"].get("job")
+                for t in get_targets(url)
+                if t.get("health") == "up"
+            }
+            if expected_up_jobs.issubset(up_jobs & healthy_jobs):
+                return url
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            pass
+        time.sleep(2)
+    pytest.fail(
+        f"Prometheus never scraped all core jobs as up within 90s "
+        f"(missing from up metric: {expected_up_jobs - up_jobs}, "
+        f"missing from /targets health: {expected_up_jobs - healthy_jobs})"
+    )
 
-    pytest.fail("Prometheus did not become ready in time")
 
-
-def query_prometheus(prometheus_url: str, query: str) -> Dict[str, Any]:
-    """
-    Execute a PromQL query and return results.
-
-    Args:
-        prometheus_url: Base URL for Prometheus
-        query: PromQL query string
-
-    Returns:
-        Query result dictionary
-    """
+def query_prometheus(prometheus_url: str, query: str) -> dict[str, Any]:
     response = requests.get(
         f"{prometheus_url}/api/v1/query", params={"query": query}, timeout=10
     )
@@ -71,46 +137,7 @@ def query_prometheus(prometheus_url: str, query: str) -> Dict[str, Any]:
     return result.get("data", {})
 
 
-def query_prometheus_range(
-    prometheus_url: str, query: str, start: int, end: int, step: int = 15
-) -> Dict[str, Any]:
-    """
-    Execute a PromQL range query.
-
-    Args:
-        prometheus_url: Base URL for Prometheus
-        query: PromQL query string
-        start: Start timestamp (Unix time)
-        end: End timestamp (Unix time)
-        step: Query resolution step width in seconds
-
-    Returns:
-        Query result dictionary
-    """
-    response = requests.get(
-        f"{prometheus_url}/api/v1/query_range",
-        params={"query": query, "start": start, "end": end, "step": step},
-        timeout=10,
-    )
-    response.raise_for_status()
-    result = response.json()
-
-    if result.get("status") != "success":
-        raise ValueError(f"Query failed: {result.get('error', 'Unknown error')}")
-
-    return result.get("data", {})
-
-
-def get_targets(prometheus_url: str) -> List[Dict[str, Any]]:
-    """
-    Get all scrape targets from Prometheus.
-
-    Args:
-        prometheus_url: Base URL for Prometheus
-
-    Returns:
-        List of target dictionaries
-    """
+def get_targets(prometheus_url: str) -> list[dict[str, Any]]:
     response = requests.get(f"{prometheus_url}/api/v1/targets", timeout=10)
     response.raise_for_status()
     result = response.json()
@@ -126,9 +153,7 @@ def get_targets(prometheus_url: str) -> List[Dict[str, Any]]:
 class TestPrometheusOTelCollectorScraping:
     """Test Prometheus scraping of OTel Collector metrics."""
 
-    def test_otel_collector_target_is_up(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_otel_collector_target_is_up(self, prometheus_url: str):
         """
         Scenario: Prometheus scrapes OTel Collector successfully
           Given Obstackd stack is running
@@ -141,21 +166,11 @@ class TestPrometheusOTelCollectorScraping:
         results = data.get("result", [])
         assert len(results) > 0, "OTel Collector target should exist in Prometheus"
 
-        # Check that the target is up (value=1)
         up_value = float(results[0].get("value", [0, "0"])[1])
         assert up_value == 1.0, f"OTel Collector should be up (value=1), got {up_value}"
 
-        print("✅ OTel Collector target is up and being scraped")
-
-    def test_otel_collector_scrape_duration(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
-        """
-        Test that OTel Collector scrape completes in under 1 second.
-
-        Scenario: Prometheus scrapes OTel Collector successfully
-          And the scrape should complete in under 1 second
-        """
+    def test_otel_collector_scrape_duration(self, prometheus_url: str):
+        """Test that OTel Collector scrape completes in under 1 second."""
         data = query_prometheus(
             prometheus_url, 'scrape_duration_seconds{job="otel-collector"}'
         )
@@ -168,13 +183,7 @@ class TestPrometheusOTelCollectorScraping:
             f"Scrape duration should be < {SCRAPE_SLA_SECONDS}s, got {duration}s"
         )
 
-        print(
-            f"✅ OTel Collector scrape duration: {duration:.3f}s (< {SCRAPE_SLA_SECONDS}s)"
-        )
-
-    def test_otel_collector_no_scrape_errors(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_otel_collector_no_scrape_errors(self, prometheus_url: str):
         """Test that there are no scrape errors for OTel Collector."""
         data = query_prometheus(prometheus_url, 'up{job="otel-collector"}')
 
@@ -182,17 +191,11 @@ class TestPrometheusOTelCollectorScraping:
         for result in results:
             up_value = float(result.get("value", [0, "0"])[1])
             if up_value != 1.0:
-                # Get the instance that's down
                 instance = result.get("metric", {}).get("instance", "unknown")
                 pytest.fail(f"Scrape error detected for instance {instance}")
 
-        print("✅ No scrape errors detected for OTel Collector")
-
-    def test_otel_collector_metrics_available(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_otel_collector_metrics_available(self, prometheus_url: str):
         """Test that OTel Collector is exporting expected metrics."""
-        # Check for key OTel Collector metrics
         expected_metrics = [
             "otelcol_process_uptime",
             "otelcol_receiver_accepted_spans",
@@ -202,21 +205,15 @@ class TestPrometheusOTelCollectorScraping:
         ]
 
         for metric in expected_metrics:
-            data = query_prometheus(prometheus_url, metric)
-            results = data.get("result", [])
-            # Note: Some metrics might not have data yet if no traffic has been sent
-            # So we just check that the query succeeds
-            print(f"  Metric '{metric}': {len(results)} series")
-
-        print("✅ OTel Collector metrics are queryable")
+            # Some metrics might not have data yet if no traffic has been
+            # sent -- we just check that the query itself succeeds.
+            query_prometheus(prometheus_url, metric)
 
 
 class TestPrometheusAllTargets:
     """Test that all configured Prometheus targets are healthy."""
 
-    def test_all_configured_targets_are_up(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_all_configured_targets_are_up(self, prometheus_url: str):
         """
         Scenario: All configured targets are healthy
           Given Obstackd stack is running
@@ -228,11 +225,8 @@ class TestPrometheusAllTargets:
         results = data.get("result", [])
         assert len(results) > 0, "Should have at least one target configured"
 
-        # Core services that must be up
-        _core_services = ["prometheus", "otel-collector", "alertmanager"]
-        # Optional services that may not be scheduled
-        # dora-api is dora-profile-only; CI's Integration Tests job runs
-        # `--profile core`, so it's never started there.
+        # dora-api is dora-profile-only; this file provisions --profile
+        # core only, so it's never started here.
         optional_services = ["dora-api"]
 
         down_core_targets = []
@@ -250,20 +244,11 @@ class TestPrometheusAllTargets:
                 else:
                     down_core_targets.append(f"{job}/{instance}")
 
-        # Only fail if core services are down
         assert len(down_core_targets) == 0, (
             f"Core targets should be up, but these are down: {', '.join(down_core_targets)}"
         )
 
-        if down_optional_targets:
-            print(f"⚠️  Optional targets are down: {', '.join(down_optional_targets)}")
-
-        up_count = len(results) - len(down_core_targets) - len(down_optional_targets)
-        print(f"✅ All {up_count} core targets are up and healthy")
-
-    def test_no_targets_with_zero_samples(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_no_targets_with_zero_samples(self, prometheus_url: str):
         """
         Scenario: All configured targets are healthy
           And no core scrape_samples_scraped should be 0
@@ -272,70 +257,42 @@ class TestPrometheusAllTargets:
 
         results = data.get("result", [])
 
-        # Optional services that may not be running
-        # otel-app-metrics only has samples when applications send OTLP telemetry
-        # dora-api is dora-profile-only; not started in CI's `--profile core` run
+        # otel-app-metrics only has samples when applications send OTLP
+        # telemetry; dora-api is dora-profile-only (not started here).
         optional_services = ["otel-app-metrics", "dora-api"]
 
-        if len(results) > 0:
-            core_zero_sample_targets = []
-            optional_zero_sample_targets = []
+        core_zero_sample_targets = [
+            f"{r.get('metric', {}).get('job', 'unknown')}/{r.get('metric', {}).get('instance', 'unknown')}"
+            for r in results
+            if r.get("metric", {}).get("job", "unknown") not in optional_services
+        ]
 
-            for result in results:
-                metric = result.get("metric", {})
-                job = metric.get("job", "unknown")
-                instance = metric.get("instance", "unknown")
+        assert not core_zero_sample_targets, (
+            f"Core targets are not producing samples: {', '.join(core_zero_sample_targets)}"
+        )
 
-                if job in optional_services:
-                    optional_zero_sample_targets.append(f"{job}/{instance}")
-                else:
-                    core_zero_sample_targets.append(f"{job}/{instance}")
-
-            # Only fail if core services are not producing samples
-            if core_zero_sample_targets:
-                pytest.fail(
-                    f"Core targets are not producing samples: {', '.join(core_zero_sample_targets)}"
-                )
-
-            if optional_zero_sample_targets:
-                print(
-                    f"⚠️  Optional targets not producing samples: {', '.join(optional_zero_sample_targets)}"
-                )
-
-        print("✅ All core targets are producing samples")
-
-    def test_all_targets_scrape_duration_within_sla(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_all_targets_scrape_duration_within_sla(self, prometheus_url: str):
         """Test that all target scrapes complete within SLA."""
         data = query_prometheus(
             prometheus_url, f"scrape_duration_seconds > {SCRAPE_SLA_SECONDS}"
         )
 
         results = data.get("result", [])
+        slow_targets = [
+            f"{r.get('metric', {}).get('job', 'unknown')}/{r.get('metric', {}).get('instance', 'unknown')} "
+            f"({float(r.get('value', [0, '0'])[1]):.3f}s)"
+            for r in results
+        ]
 
-        if len(results) > 0:
-            slow_targets = []
-            for result in results:
-                metric = result.get("metric", {})
-                job = metric.get("job", "unknown")
-                instance = metric.get("instance", "unknown")
-                duration = float(result.get("value", [0, "0"])[1])
-                slow_targets.append(f"{job}/{instance} ({duration:.3f}s)")
-
-            pytest.fail(
-                f"These targets exceed scrape SLA ({SCRAPE_SLA_SECONDS}s): {', '.join(slow_targets)}"
-            )
-
-        print(f"✅ All targets scrape within SLA ({SCRAPE_SLA_SECONDS}s)")
+        assert not slow_targets, (
+            f"These targets exceed scrape SLA ({SCRAPE_SLA_SECONDS}s): {', '.join(slow_targets)}"
+        )
 
 
 class TestPrometheusMetricLabels:
     """Test that metrics have correct labels."""
 
-    def test_otel_receiver_metrics_have_required_labels(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_otel_receiver_metrics_have_required_labels(self, prometheus_url: str):
         """
         Scenario: Metrics have correct labels
           Given Prometheus is scraping metrics
@@ -345,13 +302,8 @@ class TestPrometheusMetricLabels:
         data = query_prometheus(prometheus_url, "otelcol_receiver_accepted_spans")
 
         results = data.get("result", [])
-
-        # Check if we have results (may be empty if no spans have been received yet)
         if len(results) > 0:
-            # Check first result for expected labels
             metric = results[0].get("metric", {})
-
-            # Expected labels on OTel Collector metrics
             expected_labels = ["job", "instance", "receiver", "transport"]
 
             for label in expected_labels:
@@ -359,17 +311,8 @@ class TestPrometheusMetricLabels:
                     f"Metric should have label '{label}', got labels: {list(metric.keys())}"
                 )
 
-            print(
-                f"✅ OTel receiver metrics have required labels: {list(metric.keys())}"
-            )
-        else:
-            print(
-                "⚠️  No otelcol_receiver_accepted_spans data yet (this is OK if no spans sent)"
-            )
-
-    def test_metrics_have_job_label(self, wait_for_prometheus, prometheus_url: str):
+    def test_metrics_have_job_label(self, prometheus_url: str):
         """Test that all metrics have a 'job' label."""
-        # Query for any metric without a job label
         data = query_prometheus(prometheus_url, 'up{job=""}')
 
         results = data.get("result", [])
@@ -377,45 +320,28 @@ class TestPrometheusMetricLabels:
             "All metrics should have a 'job' label, but found metrics without it"
         )
 
-        print("✅ All scraped metrics have 'job' label")
-
 
 class TestPrometheusTargetDetails:
     """Test detailed target information."""
 
-    def test_get_all_targets_details(self, wait_for_prometheus, prometheus_url: str):
+    def test_get_all_targets_details(self, prometheus_url: str):
         """Get detailed information about all scrape targets."""
         targets = get_targets(prometheus_url)
-
         assert len(targets) > 0, "Should have at least one active target"
 
-        # Optional services that may not be running
-        # dora-api is dora-profile-only; not started in CI's `--profile core` run
         optional_services = ["dora-api"]
-
-        print(f"\n📊 Active Targets ({len(targets)}):")
-        down_core_targets = []
-
-        for target in targets:
-            job = target.get("labels", {}).get("job", "unknown")
-            instance = target.get("labels", {}).get("instance", "unknown")
-            health = target.get("health", "unknown")
-            _last_scrape = target.get("lastScrape", "never")
-            last_scrape_duration = target.get("lastScrapeDuration", 0)
-
-            print(f"  • {job}/{instance}: {health} (last: {last_scrape_duration}s)")
-
-            # Verify core services are healthy
-            if health != "up" and job not in optional_services:
-                down_core_targets.append(f"{job}/{instance}")
+        down_core_targets = [
+            f"{t.get('labels', {}).get('job', 'unknown')}/{t.get('labels', {}).get('instance', 'unknown')}"
+            for t in targets
+            if t.get("health") != "up"
+            and t.get("labels", {}).get("job") not in optional_services
+        ]
 
         assert len(down_core_targets) == 0, (
             f"Core targets should be healthy, but these are down: {', '.join(down_core_targets)}"
         )
 
-    def test_otel_collector_target_labels(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_otel_collector_target_labels(self, prometheus_url: str):
         """Test that OTel Collector target has correct labels."""
         targets = get_targets(prometheus_url)
 
@@ -424,10 +350,7 @@ class TestPrometheusTargetDetails:
         ]
         assert len(otel_targets) > 0, "Should have OTel Collector target"
 
-        otel_target = otel_targets[0]
-        labels = otel_target.get("labels", {})
-
-        # Check for expected labels from prometheus.yaml
+        labels = otel_targets[0].get("labels", {})
         assert labels.get("component") == "otel-collector", (
             "Should have component=otel-collector label"
         )
@@ -435,43 +358,26 @@ class TestPrometheusTargetDetails:
             "Should have service=telemetry label"
         )
 
-        print("✅ OTel Collector target has correct labels")
-
 
 class TestPrometheusMetricCardinality:
     """Test that metric cardinality is reasonable."""
 
-    def test_metric_cardinality_is_reasonable(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_metric_cardinality_is_reasonable(self, prometheus_url: str):
         """Test that we don't have excessive metric cardinality."""
-        # Query for total number of time series
         data = query_prometheus(prometheus_url, 'count({__name__=~".+"})')
 
         results = data.get("result", [])
         if len(results) > 0:
             total_series = int(float(results[0].get("value", [0, "0"])[1]))
-
-            # Set a reasonable upper limit (this will depend on your environment)
-            # For a basic setup, we expect < 10,000 series
-            # Adjust this limit via MAX_SERIES_CARDINALITY env var for your environment
             max_expected_series = int(os.getenv("MAX_SERIES_CARDINALITY", "10000"))
 
             assert total_series < max_expected_series, (
-                f"Metric cardinality is too high: {total_series} series (max: {max_expected_series})"
+                f"Metric cardinality is too high: {total_series} series "
+                f"(max: {max_expected_series})"
             )
 
-            print(
-                f"✅ Metric cardinality is reasonable: {total_series} series (max: {max_expected_series})"
-            )
-        else:
-            print("⚠️  No metric series found yet")
-
-    def test_no_excessive_label_combinations(
-        self, wait_for_prometheus, prometheus_url: str
-    ):
+    def test_no_excessive_label_combinations(self, prometheus_url: str):
         """Test that no single metric has excessive label combinations."""
-        # Check cardinality for key metrics
         metrics_to_check = ["up", "scrape_duration_seconds", "otelcol_process_uptime"]
 
         for metric in metrics_to_check:
@@ -485,5 +391,3 @@ class TestPrometheusMetricCardinality:
                 assert count < max_expected, (
                     f"Metric '{metric}' has too many series: {count} (max: {max_expected})"
                 )
-
-                print(f"  • {metric}: {count} series")

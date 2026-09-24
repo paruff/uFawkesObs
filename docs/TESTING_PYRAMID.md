@@ -131,6 +131,7 @@ live `make up` (`core` profile) stack before wiring anything into CI:
   - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. `TestAlloyIntegration` in this same file left unmigrated -- Alloy depends on both Loki and Prometheus, so it belongs with the `test_alloy_and_dashboards.py` entry below instead (PR open)
   - [ ] `test_grafana_integration.py` — depends on Prometheus being scraped
   - [ ] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
-  - [ ] rest of `test_otel_collector.py` / `test_prometheus_scraping.py` — retire the originals once their Testcontainers replacements cover the same assertions
+  - [x] `test_prometheus_scraping.py` — migrated in place (whole file needs the full `core` profile since `test_all_configured_targets_are_up` checks every scrape target)
+  - [ ] rest of `test_otel_collector.py` — retire the original once its Testcontainers replacement (`test_otel_collector_testcontainers.py`, #413) covers the same assertions
   - [ ] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them
 - [ ] [#417](https://github.com/paruff/uFawkesObs/issues/417) — Update `tests/README.md`'s pyramid diagram (depends on all above). `tests/README.md` now has a 5-tier overview and `docs/DETERMINISM.md` has a re-audit note; both marked partial/in-progress since #416's file-by-file migration isn't finished yet. Revisit once that checklist is fully checked off.
