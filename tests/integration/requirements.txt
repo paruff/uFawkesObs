@@ -1,7 +1,7 @@
 # Integration Testing Requirements
 # Python dependencies for Home Assistant integration tests
 
-pytest>=7.4.3
+pytest>=9.1.1
 pytest-bdd>=6.1.1
 requests>=2.34.2
 python-dotenv>=1.2.3
