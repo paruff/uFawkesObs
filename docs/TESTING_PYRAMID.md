@@ -122,13 +122,13 @@ live `make up` (`core` profile) stack before wiring anything into CI:
 
 ## Tracking
 
-- [ ] [#413](https://github.com/paruff/uFawkesObs/issues/413) — Testcontainers spike: migrate one integration test file
-- [ ] [#414](https://github.com/paruff/uFawkesObs/issues/414) — InSpec profile for AGENTS.md §4 conformance
-- [ ] [#415](https://github.com/paruff/uFawkesObs/issues/415) — Wire InSpec profile into CI (depends on #414)
+- [x] [#413](https://github.com/paruff/uFawkesObs/issues/413) — Testcontainers spike: migrate one integration test file (on `main`)
+- [x] [#414](https://github.com/paruff/uFawkesObs/issues/414) — InSpec profile for AGENTS.md §4 conformance (on `main`)
+- [ ] [#415](https://github.com/paruff/uFawkesObs/issues/415) — Wire InSpec profile into CI (depends on #414). CI job on `main`, reporting on every PR. Still needed: adding it to branch protection's required checks (maintainer action, AGENTS.md §5) once its false-positive rate is confirmed low across real runs.
 - [ ] [#416](https://github.com/paruff/uFawkesObs/issues/416) — Migrate remaining `tests/integration/` to Testcontainers (depends on #413). File-by-file status (each a separate PR, kept under the 400-line gate):
-  - [x] `test_otel_collector_testcontainers.py` — spike, #413 (new file, alongside the original)
-  - [x] `test_tempo_integration.py` — single-service, no `depends_on:`
-  - [ ] `test_loki_integration.py` — single-service, no `depends_on:` (same shape as Tempo)
+  - [x] `test_otel_collector_testcontainers.py` — spike, #413 (new file, alongside the original) (on `main`)
+  - [x] `test_tempo_integration.py` — single-service, no `depends_on:` (PR open)
+  - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. `TestAlloyIntegration` in this same file left unmigrated -- Alloy depends on both Loki and Prometheus, so it belongs with the `test_alloy_and_dashboards.py` entry below instead (PR open)
   - [ ] `test_grafana_integration.py` — depends on Prometheus being scraped
   - [ ] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
   - [ ] rest of `test_otel_collector.py` / `test_prometheus_scraping.py` — retire the originals once their Testcontainers replacements cover the same assertions
