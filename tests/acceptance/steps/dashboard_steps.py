@@ -5,6 +5,7 @@ Additional steps specific to dashboards beyond shared steps.
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 import requests
@@ -37,8 +38,16 @@ def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
     step blocks until the metric is genuinely visible in Prometheus
     (same poll_metric() helper OBS-SLI-006 already uses) instead of
     returning the instant the ingestion API accepts the POST.
+
+    #359: a fixed, reused team_id here means Prometheus's *own* TSDB
+    (bind-mounted to ./data/prometheus, not wiped by `docker compose down
+    -v`) permanently satisfies this poll after the first local run ever
+    seeds it -- confirmed live: a second run's poll_metric() returned in
+    0.0s against genuinely stale data from a prior run, never exercising
+    the wait it exists to provide. A unique team_id per invocation makes
+    that impossible: the query can only match this run's own event.
     """
-    repo = "acceptance-test/dashboard-data-presence"
+    repo = f"acceptance-test/dashboard-data-presence-{uuid.uuid4().hex[:12]}"
     resp = requests.post(
         "http://localhost:8088/event",
         json={
