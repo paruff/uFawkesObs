@@ -101,9 +101,10 @@ jobs:
           PROMETHEUS_URL: http://localhost:9090
 
       - name: Run OTel Collector tests
-        run: pytest tests/integration/test_otel_collector.py -v --tb=short
-        env:
-          OTEL_METRICS_URL: http://localhost:8888
+        # Migrated to Testcontainers (#413/#416) -- self-provisions,
+        # doesn't read OTEL_METRICS_URL. The original test_otel_collector.py
+        # is retired; this file now covers everything it did.
+        run: pytest tests/integration/test_otel_collector_testcontainers.py -v --tb=short
 
       - name: Run Grafana integration tests
         run: pytest tests/integration/test_grafana_integration.py -v --tb=short
