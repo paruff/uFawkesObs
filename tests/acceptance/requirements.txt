@@ -1,7 +1,7 @@
 # Acceptance Test Requirements
 # Python dependencies for uFawkesObs acceptance tests
 
-pytest>=8.0
+pytest>=9.1.1
 pytest-bdd>=7.0
 requests>=2.34.2
 python-dotenv>=1.0.0
