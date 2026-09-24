@@ -133,4 +133,4 @@ live `make up` (`core` profile) stack before wiring anything into CI:
   - [ ] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
   - [ ] rest of `test_otel_collector.py` / `test_prometheus_scraping.py` — retire the originals once their Testcontainers replacements cover the same assertions
   - [ ] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them
-- [ ] [#417](https://github.com/paruff/uFawkesObs/issues/417) — Update `tests/README.md`'s pyramid diagram (depends on all above)
+- [ ] [#417](https://github.com/paruff/uFawkesObs/issues/417) — Update `tests/README.md`'s pyramid diagram (depends on all above). `tests/README.md` now has a 5-tier overview and `docs/DETERMINISM.md` has a re-audit note; both marked partial/in-progress since #416's file-by-file migration isn't finished yet. Revisit once that checklist is fully checked off.
