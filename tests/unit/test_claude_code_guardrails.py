@@ -10,6 +10,7 @@
 """
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -27,12 +28,16 @@ ONE_TEST = "def test_a():\n    assert 1\n"
 
 
 def run_hook(hook: Path, payload: dict, cwd: Path = REPO_ROOT):
+    # Hooks cd to $CLAUDE_PROJECT_DIR when set; drop it so a test run inside
+    # a Claude Code session exercises `cwd`, not the real repo.
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDE_PROJECT_DIR"}
     return subprocess.run(
         [str(hook)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
         cwd=cwd,
+        env=env,
         timeout=120,
     )
 

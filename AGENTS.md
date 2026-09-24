@@ -210,6 +210,9 @@ Check `docs/CHANGE_IMPACT_MAP.md` for cross-plane impact before changing shared 
 
 - `INTENT.md` — half-page anchor, read this first
 - `.claude/rules/` — path-scoped architecture rules (§4)
+- `REVIEW.md` — review policy: severity, when human approval is required
+- `.claude/hooks/` — enforced guardrails: `protect-tests.py` (no test deletion), `verify-changed-files.sh` (pre-commit before a session stops)
+- `.claude/skills` → `.agents/skills` (symlink, so Claude Code loads the same skills)
 - `.agents/skills/gitops-reconcile/` — deploy/reconciliation mechanics (§8)
 - `.github/copilot-instructions.md` — Copilot-specific subset
 - `.github/instructions/` — path-scoped instruction files
