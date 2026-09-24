@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.25-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.24-alpha.1...v0.3.25-alpha.1) (2026-09-24)
+
+
+### Added
+
+* **test:** InSpec profile for AGENTS.md §4 live-stack conformance ([#444](https://github.com/paruff/uFawkesObs/issues/444)) ([7c0c924](https://github.com/paruff/uFawkesObs/commit/7c0c924c7656bd3b53baa0986850d7973dedaf5d))
+* **test:** Testcontainers spike for integration tier ([b5603b4](https://github.com/paruff/uFawkesObs/commit/b5603b42d89aa11d0c437a1f084f2ffb15cdb302))
+* **test:** Testcontainers spike for integration tier ([d30bc5a](https://github.com/paruff/uFawkesObs/commit/d30bc5ab2e47934fe5c3490c100bfbaee6c4ee5d))
+
+
+### Fixed
+
+* **deps:** rename lock files so Dependabot cannot partially bump them ([#419](https://github.com/paruff/uFawkesObs/issues/419)) ([b9e7311](https://github.com/paruff/uFawkesObs/commit/b9e731122ca000d91b346b4af6ac717f643ffffe))
+* **dora:** persist failed deployment events instead of dropping them ([#412](https://github.com/paruff/uFawkesObs/issues/412)) ([de45f49](https://github.com/paruff/uFawkesObs/commit/de45f49aa8aad21692a8455876bec1cc7d7cdc18))
+
+
+### Docs
+
+* add testing pyramid plan (Testcontainers + InSpec) ([#418](https://github.com/paruff/uFawkesObs/issues/418)) ([d859523](https://github.com/paruff/uFawkesObs/commit/d85952322e3cb48e8c2f9a2a3ff45f005ce89bf7))
+* fold test-suite determinism audit into DETERMINISM.md ([#402](https://github.com/paruff/uFawkesObs/issues/402)) ([9b29041](https://github.com/paruff/uFawkesObs/commit/9b2904143e73026df6982c185570c0fdb52be512))
+
+
+### Chores
+
+* **deps:** update aiohttp requirement from &gt;=3.14 to &gt;=3.14.3 in /dora/compute ([94007ef](https://github.com/paruff/uFawkesObs/commit/94007ef0e26961a168abee609ea3ea6e6b028b13))
+* **deps:** update aiohttp requirement from &gt;=3.14 to &gt;=3.14.3 in /tests/unit ([01f9fae](https://github.com/paruff/uFawkesObs/commit/01f9fae77f89398d3a7ceb7406cf6506b95b32ae))
+* **deps:** update aiohttp requirement in /dora/compute ([fa81fa7](https://github.com/paruff/uFawkesObs/commit/fa81fa7ccd95207aa2547912281613a569685b1f))
+* **deps:** update aiohttp requirement in /tests/unit ([57948d9](https://github.com/paruff/uFawkesObs/commit/57948d9a274c25b6a8feef784bd68aa35ff50068))
+* **deps:** update aiosqlite requirement from &gt;=0.20 to &gt;=0.22.1 in /dora/ingestion ([86dd7e0](https://github.com/paruff/uFawkesObs/commit/86dd7e09b26082bb872ae44a2f7921d4770d1495))
+* **deps:** update aiosqlite requirement in /dora/compute ([#441](https://github.com/paruff/uFawkesObs/issues/441)) ([e379863](https://github.com/paruff/uFawkesObs/commit/e379863dbe59416a0ade287e9b450dc98cbf9432))
+* **deps:** update aiosqlite requirement in /dora/ingestion ([43a78be](https://github.com/paruff/uFawkesObs/commit/43a78bea6ae9c165cc982965a90ef8c97ed02c6e))
+* **deps:** update fastapi requirement from &gt;=0.110 to &gt;=0.141.1 in /dora/ingestion ([55d7005](https://github.com/paruff/uFawkesObs/commit/55d7005c4f89efe39332ebaeea51a047ceacdaf3))
+* **deps:** update fastapi requirement from &gt;=0.110 to &gt;=0.141.1 in /tests/unit ([c3bd8f0](https://github.com/paruff/uFawkesObs/commit/c3bd8f043e4a54208abd3f8dd1de3fd8a48e7311))
+* **deps:** update fastapi requirement in /dora/ingestion ([12ecd0e](https://github.com/paruff/uFawkesObs/commit/12ecd0eff4fdb15ef04267dc34f33c72020e7e2b))
+* **deps:** update fastapi requirement in /tests/unit ([815c0c5](https://github.com/paruff/uFawkesObs/commit/815c0c5da2bc988b2c692c4d56e06693f09d24eb))
+* **deps:** update jsonschema requirement from &gt;=4.20 to &gt;=4.26.0 in /dora/ingestion ([b8bbe98](https://github.com/paruff/uFawkesObs/commit/b8bbe980c533b00254a9864291704d03072953ea))
+* **deps:** update jsonschema requirement in /dora/compute ([#440](https://github.com/paruff/uFawkesObs/issues/440)) ([f5a2b76](https://github.com/paruff/uFawkesObs/commit/f5a2b765403bce50b1167e85890e4c68283feed2))
+* **deps:** update jsonschema requirement in /dora/ingestion ([e81a62d](https://github.com/paruff/uFawkesObs/commit/e81a62d1fdd26deb5d9a65753bdb3d5a81aa0bbe))
+* **deps:** update opentelemetry-exporter-otlp-proto-http requirement ([4e3dbca](https://github.com/paruff/uFawkesObs/commit/4e3dbca4ad35e6db4922ffca34318c50fabb45f4))
+* **deps:** update opentelemetry-exporter-otlp-proto-http requirement from &gt;=1.22.0 to &gt;=1.44.0 in /tests/acceptance ([f0587d4](https://github.com/paruff/uFawkesObs/commit/f0587d475f1dadcbc1cb20be0d8aa4918e7a3402))
+* **deps:** update pytest requirement from &gt;=7.4.3 to &gt;=9.1.1 in /tests/integration ([1bdf513](https://github.com/paruff/uFawkesObs/commit/1bdf5138a0de8a8220068e8078157398877f259f))
+* **deps:** update pytest requirement from &gt;=7.4.3 to &gt;=9.1.1 in /tests/unit ([5a843cd](https://github.com/paruff/uFawkesObs/commit/5a843cd86577d7057a4a45b95f8c717b39926f23))
+* **deps:** update pytest requirement from &gt;=8.0 to &gt;=9.1.1 in /tests/acceptance ([205c47e](https://github.com/paruff/uFawkesObs/commit/205c47ebfbe36b0077e052df139407b37f8c4b00))
+* **deps:** update pytest requirement in /tests/acceptance ([39f1b48](https://github.com/paruff/uFawkesObs/commit/39f1b4849980cfe1346d45d01f633b0ae9aa354d))
+* **deps:** update pytest requirement in /tests/integration ([cbdde5f](https://github.com/paruff/uFawkesObs/commit/cbdde5f2b7d3033801fadd8dcb84cd2da8c7ac54))
+* **deps:** update pytest requirement in /tests/unit ([63f6a34](https://github.com/paruff/uFawkesObs/commit/63f6a3405dc084ad8e0c789ee2fe8a346d450c03))
+* **deps:** update pytest-bdd requirement from &gt;=6.1.1 to &gt;=8.1.0 in /tests/integration ([7f07095](https://github.com/paruff/uFawkesObs/commit/7f0709583e2d4b78fdc1c0ba257a5e51117a6d70))
+* **deps:** update pytest-bdd requirement in /tests/integration ([1c13042](https://github.com/paruff/uFawkesObs/commit/1c13042897089630b0f0f718b5cc287601ab6f18))
+* **deps:** update python-dotenv requirement from &gt;=1.0.0 to &gt;=1.2.3 in /tests/integration ([369d54e](https://github.com/paruff/uFawkesObs/commit/369d54e7d3efe848e9552676873c881abd24b156))
+* **deps:** update python-dotenv requirement in /tests/integration ([e63d515](https://github.com/paruff/uFawkesObs/commit/e63d5156583070e6707d631ec342ba98bc8d4c3b))
+* **deps:** update pyyaml requirement from &gt;=6.0 to &gt;=6.0.3 in /tests/acceptance ([c3582a1](https://github.com/paruff/uFawkesObs/commit/c3582a1b9d6de52289409763b5e600d3608425f8))
+* **deps:** update pyyaml requirement from &gt;=6.0.1 to &gt;=6.0.3 in /tests/integration ([346d358](https://github.com/paruff/uFawkesObs/commit/346d35817cb0b6578b2f4788fc0a3da8d6519209))
+* **deps:** update pyyaml requirement in /tests/acceptance ([9ab21e8](https://github.com/paruff/uFawkesObs/commit/9ab21e8f594211eeb3c66572dba96fad7fbf6c08))
+* **deps:** update pyyaml requirement in /tests/integration ([b287b28](https://github.com/paruff/uFawkesObs/commit/b287b285525bc174d970b25b251e7209eefb7be5))
+* **deps:** update requests requirement from &gt;=2.31 to &gt;=2.34.2 in /tests/unit ([fd6ea81](https://github.com/paruff/uFawkesObs/commit/fd6ea81aa25e405a567afbb894ec2bcebc1b0821))
+* **deps:** update requests requirement from &gt;=2.31.0 to &gt;=2.34.2 in /tests/acceptance ([2f32587](https://github.com/paruff/uFawkesObs/commit/2f32587be61ae60209f74c039e11c16eb6e4559b))
+* **deps:** update requests requirement from &gt;=2.31.0 to &gt;=2.34.2 in /tests/integration ([6f35fe5](https://github.com/paruff/uFawkesObs/commit/6f35fe5d4c9fc4e8ed41297d3119299c6274b86a))
+* **deps:** update requests requirement in /tests/acceptance ([2c2b8d2](https://github.com/paruff/uFawkesObs/commit/2c2b8d25f1f53d2e2872232075bab1921f6c67e8))
+* **deps:** update requests requirement in /tests/integration ([45d334e](https://github.com/paruff/uFawkesObs/commit/45d334e22e13b611da0c4b849b963a4830dc1d7f))
+* **deps:** update requests requirement in /tests/unit ([d43bf96](https://github.com/paruff/uFawkesObs/commit/d43bf962e61a52e349c8d3d2ed8b6e13c34dbb9d))
+* **deps:** update uvicorn requirement from &gt;=0.29 to &gt;=0.53.0 in /dora/ingestion ([d355c3b](https://github.com/paruff/uFawkesObs/commit/d355c3bf27569dbd6b46f995a5f588b02664cbf8))
+* **deps:** update uvicorn requirement in /dora/ingestion ([f40dc80](https://github.com/paruff/uFawkesObs/commit/f40dc8027f0bc926310f819847badffba65e8073))
+* **deps:** update yamllint requirement from &gt;=1.33.0 to &gt;=1.38.0 in /tests/unit ([0a2af56](https://github.com/paruff/uFawkesObs/commit/0a2af568f464d71e257b705c451508b4c05ec0a7))
+* **deps:** update yamllint requirement in /tests/unit ([58c3bb9](https://github.com/paruff/uFawkesObs/commit/58c3bb9d6f314c7396df2560b2f4926c593ede06))
+
 ## [0.3.24-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.23-alpha.1...v0.3.24-alpha.1) (2026-09-23)
 
 
