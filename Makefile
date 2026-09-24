@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -248,3 +248,55 @@ pre-commit-run: ## Run all pre-commit hooks
 ##          make pr                                          # auto-generate message
 pr:
 	./scripts/pr-create.sh "$(MSG)"
+
+# ─── Extra lint / scan / release tooling ────────────────────────────────────
+# Not wired into CI. Binaries (actionlint, hadolint, trivy, yq) come from
+# .devcontainer/install-tools.sh; config validators run the exact image
+# compose.yaml pins, read with yq so the two can't drift.
+require = @command -v $(1) >/dev/null || { echo "❌ $(1) not found -- run .devcontainer/install-tools.sh"; exit 1; }
+compose_image = $(shell yq -r '.services.$(1).image' compose.yaml)
+
+## lint-tools: run lint-workflows, lint-dockerfiles, validate-alertmanager, validate-alloy
+lint-tools: lint-workflows lint-dockerfiles validate-alertmanager validate-alloy
+
+## lint-workflows: lint GitHub Actions workflows with actionlint (+ shellcheck warnings on run: blocks)
+lint-workflows:
+	$(call require,actionlint)
+	SHELLCHECK_OPTS="--severity=warning" actionlint
+
+## lint-dockerfiles: lint every Dockerfile with hadolint (prints all, fails on errors)
+lint-dockerfiles:
+	$(call require,hadolint)
+	git ls-files '*Dockerfile*' | xargs hadolint --no-color --failure-threshold error
+
+## validate-alertmanager: amtool check-config using compose.yaml's alertmanager image
+validate-alertmanager:
+	$(call require,yq)
+	docker run --rm --entrypoint amtool \
+		-v $(PWD)/config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro \
+		$(call compose_image,alertmanager) check-config /etc/alertmanager/alertmanager.yml
+
+## validate-alloy: parse the Alloy config with compose.yaml's alloy image
+validate-alloy:
+	$(call require,yq)
+	docker run --rm -v $(PWD)/config/alloy/config.river:/etc/alloy/config.river:ro \
+		$(call compose_image,alloy) fmt /etc/alloy/config.river > /dev/null
+	@echo "✅ config.river parses"
+
+## scan-images: trivy scan of every compose.yaml image (HIGH/CRITICAL, report only)
+scan-images:
+	$(call require,yq)
+	$(call require,trivy)
+	yq -r '.services[].image | select(. != null)' compose.yaml | sort -u | \
+		while read -r img; do \
+			echo "── $$img"; \
+			trivy image --quiet --severity HIGH,CRITICAL --ignore-unfixed "$$img" || exit 1; \
+		done
+
+## release-preview: dry-run release-please -- shows the next release PR without creating it
+release-preview:
+	$(call require,gh)
+	npx -y release-please@17.11.2 release-pr --dry-run \
+		--token="$$(gh auth token)" --repo-url=paruff/uFawkesObs \
+		--config-file=release-please-config.json \
+		--manifest-file=.release-please-manifest.json
