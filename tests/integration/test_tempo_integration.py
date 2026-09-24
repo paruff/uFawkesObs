@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pathlib
 import socket
+import time
 
 import pytest
 import requests
@@ -40,7 +41,25 @@ def _host_port(stack: DockerCompose, container_port: int) -> tuple[str, int]:
 @pytest.fixture(scope="module")
 def tempo_url(tempo_stack: DockerCompose) -> str:
     host, port = _host_port(tempo_stack, 3200)
-    return f"http://{host}:{port}"
+    url = f"http://{host}:{port}"
+
+    # Testcontainers' wait=True only confirms the port is listening, not that
+    # Tempo's own /ready check passes -- Tempo answers with 503 for a few
+    # seconds after the port opens while its internal components (ingester,
+    # compactor) finish starting. Empirically flaky without this: a second
+    # local run failed 3/15 tests on a bare port-open wait.
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        try:
+            if requests.get(f"{url}/ready", timeout=5).status_code == 200:
+                break
+        except requests.exceptions.RequestException:
+            pass
+        time.sleep(1)
+    else:
+        pytest.fail("Tempo did not report /ready within 30s of its port opening")
+
+    return url
 
 
 @pytest.fixture(scope="module")
