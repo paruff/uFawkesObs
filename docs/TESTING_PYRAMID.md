@@ -129,7 +129,7 @@ live `make up` (`core` profile) stack before wiring anything into CI:
   - [x] `test_otel_collector_testcontainers.py` — spike, #413 (new file, alongside the original) (on `main`)
   - [x] `test_tempo_integration.py` — single-service, no `depends_on:` (PR open)
   - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. `TestAlloyIntegration` in this same file left unmigrated -- Alloy depends on both Loki and Prometheus, so it belongs with the `test_alloy_and_dashboards.py` entry below instead (PR open)
-  - [ ] `test_grafana_integration.py` — depends on Prometheus being scraped
+  - [x] `test_grafana_integration.py` — multi-service (Grafana + Prometheus + Tempo + Loki together, since Grafana's datasource provisioning needs them by Docker Compose service name)
   - [ ] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
   - [ ] rest of `test_otel_collector.py` / `test_prometheus_scraping.py` — retire the originals once their Testcontainers replacements cover the same assertions
   - [ ] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them

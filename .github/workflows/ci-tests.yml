@@ -60,10 +60,12 @@ jobs:
       # so a plain value here (not a GitHub secret) is fine. Required since
       # compose.yaml stopped defaulting this to "admin" (#380/PR #386); this
       # job never set it at all before, unlike the other CI workflows.
-      # Must be "admin" — the later "Run Grafana integration tests" and
-      # "Run dashboard tests" steps below hardcode GRAFANA_PASSWORD: admin
-      # for their API assertions (a *different* env var name than this one),
-      # so any other value here 401s against the stack this starts.
+      # Must be "admin" — the "Run dashboard tests" step below hardcodes
+      # GRAFANA_PASSWORD: admin for its API assertions (a *different* env
+      # var name than this one), so any other value here 401s against the
+      # stack this starts. The Grafana integration test file itself no
+      # longer reads a separate GRAFANA_PASSWORD (#416) -- it self-
+      # provisions and reads this same GRAFANA_ADMIN_PASSWORD directly.
       GRAFANA_ADMIN_PASSWORD: admin
     steps:
       - uses: actions/checkout@v7
@@ -106,11 +108,11 @@ jobs:
           OTEL_METRICS_URL: http://localhost:8888
 
       - name: Run Grafana integration tests
+        # Migrated to Testcontainers (#416) -- self-provisions Grafana +
+        # Prometheus + Tempo + Loki together (Grafana's datasource
+        # provisioning needs them by Docker Compose service name),
+        # doesn't read GRAFANA_URL/GRAFANA_USER/GRAFANA_PASSWORD.
         run: pytest tests/integration/test_grafana_integration.py -v --tb=short
-        env:
-          GRAFANA_URL: http://localhost:3000
-          GRAFANA_USER: admin
-          GRAFANA_PASSWORD: admin
 
       - name: Run Tempo integration tests
         # Migrated to Testcontainers (#416) -- self-provisions its own Tempo
