@@ -37,16 +37,41 @@ Grades are defined by minimum benchmark requirements, not specific model names. 
 
 | Grade | Primary Model | Provider | Fallbacks | Notes |
 |-------|---------------|----------|-----------|-------|
-| **S** | nvidia/qwen3-coder-480b-a35b-instruct | NVIDIA NIM (local proxy) | nvidia/nemotron-3-ultra-550b-a55b | Largest available model; use for critical paths |
-| **A** | google/gemini-2.5-pro | Google | opencode-zen/deepseek-v4 | Strong reasoning, good for standard dev work |
-| **B** | google/gemini-2.5-flash | Google | opencode-zen/deepseek-v4-flash-free | Fast, sufficient for simple tasks |
-| **C** | opencode-zen/deepseek-v4-flash-free | OpenCode Zen | — | Trivial edits only |
+| **S** | (configure per environment) | — | — | Use for critical paths: PromQL rules, OTEL AI pipeline, Grafana DORA panels |
+| **A** | (configure per environment) | — | — | Standard development: compose, Alloy, OTEL standard pipelines |
+| **B** | (configure per environment) | — | — | Routine tasks: docs, runbooks, simple YAML |
+| **C** | (configure per environment) | — | — | Trivial edits only |
 | **F** | (same as C) | — | — | Emergency fallback |
+
+### The Real Routing Constraint: No Shell Access
+
+Some agent dispatch paths run with shell access denied by design — the
+agent can't run tests, start the stack, or verify anything locally, only
+edit files and open a PR, leaving CI as the sole verification before a
+human looks at it. **This constraint, not raw model strength, is what
+actually decides what's safely delegable to a no-shell dispatch path.**
+The current concrete instance of this in this repo:
+`.github/workflows/opencode.yml` dispatches every agent session with
+`OPENCODE_PERMISSION: '{"bash": "deny"}'` — but the routing logic below
+applies to any orchestrator with the same no-shell property, not
+specifically to OpenCode.
+
+- **Safe to route at Grade B/C**, including a free/low-cost tier meeting
+  Grade B's benchmark thresholds as the default there: work where the
+  spec fully constrains the outcome and CI can catch a wrong answer — a
+  single YAML edit, a version bump, a doc fix, a narrowly-scoped test fix
+  with an existing test asserting it.
+- **Escalate to Grade S/A regardless of task size**: anything needing
+  live-system verification (the agent can't run `make up` to check),
+  CI/deploy pipeline changes (a wrong workflow edit breaks merges for
+  everyone, and the agent can't dry-run it), security decisions, or
+  cross-file architectural work where CI's test coverage can't fully
+  express correctness.
 
 ### Fallback Chain
 
 ```
-Grade S (NVIDIA NIM primary) → Grade S (NVIDIA NIM secondary) → Grade A (Gemini Pro) → Grade B (Gemini Flash) → Grade F (OpenCode Zen)
+Grade S → Grade A → Grade B → Grade F
 ```
 
 Triggers: `rate_limit`, `timeout`, `server_error`
@@ -121,14 +146,15 @@ When a model updates or a new model appears:
 | Date | Task Type | Old Grade | New Grade | Reason | Evidence |
 |------|-----------|-----------|-----------|--------|----------|
 | 2026-09-13 | All | Copilot-specific | OpenCode grade-based | Initial migration from Copilot model ladder | — |
+| 2026-09-24 | All | OpenCode grade-based | Platform/provider-agnostic grade-based | Removed remaining OpenCode/MiMo-specific product names from routing prose and enforcement notes (#346); grade definitions and routing logic now name no orchestrator or model by default, only benchmark thresholds and dispatch-mode properties (e.g. no-shell access) | This file's diff |
 
 ---
 
 ## Model Policy Enforcement
 
-- `opencode.json` configures the fallback chain and default model
+- The agent orchestrator's own config file sets the fallback chain and default model (currently `opencode.json`, for this repo's OpenCode dispatch) — swap this line if the orchestrator changes, the grade definitions above don't need to
 - Agent YAML files specify grades for operational agents (test, review, etc.)
-- The NVIDIA NIM proxy (`nim-proxy` service in compose.yaml) must be running for Grade S models
+- If a Grade S provider requires a local proxy or gateway service to reach it, confirm that service is actually running before dispatching to that grade — this repo has no such service wired into `compose.yaml` today
 
 ---
 
