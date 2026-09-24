@@ -66,6 +66,15 @@
 | Add test coverage measurement | [#343](https://github.com/paruff/uFawkesObs/issues/343) | ✅ Done | `pytest.ini`, `Makefile` |
 | Close stale RELEASE_PLEASE_TOKEN issue | [#353](https://github.com/paruff/uFawkesObs/issues/353) | ✅ Done | Closed — release-please works with fallback token |
 
+**LB-04 update (2026-09-24):** the network-path blocker is resolved — a
+self-hosted GitHub Actions runner is now registered on the deploy target
+itself (a Synology DS920+), giving CI a LAN route it never had before.
+Root cause of the original SSH instability (#381) turned out to be that
+every deploy job ran on GitHub-hosted cloud runners with no route to the
+LAN at all, not host-key regeneration. The drill itself (`docs/ROLLBACK_DRILL.md`
+Precondition 1 onward) still hasn't been run — do that once #381 closes
+with a confirmed-successful deploy, not before.
+
 **H2 exit criteria (remaining):**
 - [ ] LB-04: Full rollback drill completed over SSH with sandbox host
 - [ ] All docs pass reality sweep (no stale aspirational markers)
