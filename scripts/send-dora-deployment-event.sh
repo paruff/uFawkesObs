@@ -61,5 +61,16 @@ if curl -sf -X POST "${DORA_URL}/event" \
     -d "${PAYLOAD}" > /dev/null; then
     echo "[dora] deployment event sent (status=${DORA_STATUS})"
 else
-    echo "::warning::Failed to send DORA deployment event (non-fatal)"
+    # #324: previously just warned and discarded the payload — a lost
+    # rollback event unpairs recovery time from its failure event, silently
+    # skewing CFR/FDRT with no way to backfill. Persist to a local queue
+    # instead so it's recoverable, without making a DORA hiccup fail the
+    # deploy (still best-effort, per this script's own contract above).
+    FAILED_QUEUE="${DORA_FAILED_EVENTS_PATH:-${HOME}/.dora-failed-events.jsonl}"
+    if printf '%s\n' "${PAYLOAD}" | tr -d '\n' >> "${FAILED_QUEUE}" 2>/dev/null \
+        && printf '\n' >> "${FAILED_QUEUE}" 2>/dev/null; then
+        echo "::warning::Failed to send DORA deployment event — queued to ${FAILED_QUEUE} for retry (non-fatal, #324)"
+    else
+        echo "::warning::Failed to send DORA deployment event AND failed to queue it to ${FAILED_QUEUE} — event is lost (non-fatal)"
+    fi
 fi

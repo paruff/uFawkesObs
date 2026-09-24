@@ -1,0 +1,8 @@
+name: ufawkesobs-conformance
+title: uFawkesObs Live-Stack Conformance
+maintainer: paruff
+license: Apache-2.0
+summary: >-
+  Checks AGENTS.md §4 architecture rules against the actually-running
+  containers of a `make up` stack, not just compose.yaml's declared config.
+version: 0.1.0
