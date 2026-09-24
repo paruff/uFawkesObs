@@ -113,9 +113,12 @@ jobs:
           GRAFANA_PASSWORD: admin
 
       - name: Run Tempo integration tests
+        # Migrated to Testcontainers (#416) -- self-provisions its own Tempo
+        # container via the docker socket, doesn't read TEMPO_URL or depend
+        # on this job's shared stack. Runs here alongside the rest of this
+        # job only because the other files below still need that stack;
+        # revisit this job's shared docker compose up once they migrate too.
         run: pytest tests/integration/test_tempo_integration.py -v --tb=short
-        env:
-          TEMPO_URL: http://localhost:3200
 
       - name: Run Loki integration tests
         run: pytest tests/integration/test_loki_integration.py -v --tb=short
