@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.3.25-alpha.1...v0.4.0-beta.1) (2026-09-24)
+
+
+### Added
+
+* **test:** migrate Loki integration tests to Testcontainers ([7c5e5dd](https://github.com/paruff/uFawkesObs/commit/7c5e5dd7cc4c9bdcac502df3c5a277765b6f09e7))
+* **test:** migrate Loki integration tests to Testcontainers ([6778447](https://github.com/paruff/uFawkesObs/commit/67784476ec40cd90ae7dd1f563b6ec826493d655))
+* **test:** migrate Tempo integration tests to Testcontainers ([94c4b55](https://github.com/paruff/uFawkesObs/commit/94c4b551f0a92e0724a77bde716f0e21790bc399))
+* **test:** migrate Tempo integration tests to Testcontainers ([28f275d](https://github.com/paruff/uFawkesObs/commit/28f275d14f6eac9b8e6b29fa7ce30f79101730bb))
+
+
+### Fixed
+
+* **test:** use a unique team_id per DORA acceptance run, not a fixed one ([c5e03d4](https://github.com/paruff/uFawkesObs/commit/c5e03d4d7502ae8885652ab1e7594d81baa89bf2))
+* **test:** use a unique team_id per DORA acceptance run, not a fixed one ([1415e26](https://github.com/paruff/uFawkesObs/commit/1415e265306487513d5b83808b4807eedb49d375))
+* **test:** wait for Tempo's actual /ready, not just its open port ([cb9c06e](https://github.com/paruff/uFawkesObs/commit/cb9c06e1e6e7c48f9364ea948441d365196086a8))
+
+
+### Docs
+
+* delete docs/plan.md, tracker is the source of truth ([#348](https://github.com/paruff/uFawkesObs/issues/348)) ([8c53318](https://github.com/paruff/uFawkesObs/commit/8c533185555a4023e29fe2dae7ff6c83226f5858))
+* delete docs/plan.md, tracker is the source of truth ([#348](https://github.com/paruff/uFawkesObs/issues/348)) ([56a31cd](https://github.com/paruff/uFawkesObs/commit/56a31cd944f7ff26ff960a494b8d06ba05def4f8))
+* mark project status as beta, six of seven LB-* items closed ([b7cc530](https://github.com/paruff/uFawkesObs/commit/b7cc530d046b666e6401b971784d9b5f7e5b78c6))
+* mark project status as beta, six of seven LB-* items closed ([6ff5a08](https://github.com/paruff/uFawkesObs/commit/6ff5a0844e70c1a407a5725f4cf89643c3622c02))
+* **model-policy:** remove hardcoded model/provider names, keep grades ([e813338](https://github.com/paruff/uFawkesObs/commit/e8133384bf9be2ecd8b6450b12c7db2b4cedefd6))
+* **model-policy:** remove hardcoded model/provider names, keep grades ([2b9a0b5](https://github.com/paruff/uFawkesObs/commit/2b9a0b5fb314f85db5dfdeebcc677c215b16ae96))
+* **test:** describe all five pyramid tiers, honest partial state ([e64a541](https://github.com/paruff/uFawkesObs/commit/e64a54121f3151d67eef5c9cb7b2b70e92b2961c))
+* **test:** describe all five pyramid tiers, honest partial state ([ad9a638](https://github.com/paruff/uFawkesObs/commit/ad9a63841f42ae34b2b06042bfcfc9e6881a3edc))
+
 ## [0.3.25-alpha.1](https://github.com/paruff/uFawkesObs/compare/v0.3.24-alpha.1...v0.3.25-alpha.1) (2026-09-24)
 
 
