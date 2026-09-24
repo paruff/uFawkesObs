@@ -69,6 +69,23 @@
    the *source* `requirements.txt` (loose ranges); `make relock` still
    needs a human/CI step afterward to regenerate the matching lock —
    documented in the new dependabot.yml comment.
+5. ⏳ **Re-audit against Testcontainers (#417, partial).** The `apps-test`
+   fix above (item 3) and this section's "5 of 6 are deliberate" verdict
+   were written before `tests/integration/`'s Testcontainers migration
+   (`docs/TESTING_PYRAMID.md`) started. Re-checked now that 3 of ~8 files
+   have moved: **not yet moot.** `ci-tests.yml`'s Integration Tests job
+   still runs one shared `docker compose up` + `sleep 20` warm-up because
+   the still-unmigrated files (`test_prometheus_scraping.py`, the original
+   `test_otel_collector.py`, `test_grafana_integration.py`,
+   `test_dashboards.py`, `test_alloy_and_dashboards.py`) still need it —
+   that sleep can only be removed once every file in the job self-
+   provisions. The migrated files no longer depend on it (each proved via
+   live runs: `test_tempo_integration.py` needed its own explicit `/ready`
+   retry-wait beyond Testcontainers' `wait=True`, since that only confirms
+   a port is open, not that the service's own readiness check passes —
+   a genuinely new failure mode this migration surfaced, not one the
+   original sleep-audit could have found). Revisit this item again once
+   `docs/TESTING_PYRAMID.md`'s file-by-file checklist is fully checked off.
 
 ## Future (larger, aspirational — not a near-term ask)
 
