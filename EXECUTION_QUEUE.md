@@ -126,7 +126,6 @@ order — this is the condensed version:
 |---|---|---|---|
 | Align Rework Rate with DORA definition | [#331](https://github.com/paruff/uFawkesObs/issues/331) | Metric uses deployment-derived calculation | 🔲 Pending |
 | `find_repo_root()` hardcodes checkout dir name `uFawkesObs` | [#383](https://github.com/paruff/uFawkesObs/issues/383) | Test passes from any clone/worktree name | 🔲 Pending |
-| Should `docs/plan.md` be deleted? | [#348](https://github.com/paruff/uFawkesObs/issues/348) | Maintainer decides keep-with-owner or delete | 🔲 Pending — mechanical reconciliation done, this is the one open question |
 | Extend dependency lock-file pattern (PR #392) to remaining `requirements*.txt` | Follow-up to #392, see [`docs/DETERMINISM.md`](docs/DETERMINISM.md) | `tests/integration/`, `tests/acceptance/`, `dora/compute/`, `dora/ingestion/`, `apps/telemetry-generator` all get lock files | 🔲 Pending |
 | Pin GitHub Actions runner images (`ubuntu-latest` → e.g. `ubuntu-24.04`) and exact Python patch versions | [`docs/DETERMINISM.md`](docs/DETERMINISM.md) "Now" #3-4 | 22 workflow occurrences pinned; needs PM sign-off (AGENTS.md §5, CI/CD config) | 🔲 Pending — awaiting sign-off |
 | Testing pyramid: Testcontainers + InSpec | [`docs/TESTING_PYRAMID.md`](docs/TESTING_PYRAMID.md), issues [#413](https://github.com/paruff/uFawkesObs/issues/413)-[#417](https://github.com/paruff/uFawkesObs/issues/417) | 5-issue rollout: spike → InSpec profile → CI-gate it → full migration → docs update | 🔲 Pending |
@@ -152,6 +151,11 @@ Public-release blockers PR-01/PR-03 (Grafana anonymous access, internal port
 exposure) and the README restructure / stranded coverage-measurement fix —
 see git log or the closed issues (#380, #335, #345, #343) rather than a
 status table here, so this doesn't drift again.
+
+`docs/plan.md` deleted (#348) — the tracker (this file, `MILESTONES.md`,
+`EXECUTION_QUEUE.md`) is now the sole source of truth for planning status,
+removing the recurring reconciliation cost that made #348/LB-07 necessary
+in the first place.
 
 ---
 
