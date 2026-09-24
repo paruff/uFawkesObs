@@ -4,6 +4,19 @@
 
 This document maps each BDD marker (`@smoke`, `@full`, `@chaos`) to the CI workflow that runs it, the stack profiles required, the expected runtime, and what category of scenarios belong under each marker. Contributors can decide, without reading the workflows, which marker a new scenario belongs to and what running it locally requires.
 
+## The Five Tiers
+
+See [`docs/TESTING_PYRAMID.md`](../docs/TESTING_PYRAMID.md) for the full
+rationale and rollout history (issues #413–#417). Current state:
+
+| Tier | Location | Status |
+|---|---|---|
+| **Unit** | `tests/unit/` | Static parsing, no containers. Unchanged. |
+| **Integration** | `tests/integration/` | **Partially migrated to Testcontainers.** `test_otel_collector_testcontainers.py` (new file, alongside the original), `test_tempo_integration.py`, and `test_loki_integration.py`'s Loki-specific classes now self-provision their own container per test module — no `make up` needed first. The rest (`test_prometheus_scraping.py`, the original `test_otel_collector.py`, `test_grafana_integration.py`, `test_dashboards.py`, `test_alloy_and_dashboards.py`, and `test_loki_integration.py`'s `TestAlloyIntegration` class) still assume a shared stack from `ci-tests.yml`'s `docker compose up`. Track remaining files in `docs/TESTING_PYRAMID.md`'s checklist. |
+| **Contract** *(new)* | `inspec/ufawkesobs-conformance/` | InSpec profile checking AGENTS.md §4 against the *actually running* stack (healthcheck status, image digest, port bindings, no anonymous volumes). Runs as `ci-tests.yml`'s `Conformance Tests (InSpec)` job on every PR, reporting only — **not yet a required branch-protection check** (needs its false-positive rate confirmed over more real runs first). Run locally with `make test-conformance`. |
+| **Acceptance** | `tests/acceptance/` | pytest-bdd, `@smoke`/`@full`/`@chaos` markers — see the Marker Matrix below. Unchanged by the Testcontainers/InSpec work; still one shared running stack per scenario, which fits this tier's cross-service nature. |
+| **Chaos** | `tests/acceptance/` (`@chaos` marker) | Nightly, kills/restarts real containers. Covered under Acceptance's marker taxonomy below. |
+
 ## Marker Matrix
 
 | Marker | Workflow | CI Gate | Stack Profiles | Expected Runtime | What Belongs Here |

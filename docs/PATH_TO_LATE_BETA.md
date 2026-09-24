@@ -10,10 +10,17 @@
 
 Milestones M1–M4 are complete (`docs/product/spec.md`): core Compose stack,
 repo hardening, cross-plane integration docs, and DORA/ecosystem wiring are
-all shipped and tagged `v0.1.0`. `main` CI is green. This is effectively
-**alpha** — internally dogfooded, functionally complete for the target
-scope, but never validated against a real external adopter and with several
-known gaps that would burn one on first contact.
+all shipped and tagged `v0.1.0`. `main` CI is green.
+
+**As of the `0.4.0-beta.1` release, versioning moved from alpha to beta**:
+six of the seven `LB-*` exit criteria below are closed. The one remaining
+gate, LB-04 (a live rollback drill), is blocked on infrastructure access
+the maintainer needs to arrange (see `EXECUTION_QUEUE.md`'s Unblock
+Runbook) — not on outstanding feature work. Per `docs/RELEASE_PROCESS.md`,
+releases stay marked as GitHub prereleases (`"prerelease": true`) until
+LB-04 also closes and "late beta" is formally reached; the alpha→beta move
+is a maturity-label update, not a claim that every exit criterion here is
+met yet.
 
 ## What "Late Beta" Means Here
 
