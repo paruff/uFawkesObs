@@ -37,7 +37,12 @@
 
 ## Scheduled Work (P1 — This Sprint)
 
-*No P1 items currently — the last one (#357, opencode agent hardening) closed via PR #371, merged.*
+| Task | Source | Acceptance Criteria | Status |
+|---|---|---|---|
+| Bump alertmanager v0.28.0 — 42 HIGH/CRITICAL fixable CVEs (found by `make scan-images`) | [#469](https://github.com/paruff/uFawkesObs/issues/469) | 0 fixable CRITICAL; old/new versions in PR; needs PM sign-off (image version) | 🔲 Pending — awaiting sign-off |
+| Validate Configs gate checks Tempo config with 2.4.1, stack runs 2.10.5 | [#470](https://github.com/paruff/uFawkesObs/issues/470) | CI + `make validate-configs` use compose's exact images, derived not re-pinned; needs PM sign-off (CI config) | 🔲 Pending — awaiting sign-off |
+| Testcontainers fixtures join the shared `ufawkesobs` compose project and tear it down | [#471](https://github.com/paruff/uFawkesObs/issues/471) | Fixtures isolated; CI correctness no longer depends on step order. Blocks the dashboards step of #416 below | 🔲 Pending |
+| Review + merge dev tooling PRs: Claude Code agents, devcontainer, lint/scan targets | [#466](https://github.com/paruff/uFawkesObs/pull/466), [#467](https://github.com/paruff/uFawkesObs/pull/467), [#468](https://github.com/paruff/uFawkesObs/pull/468) | #467: rebuild the devcontainer from the new definition and confirm Docker + Python work end-to-end | 🟡 In review |
 
 ---
 
@@ -53,6 +58,8 @@
 | **Add SLO burn alerts + automated rollback on CFR regression** | Expert feedback | Acceptance suite includes CFR-triggered rollback | 🔲 Pending |
 | **Add resource budgeting, HPA, VPA to M5 Helm chart spec** | Expert feedback | Helm chart includes HPA/VPA configs | 🔲 Pending |
 | **Decide River DSL vs OTel YAML and document in ADR** | Expert feedback | Design decision documented, one paradigm chosen | 🔲 Pending |
+| Gate PRs on actionlint, hadolint, trivy (CI follow-up to #468) | [#474](https://github.com/paruff/uFawkesObs/issues/474) | Runs on relevant paths, same versions as `install-tools.sh`; fix #469/#472 first; needs PM sign-off (CI config) | 🔲 Pending — after #468 |
+| Exec-form CMD in dora compute/ingestion Dockerfiles (hadolint DL3025) | [#472](https://github.com/paruff/uFawkesObs/issues/472) | `make lint-dockerfiles` clean of DL3025; `--profile dora stop` exits promptly | 🔲 Pending |
 
 ---
 
@@ -63,6 +70,7 @@
 | Prometheus /-/reload returns 200 without applying config | [#334](https://github.com/paruff/uFawkesObs/issues/334) | Silent failure; needs investigation |
 | send-dora-deployment-event.sh drops failed events | [#324](https://github.com/paruff/uFawkesObs/issues/324) | Unpairs rollback recovery |
 | `paruff/ufawkespipe` reusable workflows pinned to a beta tag | [#352](https://github.com/paruff/uFawkesObs/issues/352) | Merge gate depends on `@v1.4.0-beta.1`/`@v1.2.0`, not a stable release |
+| Alertmanager `templates:` glob matches nothing | [#473](https://github.com/paruff/uFawkesObs/issues/473) | Harmless today; named templates would silently fall back to defaults |
 
 ---
 
