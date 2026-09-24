@@ -35,13 +35,44 @@ Grades are defined by minimum benchmark requirements, not specific model names. 
 
 > **⚠️ Update this table when models change.** The grade definitions above are stable; only this mapping updates.
 
+Mapping per dispatch environment. Environments not listed here (e.g.
+OpenCode via `opencode.json`) configure their own.
+
+**Claude Code** (`.claude/agents/`, see [Claude Code Routing](#claude-code-routing) below):
+
 | Grade | Primary Model | Provider | Fallbacks | Notes |
 |-------|---------------|----------|-----------|-------|
-| **S** | (configure per environment) | — | — | Use for critical paths: PromQL rules, OTEL AI pipeline, Grafana DORA panels |
-| **A** | (configure per environment) | — | — | Standard development: compose, Alloy, OTEL standard pipelines |
-| **B** | (configure per environment) | — | — | Routine tasks: docs, runbooks, simple YAML |
-| **C** | (configure per environment) | — | — | Trivial edits only |
+| **S** | Claude Opus 5.5 (`opus`) | Anthropic | Sonnet 5 | Use for critical paths: PromQL rules, OTEL AI pipeline, Grafana DORA panels |
+| **A** | Claude Sonnet 5 (`sonnet`) | Anthropic | Haiku 4.5 | Standard development: compose, Alloy, OTEL standard pipelines |
+| **B** | Claude Haiku 4.5 (`haiku`) | Anthropic | — | Routine tasks: docs, runbooks, simple YAML |
+| **C** | Claude Haiku 4.5 (`haiku`) | Anthropic | — | Trivial edits only |
 | **F** | (same as C) | — | — | Emergency fallback |
+
+### Claude Code Routing
+
+Claude Code has no automatic difficulty-based router: the main session's
+model does the work unless it delegates to a subagent, and each subagent
+runs on the model its definition names. Routing is therefore by role:
+
+| Role | How it's invoked | Model | Grade |
+|------|------------------|-------|-------|
+| Main session (coding, orchestration) | Per-developer `/model` choice — not set in checked-in settings | `sonnet`, or `opusplan` (Opus in plan mode, Sonnet when executing) | A |
+| Planning / root-cause analysis | `planner` agent (`.claude/agents/planner.md`) | `opus` | S |
+| Pre-PR review | `reviewer` agent (`.claude/agents/reviewer.md`) — runs `.agents/agents/review.md`'s checklist | `opus` | S |
+| Running checks (pre-commit, unit tests, compose config) | `test-runner` agent (`.claude/agents/test-runner.md`) | `haiku` | C |
+
+Invoke an agent by name ("use the reviewer agent") or let the main
+session delegate by matching the agent's `description`.
+
+- **Don't default the main session to a Grade B/C model.** The main
+  session is the router — it decides when a task needs escalating, and a
+  weaker model under-escalates exactly the tasks this policy marks S/A
+  "regardless of task size" (CI/deploy edits, cross-file architecture).
+- **Delegation isn't free.** Each subagent starts with a fresh context and
+  re-reads what the main session already knows, so delegate large,
+  self-contained work (a full review, a test run) — not small edits.
+- **Keep the agent set small.** Add an agent only when a role recurs and
+  needs a different grade than the main session.
 
 ### The Real Routing Constraint: No Shell Access
 
@@ -147,6 +178,7 @@ When a model updates or a new model appears:
 |------|-----------|-----------|-----------|--------|----------|
 | 2026-09-13 | All | Copilot-specific | OpenCode grade-based | Initial migration from Copilot model ladder | — |
 | 2026-09-24 | All | OpenCode grade-based | Platform/provider-agnostic grade-based | Removed remaining OpenCode/MiMo-specific product names from routing prose and enforcement notes (#346); grade definitions and routing logic now name no orchestrator or model by default, only benchmark thresholds and dispatch-mode properties (e.g. no-shell access) | This file's diff |
+| 2026-09-24 | All (Claude Code) | Unmapped | S=Opus 5.5, A=Sonnet 5, B/C=Haiku 4.5 | Filled the Current Model Mapping for Claude Code dispatch and added role-based `.claude/agents/` (planner, reviewer, test-runner); grade definitions unchanged | This file's diff |
 
 ---
 
@@ -154,6 +186,7 @@ When a model updates or a new model appears:
 
 - The agent orchestrator's own config file sets the fallback chain and default model (currently `opencode.json`, for this repo's OpenCode dispatch) — swap this line if the orchestrator changes, the grade definitions above don't need to
 - Agent YAML files specify grades for operational agents (test, review, etc.)
+- Claude Code: each `.claude/agents/*.md` file's `model:` frontmatter enforces its grade; the main session's model is each developer's `/model` choice (see Claude Code Routing)
 - If a Grade S provider requires a local proxy or gateway service to reach it, confirm that service is actually running before dispatching to that grade — this repo has no such service wired into `compose.yaml` today
 
 ---
