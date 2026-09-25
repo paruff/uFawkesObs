@@ -1,0 +1,23 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12",
+      "installTools": false
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=claude-code-config,target=/home/vscode/.claude,type=volume",
+    "source=ufawkesobs-pre-commit-cache,target=/home/vscode/.cache/pre-commit,type=volume",
+    "source=ufawkesobs-gh-config,target=/home/vscode/.config/gh,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends pre-commit shellcheck && sudo chown -R vscode:vscode /home/vscode/.cache/pre-commit /home/vscode/.config/gh && bash .devcontainer/install-tools.sh && pip install -r tests/unit/requirements.lock -r tests/integration/requirements.lock -r tests/acceptance/requirements.lock"
+}

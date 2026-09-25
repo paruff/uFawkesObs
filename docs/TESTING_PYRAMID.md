@@ -126,12 +126,12 @@ live `make up` (`core` profile) stack before wiring anything into CI:
 - [x] [#414](https://github.com/paruff/uFawkesObs/issues/414) — InSpec profile for AGENTS.md §4 conformance (on `main`)
 - [ ] [#415](https://github.com/paruff/uFawkesObs/issues/415) — Wire InSpec profile into CI (depends on #414). CI job on `main`, reporting on every PR. Still needed: adding it to branch protection's required checks (maintainer action, AGENTS.md §5) once its false-positive rate is confirmed low across real runs.
 - [ ] [#416](https://github.com/paruff/uFawkesObs/issues/416) — Migrate remaining `tests/integration/` to Testcontainers (depends on #413). File-by-file status (each a separate PR, kept under the 400-line gate):
-  - [x] `test_otel_collector_testcontainers.py` — spike, #413 (new file, alongside the original) (on `main`)
+  - [x] `test_otel_collector_testcontainers.py` — spike (#413, on `main`), expanded to full coverage and the original retired (below)
   - [x] `test_tempo_integration.py` — single-service, no `depends_on:` (PR open)
   - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. `TestAlloyIntegration` in this same file left unmigrated -- Alloy depends on both Loki and Prometheus, so it belongs with the `test_alloy_and_dashboards.py` entry below instead (PR open)
-  - [ ] `test_grafana_integration.py` — depends on Prometheus being scraped
-  - [x] `test_dashboards.py` — multi-service (Grafana+Prometheus+Tempo+Loki); turned out not to need real data flow, just provisioning -- most of the file's assertions check dashboard/datasource structure, not live telemetry
-  - [ ] `test_alloy_and_dashboards.py` — same multi-service pattern plus Alloy; most "data flow" assertions in this file are soft (print-only, no real assert) on closer read
-  - [ ] rest of `test_otel_collector.py` / `test_prometheus_scraping.py` — retire the originals once their Testcontainers replacements cover the same assertions
+  - [x] `test_grafana_integration.py` — multi-service (Grafana + Prometheus + Tempo + Loki together, since Grafana's datasource provisioning needs them by Docker Compose service name)
+  - [x] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
+  - [x] `test_otel_collector.py` — retired; `test_otel_collector_testcontainers.py` (#413's spike) expanded to cover every assertion it had
+  - [x] `test_prometheus_scraping.py` — migrated in place (whole file needs the full `core` profile since `test_all_configured_targets_are_up` checks every scrape target)
   - [ ] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them
 - [ ] [#417](https://github.com/paruff/uFawkesObs/issues/417) — Update `tests/README.md`'s pyramid diagram (depends on all above). `tests/README.md` now has a 5-tier overview and `docs/DETERMINISM.md` has a re-audit note; both marked partial/in-progress since #416's file-by-file migration isn't finished yet. Revisit once that checklist is fully checked off.

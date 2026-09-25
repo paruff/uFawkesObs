@@ -58,6 +58,7 @@ metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles).
 | [tests/README.md](tests/README.md)                                 | Test pyramid, marker taxonomy, and which suite runs when               |
 | [tests/acceptance/README.md](tests/acceptance/README.md)           | How to run the acceptance suite, E2E runner, and unit tests            |
 | [docs/PROMPT_LIBRARY.md](docs/PROMPT_LIBRARY.md)                   | Tested prompt templates for common tasks                               |
+| [docs/adr/README.md](docs/adr/README.md)                           | Architecture Decision Records — why Loki 3.3.2, Compose over Kubernetes, GitOps scope, etc. |
 
 ---
 

@@ -60,10 +60,12 @@ jobs:
       # so a plain value here (not a GitHub secret) is fine. Required since
       # compose.yaml stopped defaulting this to "admin" (#380/PR #386); this
       # job never set it at all before, unlike the other CI workflows.
-      # Must be "admin" — the later "Run Grafana integration tests" and
-      # "Run dashboard tests" steps below hardcode GRAFANA_PASSWORD: admin
-      # for their API assertions (a *different* env var name than this one),
-      # so any other value here 401s against the stack this starts.
+      # Must be "admin" — the "Run dashboard tests" step below hardcodes
+      # GRAFANA_PASSWORD: admin for its API assertions (a *different* env
+      # var name than this one), so any other value here 401s against the
+      # stack this starts. The Grafana integration test file itself no
+      # longer reads a separate GRAFANA_PASSWORD (#416) -- it self-
+      # provisions and reads this same GRAFANA_ADMIN_PASSWORD directly.
       GRAFANA_ADMIN_PASSWORD: admin
     steps:
       - uses: actions/checkout@v7
@@ -95,22 +97,11 @@ jobs:
           timeout 90 bash -c 'until curl -sf http://localhost:8888/metrics; do sleep 2; done'
           sleep 20
 
-      - name: Run Prometheus scraping tests
-        run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
-        env:
-          PROMETHEUS_URL: http://localhost:9090
-
       - name: Run OTel Collector tests
-        run: pytest tests/integration/test_otel_collector.py -v --tb=short
-        env:
-          OTEL_METRICS_URL: http://localhost:8888
-
-      - name: Run Grafana integration tests
-        run: pytest tests/integration/test_grafana_integration.py -v --tb=short
-        env:
-          GRAFANA_URL: http://localhost:3000
-          GRAFANA_USER: admin
-          GRAFANA_PASSWORD: admin
+        # Migrated to Testcontainers (#413/#416) -- self-provisions,
+        # doesn't read OTEL_METRICS_URL. The original test_otel_collector.py
+        # is retired; this file now covers everything it did.
+        run: pytest tests/integration/test_otel_collector_testcontainers.py -v --tb=short
 
       - name: Run Tempo integration tests
         # Migrated to Testcontainers (#416) -- self-provisions its own Tempo
@@ -131,6 +122,30 @@ jobs:
         # Migrated to Testcontainers (#416) -- self-provisions Grafana +
         # Prometheus + Tempo + Loki, doesn't read GRAFANA_URL/USER/PASSWORD.
         run: pytest tests/integration/test_dashboards.py -v --tb=short
+
+      - name: Run Grafana integration tests
+        # Migrated to Testcontainers (#416) -- self-provisions Grafana +
+        # Prometheus + Tempo + Loki together (Grafana's datasource
+        # provisioning needs them by Docker Compose service name),
+        # doesn't read GRAFANA_URL/GRAFANA_USER/GRAFANA_PASSWORD.
+        # Must run AFTER every step that uses this job's shared stack:
+        # compose.yaml pins `name: ufawkesobs` + fixed container_name/ports,
+        # so the fixture joins the shared project rather than isolating,
+        # and its teardown (`down --volumes grafana prometheus tempo loki`)
+        # removes those containers from it -- which broke test_dashboards.py
+        # when this step ran first.
+        run: pytest tests/integration/test_grafana_integration.py -v --tb=short
+
+      - name: Run Prometheus scraping tests
+        # Migrated to Testcontainers (#416) -- self-provisions the whole
+        # `core` profile (test_all_configured_targets_are_up needs every
+        # scrape target up), doesn't read PROMETHEUS_URL.
+        # Must be the LAST step that touches Docker Compose: the fixture
+        # joins this job's shared `ufawkesobs` project (compose.yaml pins
+        # the name), and its teardown -- `docker compose --profile core
+        # down --volumes`, no service list -- removes the ENTIRE shared
+        # stack, which broke every later step that still used it (#471).
+        run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
 
       - name: Show logs on failure
         if: failure()

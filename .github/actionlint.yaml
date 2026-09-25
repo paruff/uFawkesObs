@@ -1,0 +1,4 @@
+self-hosted-runner:
+  # deploy.yml runs on the self-hosted Synology deploy host
+  labels:
+    - synology
