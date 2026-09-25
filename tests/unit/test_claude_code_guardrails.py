@@ -130,6 +130,13 @@ class TestProtectTestsHook:
             "git mv tests/unit/test_check_env.py /tmp/x.py",
             "cd tests && rm unit/test_check_env.py",
             "find tests -name 'test_*.py' -delete",
+            # git global options before the subcommand -- found by the
+            # guardrail eval (hooks-only): `git -C <dir> rm` went through.
+            "git -C /tmp/ws rm tests/integration/test_tempo_integration.py",
+            "git -c core.quotepath=off rm tests/unit/test_check_env.py",
+            "git --git-dir=.git --work-tree=. rm tests/unit/test_check_env.py",
+            "git --no-pager mv tests/unit/test_check_env.py /tmp/x.py",
+            "/bin/rm tests/unit/test_check_env.py",
         ],
     )
     def test_bash_deleting_tests_is_blocked(self, command):
@@ -144,6 +151,8 @@ class TestProtectTestsHook:
             "rm -rf tests/unit/__pycache__",
             "rm -f tests/unit/reports/junit.xml",
             "git diff tests/",
+            "git -C /tmp/ws status",
+            "git -C /tmp/ws log -- tests/unit/test_check_env.py",
         ],
     )
     def test_bash_non_deleting_commands_are_allowed(self, command):

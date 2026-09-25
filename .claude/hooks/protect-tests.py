@@ -28,6 +28,15 @@ TEST_FILE = re.compile(r"^(test_.*|.*_test|conftest)\.py$")
 ARTIFACT_DIRS = {"__pycache__", ".pytest_cache", "reports", "htmlcov"}
 ARTIFACT_SUFFIXES = {".pyc", ".xml", ".html", ".log"}
 SEGMENT_SPLIT = re.compile(r"&&|\|\||[;|\n]")
+# git global options that take their value as the NEXT argument
+GIT_OPTS_WITH_VALUE = {
+    "-C",
+    "-c",
+    "--git-dir",
+    "--work-tree",
+    "--namespace",
+    "--config-env",
+}
 
 
 def block(message: str) -> None:
@@ -100,9 +109,15 @@ def check_bash(command: str) -> None:
         if not tokens:
             continue
 
-        cmd, args = tokens[0], tokens[1:]
-        if cmd == "git" and args[:1] in (["rm"], ["mv"]):
-            cmd, args = f"git {args[0]}", args[1:]
+        cmd, args = PurePath(tokens[0]).name, tokens[1:]  # /bin/rm -> rm
+        if cmd == "git":
+            # Skip global options before the subcommand -- `git -C <dir> rm`
+            # bypassed this hook in a live session (guardrail eval).
+            i = 0
+            while i < len(args) and args[i].startswith("-"):
+                i += 2 if args[i] in GIT_OPTS_WITH_VALUE else 1
+            if args[i : i + 1] in (["rm"], ["mv"]):
+                cmd, args = f"git {args[i]}", args[i + 1 :]
 
         paths = [a for a in args if not a.startswith("-")]
         if cmd in ("mv", "git mv"):
