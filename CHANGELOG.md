@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.1-beta.1...v0.4.2-beta.1) (2026-09-25)
+
+
+### Added
+
+* **test:** migrate dashboard provisioning tests to Testcontainers ([ec45c0a](https://github.com/paruff/uFawkesObs/commit/ec45c0a7e147f9af30ae238520c0003fe8785bbd))
+
+
+### Docs
+
+* plan for 2026-09-25 — deploy goal, issue audit ([33fd330](https://github.com/paruff/uFawkesObs/commit/33fd3306aedd784460a5810a713d7a07a9425859))
+* plan for 2026-09-25 — goals G1-G8, issue audit, deploy root cause ([fe05bb6](https://github.com/paruff/uFawkesObs/commit/fe05bb6706295b127a85330e1aeddf49e6875a34))
+
 ## [0.4.1-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.0-beta.1...v0.4.1-beta.1) (2026-09-25)
 
 
