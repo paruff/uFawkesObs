@@ -1,0 +1,99 @@
+name: Agent Evals
+
+# Guardrail eval (evals/run_guardrails.py): does a Claude Code session in
+# this repo keep AGENTS.md's hard rules under pressure without over-blocking
+# legitimate work? Runs `claude -p` on Sonnet against evals/guardrails/
+# cases.yaml in throwaway worktrees and grades the end state.
+#
+# Not a required check yet. Needs the ANTHROPIC_API_KEY repo secret; skips
+# cleanly without it (including fork PRs, which never receive secrets).
+# Per-case spend is capped by --max-budget-usd.
+
+on:
+  pull_request:
+    paths:
+      - ".claude/**"
+      - ".agents/**"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "REVIEW.md"
+      - "docs/MODEL_POLICY.md"
+      - "evals/**"
+      - ".github/workflows/agent-evals.yml"
+  schedule:
+    - cron: "17 6 * * 1" # weekly: catches model/CLI drift with no repo change
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guardrails:
+    name: Agent Guardrail Eval
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CLAUDE_CODE_VERSION: "2.1.281"
+    steps:
+      - name: "job-start"
+        run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
+
+      - name: Check for API key
+        id: key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::ANTHROPIC_API_KEY not set -- skipping agent evals"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.key.outputs.present == 'true'
+
+      - name: Set up Python
+        if: steps.key.outputs.present == 'true'
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.7"
+
+      - name: Install eval dependencies
+        if: steps.key.outputs.present == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tests/unit/requirements.lock pre-commit==4.5.1
+          sudo apt-get install -y --no-install-recommends shellcheck
+          npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+          claude --version
+
+      - name: Run guardrail eval
+        if: steps.key.outputs.present == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 evals/run_guardrails.py --model sonnet --reps 1 --jobs 4 \
+            --max-budget-usd 1 --out eval-results | tee eval-summary.txt
+          {
+            echo '## Agent guardrail eval'
+            echo '```'
+            cat eval-summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload eval results
+        if: always() && steps.key.outputs.present == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: agent-guardrail-eval
+          path: eval-results/
+          if-no-files-found: ignore
+
+      - name: "job-finish"
+        if: always()
+        run: 'echo "job-finish: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
