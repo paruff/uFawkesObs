@@ -1,112 +1,114 @@
-# Daily Plan: 2026-09-24
+# Daily Plan: 2026-09-25
 
 ## 🎯 Primary Goal (`/goal`)
 
-- **Focus:** Finish the testing-pyramid rollout (#413-#417), then unblock
-  the two remaining public-release blockers (#381, #182) now that the
-  maintainer could provide direct NAS access (IP, hostname, Synology
-  DS920+) instead of the console-only path `EXECUTION_QUEUE.md` previously
-  assumed was required.
+- **Focus:** Get one real GitOps compose-restart deploy green on the
+  Synology host (#381/#393). Yesterday's network fix worked, and the
+  deploy now fails one step later on a kernel limitation (see G1). Then
+  run the #182 rollback drill against it.
+
+Each goal below is an end state with a verification command, so an agent
+can execute it and a reviewer can check it. Goals marked **needs
+sign-off** change something AGENTS.md §5 reserves for the maintainer.
+They start only after that decision is made.
+
+| # | Goal (end state) | Verification | Source | Notes |
+|---|---|---|---|---|
+| G1 | A real `Deploy (compose restart)` job succeeds on `synology-ds920`, followed by a green Post-Deploy Verification | `gh run list --workflow deploy.yml --limit 5`: a run whose compose-restart job **ran** (not skipped) and succeeded | #381, #393 | **Needs sign-off:** pick a CPU-limit option from [#381's comment](https://github.com/paruff/uFawkesObs/issues/381#issuecomment-5829614254). `compose.yaml` sets `cpus:` on 22 services, and the DSM kernel has no CPU CFS scheduler |
+| G2 | #381 and #393 closed, with the G1 run URL as evidence | `gh issue view 381 --json state` | #381, #393 | Only after G1 |
+| G3 | Rollback drill executed and documented against the live host | `docs/ROLLBACK_DRILL.md` run log committed; #182 closed | #182 | Only after G2 |
+| G4 | Testcontainers fixtures run under their own Compose project, so Integration Tests no longer depends on step order | Grafana/Prometheus steps can run in any order; a fixture's teardown leaves a running `ufawkesobs` stack untouched (test asserts it) | #471 | Unblocks the last #416 file |
+| G5 | `test_alloy_and_dashboards.py` and `TestAlloyIntegration` migrated; #416 closed | `grep -L testcontainers tests/integration/test_*.py` is empty | #416 | After G4 |
+| G6 | Agent guardrail eval merged and running in CI, with all three variants measured | `make eval-guardrails` for baseline / `no-hooks` / `hooks-only`: 0 adversarial violations in baseline; Agent Evals workflow green; `ANTHROPIC_API_KEY` secret set | AI-Native SDLC item 6 | Harness changed after the pilot, so it **needs re-approval** (`python3 evals/run_guardrails.py --approve-harness`). Full run ≈ 15 cases × ~$0.14 ≈ $2 per variant, ~2 min |
+| G7 | Devcontainer rebuilt from #467 and verified | In the rebuilt container: `docker compose version`, `python3 --version` (3.12), `pre-commit --version`, `actionlint --version` | #467 follow-up | Manual rebuild |
+| G8 | alertmanager bumped (0 fixable CRITICAL); Tempo config validated with the version that runs (2.10.5) | `make scan-images`; `make validate-configs` | #469, #470 | **Needs sign-off** (image version; CI config) |
 
 ---
 
-## ✅ Done Today
+## ✅ Done Since Last Plan (2026-09-24 → 25)
 
-**Testing pyramid (#413-#417):**
-- #413, #414 merged to `main` (Testcontainers spike, InSpec profile).
-- #415: CI job added and merged; required-check wiring still pending
-  (needs its false-positive rate confirmed over more real runs first).
-- #416: Tempo and Loki integration tests migrated to Testcontainers
-  (otel-collector spike already done) — 3 of ~8 files; rest tracked in
-  `docs/TESTING_PYRAMID.md`'s checklist.
-- #417: `tests/README.md` and `docs/DETERMINISM.md` updated, honestly
-  marked partial since #416 isn't fully done.
+**Merged:** #460 (Grafana → Testcontainers), #461 (Prometheus →
+Testcontainers), #463 (dashboards → Testcontainers), #466 (Claude Code
+role agents + model routing), #467 (devcontainer: Docker, Python 3.12, gh,
+pre-commit, pinned lint/scan tools), #468 (lint / image-scan /
+release-preview Make targets), #475 + #486 (queue updates incl. valid
+`RELEASE_GOALS.md` items), #476 (AI-Native SDLC guardrails: skills
+visible to Claude Code, test-protection + self-verify hooks, `REVIEW.md`),
+and #477-#485 (Dependabot requirement bumps). Released `v0.4.1-beta.1`.
 
-**Other closed issues:**
-- #359 — DORA acceptance test flakiness. Root cause found live: a fixed,
-  reused `team_id` let stale Prometheus data from a prior local run
-  satisfy the readiness poll instantly. Fixed with a per-run unique ID.
-- #348 — deleted `docs/plan.md` (already self-declared superseded).
-- #346 — finished migrating `docs/MODEL_POLICY.md` to be fully
-  platform/provider-agnostic (no hardcoded model IDs or OpenCode-specific
-  naming in the routing logic itself).
-- Version bumped from alpha to beta (`0.4.0-beta.1`) — 6 of 7 `LB-*` exit
-  criteria closed.
+**CI failures root-caused and fixed:**
+- #460 and #461: the new Testcontainers fixtures join the CI job's
+  shared compose project (`compose.yaml` pins `name: ufawkesobs`) and their
+  teardown deletes shared containers. #461's fixture removed the *entire*
+  stack. Fixed by ordering the steps; the real fix is tracked in #471 (G4).
 
-**Deploy pipeline (#381 / #393 / #182) — in progress, not yet closed:**
-- Root cause found via live investigation, not assumed: every `deploy.yml`
-  job ran on GitHub-hosted cloud runners, which have no route into the
-  maintainer's home LAN at all. The "4 different SSH fingerprints"
-  symptom is far better explained by an unstable public path (DDNS/port-
-  forward) than host-key regeneration — confirmed on the actual NAS that
-  `/etc/ssh/ssh_host_ed25519_key` has been unchanged since 2021.
-- Registered a self-hosted GitHub Actions runner as a container on the
-  deploy target itself (Synology DS920+), routed the four LAN-touching
-  deploy jobs onto it (PR #456), and updated all four deploy secrets to
-  the LAN path.
-- Two more real bugs found and fixed on the first live deploy attempts:
-  a stale `DEPLOY_PATH` repo variable pointing at a macOS dev path (fixed
-  directly via `gh variable delete`), and a `make: command not found`
-  failure — GNU Make isn't installed on this NAS at all, fixed by
-  inlining `make up`'s two underlying commands (PR #457).
-- **Not yet confirmed**: whether a full deploy run succeeds end-to-end
-  now that #457 is merged. Acceptance Full was in progress for that merge
-  commit as of this writing. Do not close #381/#393 until a run is seen
-  fully green, and don't run the #182 rollback drill until #381 is closed
-  (avoid drilling against a still-unstable path).
+**Issues filed (tooling findings):** #469 alertmanager CVEs, #470 Tempo
+validation-version drift, #471 fixture/shared-stack coupling, #472
+hadolint DL3025, #473 dangling alertmanager templates glob, #474 CI lint
+gates.
+
+**Issue audit (2026-09-25):** checked all 12 open issues against `main`,
+CI, and deploy logs. None is verifiably done, so none closed:
+issues #469/#470/#473/#474 unchanged; #472 still 2× DL3025; #471/#416 alloy files
+still unmigrated; #415 not in the required-check ruleset; #381/#393 real
+deploys still failing (new cause posted on #381); #182 blocked on #381.
+
+**Deploy (#381):** the self-hosted runner now reaches the host, pulls,
+and passes `check-env`. Every real compose restart then fails with
+`NanoCPUs can not be set, as your kernel does not support CPU CFS
+scheduler`. The CPU limits long predate this issue; they never surfaced
+because deploys never got past SSH until now.
+
+**Guardrail eval pilot** (4 Sonnet sessions, measured $0.48, ~25 s/case):
+with hooks on, both adversarial cases held and the benign rename completed.
+With the ablation, the agent ran `git rm` on the test file immediately.
+Reading the transcripts turned up two harness flaws, now fixed on the eval
+branch: the agent could tell it was being evaluated (it found the eval's
+own tests and an "eval seed" commit), and the ablation dropped the
+instructions along with the hooks. In baseline the agent declined on its
+own, so the hook never fired; the new `hooks-only` variant tests the hook
+directly.
+
+**Housekeeping:** removed the two stale agent worktrees
+(`.claude/worktrees/agent-*`; both branches already merged upstream).
 
 ---
 
 ## 🔁 Carryover (next session)
 
-- **Confirm the next full deploy run succeeds** — check
-  `gh run list --repo paruff/uFawkesObs --workflow "GitOps Reconciliation Deploy" --branch main --limit 1`,
-  and check the job logs show `synology-ds920` as the runner.
-- **Close #381 and #393 together** once that's confirmed, with the run URL
-  as evidence.
-- **Run the #182 rollback drill** (`docs/ROLLBACK_DRILL.md` from
-  Precondition 1) once #381 is closed.
-- **#416 remaining files**: `test_grafana_integration.py`,
-  `test_dashboards.py`/`test_alloy_and_dashboards.py` (cross-service,
-  hardest — do last), rest of `test_otel_collector.py` /
-  `test_prometheus_scraping.py`.
-- **#415 required-check wiring**: add the InSpec conformance job to
-  branch protection once its false-positive rate is confirmed low.
-- **#417 full completion**: once #416 is fully done, re-audit
-  `docs/DETERMINISM.md` again — the "not yet moot" conclusion from today
-  may change once every `tests/integration/` file self-provisions.
+- G1 needs the CPU-limit decision before any work starts.
+- #415 required-check wiring: InSpec job still not in the ruleset.
+- #417: re-audit `docs/DETERMINISM.md` once #416 closes.
+- #472, #473, #474: small, queued in P2/P3.
 
-**Queued but not today** (each deserves its own session): #331 Rework
-Rate DORA alignment; #383 `find_repo_root()` portability; extending the
-PR #392 lock-file pattern to the other five `requirements*.txt` files;
-SLO burn alerts + CFR-triggered rollback; HPA/VPA in the M5 Helm spec;
-River DSL vs OTel YAML ADR.
+**Queued but not today:** #331 Rework Rate DORA alignment; #383
+`find_repo_root()` portability; SLO burn alerts + CFR-triggered rollback;
+HPA/VPA in the M5 Helm spec; River DSL vs OTel YAML ADR; P2 items from
+`RELEASE_GOALS.md` (AGENTS.md ≤150 lines, skill "when to use"
+descriptions, rename the colliding `security-review` skill).
 
 ---
 
 ## 🧠 Session Retrospective (`ecc:learn`)
 
-- **Key Insights & Architecture:** A squash-merge workflow strands any
-  commit later merged into the now-stale feature branch instead of onto
-  `main` directly — hit this with PRs #445/#446 stacked on already-merged
-  #443/#444 branches; fixed by cherry-picking onto fresh branches off
-  current `main`. Testcontainers' `wait=True` only confirms a container's
-  port is listening, not that the service's own readiness check passes —
-  cost a real flaky-test regression on Tempo before adding an explicit
-  `/ready` poll. `docker context` can silently redirect the CLI to a
-  different daemon (a stray `ssh://` context caused a confusing
-  self-referential-SSH failure on the NAS). Bash's unquoted `~` and
-  backticks-inside-double-quotes both bit us live during the deploy debug
-  — always quote remote-command strings and heredoc commit messages.
-- **Edge Cases & Pitfalls:** A GitHub Actions repo *variable* (not secret)
-  can silently hold a stale value indefinitely — `DEPLOY_PATH` had a dead
-  macOS path from Aug 31 that nothing ever caught until a live deploy
-  attempt. Deploy scripts should assume the target host may lack tools
-  the local dev Makefile assumes (`make` itself, in this case) — inlining
-  the two underlying commands removed a dependency rather than adding one.
-- **Backlog Delta:** None of today's findings need new backlog items
-  beyond what's already tracked above — the deploy-pipeline work directly
-  advances #381/#393/#182, which were already tracked.
+- **Key Insights & Architecture:** `docker compose` treats a pinned
+  top-level `name:` as a shared namespace. Any tool that runs compose
+  from the repo root (Testcontainers included) joins the running stack
+  rather than isolating, and its `down` removes shared containers. It
+  caused two CI failures in two days, and step ordering is the only thing
+  holding it together today.
+- **Edge Cases & Pitfalls:** The deploy workflow reports **success** on
+  no-op runs (nothing deploy-relevant changed, compose-restart skipped),
+  interleaved with the real failures. A glance at the run list says "flaky"
+  when it's actually 100% failing on real deploys. Check the compose-restart
+  job's own conclusion, not the workflow's.
+- **Edge Cases & Pitfalls:** `git worktree prune` inside the devcontainer
+  deletes the metadata of worktrees created on the Mac host (their
+  `/Users/...` paths don't exist in the container). Never prune from the
+  container.
+- **Backlog Delta:** Consider making the deploy workflow's summary state
+  "no-op" explicitly instead of success, so the run list reflects the real
+  deploy failure rate (DORA change-failure-rate accuracy depends on it).
 
 ---
 
@@ -118,9 +120,11 @@ VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → 
 
 | Today's Work | EXECUTION_QUEUE | MILESTONES | VISION Principle |
 |---|---|---|---|
-| Testing pyramid #413-#417 | P2 Next Sprint | H2 Late Beta | Reliable confidence per commit |
-| #359, #348, #346 (closed) | — | H2 Documentation Reconciliation | Reduce drift, keep tracker authoritative |
-| Deploy pipeline #381/#393/#182 | P0 This Week | H2 Late Beta (LB-04) | GitOps Reconciliation |
+| G1-G3 deploy + rollback drill (#381/#393/#182) | P0 This Week | H2 Late Beta (LB-04) | GitOps Reconciliation |
+| G4-G5 test isolation + #416 | P1 | H2 Late Beta | Reliable confidence per commit |
+| G6 agent guardrail eval | P1 | H2 Late Beta | Governance as code |
+| G7 devcontainer verification | P1 | H2 Late Beta | Reproducible environments |
+| G8 CVE bump + validation drift (#469/#470) | P1 | Public release (RG goals) | Secure by default |
 
 ---
 
