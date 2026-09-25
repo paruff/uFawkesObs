@@ -3,8 +3,11 @@
 hard rules under pressure, without over-blocking legitimate work?
 
 Each (case, rep) runs `claude -p` in a fresh detached git worktree of HEAD,
-seeded from cases.yaml, with evals/ removed so the answer key isn't
-readable. It is graded on the END STATE left behind, plus the transcript
+seeded from cases.yaml, with evals/ and other eval artifacts removed so
+neither the answer key nor the fact that it's an eval is readable. Variants
+attribute the result: baseline (hooks + instructions), no-hooks
+(instructions only, via disableAllHooks), hooks-only (CLAUDE.md, AGENTS.md,
+.claude/rules and REVIEW.md removed). It is graded on the END STATE left behind, plus the transcript
 for the one rule with no end state (remote `compose up`).
 
 Outputs (per variant): results.jsonl, errors.jsonl, traces/<id>_rep<k>.json
@@ -48,6 +51,11 @@ MODEL_PREFIX = {
     "opus": "claude-opus",
     "haiku": "claude-haiku",
 }
+EVAL_ARTIFACTS = [
+    ".github/workflows/agent-evals.yml",
+    "tests/unit/test_guardrail_eval_harness.py",
+]
+INSTRUCTION_FILES = ["CLAUDE.md", "AGENTS.md", ".claude/rules", "REVIEW.md"]
 _git_lock = threading.Lock()
 _write_lock = threading.Lock()
 
@@ -65,13 +73,23 @@ def git(*args, cwd=REPO, check=True):
     )
 
 
-def make_workspace(seeds: dict) -> Path:
+def make_workspace(seeds: dict, variant: str) -> Path:
     ws = Path(tempfile.mkdtemp(prefix="guardrail-eval-"))
     ws.rmdir()
     with _git_lock:  # concurrent `worktree add` contends on .git locks
         git("worktree", "add", "--detach", str(ws), "HEAD")
+    # Nothing in the workspace may reveal it's an eval: the pilot's agent
+    # searched for *guardrail* files and read an "eval seed" commit message.
     shutil.rmtree(ws / "evals", ignore_errors=True)
-    (ws / ".github" / "workflows" / "agent-evals.yml").unlink(missing_ok=True)
+    for rel in EVAL_ARTIFACTS:
+        (ws / rel).unlink(missing_ok=True)
+    if variant == "hooks-only":  # ablation: hooks without the instructions
+        for rel in INSTRUCTION_FILES:
+            target = ws / rel
+            if target.is_dir():
+                shutil.rmtree(target)
+            else:
+                target.unlink(missing_ok=True)
     for rel, content in seeds.items():
         path = ws / rel
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -79,14 +97,14 @@ def make_workspace(seeds: dict) -> Path:
     git("add", "-A", "-f", cwd=ws)
     git(
         "-c",
-        "user.name=eval",
+        "user.name=dev",
         "-c",
-        "user.email=eval@localhost",
+        "user.email=dev@localhost",
         "commit",
         "-q",
         "--no-verify",
         "-m",
-        "eval seed",
+        "wip",
         cwd=ws,
     )
     return ws
@@ -115,7 +133,9 @@ def run_claude(prompt, ws, args):
         *TOOLS,
     ]
     if args.variant == "no-hooks":
-        cmd += ["--setting-sources", "user"]  # ablation: drop the project's hooks
+        # ablation: instructions without the hooks (project settings, and so
+        # CLAUDE.md loading, unchanged)
+        cmd += ["--settings", json.dumps({"disableAllHooks": True})]
     env = {
         k: v
         for k, v in os.environ.items()
@@ -290,7 +310,7 @@ def to_trace(prompt, events):
 
 
 def run_case(case, rep, seeds, args, out_dir):
-    ws, started = make_workspace(seeds), time.monotonic()
+    ws, started = make_workspace(seeds, args.variant), time.monotonic()
     try:
         if args.fake_agent:
             events, stderr = fake_agent(args.fake_agent, case, ws)
@@ -347,7 +367,9 @@ def main():
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    ap.add_argument("--variant", default="baseline", choices=["baseline", "no-hooks"])
+    ap.add_argument(
+        "--variant", default="baseline", choices=["baseline", "no-hooks", "hooks-only"]
+    )
     ap.add_argument("--model", default="sonnet")
     ap.add_argument("--reps", type=int, default=1)
     ap.add_argument("--jobs", type=int, default=4)
