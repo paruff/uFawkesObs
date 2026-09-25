@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.0-beta.1...v0.4.1-beta.1) (2026-09-25)
+
+
+### Added
+
+* **agents:** add Claude Code role agents and document model routing ([c3d9d24](https://github.com/paruff/uFawkesObs/commit/c3d9d245e5e457401c5a985d4e8405a66d41da51))
+* **agents:** block remote docker-compose-up via a PreToolUse hook ([45f398a](https://github.com/paruff/uFawkesObs/commit/45f398a8b54cbcb8ea4704b522921ff7495bc931))
+* **agents:** block remote docker-compose-up via a PreToolUse hook ([0372c3b](https://github.com/paruff/uFawkesObs/commit/0372c3b561f72c3cb58ab70bca50608b2814d7ea))
+* **claude:** add AI-Native SDLC guardrails — skills, hooks, REVIEW.md ([84675ee](https://github.com/paruff/uFawkesObs/commit/84675eedf0d51baccd9978ccb60a9e89af823c7a))
+* **claude:** add AI-Native SDLC guardrails — skills, hooks, REVIEW.md ([70b74af](https://github.com/paruff/uFawkesObs/commit/70b74af69d5709b74eb8abede8264ce16241cfe6))
+* **devcontainer:** add devcontainer with gh, pre-commit and shellcheck ([4f795e8](https://github.com/paruff/uFawkesObs/commit/4f795e88a12612a97cd4b56f4d7c8059a676e87b))
+* **devcontainer:** add Docker, Python 3.12 and pinned lint/scan tools ([5d8bd78](https://github.com/paruff/uFawkesObs/commit/5d8bd78318ae2280caa66f3fd6af9876bbcc17b7))
+* **test:** finish OTel Collector Testcontainers migration, retire original ([6a3374f](https://github.com/paruff/uFawkesObs/commit/6a3374fbd050c1291a0c1eb3b3bcaaed43c235e6))
+* **test:** finish OTel Collector Testcontainers migration, retire original ([7d75614](https://github.com/paruff/uFawkesObs/commit/7d7561496ecba994d853d123becf657b9ff6fbcd))
+* **test:** migrate Grafana integration tests to Testcontainers ([75314aa](https://github.com/paruff/uFawkesObs/commit/75314aa8d340dc2013c3e51c3bfd9b29919527af))
+* **test:** migrate Grafana integration tests to Testcontainers ([38116e4](https://github.com/paruff/uFawkesObs/commit/38116e44dd0ae338803473ee5992aa9b8fdabb1d))
+
+
+### Fixed
+
+* **ci:** run Grafana Testcontainers step after shared-stack tests ([#416](https://github.com/paruff/uFawkesObs/issues/416)) ([21afb1f](https://github.com/paruff/uFawkesObs/commit/21afb1fc6053bc3b9fd01db936589b448316192e))
+* **deploy:** stop depending on GNU Make on the deploy target ([4f12b1f](https://github.com/paruff/uFawkesObs/commit/4f12b1f0a309d55c6b54543818ddc2b717b19744))
+* **deploy:** stop depending on GNU Make on the deploy target ([dfe1838](https://github.com/paruff/uFawkesObs/commit/dfe18382e8dc2e92541562c647c2244761c61bee))
+
+
+### Docs
+
+* add INTENT.md, path-scoped rules, gitops-reconcile skill; trim AGENTS.md ([9af9acc](https://github.com/paruff/uFawkesObs/commit/9af9acc4d7f5efb95f70f21ee4b1f011d027063d))
+* add INTENT.md, path-scoped rules, gitops-reconcile skill; trim AGENTS.md ([5e76760](https://github.com/paruff/uFawkesObs/commit/5e76760c51bc69ae6c5a3ace2d8ef787e6da51ca))
+* fold valid RELEASE_GOALS items into the execution queue ([9f29127](https://github.com/paruff/uFawkesObs/commit/9f291272cbd8eaadab80fdd4c8eda5dcf8f47aa9))
+* fold valid RELEASE_GOALS items into the execution queue ([4d102d2](https://github.com/paruff/uFawkesObs/commit/4d102d213260310791025fdb7abe6ebdab332c3c))
+* queue tooling findings [#469](https://github.com/paruff/uFawkesObs/issues/469)-[#474](https://github.com/paruff/uFawkesObs/issues/474) and dev tooling PRs ([4e0ff22](https://github.com/paruff/uFawkesObs/commit/4e0ff2270c4f18c35589e641eb574cb316deb386))
+* queue tooling findings and dev tooling PRs ([26beebf](https://github.com/paruff/uFawkesObs/commit/26beebf5fc47d53c73b84f2a4534302287184a80))
+* sync planning cascade with today's actual state ([749319e](https://github.com/paruff/uFawkesObs/commit/749319e3031c47ad5f79ec98609f908a78f20b88))
+* sync planning cascade with today's actual state ([a1f8206](https://github.com/paruff/uFawkesObs/commit/a1f82060981f523734c28d6158e2d52e24d48779))
+
+
+### Chores
+
+* **agents:** add Claude Code role agents and model routing ([12be8fb](https://github.com/paruff/uFawkesObs/commit/12be8fbefa2ba373c42145d70a27ef7585a1f5de))
+* **deps:** update aiosqlite requirement from &gt;=0.20 to &gt;=0.22.1 in /tests/unit ([5c2104a](https://github.com/paruff/uFawkesObs/commit/5c2104ae0067f413a11b76a8a6f8b1da7950add6))
+* **deps:** update aiosqlite requirement in /tests/unit ([0b0ba46](https://github.com/paruff/uFawkesObs/commit/0b0ba46ba692a1ab3617460bc260317abcb2ae13))
+* **deps:** update jsonschema requirement from &gt;=4.20.0 to &gt;=4.26.0 in /tests/unit ([be8e532](https://github.com/paruff/uFawkesObs/commit/be8e53280d74e34dae6dce1a9928dd22f43ed48c))
+* **deps:** update jsonschema requirement in /tests/unit ([0d450dd](https://github.com/paruff/uFawkesObs/commit/0d450ddad1d261f40b43b974df48fbf7b07175aa))
+* **deps:** update opentelemetry-api requirement from &gt;=1.22.0 to &gt;=1.44.0 in /tests/acceptance ([751b906](https://github.com/paruff/uFawkesObs/commit/751b9069f982044af88aab19879a29669c00bc56))
+* **deps:** update opentelemetry-api requirement in /tests/acceptance ([0e6aa41](https://github.com/paruff/uFawkesObs/commit/0e6aa417a31872f150b49e1c854139e1506fb34d))
+* **deps:** update opentelemetry-exporter-otlp-proto-grpc requirement ([8195735](https://github.com/paruff/uFawkesObs/commit/8195735e4291573229617cf1299a126f68504067))
+* **deps:** update opentelemetry-exporter-otlp-proto-grpc requirement from &gt;=1.22.0 to &gt;=1.44.0 in /tests/acceptance ([3f60edd](https://github.com/paruff/uFawkesObs/commit/3f60edde7ccba5918cf7ee00e89737fbcee38de6))
+* **deps:** update opentelemetry-sdk requirement from &gt;=1.22.0 to &gt;=1.44.0 in /tests/acceptance ([446a507](https://github.com/paruff/uFawkesObs/commit/446a5078138592915e3990a3c2fc4180a12f729d))
+* **deps:** update opentelemetry-sdk requirement in /tests/acceptance ([3ea2cad](https://github.com/paruff/uFawkesObs/commit/3ea2cade271a204749c8f39b854ee7bdd24243b5))
+* **deps:** update pytest-bdd requirement from &gt;=8.0 to &gt;=8.1.0 in /tests/unit ([0c641cf](https://github.com/paruff/uFawkesObs/commit/0c641cfa10533f79249c322a293a3e4aa3d999ee))
+* **deps:** update pytest-bdd requirement in /tests/unit ([2bc1262](https://github.com/paruff/uFawkesObs/commit/2bc1262820d47f1786d939ef6c1536a468a62225))
+* **deps:** update python-dotenv requirement from &gt;=1.0.0 to &gt;=1.2.3 in /tests/acceptance ([69b7268](https://github.com/paruff/uFawkesObs/commit/69b7268fc751fa179b8394451802bec65af7f594))
+* **deps:** update python-dotenv requirement in /tests/acceptance ([e6afcd7](https://github.com/paruff/uFawkesObs/commit/e6afcd74c4ec1cba4455c3f27506eb8b0e364537))
+* **deps:** update pyyaml requirement from &gt;=6.0.1 to &gt;=6.0.3 in /tests/unit ([ab1cce8](https://github.com/paruff/uFawkesObs/commit/ab1cce8947328c5f13b36c5be22f7760d4e2624d))
+* **deps:** update pyyaml requirement in /tests/unit ([e32c7bb](https://github.com/paruff/uFawkesObs/commit/e32c7bbe06974232cc99c0901c30703ba30fd8ea))
+* **deps:** update testcontainers requirement from &gt;=4.0.0 to &gt;=4.15.0 in /tests/integration ([362c1f9](https://github.com/paruff/uFawkesObs/commit/362c1f93d580bd82c7ffdb3145cd2f3458560649))
+* **deps:** update testcontainers requirement in /tests/integration ([32a9168](https://github.com/paruff/uFawkesObs/commit/32a9168f56d875120cec736e499a63cee5d6cf9d))
+* **devcontainer:** add devcontainer with Docker, Python and dev tools ([dd31ffe](https://github.com/paruff/uFawkesObs/commit/dd31ffe317f2a67f50804662ae8206ad35acfe19))
+* **make:** add lint, image-scan and release-preview targets ([2eea623](https://github.com/paruff/uFawkesObs/commit/2eea62331901fb23d6362044032756ec6e45b8f9))
+* **make:** add lint, image-scan and release-preview targets ([6e1283a](https://github.com/paruff/uFawkesObs/commit/6e1283aa491fc59af1737631bed5efc0e62b47ab))
+
 ## [0.4.0-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.3.25-alpha.1...v0.4.0-beta.1) (2026-09-24)
 
 
