@@ -119,11 +119,9 @@ jobs:
         run: pytest tests/integration/test_loki_integration.py -v --tb=short
 
       - name: Run dashboard tests
+        # Migrated to Testcontainers (#416) -- self-provisions Grafana +
+        # Prometheus + Tempo + Loki, doesn't read GRAFANA_URL/USER/PASSWORD.
         run: pytest tests/integration/test_dashboards.py -v --tb=short
-        env:
-          GRAFANA_URL: http://localhost:3000
-          GRAFANA_USER: admin
-          GRAFANA_PASSWORD: admin
 
       - name: Run Grafana integration tests
         # Migrated to Testcontainers (#416) -- self-provisions Grafana +
