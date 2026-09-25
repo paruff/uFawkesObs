@@ -78,3 +78,7 @@ graphify-out/
 
 # Serena MCP local cache/config
 .serena/
+
+# Claude Code: per-developer settings and agent worktrees (never commit)
+.claude/settings.local.json
+.claude/worktrees/
