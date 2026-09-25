@@ -37,7 +37,28 @@
 
 ## Scheduled Work (P1 — This Sprint)
 
-*No P1 items currently — the last one (#357, opencode agent hardening) closed via PR #371, merged.*
+| Task | Source | Acceptance Criteria | Status |
+|---|---|---|---|
+| Bump alertmanager v0.28.0 — 42 HIGH/CRITICAL fixable CVEs (found by `make scan-images`) | [#469](https://github.com/paruff/uFawkesObs/issues/469) | 0 fixable CRITICAL; old/new versions in PR; needs PM sign-off (image version) | 🔲 Pending — awaiting sign-off |
+| Validate Configs gate checks Tempo config with 2.4.1, stack runs 2.10.5 | [#470](https://github.com/paruff/uFawkesObs/issues/470) | CI + `make validate-configs` use compose's exact images, derived not re-pinned; needs PM sign-off (CI config) | 🔲 Pending — awaiting sign-off |
+| Testcontainers fixtures join the shared `ufawkesobs` compose project and tear it down | [#471](https://github.com/paruff/uFawkesObs/issues/471) | Fixtures isolated; CI correctness no longer depends on step order. Blocks the dashboards step of #416 below | 🔲 Pending |
+| Verify the devcontainer end-to-end | [#467](https://github.com/paruff/uFawkesObs/pull/467) (merged) | Rebuild from the new definition; Docker, Python 3.12 and the pinned tools work | 🔲 Pending — needs a rebuild |
+| AI-Native SDLC guardrails: skills discoverable by Claude Code, test-protection + self-verify hooks, `REVIEW.md` | [#476](https://github.com/paruff/uFawkesObs/pull/476) | Needs human `large-pr-approved` (494 lines) before merge | 🟡 In review |
+| Agent guardrail eval in CI (adversarial + benign cases, end-state graded) | Stacked on #476 | Fail-on-any violation; benign completion reported; `ANTHROPIC_API_KEY` repo secret added by maintainer | 🟡 In progress |
+
+### Public-release goals (folded from the proposed `RELEASE_GOALS.md`)
+
+End-state goals with a verification command, so an agent can execute them and a reviewer can check them. These add to [`docs/PREPARE_FOR_PUBLIC_RELEASE.md`](docs/PREPARE_FOR_PUBLIC_RELEASE.md)'s blockers (PR-01…PR-04: #380, #381, #335, #182), which remain the gate. They don't replace it.
+
+| ID | Goal (end state) | Verification | Status |
+|---|---|---|---|
+| RG-1 | `make init && make up` on a clean machine reaches a healthy stack within 15 min, and Grafana shows metrics, logs **and** traces | Timed run following README Quick Start only + screenshot of each signal in Grafana | 🔲 Pending |
+| RG-2 | README documents that DORA uses **SQLite by default** (no external DB) | `grep -qi sqlite README.md` | 🔲 Pending |
+| RG-3 | A new user can follow README Quick Start without maintainer help | Walkthrough by someone who hasn't used the repo; gaps filed as issues | 🔲 Pending — after RG-1 |
+| RG-4 | Each GitHub Release carries the changelog excerpt, a source tarball and its SHA256 | `gh release view <tag> --json assets` lists the tarball + `.sha256` (latest `v0.2.0` has 0 assets) | 🔲 Pending — CI change, needs sign-off |
+| RG-5 | No secrets anywhere in git history | `gitleaks git --redact .` exits 0 (**verified 2026-09-24: clean**); CI Security already scans every PR | ✅ Verified |
+| RG-6 | `.claude/settings.local.json` and `.claude/worktrees/` can't be committed | `git check-ignore .claude/settings.local.json` | 🟡 In #476 |
+| RG-7 | Claude Code loads the repo's skills | A headless session's init event lists `gitops-reconcile` | 🟡 In #476 (verified on branch) |
 
 ---
 
@@ -53,6 +74,11 @@
 | **Add SLO burn alerts + automated rollback on CFR regression** | Expert feedback | Acceptance suite includes CFR-triggered rollback | 🔲 Pending |
 | **Add resource budgeting, HPA, VPA to M5 Helm chart spec** | Expert feedback | Helm chart includes HPA/VPA configs | 🔲 Pending |
 | **Decide River DSL vs OTel YAML and document in ADR** | Expert feedback | Design decision documented, one paradigm chosen | 🔲 Pending |
+| Trim `AGENTS.md` to ≤150 lines (now 223) by moving detail into `.claude/rules/` and skills; no duplicated content | Proposed `RELEASE_GOALS.md` R1.6 | `wc -l AGENTS.md` ≤ 150; every removed rule still reachable from a rule file or skill | 🔲 Pending |
+| Skill descriptions state *when* to use each skill (none of the 15 has a "When to use" section today) | Proposed `RELEASE_GOALS.md` R2.4 | Each `description:` names its trigger situations; measure with a skill-routing eval rather than a grep | 🔲 Pending |
+| Rename the repo's `security-review` skill: it collides with Claude Code's built-in `/security-review` | Found in #476 | No duplicate skill names in a headless session's init event | 🔲 Pending |
+| Gate PRs on actionlint, hadolint, trivy (CI follow-up to #468) | [#474](https://github.com/paruff/uFawkesObs/issues/474) | Runs on relevant paths, same versions as `install-tools.sh`; fix #469/#472 first; needs PM sign-off (CI config) | 🔲 Pending — after #468 |
+| Exec-form CMD in dora compute/ingestion Dockerfiles (hadolint DL3025) | [#472](https://github.com/paruff/uFawkesObs/issues/472) | `make lint-dockerfiles` clean of DL3025; `--profile dora stop` exits promptly | 🔲 Pending |
 
 ---
 
@@ -63,6 +89,7 @@
 | Prometheus /-/reload returns 200 without applying config | [#334](https://github.com/paruff/uFawkesObs/issues/334) | Silent failure; needs investigation |
 | send-dora-deployment-event.sh drops failed events | [#324](https://github.com/paruff/uFawkesObs/issues/324) | Unpairs rollback recovery |
 | `paruff/ufawkespipe` reusable workflows pinned to a beta tag | [#352](https://github.com/paruff/uFawkesObs/issues/352) | Merge gate depends on `@v1.4.0-beta.1`/`@v1.2.0`, not a stable release |
+| Alertmanager `templates:` glob matches nothing | [#473](https://github.com/paruff/uFawkesObs/issues/473) | Harmless today; named templates would silently fall back to defaults |
 
 ---
 
