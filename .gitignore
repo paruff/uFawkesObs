@@ -82,3 +82,4 @@ graphify-out/
 # Claude Code: per-developer settings and agent worktrees (never commit)
 .claude/settings.local.json
 .claude/worktrees/
+.claude/hillclimb/
