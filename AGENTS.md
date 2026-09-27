@@ -88,6 +88,7 @@ VISION.md (years) → MILESTONES.md (months) → EXECUTION_QUEUE.md (weeks) → 
 - **Strict Top-Down Traceability:** Every task in `plan-for-the-day.md` originates from `EXECUTION_QUEUE.md`, which fulfills a delivery gate in `MILESTONES.md`, moving toward `VISION.md`.
 - **Scope Drift Protection:** Before adding a feature to `EXECUTION_QUEUE.md`, check it against `VISION.md` non-goals.
 - **Controlled Bottom-Up Feedback:** Learnings from `plan-for-the-day.md` route back to `EXECUTION_QUEUE.md` for reprioritization.
+- **Status Lives in GitHub:** `EXECUTION_QUEUE.md` holds priority and goal definitions, not status. Every queued task links an issue; "is it done" is the issue's state and the [suite Project](https://github.com/users/paruff/projects/7). Don't add status columns back.
 
 ### Product Artifacts
 
