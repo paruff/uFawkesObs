@@ -71,8 +71,8 @@ Rather than having each repository or plane provision its own isolated, custom t
 
 - **OBS-F20:** Define the DORA data contract mapping of what counts as a deployment, incident, and lead-time event inside uFawkesObs telemetry. This contract is consumed by uFawkesDORA's ingestion API.
 - **OBS-F21:** Implement Prometheus recording rules inside `config/prometheus/rules/` computing Deployment Frequency, Lead Time for Changes, Change Failure Rate, and Failed Deployment Recovery Time (FDRT).
-- **OBS-F22:** Pre-provision a "DORA Metrics" Grafana dashboard showing historical stat panels and trendlines for all 4 DORA indicators. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL (current snapshots via Postgres datasource plugin).
-- **OBS-F23:** Configure uFawkesObs to connect to uFawkesRes's shared PostgreSQL on `fawkes-backbone-net` for DORA metric snapshots, and to uFawkesDORA's ingestion API for event forwarding.
+- **OBS-F22:** Pre-provision a "DORA Metrics" Grafana dashboard showing historical stat panels and trendlines for all 4 DORA indicators. Dashboard reads from Prometheus (time-series) and uFawkesRes PostgreSQL (current snapshots via Postgres datasource plugin). **[Superseded: ADR-007, #275: uFawkesDORA merged into uFawkesObs, DORA storage is SQLite-only, uFawkesRes deprecated.]**
+- **OBS-F23:** Configure uFawkesObs to connect to uFawkesRes's shared PostgreSQL on `fawkes-backbone-net` for DORA metric snapshots, and to uFawkesDORA's ingestion API for event forwarding. **[Superseded: ADR-007, #275: uFawkesDORA merged into uFawkesObs, DORA storage is SQLite-only, uFawkesRes deprecated.]**
 
 **Out of scope for M4 (moved to uFawkesDORA/uFawkesRes):**
 - Apache DevLake — now owned by uFawkesDORA as optional complementary visualization

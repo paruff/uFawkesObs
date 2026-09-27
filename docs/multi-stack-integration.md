@@ -36,7 +36,7 @@ uFawkesObs exposes a dedicated Docker bridge network named **`observability-lab`
 │   └─────────────────────────────────────────────────────────────────┘   │
 │                                                                         │
 │   ┌─────────────────────────────────────────────────────────────────┐  │
-│   │               fawkes-backbone-net (external, M4+)               │  │
+│   │               fawkes-backbone-net (retired, see §4)             │  │
 │   │  uFawkesRes PostgreSQL  •  uFawkesDORA Ingestion API            │  │
 │   └─────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
