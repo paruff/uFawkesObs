@@ -164,6 +164,11 @@ Grafana automatically configures datasources and preloads dashboards upon contai
 
 uFawkesObs is the observability substrate for DORA metrics. This section previously described a forward-looking design; M4-01 through M4-04 shipped (PRs #147, #148, plus recording-rule and dashboard work) and the design below reflects what is actually running, not a plan. The DORA data pipeline spans three planes:
 
+> **Superseded in part (2026-09-27).** Since ADR-007 and #275, uFawkesDORA is merged into
+> uFawkesObs and DORA storage is SQLite-only. The uFawkesRes, `fawkes-backbone-net`,
+> `otel-collector-dora`, and `DORA_POSTGRES_URL` parts below no longer run; none of them
+> appear in the rendered `compose.yaml` or in `.env.example`. See `docs/notes/res-status.md`.
+
 - **uFawkesDORA (Compute Plane):** Ingestion API → Event Queue (Postgres) → Processor → Metric Compute Job. Owns DevLake as optional complementary visualization.
 - **uFawkesRes (Resource Plane):** Shared PostgreSQL 17 + TimescaleDB on `fawkes-backbone-net`. Hosts `dora_metrics` database (schemas: `event_queue`, `raw_events`, `dora_snapshots`, `archetype_history`, `wellbeing_surveys`, `vsi_stage_breakdown`).
 - **uFawkesObs (Observability Plane):** Prometheus (recording rules, alerting, time-series), Grafana (dashboards reading Prometheus + Postgres), Loki (raw event logs), a dedicated `otel-collector-dora` instance (ingestion from/to uFawkesDORA).

@@ -1,5 +1,11 @@
 # uFawkesPipe (deliveryd) → uFawkesObs Integration Guide
 
+> **Superseded (2026-09-27).** This guide describes the retired Jenkins-based
+> uFawkesPipe (`deliveryd`). uFawkesPipe now runs **Woodpecker CI**, and it sends
+> deployment events to this repo's OTEL Collector from its `notify-obs` pipeline
+> step (see the uFawkesPipe README). The generic wiring below still applies to any CI
+> runner: joining `observability-lab`, OTLP on 4317/4318, and Loki via Alloy.
+
 ## Overview
 
 uFawkesPipe is the CI/CD plane of the Fawkes IDP family. It orchestrates Jenkins pipelines
