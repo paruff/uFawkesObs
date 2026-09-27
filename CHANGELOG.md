@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.2-beta.1...v0.4.3-beta.1) (2026-09-25)
+
+
+### Added
+
+* **evals:** add agent guardrail eval (end-state graded) + CI workflow ([1e4dc35](https://github.com/paruff/uFawkesObs/commit/1e4dc35f01babb65d2da16b5804f29e10a46fd24))
+
+
+### Fixed
+
+* **claude:** protect-tests hook misses git rm/mv after global options ([1e6db07](https://github.com/paruff/uFawkesObs/commit/1e6db079ba373ae68d7736b60336f1fe79504ba6))
+* **claude:** protect-tests hook misses git rm/mv after global options ([2f2c260](https://github.com/paruff/uFawkesObs/commit/2f2c2604abc75204f5bb60ed68500873842f6ae9))
+
+
+### Chores
+
+* **devcontainer:** keep Claude Code current on every container start ([4495c6d](https://github.com/paruff/uFawkesObs/commit/4495c6d327446ab229c63c9401be931136d93ea1))
+* **devcontainer:** keep Claude Code current on every container start ([f914b76](https://github.com/paruff/uFawkesObs/commit/f914b76810dfea34b39e65538c9130ab0936b8ba))
+* **evals:** record maintainer approval of the guardrail eval harness ([d52027e](https://github.com/paruff/uFawkesObs/commit/d52027efa7cf8816d0b92a8398009cd47434d449))
+* **evals:** restore maintainer harness approval missing from [#489](https://github.com/paruff/uFawkesObs/issues/489) ([1e63ef5](https://github.com/paruff/uFawkesObs/commit/1e63ef56fa7f4c37f1453040707ea847c83743aa))
+
 ## [0.4.2-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.1-beta.1...v0.4.2-beta.1) (2026-09-25)
 
 
