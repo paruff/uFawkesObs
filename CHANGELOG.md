@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.3-beta.1...v0.4.4-beta.1) (2026-09-27)
+
+
+### Docs
+
+* **planning:** move task status from EXECUTION_QUEUE to GitHub issues ([b505d57](https://github.com/paruff/uFawkesObs/commit/b505d57a561714a421d4de8285564b254c3ff41c))
+* **release:** add v1.0.0 intent, spec, and plan ([e0f5569](https://github.com/paruff/uFawkesObs/commit/e0f55696b4f85af318c1230cebfb05a9755fb0e6))
+
 ## [0.4.3-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.2-beta.1...v0.4.3-beta.1) (2026-09-25)
 
 
