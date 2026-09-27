@@ -64,7 +64,7 @@ Every PR must include the **AI-Assisted Review Block** (see `AGENTS.md §7`):
 
 **Architecture check:**
 - What layer(s) were touched and are they correct per AGENTS.md §4?
-- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDORA)?
+- Any cross-plane impact (uFawkesPipe, uFawkesDevX, uFawkesDojo)?
 
 **What I was NOT sure about:**
 [Anything uncertain — reviewers should focus here]

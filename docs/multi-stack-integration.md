@@ -125,7 +125,13 @@ To enable correlation in Grafana dashboards, set `OTEL_SERVICE_NAME` consistentl
 
 ---
 
-## 4. M4+ DORA/Ecosystem Integration (Backbone Network)
+## 4. M4+ DORA/Ecosystem Integration (Backbone Network) — retired
+
+> **Retired (2026-09-27). Don't follow this section.** uFawkesDORA was merged into
+> uFawkesObs (ADR-007), DORA storage is SQLite-only (#275), and uFawkesRes is
+> deprecated. There's no `fawkes-backbone-net`, `DORA_INGESTION_URL`, or
+> `ufawkesres-postgres` to connect to. Send DORA events to uFawkesObs's own API
+> instead (see [`docs/CONTRACTS.md`](CONTRACTS.md)). Kept below for history only.
 
 Starting with Milestone 4, external planes also join the **`fawkes-backbone-net`** network to access:
 
@@ -172,6 +178,11 @@ cat config/docker-compose.integration.yml
 # Validate syntax (requires --profile placeholder since no default services)
 docker compose -f config/docker-compose.integration.yml --profile placeholder config
 ```
+
+**Key sections.** Copy only the `observability` network. The template's
+`fawkes-backbone-net` block belongs to the retired uFawkesRes integration (§4).
+Removing it from the template is tracked separately, because editing `config/**`
+triggers a deploy.
 
 **Key sections:**
 

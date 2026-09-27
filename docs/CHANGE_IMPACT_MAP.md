@@ -66,7 +66,7 @@
 
 | If you change...                         | Impact on other planes                                                             |
 | ---------------------------------------- | ---------------------------------------------------------------------------------- |
-| OTEL Collector receiver port (4317/4318) | **deliveryd**: Jenkins pipeline traces sent here; update deliveryd OTEL SDK config |
+| OTEL Collector receiver port (4317/4318) | **uFawkesPipe**: Woodpecker pipeline telemetry and `notify-obs` deployment events are sent here; update its OTEL exporter config |
 | Loki port (3100)                         | Any external log shippers or apps pushing logs via OTLP/HTTP must be updated       |
 | Prometheus remote-write endpoint         | **fawkes**: Full IDP deployment may scrape this Prometheus                         |
 | Grafana admin credentials format         | **developerd**: Developer tooling that embeds Grafana panels                       |

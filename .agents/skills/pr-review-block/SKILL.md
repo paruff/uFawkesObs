@@ -21,7 +21,7 @@ Every PR opened by an agent in this repo must include this block in its descript
 
 **Architecture check:**
 - What layer(s) were touched and are they correct per §4?
-- Any cross-plane impact (uFawkesPipe, uFawkesRes, uFawkesDevX)?
+- Any cross-plane impact (uFawkesPipe, uFawkesDevX, uFawkesDojo)?
 
 **What I was NOT sure about:**
 [...]
