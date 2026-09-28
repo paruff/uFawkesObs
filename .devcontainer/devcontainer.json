@@ -1,15 +1,6 @@
 {
-  "name": "uFawkesAI Development",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-  "features": {
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "installOhMyZsh": true
-    }
-  },
-  "postCreateCommand": "npm ci && ./scripts/setup.sh && npm install -g opencode-ai@1.18.30 @anthropic-ai/claude-code@2.1.283",
+  "name": "uFawkesObs Development",
+  "image": "ghcr.io/paruff/ufawkesai-devcontainer:latest",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -30,6 +21,7 @@
       }
     }
   },
-  "forwardPorts": [],
-  "remoteUser": "node"
+  "forwardPorts": [9090, 3000],
+  "remoteUser": "dev",
+  "postCreateCommand": "echo 'uFawkesObs devcontainer ready — all tools pre-installed'"
 }
