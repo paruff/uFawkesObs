@@ -389,7 +389,7 @@ async def _push_metrics(
                         )
                     else:
                         logger.debug("Pushed metrics for %s", tid)
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as e:
             logger.warning("Failed to push metrics for %s: %s", tid, e)
 
 
