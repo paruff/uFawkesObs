@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.4-beta.1...v0.4.5-beta.1) (2026-09-27)
+
+
+### Docs
+
+* mark the retired uFawkesRes/uFawkesDORA integration as retired ([2308771](https://github.com/paruff/uFawkesObs/commit/23087711bc5f42b96116e48c54950bd86e511811))
+
 ## [0.4.4-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.3-beta.1...v0.4.4-beta.1) (2026-09-27)
 
 
