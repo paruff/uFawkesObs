@@ -5,12 +5,12 @@ Contains step for validating datasource UID format in the provisioning YAML.
 """
 
 from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pytest_bdd import then, given, parsers
-
 import yaml
+from pytest_bdd import given, parsers, then
 
 if TYPE_CHECKING:
     from tests.acceptance.runtime import ObservabilityStack

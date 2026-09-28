@@ -10,22 +10,22 @@ BDD Scenarios:
 
 import time
 import uuid
+
 import pytest
-from typing import Dict
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter as HTTPSpanExporter,
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter as GRPCSpanExporter,
 )
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter as HTTPMetricExporter,
 )
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-    OTLPSpanExporter as GRPCSpanExporter,
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HTTPSpanExporter,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
 class TelemetryGenerator:
@@ -84,7 +84,7 @@ class TelemetryGenerator:
         )
 
     def send_test_metric(
-        self, metric_name: str, value: float, labels: Dict[str, str] = None
+        self, metric_name: str, value: float, labels: dict[str, str] = None
     ) -> str:
         """
         Send a test metric.
@@ -110,7 +110,7 @@ class TelemetryGenerator:
         return test_id
 
     def send_test_trace(
-        self, trace_name: str, span_count: int = 3, labels: Dict[str, str] = None
+        self, trace_name: str, span_count: int = 3, labels: dict[str, str] = None
     ) -> str:
         """
         Send a test trace with multiple spans.
@@ -144,7 +144,7 @@ class TelemetryGenerator:
         )
         return trace_id
 
-    def send_correlated_telemetry(self, trace_name: str) -> Dict[str, str]:
+    def send_correlated_telemetry(self, trace_name: str) -> dict[str, str]:
         """
         Send correlated metrics and traces with shared trace_id.
 

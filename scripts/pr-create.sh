@@ -25,10 +25,13 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-info()  { printf "%b\n" "${CYAN}ℹ️  ${NC} $*"; }
-pass()  { printf "%b\n" "${GREEN}✅ ${NC} $*"; }
-warn()  { printf "%b\n" "${YELLOW}⚠️  ${NC} $*"; }
-fail()  { printf "%b\n" "${RED}❌ ${NC} $*"; exit 1; }
+info() { printf "%b\n" "${CYAN}ℹ️  ${NC} $*"; }
+pass() { printf "%b\n" "${GREEN}✅ ${NC} $*"; }
+warn() { printf "%b\n" "${YELLOW}⚠️  ${NC} $*"; }
+fail() {
+  printf "%b\n" "${RED}❌ ${NC} $*"
+  exit 1
+}
 
 COMMIT_MSG="${1:-}"
 PR_BRANCH="${PR_BRANCH:-}"
@@ -38,14 +41,14 @@ PR_DRY_RUN="${PR_DRY_RUN:-0}"
 
 # ── 1) Pre-flight checks ────────────────────────────────────────────────────
 
-command -v git >/dev/null 2>&1  || fail "git is not installed"
-command -v gh  >/dev/null 2>&1  || fail "gh (GitHub CLI) is not installed. Run: brew install gh"
+command -v git > /dev/null 2>&1 || fail "git is not installed"
+command -v gh > /dev/null 2>&1 || fail "gh (GitHub CLI) is not installed. Run: brew install gh"
 
 # Must be in a git repo
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || fail "Not inside a git repository"
+git rev-parse --is-inside-work-tree > /dev/null 2>&1 || fail "Not inside a git repository"
 
 # Check for pre-commit
-if command -v pre-commit >/dev/null 2>&1; then
+if command -v pre-commit > /dev/null 2>&1; then
   HOOKS_INSTALLED=.git/hooks/pre-commit
   if [ -f "${HOOKS_INSTALLED}" ]; then
     info "Pre-commit hooks found — will run before commit."
@@ -58,9 +61,9 @@ fi
 
 # ── 2) Stage changes ────────────────────────────────────────────────────────
 
-CHANGED_FILES=$(git diff --name-only HEAD 2>/dev/null || true)
-STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
-UNTRACKED_FILES=$(git ls-files --others --exclude-standard 2>/dev/null || true)
+CHANGED_FILES=$(git diff --name-only HEAD 2> /dev/null || true)
+STAGED_FILES=$(git diff --cached --name-only 2> /dev/null || true)
+UNTRACKED_FILES=$(git ls-files --others --exclude-standard 2> /dev/null || true)
 
 if [ -z "${CHANGED_FILES}" ] && [ -z "${STAGED_FILES}" ] && [ -z "${UNTRACKED_FILES}" ]; then
   fail "No changes to commit. Nothing staged, nothing modified, no untracked files."
@@ -92,7 +95,7 @@ if [ -f .git/hooks/pre-commit ] && [ -x .git/hooks/pre-commit ]; then
   else
     fail "Pre-commit hooks failed. Fix the issues above and try again."
   fi
-elif command -v pre-commit >/dev/null 2>&1 && [ -f .pre-commit-config.yaml ]; then
+elif command -v pre-commit > /dev/null 2>&1 && [ -f .pre-commit-config.yaml ]; then
   info "Running pre-commit via pre-commit CLI..."
   if pre-commit run --all-files; then
     pass "Pre-commit hooks passed."
@@ -126,7 +129,7 @@ fi
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "${CURRENT_BRANCH}" != "${PR_BRANCH}" ]; then
   # Check if branch already exists
-  if git show-ref --verify --quiet "refs/heads/${PR_BRANCH}" 2>/dev/null; then
+  if git show-ref --verify --quiet "refs/heads/${PR_BRANCH}" 2> /dev/null; then
     info "Branch '${PR_BRANCH}' already exists — switching to it."
     git checkout "${PR_BRANCH}"
   else
@@ -167,9 +170,9 @@ pass "Pushed to origin/${PR_BRANCH}"
 # Auto-generate PR body if not provided
 if [ -z "${PR_BODY:-}" ]; then
   # Count files changed
-  FILES_CHANGED=$(git diff --stat HEAD~1 --name-only 2>/dev/null | wc -l | tr -d ' ')
-  LINES_ADDED=$(git diff --stat HEAD~1 2>/dev/null | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
-  LINES_REMOVED=$(git diff --stat HEAD~1 2>/dev/null | tail -1 | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo "0")
+  FILES_CHANGED=$(git diff --stat HEAD~1 --name-only 2> /dev/null | wc -l | tr -d ' ')
+  LINES_ADDED=$(git diff --stat HEAD~1 2> /dev/null | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo "0")
+  LINES_REMOVED=$(git diff --stat HEAD~1 2> /dev/null | tail -1 | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo "0")
 
   PR_BODY="## Summary
 
@@ -183,7 +186,7 @@ $(echo "${COMMIT_MSG}" | head -1)
 
 ### Services affected
 
-$(git diff --name-only HEAD~1 2>/dev/null | sed 's/^/- /' || echo "- See files changed above")
+$(git diff --name-only HEAD~1 2> /dev/null | sed 's/^/- /' || echo "- See files changed above")
 
 ### Run locally
 
@@ -205,7 +208,7 @@ No secrets, credentials, or environment variables committed.
 fi
 
 # Check if PR already exists for this branch
-EXISTING_PR=$(gh pr list --head "${PR_BRANCH}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+EXISTING_PR=$(gh pr list --head "${PR_BRANCH}" --json number --jq '.[0].number' 2> /dev/null || echo "")
 
 if [ -n "${EXISTING_PR}" ]; then
   warn "PR #${EXISTING_PR} already exists for branch '${PR_BRANCH}'."

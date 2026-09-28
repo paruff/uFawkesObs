@@ -21,7 +21,7 @@ strip_surrounding_quotes() {
     last_char="${value: -1}"
     if [ "${first_char}" = "${last_char}" ]; then
       case "${first_char}" in
-        '"'|"'") value="${value:1:${#value}-2}" ;;
+        '"' | "'") value="${value:1:${#value}-2}" ;;
       esac
     fi
   fi
@@ -41,7 +41,7 @@ read_env_password() {
     line="${line%$'\r'}"
     case "${line}" in
       # Skip empty lines and both direct/indented comment lines.
-      ''|'#'*|[[:space:]]*'#'*) continue ;;
+      '' | '#'* | [[:space:]]*'#'*) continue ;;
     esac
 
     key="$(trim_whitespace "${line%%=*}")"
@@ -73,8 +73,8 @@ export GRAFANA_ADMIN_PASSWORD
 # admin account whose password is published in this repository. Matching the
 # prefix keeps the guard correct if the placeholder wording changes again.
 case "${GRAFANA_ADMIN_PASSWORD}" in
-  ''|admin|changeme|REPLACE_ME*)
-  cat <<'EOF'
+  '' | admin | changeme | REPLACE_ME*)
+    cat << 'EOF'
 ❌ Refusing to start: GRAFANA_ADMIN_PASSWORD is missing or insecure.
 Set a non-default Grafana admin password before starting the stack.
 
@@ -82,8 +82,8 @@ Remediation:
   cp .env.example .env
   $EDITOR .env
 EOF
-  exit 1
-  ;;
+    exit 1
+    ;;
 esac
 
 echo "✅ Environment check passed: GRAFANA_ADMIN_PASSWORD is set."

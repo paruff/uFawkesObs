@@ -5,10 +5,10 @@ Provides shared fixtures for end-to-end telemetry testing
 
 import os
 import time
-import requests
-import pytest
-from typing import Dict, Any
+from typing import Any
 
+import pytest
+import requests
 
 # Configuration
 OTEL_HTTP_ENDPOINT = os.getenv("OTEL_HTTP_ENDPOINT", "http://localhost:4318")
@@ -101,7 +101,7 @@ def wait_for_stack(
 
 def query_prometheus(
     prometheus_url: str, query: str, timeout: int = 10
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Query Prometheus.
 
@@ -122,7 +122,7 @@ def query_prometheus(
 
 def query_tempo_trace(
     tempo_url: str, trace_id: str, timeout: int = 10
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Query Tempo for a trace.
 
@@ -139,7 +139,7 @@ def query_tempo_trace(
     return response.json()
 
 
-def query_loki(loki_url: str, query: str, timeout: int = 10) -> Dict[str, Any]:
+def query_loki(loki_url: str, query: str, timeout: int = 10) -> dict[str, Any]:
     """
     Query Loki.
 
@@ -162,9 +162,9 @@ def query_grafana_datasource(
     grafana_url: str,
     grafana_auth: tuple,
     datasource_uid: str,
-    query_params: Dict[str, Any],
+    query_params: dict[str, Any],
     timeout: int = 10,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Query a Grafana datasource.
 
@@ -192,7 +192,7 @@ def query_grafana_datasource(
 def prometheus_query(prometheus_url: str):
     """Fixture that provides Prometheus query function."""
 
-    def _query(query: str, timeout: int = 10) -> Dict[str, Any]:
+    def _query(query: str, timeout: int = 10) -> dict[str, Any]:
         return query_prometheus(prometheus_url, query, timeout)
 
     return _query
@@ -202,7 +202,7 @@ def prometheus_query(prometheus_url: str):
 def tempo_query(tempo_url: str):
     """Fixture that provides Tempo query function."""
 
-    def _query(trace_id: str, timeout: int = 10) -> Dict[str, Any]:
+    def _query(trace_id: str, timeout: int = 10) -> dict[str, Any]:
         return query_tempo_trace(tempo_url, trace_id, timeout)
 
     return _query
@@ -212,7 +212,7 @@ def tempo_query(tempo_url: str):
 def loki_query(loki_url: str):
     """Fixture that provides Loki query function."""
 
-    def _query(query: str, timeout: int = 10) -> Dict[str, Any]:
+    def _query(query: str, timeout: int = 10) -> dict[str, Any]:
         return query_loki(loki_url, query, timeout)
 
     return _query
@@ -223,8 +223,8 @@ def grafana_query(grafana_url: str, grafana_auth: tuple):
     """Fixture that provides Grafana datasource query function."""
 
     def _query(
-        datasource_uid: str, query_params: Dict[str, Any], timeout: int = 10
-    ) -> Dict[str, Any]:
+        datasource_uid: str, query_params: dict[str, Any], timeout: int = 10
+    ) -> dict[str, Any]:
         return query_grafana_datasource(
             grafana_url, grafana_auth, datasource_uid, query_params, timeout
         )

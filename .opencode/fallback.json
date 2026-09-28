@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/HyeokjaeLee/opencode-auto-fallback/main/docs/fallback.schema.json",
+  "enabled": true,
+  "autoUpdate": false,
+  "defaultFallback": [
+    "google/gemini-2.5-flash",
+    "nvidia-proxy/nvidia/qwen3-coder-480b-a35b-instruct",
+    "nvidia-proxy/nvidia/nemotron-3-ultra-550b-a55b",
+    "opencode/nemotron-3.5-lightning-free"
+  ],
+  "cooldownMs": 60000,
+  "maxRetries": 2,
+  "logging": true
+}

@@ -20,7 +20,7 @@ import pytest
 # container, so dora/ needs to be on sys.path for this import to resolve.
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "dora"))
 
-from dora.ingestion.processor.worker import (  # noqa: E402
+from dora.ingestion.processor.worker import (
     MAX_ATTEMPTS,
     _extract_outcome,
     process_event,

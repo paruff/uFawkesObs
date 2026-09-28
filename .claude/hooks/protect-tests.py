@@ -23,7 +23,9 @@ import sys
 from collections import Counter
 from pathlib import PurePath
 
-TEST_DEF = re.compile(r"^[ \t]*(?:async[ \t]+)?def[ \t]+(test\w*)[ \t]*\(", re.M)
+TEST_DEF = re.compile(
+    r"^[ \t]*(?:async[ \t]+)?def[ \t]+(test\w*)[ \t]*\(", re.MULTILINE
+)
 TEST_FILE = re.compile(r"^(test_.*|.*_test|conftest)\.py$")
 ARTIFACT_DIRS = {"__pycache__", ".pytest_cache", "reports", "htmlcov"}
 ARTIFACT_SUFFIXES = {".pyc", ".xml", ".html", ".log"}
@@ -59,9 +61,7 @@ def is_protected_path(path: str) -> bool:
         return True
     if not in_tests_dir(path):
         return False
-    if ARTIFACT_DIRS.intersection(p.parts) or p.suffix in ARTIFACT_SUFFIXES:
-        return False
-    return True
+    return not (ARTIFACT_DIRS.intersection(p.parts) or p.suffix in ARTIFACT_SUFFIXES)
 
 
 def test_names(source: str) -> Counter:

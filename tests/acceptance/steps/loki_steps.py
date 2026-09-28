@@ -5,7 +5,7 @@ Additional steps specific to Loki beyond shared steps.
 
 from __future__ import annotations
 
-from pytest_bdd import then, parsers
+from pytest_bdd import parsers, then
 
 from tests.acceptance.runtime import ObservabilityStack
 

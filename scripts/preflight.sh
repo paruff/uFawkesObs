@@ -17,7 +17,10 @@ failures=0
 
 pass() { printf "%b\n" "${GREEN}✅ ${NC} $*"; }
 warn() { printf "%b\n" "${YELLOW}⚠️  ${NC} $*"; }
-fail() { printf "%b\n" "${RED}❌ ${NC} $*"; failures=$((failures + 1)); }
+fail() {
+  printf "%b\n" "${RED}❌ ${NC} $*"
+  failures=$((failures + 1))
+}
 
 echo ""
 echo "Running preflight checks..."
@@ -25,7 +28,7 @@ echo ""
 
 # ── 1) Shellcheck all shell scripts ─────────────────────────────────────────
 
-if ! command -v shellcheck >/dev/null 2>&1; then
+if ! command -v shellcheck > /dev/null 2>&1; then
   fail "shellcheck is required but not installed. Run: brew install shellcheck"
 else
   shell_files=()
@@ -87,8 +90,8 @@ done
 
 # ── 4) compose.yaml must be valid YAML ──────────────────────────────────────
 
-if command -v python3 >/dev/null 2>&1; then
-  if python3 -c "import yaml; yaml.safe_load(open('compose.yaml'))" 2>/dev/null; then
+if command -v python3 > /dev/null 2>&1; then
+  if python3 -c "import yaml; yaml.safe_load(open('compose.yaml'))" 2> /dev/null; then
     pass "compose.yaml is valid YAML."
   else
     fail "compose.yaml is not valid YAML."
@@ -99,7 +102,7 @@ fi
 
 # ── 5) No :latest tags in compose.yaml ──────────────────────────────────────
 
-if grep -q "image: .*:latest" compose.yaml 2>/dev/null; then
+if grep -q "image: .*:latest" compose.yaml 2> /dev/null; then
   fail "compose.yaml uses :latest tags."
 else
   pass "No :latest tags in compose.yaml."

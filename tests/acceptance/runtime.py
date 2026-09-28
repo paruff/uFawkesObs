@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import requests
 
@@ -199,10 +199,10 @@ class PromQLClient:
     def poll_metric(
         self,
         query: str,
-        expected_value: Optional[float] = None,
+        expected_value: float | None = None,
         timeout: int = 60,
         interval: float = 2.0,
-    ) -> Tuple[bool, float, Optional[dict]]:
+    ) -> tuple[bool, float, dict | None]:
         """Poll Prometheus until a metric appears or timeout.
 
         Returns:
@@ -232,8 +232,8 @@ class LokiClient:
     def query_range(
         self,
         query: str,
-        start: Optional[str] = None,
-        end: Optional[str] = None,
+        start: str | None = None,
+        end: str | None = None,
         limit: int = 100,
         timeout: int = 10,
     ) -> dict[str, Any]:
@@ -299,7 +299,7 @@ class LokiClient:
         min_streams: int = 1,
         timeout: int = 60,
         interval: float = 3.0,
-    ) -> Tuple[bool, float, int]:
+    ) -> tuple[bool, float, int]:
         """Poll Loki until log streams appear.
 
         Returns:
@@ -327,7 +327,7 @@ class TempoClient:
         except requests.RequestException:
             return False
 
-    def query_trace(self, trace_id: str, timeout: int = 10) -> Optional[dict[str, Any]]:
+    def query_trace(self, trace_id: str, timeout: int = 10) -> dict[str, Any] | None:
         """Query a trace by ID."""
         try:
             resp = requests.get(
@@ -356,7 +356,7 @@ class TempoClient:
         trace_id: str,
         timeout: int = 30,
         interval: float = 2.0,
-    ) -> Tuple[bool, float, Optional[dict]]:
+    ) -> tuple[bool, float, dict | None]:
         """Poll Tempo until a trace is found.
 
         Returns:
@@ -400,7 +400,7 @@ class GrafanaClient:
         resp.raise_for_status()
         return resp.json()
 
-    def get_datasource_by_name(self, name: str) -> Optional[dict[str, Any]]:
+    def get_datasource_by_name(self, name: str) -> dict[str, Any] | None:
         """Get a datasource by name."""
         for ds in self.datasources():
             if ds.get("name") == name:
@@ -417,7 +417,7 @@ class GrafanaClient:
         resp.raise_for_status()
         return resp.json()
 
-    def get_dashboard(self, uid: str) -> Optional[dict[str, Any]]:
+    def get_dashboard(self, uid: str) -> dict[str, Any] | None:
         """Get a dashboard by UID."""
         try:
             resp = requests.get(
@@ -488,9 +488,9 @@ class OTLPClient:
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
             OTLPSpanExporter,
         )
+        from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
-        from opentelemetry.sdk.resources import Resource
 
         resource = Resource.create(
             {
@@ -530,7 +530,7 @@ class OTLPClient:
         self,
         name: str = "test-trace",
         span_count: int = 3,
-        attributes: Optional[dict[str, str]] = None,
+        attributes: dict[str, str] | None = None,
     ) -> str:
         """Send a synthetic trace with child spans. Returns trace_id."""
         import uuid
@@ -556,7 +556,7 @@ class OTLPClient:
         self,
         name: str = "test_counter",
         value: float = 1.0,
-        attributes: Optional[dict[str, str]] = None,
+        attributes: dict[str, str] | None = None,
     ) -> str:
         """Send a counter metric. Returns a test_id for correlation."""
         import uuid
@@ -574,7 +574,7 @@ class OTLPClient:
         self,
         name: str = "test_duration",
         value: float = 100.0,
-        attributes: Optional[dict[str, str]] = None,
+        attributes: dict[str, str] | None = None,
     ) -> str:
         """Send a histogram metric. Returns a test_id for correlation."""
         import uuid
@@ -602,13 +602,13 @@ class ObservabilityStack:
     def __init__(
         self,
         compose_dir: Path | str = DEFAULT_COMPOSE_DIR,
-        profiles: Optional[list[str]] = None,
-        env: Optional[dict[str, str]] = None,
+        profiles: list[str] | None = None,
+        env: dict[str, str] | None = None,
     ):
         self.compose_dir = Path(compose_dir).resolve()
         self.profiles = profiles or ["core"]
         self.env = env or {}
-        self._evidence_dir: Optional[Path] = None
+        self._evidence_dir: Path | None = None
 
     # ── Lifecycle ──────────────────────────────────────────────────────
 
@@ -753,8 +753,8 @@ class ObservabilityStack:
 
     def grafana(
         self,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
     ) -> GrafanaClient:
         """Get a Grafana client for querying dashboards and datasources."""
         return GrafanaClient(
@@ -772,7 +772,7 @@ class ObservabilityStack:
         """Set the directory for evidence output."""
         self._evidence_dir = Path(path)
 
-    def capture_evidence(self, test_id: str, **artifacts: Any) -> Optional[Path]:
+    def capture_evidence(self, test_id: str, **artifacts: Any) -> Path | None:
         """Capture evidence from a test for documentation generation."""
         if self._evidence_dir is None:
             return None
@@ -817,7 +817,7 @@ class ObservabilityStack:
 # Default fixture instance (created by conftest.py)
 # ──────────────────────────────────────────────────────────────────────
 
-_default_stack: Optional[ObservabilityStack] = None
+_default_stack: ObservabilityStack | None = None
 
 
 def get_default_stack() -> ObservabilityStack:

@@ -4,12 +4,12 @@ Step definitions for Repository Hardening (M2) feature.
 
 from __future__ import annotations
 
-import pytest
 import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pytest_bdd import given, then, when, parsers
+import pytest
+from pytest_bdd import given, parsers, then, when
 
 if TYPE_CHECKING:
     from tests.acceptance.runtime import ObservabilityStack
@@ -61,7 +61,7 @@ def codeowners_exists() -> None:
 
 
 @then(parsers.parse('git tag "{tag}" should exist'))
-def git_tag_exists(tag: str, stack: "ObservabilityStack") -> None:
+def git_tag_exists(tag: str, stack: ObservabilityStack) -> None:
     """Assert a specific git tag exists."""
     project_root = stack.compose_dir if stack else Path(".")
     result = subprocess.run(

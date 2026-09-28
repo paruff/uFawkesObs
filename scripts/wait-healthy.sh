@@ -13,7 +13,7 @@ validate_positive_integer() {
   local value="$1"
   local variable_name="$2"
 
-  if ! [[ "${value}" =~ ^[0-9]+$ ]] || (( value <= 0 )); then
+  if ! [[ "${value}" =~ ^[0-9]+$ ]] || ((value <= 0)); then
     echo "❌ ${variable_name} must be a positive integer (seconds), got: ${value}"
     exit 1
   fi
@@ -64,7 +64,7 @@ service_is_marked_ready() {
 
 is_service_ready() {
   local url="$1"
-  curl -fsS --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "${url}" >/dev/null 2>&1
+  curl -fsS --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "${url}" > /dev/null 2>&1
 }
 
 main() {
@@ -105,7 +105,7 @@ main() {
         echo "✅ ${name} healthy (${elapsed}s)"
       fi
 
-      if (( now >= deadline )); then
+      if ((now >= deadline)); then
         all_ready=false
         break
       fi
@@ -121,7 +121,7 @@ main() {
       exit 0
     fi
 
-    if (( now >= deadline )); then
+    if ((now >= deadline)); then
       echo "========================================"
       for service in "${SERVICES[@]}"; do
         name="${service%%|*}"

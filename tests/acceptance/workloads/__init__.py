@@ -28,9 +28,9 @@ Usage::
 """
 
 # Direct exports of all workload implementations
-from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
-from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
 from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
+from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
+from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
 
 
 # Workload registry for discovery and factory patterns
@@ -84,8 +84,8 @@ LogEmitterWorkload = SyntheticLogWorkload
 
 __all__.extend(
     [
-        "WebApiWorkload",
         "BatchJobWorkload",
         "LogEmitterWorkload",
+        "WebApiWorkload",
     ]
 )

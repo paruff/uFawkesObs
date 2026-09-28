@@ -4,9 +4,10 @@ Step definitions for Non-Functional Requirements (OBS-N) feature.
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
-from pytest_bdd import given, then, when, parsers
+
+import pytest
+from pytest_bdd import given, parsers, then, when
 
 
 @given(parsers.parse('the file "{file_path}" exists'))
@@ -75,7 +76,6 @@ def directory_contains_matching_file(dir_path: str, pattern: str) -> None:
 @given(parsers.parse("the compose.yaml is loaded"))
 def compose_yaml_loaded() -> None:
     """Compose.yaml is loaded - placeholder for step definition."""
-    pass
 
 
 @then(parsers.parse('the YAML file "{file_path}" is loaded'))

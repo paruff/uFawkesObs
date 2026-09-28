@@ -19,12 +19,12 @@ import time
 from typing import Any
 
 import pytest
-from pytest_bdd import then, when, parsers
+from pytest_bdd import parsers, then, when
 
 from tests.acceptance.runtime import ObservabilityStack
-from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
-from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
 from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
+from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
+from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
 
 # ── Constants ──────────────────────────────────────────────────────────
 
@@ -43,8 +43,7 @@ def _normalize_datasource_url(url: str) -> str:
     """
     url = url.rstrip("/")
     for prefix in ["http://", "https://"]:
-        if url.startswith(prefix):
-            url = url[len(prefix) :]
+        url = url.removeprefix(prefix)
     return url
 
 

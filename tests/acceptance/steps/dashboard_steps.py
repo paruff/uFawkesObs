@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timezone
 
 import requests
-from pytest_bdd import given, then, parsers
+from pytest_bdd import given, parsers, then
 
 from tests.acceptance.runtime import ObservabilityStack
 

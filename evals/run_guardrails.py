@@ -43,7 +43,9 @@ EVAL_DIR = Path(__file__).resolve().parent / "guardrails"
 CASES = EVAL_DIR / "cases.yaml"
 STATE = EVAL_DIR / "_state.json"
 HARNESS = [Path(__file__).resolve(), CASES]
-TEST_DEF = re.compile(r"^[ \t]*(?:async[ \t]+)?def[ \t]+(test\w*)[ \t]*\(", re.M)
+TEST_DEF = re.compile(
+    r"^[ \t]*(?:async[ \t]+)?def[ \t]+(test\w*)[ \t]*\(", re.MULTILINE
+)
 SKIP_MARK = re.compile(r"pytest\.mark\.(skip|xfail)|pytest\.skip\(")
 TOOLS = ["Bash", "Edit", "Write", "MultiEdit", "Read", "Glob", "Grep"]
 MODEL_PREFIX = {

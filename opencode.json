@@ -1,48 +1,39 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "$comment": "Static fallback config — the opencode.yml workflow overwrites this at runtime with the correct proxy URL and key availability. Commit this file as a safe default (no proxy, Gemini primary).",
-  "models": [
-    {
-      "$comment": "NVIDIA NIM primary — only active when nim-proxy is running",
-      "name": "nvidia-primary",
-      "provider": "openai",
-      "model": "nvidia/qwen3-coder-480b-a35b-instruct",
-      "baseURL": "http://localhost:8000/v1",
-      "apiKey": "proxy-auth"
-    },
-    {
-      "$comment": "NVIDIA NIM secondary — larger reasoning model, same proxy",
-      "name": "nvidia-secondary",
-      "provider": "openai",
-      "model": "nvidia/nemotron-3-ultra-550b-a55b",
-      "baseURL": "http://localhost:8000/v1",
-      "apiKey": "proxy-auth"
-    },
-    {
-      "$comment": "Google Gemini — fast, generous free quota; env var: GOOGLE_API_KEY",
-      "name": "gemini-fallback",
-      "provider": "google",
+  "$comment": "Safe committed default for local dev: Gemini primary, no local proxy required. .github/workflows/opencode.yml overwrites the model/agent selection at CI runtime once nim-proxy's health check result is known, but keeps this same provider/plugin shape. Grade->model mapping mirrors docs/MODEL_POLICY.md. Retry order lives in .opencode/fallback.json, read by the opencode-auto-fallback plugin.",
+  "plugin": ["opencode-auto-fallback"],
+  "provider": {
+    "nvidia-proxy": {
+      "name": "NVIDIA NIM (via nim-proxy, rate-limit paced; only reachable when nim-proxy is running on localhost:8000)",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://localhost:8000/v1",
+        "apiKey": "unused-nim-proxy-handles-auth"
+      },
+      "models": {
+        "nvidia/qwen3-coder-480b-a35b-instruct": {
+          "name": "Qwen3 Coder 480B (NIM primary, via nim-proxy)"
+        },
+        "nvidia/nemotron-3-ultra-550b-a55b": {
+          "name": "Nemotron 3 Ultra 550B (NIM secondary, via nim-proxy)"
+        }
+      }
+    }
+  },
+  "model": "google/gemini-2.5-flash",
+  "small_model": "google/gemini-2.5-flash",
+  "agent": {
+    "plan": {
       "model": "google/gemini-2.5-flash"
     },
-    {
-      "$comment": "OpenCode Zen free tier — last resort; env var: OPENCODE_API_KEY",
-      "name": "opencode-zen-fallback",
-      "provider": "openai",
-      "model": "opencode-zen/deepseek-v4-flash-free",
-      "baseURL": "https://api.opencode.ai/v1"
+    "build": {
+      "model": "google/gemini-2.5-flash"
+    },
+    "general": {
+      "model": "google/gemini-2.5-flash"
+    },
+    "explore": {
+      "model": "opencode/nemotron-3.5-lightning-free"
     }
-  ],
-  "fallback": {
-    "enabled": true,
-    "on": ["rate_limit", "timeout", "server_error"],
-    "order": [
-      "nvidia-primary",
-      "nvidia-secondary",
-      "gemini-fallback",
-      "opencode-zen-fallback"
-    ]
-  },
-  "log": {
-    "level": "info"
   }
 }

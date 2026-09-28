@@ -3,10 +3,16 @@
 # ============================================================================
 # Reference: https://github.com/anomalyco/opencode
 #
-# Providers (in fallback order):
+# Providers (in fallback order — see .opencode/fallback.json, written below,
+# for the exact order the opencode-auto-fallback plugin uses at runtime):
 #   1. NVIDIA NIM — free models via nim-proxy (rate-limit pacing, multi-key LB)
 #   2. Google Gemini — gemini-2.5-flash via GEMINI_API_KEY
-#   3. OpenCode Zen — deepseek-v4-flash-free via OPENCODE_API_KEY
+#   3. OpenCode free tier — nemotron-3.5-lightning-free via OPENCODE_API_KEY
+#
+# opencode.json uses the real config schema (provider/model/small_model/agent
+# — see https://opencode.ai/config.json). Automatic retry across providers is
+# NOT a native opencode.json feature; it comes from the opencode-auto-fallback
+# plugin reading .opencode/fallback.json (both written by this workflow).
 #
 # Required repository secrets:
 #   NVIDIA_API_KEY   — single key, OR
@@ -131,83 +137,82 @@ jobs:
           echo "nim_available=false" >> "$GITHUB_OUTPUT"
 
       # ── 3. Write opencode.json ───────────────────────────────────────────────
-      # Dynamically writes the model config so that:
-      #   - If nim-proxy is up  → primary = NVIDIA via proxy, then Gemini, then Zen
-      #   - If nim-proxy is down → primary = Gemini, then OpenCode Zen
-      # The file is written to the workspace root where OpenCode picks it up.
+      # Writes opencode.json (real schema: provider/model/small_model/agent)
+      # plus .opencode/fallback.json (the opencode-auto-fallback plugin's own
+      # retry-order file — opencode.json itself has no native fallback field):
+      #   - If nim-proxy is up   → primary = NVIDIA via proxy, then Gemini, then OpenCode free tier
+      #   - If nim-proxy is down → primary = Gemini, then OpenCode free tier
+      # Both files are auto-discovered by OpenCode's config loader from the
+      # workspace root / .opencode — there is no --config flag to point at them.
       - name: Write opencode.json
         env:
           NIM_AVAILABLE: ${{ steps.nim_proxy.outputs.nim_available }}
         run: |
-          # Build model list depending on proxy availability
           if [ "${NIM_AVAILABLE}" = "true" ]; then
-            MODELS=$(cat <<'EOF'
-          [
-            {
-              "name": "nvidia-primary",
-              "provider": "openai",
-              "model": "nvidia/qwen3-coder-480b-a35b-instruct",
-              "baseURL": "http://localhost:8000/v1",
-              "apiKey": "not-used-proxy-handles-auth"
-            },
-            {
-              "name": "nvidia-secondary",
-              "provider": "openai",
-              "model": "nvidia/nemotron-3-ultra-550b-a55b",
-              "baseURL": "http://localhost:8000/v1",
-              "apiKey": "not-used-proxy-handles-auth"
-            },
-            {
-              "name": "gemini-fallback",
-              "provider": "google",
-              "model": "google/gemini-2.5-flash"
-            },
-            {
-              "name": "opencode-zen-fallback",
-              "provider": "openai",
-              "model": "opencode-zen/deepseek-v4-flash-free",
-              "baseURL": "https://api.opencode.ai/v1"
-            }
-          ]
-          EOF
-          )
+            PRIMARY_MODEL="nvidia-proxy/nvidia/qwen3-coder-480b-a35b-instruct"
+            PLAN_MODEL="nvidia-proxy/nvidia/nemotron-3-ultra-550b-a55b"
+            FALLBACK_ORDER='[
+              "nvidia-proxy/nvidia/qwen3-coder-480b-a35b-instruct",
+              "nvidia-proxy/nvidia/nemotron-3-ultra-550b-a55b",
+              "google/gemini-2.5-flash",
+              "opencode/nemotron-3.5-lightning-free"
+            ]'
           else
-            MODELS=$(cat <<'EOF'
-          [
-            {
-              "name": "gemini-primary",
-              "provider": "google",
-              "model": "google/gemini-2.5-flash"
-            },
-            {
-              "name": "opencode-zen-fallback",
-              "provider": "openai",
-              "model": "opencode-zen/deepseek-v4-flash-free",
-              "baseURL": "https://api.opencode.ai/v1"
-            }
-          ]
-          EOF
-          )
+            PRIMARY_MODEL="google/gemini-2.5-flash"
+            PLAN_MODEL="google/gemini-2.5-flash"
+            FALLBACK_ORDER='[
+              "google/gemini-2.5-flash",
+              "opencode/nemotron-3.5-lightning-free"
+            ]'
           fi
 
-          # Write the full opencode.json
+          mkdir -p .opencode
+
           cat > opencode.json <<JSONEOF
           {
             "\$schema": "https://opencode.ai/config.json",
-            "models": ${MODELS},
-            "fallback": {
-              "enabled": true,
-              "on": ["rate_limit", "timeout", "server_error"],
-              "order": ["nvidia-primary", "nvidia-secondary", "gemini-fallback", "opencode-zen-fallback"]
+            "plugin": ["opencode-auto-fallback"],
+            "provider": {
+              "nvidia-proxy": {
+                "name": "NVIDIA NIM (via nim-proxy)",
+                "npm": "@ai-sdk/openai-compatible",
+                "options": {
+                  "baseURL": "http://localhost:8000/v1",
+                  "apiKey": "unused-nim-proxy-handles-auth"
+                },
+                "models": {
+                  "nvidia/qwen3-coder-480b-a35b-instruct": { "name": "Qwen3 Coder 480B (NIM primary)" },
+                  "nvidia/nemotron-3-ultra-550b-a55b": { "name": "Nemotron 3 Ultra 550B (NIM secondary)" }
+                }
+              }
             },
-            "log": {
-              "level": "info"
+            "model": "${PRIMARY_MODEL}",
+            "small_model": "google/gemini-2.5-flash",
+            "agent": {
+              "plan": { "model": "${PLAN_MODEL}" },
+              "build": { "model": "${PRIMARY_MODEL}" },
+              "general": { "model": "${PRIMARY_MODEL}" },
+              "explore": { "model": "opencode/nemotron-3.5-lightning-free" }
             }
+          }
+          JSONEOF
+
+          cat > .opencode/fallback.json <<JSONEOF
+          {
+            "\$schema": "https://raw.githubusercontent.com/HyeokjaeLee/opencode-auto-fallback/main/docs/fallback.schema.json",
+            "enabled": true,
+            "autoUpdate": false,
+            "defaultFallback": ${FALLBACK_ORDER},
+            "cooldownMs": 60000,
+            "maxRetries": 2,
+            "logging": true
           }
           JSONEOF
 
           echo "opencode.json written:"
           cat opencode.json
+          echo ".opencode/fallback.json written:"
+          cat .opencode/fallback.json
 
       # ── 4. Install OpenCode ───────────────────────────────────────────────────
       - name: Install OpenCode CLI
@@ -222,6 +227,7 @@ jobs:
       - name: Run OpenCode
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
           # Deny shell execution. The agent still edits files and opens PRs;
           # this removes arbitrary command execution from the blast radius of
@@ -253,9 +259,12 @@ jobs:
 
           echo "Prompt: ${PROMPT}"
 
+          # opencode.json / .opencode/fallback.json are auto-discovered from
+          # the workspace root — this CLI version has no --config flag, and
+          # no --issue flag either, so the issue number goes into the title
+          # for traceability instead.
           opencode run \
-            --config opencode.json \
-            --issue "${ISSUE_NUMBER}" \
+            --title "issue-${ISSUE_NUMBER}" \
             -- "${PROMPT}"
 
       # ── 6. Tear down nim-proxy ────────────────────────────────────────────────

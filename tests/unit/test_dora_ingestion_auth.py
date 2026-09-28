@@ -16,7 +16,7 @@ from fastapi import HTTPException
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "dora"))
 
-from ingestion.api.auth import require_api_key  # noqa: E402
+from ingestion.api.auth import require_api_key
 
 
 class TestRequireApiKey:

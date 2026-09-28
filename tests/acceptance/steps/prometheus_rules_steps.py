@@ -6,12 +6,11 @@ Parses rule YAML files directly from config/prometheus/rules/ for offline testin
 
 from __future__ import annotations
 
-import yaml
 from pathlib import Path
-from typing import Dict
 
 import pytest
-from pytest_bdd import given, then, when, parsers
+import yaml
+from pytest_bdd import given, parsers, then, when
 
 from tests.acceptance.runtime import ObservabilityStack
 
@@ -25,7 +24,7 @@ def prometheus_rules_dir_exists(stack: ObservabilityStack) -> None:
     )
 
 
-def _load_all_rules(stack: ObservabilityStack) -> Dict:
+def _load_all_rules(stack: ObservabilityStack) -> dict:
     """Load all rule files from config/prometheus/rules/ and parse them."""
     rules_dir = Path(stack.compose_dir) / "config" / "prometheus" / "rules"
     all_groups = []

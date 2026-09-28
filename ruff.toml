@@ -1,0 +1,26 @@
+# Ruff configuration — uFawkesObs
+#
+# Production code is held to the full default rule set. Test and eval
+# harness code gets targeted per-file ignores: acceptance/e2e suites
+# deliberately swallow broad exceptions around system teardown, assert on
+# subprocess output without `check=`, and use class-level mutable fixtures.
+
+[lint.per-file-ignores]
+"tests/**" = [
+  "BLE001",   # blind except — teardown/cleanup paths in acceptance tests
+  "PLW1510",  # subprocess.run without check — tests assert on returncode
+  "S110",     # try-except-pass — intentional skips in fixtures
+  "SIM102",   # collapsible if — kept flat for readability
+  "SIM118",   # `key in dict.keys()` — hot-loop style in tests
+  "PIE810",   # multiple startswith/endswith — simplification not worth churn
+  "PERF102",  # incorrect dict iterator — test fixtures
+  "RUF012",   # mutable class default — pytest fixtures
+  "RUF013",   # implicit optional — fixture signatures
+  "RUF022",   # unsorted __all__ — test module exports
+  "RUF059",   # unused unpacked variable — named for clarity
+  "PLW0602",  # global without assignment — module-scoped test state
+]
+"evals/**" = [
+  "BLE001",   # blind except — eval harness reports on any failure
+  "PLW1510",  # subprocess.run without check — eval asserts on returncode
+]

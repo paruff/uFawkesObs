@@ -14,10 +14,10 @@ INTERVAL_SECONDS="${DORA_COMPUTE_INTERVAL_SECONDS:-3600}"
 echo "dora-compute starting (window=${WINDOW_DAYS}d, interval=${INTERVAL_SECONDS}s)"
 
 while true; do
-    if python -m compute.metrics --window "$WINDOW_DAYS" --pushgateway "$PUSHGATEWAY_URL"; then
-        date +%s >/tmp/dora-compute-heartbeat
-    else
-        echo "dora-compute cycle failed, will retry next interval" >&2
-    fi
-    sleep "$INTERVAL_SECONDS"
+  if python -m compute.metrics --window "$WINDOW_DAYS" --pushgateway "$PUSHGATEWAY_URL"; then
+    date +%s > /tmp/dora-compute-heartbeat
+  else
+    echo "dora-compute cycle failed, will retry next interval" >&2
+  fi
+  sleep "$INTERVAL_SECONDS"
 done
