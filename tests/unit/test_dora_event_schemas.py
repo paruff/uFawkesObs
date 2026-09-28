@@ -443,4 +443,3 @@ def test_schema_version_is_1_0(schema_name):
     load_schema(schema_name)
     # The schema itself doesn't carry version; payloads do.
     # Instead verify that a payload with version "1.0" passes.
-    pass

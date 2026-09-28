@@ -4,10 +4,10 @@ Pytest configuration and shared fixtures for integration tests.
 
 import os
 import time
-import requests
-import pytest
-from typing import Dict, Any
+from typing import Any
 
+import pytest
+import requests
 
 # Configuration
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
@@ -78,7 +78,7 @@ def wait_for_scrape_cycle() -> None:
     print("✅ Scrape cycle wait completed")
 
 
-def query_prometheus(prometheus_base_url: str, query: str) -> Dict[str, Any]:
+def query_prometheus(prometheus_base_url: str, query: str) -> dict[str, Any]:
     """
     Helper function to query Prometheus.
 
@@ -96,7 +96,7 @@ def query_prometheus(prometheus_base_url: str, query: str) -> Dict[str, Any]:
     return response.json()
 
 
-def parse_prometheus_metrics(text: str) -> Dict[str, list]:
+def parse_prometheus_metrics(text: str) -> dict[str, list]:
     """
     Parse Prometheus text format metrics into a dictionary.
 
@@ -131,7 +131,7 @@ def parse_prometheus_metrics(text: str) -> Dict[str, list]:
 def prometheus_query(prometheus_base_url: str):
     """Fixture that provides a Prometheus query function."""
 
-    def _query(query: str) -> Dict[str, Any]:
+    def _query(query: str) -> dict[str, Any]:
         return query_prometheus(prometheus_base_url, query)
 
     return _query

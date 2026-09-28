@@ -338,12 +338,11 @@ To validate configurations before committing:
 ```python
 def test_new_validation_rule(self, config_path):
     """Test that <specific rule> is validated."""
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
     # Your validation logic
-    assert 'required_field' in config, \
-        "Missing required field: required_field"
+    assert "required_field" in config, "Missing required field: required_field"
 ```
 
 ## Troubleshooting

@@ -12,15 +12,15 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import pytest
 import requests
-from pytest_bdd import then, when, parsers
+from pytest_bdd import parsers, then, when
 
+from tests.acceptance.evidence.chaos_report import ChaosEvent, ChaosReportGenerator
 from tests.acceptance.runtime import ObservabilityStack
 from tests.acceptance.workloads import get_workload
-from tests.acceptance.evidence.chaos_report import ChaosEvent, ChaosReportGenerator
 
 # ── Constants ────────────────────────────────────────────────────────
 
@@ -32,7 +32,7 @@ CHAOS_LOG_STREAM_QUERY = '{compose_service="alloy"}'
 _grafana_backup_files: list[Path] = []
 
 # Global chaos report generator (will be initialized per test session)
-_chaos_report: Optional[ChaosReportGenerator] = None
+_chaos_report: ChaosReportGenerator | None = None
 
 
 def get_chaos_report() -> ChaosReportGenerator:
@@ -47,7 +47,7 @@ def add_chaos_event(
     event_type: str,
     service: str,
     description: str,
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     """Add an event to the chaos report."""
     report = get_chaos_report()
@@ -394,8 +394,7 @@ def metric_gaps_within_limit(stack: ObservabilityStack, max_gap: int) -> None:
         max_duration = 0.0
         for target in durations:
             duration = float(target.get("value", [0, "0"])[1])
-            if duration > max_duration:
-                max_duration = duration
+            max_duration = max(max_duration, duration)
 
         assert max_duration <= max_gap, (
             f"Max scrape duration {max_duration}s exceeds limit {max_gap}s"

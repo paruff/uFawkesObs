@@ -7,15 +7,14 @@ and common assertion helpers.
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import pytest
 import requests
 import yaml
-from pathlib import Path
-from pytest_bdd import given, then, when, parsers
+from pytest_bdd import given, parsers, then, when
 
 from tests.acceptance.runtime import ObservabilityStack
-
 
 # ── Given Steps ──────────────────────────────────────────────────────
 

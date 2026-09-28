@@ -16,10 +16,10 @@ readonly SUCCESS_FILE="${REPORT_DIR}/SUCCESS"
 readonly FAILURE_FILE="${REPORT_DIR}/FAILURE"
 
 # Test Constants
-readonly MAX_DURATION=120  # seconds
+readonly MAX_DURATION=120 # seconds
 readonly RETRY_INTERVAL=5
 readonly RETRY_ATTEMPTS=10
-readonly NANOSECONDS_SUFFIX="000000000"  # Suffix to convert Unix timestamp (seconds) to nanoseconds
+readonly NANOSECONDS_SUFFIX="000000000" # Suffix to convert Unix timestamp (seconds) to nanoseconds
 
 # Colors for output
 readonly GREEN='\033[0;32m'
@@ -30,26 +30,26 @@ readonly NC='\033[0m' # No Color
 
 # Initialize test environment
 initialize_test() {
-    echo -e "${BLUE}🚀 Initializing Loki Log Aggregation Acceptance Test${NC}"
-    echo "Test ID: OBS-ACCEPTANCE-LOKI-001"
-    echo "Timestamp: ${TIMESTAMP}"
-    echo "Max Duration: ${MAX_DURATION}s"
+  echo -e "${BLUE}🚀 Initializing Loki Log Aggregation Acceptance Test${NC}"
+  echo "Test ID: OBS-ACCEPTANCE-LOKI-001"
+  echo "Timestamp: ${TIMESTAMP}"
+  echo "Max Duration: ${MAX_DURATION}s"
 
-    # Create report directory
-    mkdir -p "${REPORT_DIR}"
+  # Create report directory
+  mkdir -p "${REPORT_DIR}"
 
-    # Start logging
-    exec > >(tee -a "${LOG_FILE}") 2>&1
+  # Start logging
+  exec > >(tee -a "${LOG_FILE}") 2>&1
 
-    # Record environment
-    {
-        echo "Environment:"
-        echo "Hostname: $(hostname)"
-        echo "OS: $(uname -a)"
-        echo "Docker: $(docker --version 2>/dev/null || echo 'Not available')"
-        echo "Test started at: $(date)"
-        echo ""
-    } > "${REPORT_DIR}/environment.txt"
+  # Record environment
+  {
+    echo "Environment:"
+    echo "Hostname: $(hostname)"
+    echo "OS: $(uname -a)"
+    echo "Docker: $(docker --version 2> /dev/null || echo 'Not available')"
+    echo "Test started at: $(date)"
+    echo ""
+  } > "${REPORT_DIR}/environment.txt"
 }
 
 # Test Result Tracking
@@ -58,283 +58,283 @@ declare -A TEST_DURATIONS
 START_TIME=$(date +%s)
 
 record_test_result() {
-    local test_id=$1
-    local result=$2
-    local duration=$3
-    local message=$4
+  local test_id=$1
+  local result=$2
+  local duration=$3
+  local message=$4
 
-    TEST_RESULTS["${test_id}"]="${result}"
-    TEST_DURATIONS["${test_id}"]="${duration}"
+  TEST_RESULTS["${test_id}"]="${result}"
+  TEST_DURATIONS["${test_id}"]="${duration}"
 
-    echo "TEST: ${test_id} | RESULT: ${result} | DURATION: ${duration}s | MESSAGE: ${message}" \
-        >> "${REPORT_DIR}/test-results.csv"
+  echo "TEST: ${test_id} | RESULT: ${result} | DURATION: ${duration}s | MESSAGE: ${message}" \
+    >> "${REPORT_DIR}/test-results.csv"
 }
 
 # Component Health Checks
 check_loki_health() {
-    local start
+  local start
 
-    start=$(date +%s)
-    local test_id="COMP-HEALTH-LOKI"
+  start=$(date +%s)
+  local test_id="COMP-HEALTH-LOKI"
 
-    echo -e "\n${BLUE}[${test_id}] Checking Loki Health${NC}"
+  echo -e "\n${BLUE}[${test_id}] Checking Loki Health${NC}"
 
-    # Check ready endpoint
-    local ready_status
-    ready_status=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "http://localhost:3100/ready" 2>/dev/null)
-    if [[ "${ready_status}" != "200" ]]; then
-        echo -e "${RED}✗ Loki not ready (HTTP ${ready_status})${NC}"
-        record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Loki not ready"
-        return 1
-    fi
+  # Check ready endpoint
+  local ready_status
+  ready_status=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "http://localhost:3100/ready" 2> /dev/null)
+  if [[ "${ready_status}" != "200" ]]; then
+    echo -e "${RED}✗ Loki not ready (HTTP ${ready_status})${NC}"
+    record_test_result "${test_id}" "FAIL" $(($(date +%s) - start)) "Loki not ready"
+    return 1
+  fi
 
-    echo -e "${GREEN}✓ Loki is ready${NC}"
-    record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Loki healthy"
-    return 0
+  echo -e "${GREEN}✓ Loki is ready${NC}"
+  record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "Loki healthy"
+  return 0
 }
 
 check_alloy_health() {
-    local start
+  local start
 
-    start=$(date +%s)
-    local test_id="COMP-HEALTH-ALLOY"
+  start=$(date +%s)
+  local test_id="COMP-HEALTH-ALLOY"
 
-    echo -e "\n${BLUE}[${test_id}] Checking Grafana Alloy Health${NC}"
+  echo -e "\n${BLUE}[${test_id}] Checking Grafana Alloy Health${NC}"
 
-    # Check metrics endpoint for Loki docker source activity
-    local metrics_output
-    metrics_output=$(curl -s -m 10 "http://localhost:12345/metrics" 2>/dev/null)
-    if [[ -z "${metrics_output}" ]]; then
-        echo -e "${RED}✗ Alloy metrics endpoint unreachable${NC}"
-        record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Alloy unreachable"
-        return 1
-    fi
+  # Check metrics endpoint for Loki docker source activity
+  local metrics_output
+  metrics_output=$(curl -s -m 10 "http://localhost:12345/metrics" 2> /dev/null)
+  if [[ -z "${metrics_output}" ]]; then
+    echo -e "${RED}✗ Alloy metrics endpoint unreachable${NC}"
+    record_test_result "${test_id}" "FAIL" $(($(date +%s) - start)) "Alloy unreachable"
+    return 1
+  fi
 
-    # Count docker source metrics as a proxy for active discovery
-    local active_sources
-    active_sources=$(echo "${metrics_output}" | grep -c "loki_source_docker" || true)
+  # Count docker source metrics as a proxy for active discovery
+  local active_sources
+  active_sources=$(echo "${metrics_output}" | grep -c "loki_source_docker" || true)
 
-    echo "  Loki docker source metrics lines: ${active_sources}"
+  echo "  Loki docker source metrics lines: ${active_sources}"
 
-    if [[ "${active_sources}" -gt 0 ]]; then
-        echo -e "${GREEN}✓ Alloy is scraping Docker logs${NC}"
-        record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Alloy docker source active"
-        return 0
-    else
-        echo -e "${YELLOW}⚠ Alloy metrics exposed but no docker source activity yet${NC}"
-        record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "No docker source activity"
-        return 0
-    fi
+  if [[ "${active_sources}" -gt 0 ]]; then
+    echo -e "${GREEN}✓ Alloy is scraping Docker logs${NC}"
+    record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "Alloy docker source active"
+    return 0
+  else
+    echo -e "${YELLOW}⚠ Alloy metrics exposed but no docker source activity yet${NC}"
+    record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "No docker source activity"
+    return 0
+  fi
 }
 
 # Test log ingestion
 test_log_ingestion() {
-    local start
+  local start
 
-    start=$(date +%s)
-    local test_id="LOG-INGESTION"
+  start=$(date +%s)
+  local test_id="LOG-INGESTION"
 
-    echo -e "\n${BLUE}[${test_id}] Testing Log Ingestion${NC}"
+  echo -e "\n${BLUE}[${test_id}] Testing Log Ingestion${NC}"
 
-    # Wait for logs to be ingested
-    local attempt
+  # Wait for logs to be ingested
+  local attempt
 
-    for attempt in $(seq 1 ${RETRY_ATTEMPTS}); do
-        echo "  Attempt ${attempt}/${RETRY_ATTEMPTS}: Querying Loki for container logs..."
+  for attempt in $(seq 1 ${RETRY_ATTEMPTS}); do
+    echo "  Attempt ${attempt}/${RETRY_ATTEMPTS}: Querying Loki for container logs..."
 
-        # Query Loki for any docker logs in the last 5 minutes
-        local query_result
-        local start_time
-
-        start_time="$(date -u -d '5 minutes ago' +%s)${NANOSECONDS_SUFFIX}"
-        local end_time
-
-        end_time="$(date -u +%s)${NANOSECONDS_SUFFIX}"
-
-        query_result=$(curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
-            --data-urlencode 'query={job="docker"}' \
-            --data-urlencode "start=${start_time}" \
-            --data-urlencode "end=${end_time}" \
-            --data-urlencode "limit=10" 2>/dev/null)
-
-        # Check if we got results
-        local result_count
-        result_count=$(echo "${query_result}" | jq -r '.data.result | length' 2>/dev/null || echo "0")
-
-        if [[ "${result_count}" -gt 0 ]]; then
-            echo -e "${GREEN}✓ Found ${result_count} log streams${NC}"
-
-            # Save sample logs
-            echo "${query_result}" | jq '.' > "${REPORT_DIR}/loki-query-result.json"
-
-            # Extract some sample log lines
-            local sample_logs
-            sample_logs=$(echo "${query_result}" | jq -r '.data.result[0].values[0][1]' 2>/dev/null || echo "")
-            if [[ -n "${sample_logs}" ]]; then
-                echo "  Sample log: ${sample_logs}"
-            fi
-
-            record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Logs ingested successfully (${result_count} streams)"
-            return 0
-        fi
-
-        if [[ ${attempt} -lt ${RETRY_ATTEMPTS} ]]; then
-            echo "  No logs found yet, waiting ${RETRY_INTERVAL}s..."
-            sleep ${RETRY_INTERVAL}
-        fi
-    done
-
-    echo -e "${RED}✗ No logs found after ${RETRY_ATTEMPTS} attempts${NC}"
-    record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "No logs found"
-    return 1
-}
-
-# Test log labels
-test_log_labels() {
-    local start
-
-    start=$(date +%s)
-    local test_id="LOG-LABELS"
-
-    echo -e "\n${BLUE}[${test_id}] Testing Log Labels${NC}"
-
-    # Query Loki for available labels
-    local labels_result
-    labels_result=$(curl -s "http://localhost:3100/loki/api/v1/labels" 2>/dev/null)
-
-    local labels
-    labels=$(echo "${labels_result}" | jq -r '.data[]' 2>/dev/null | tr '\n' ' ')
-
-    if [[ -z "${labels}" ]]; then
-        echo -e "${YELLOW}⚠ No labels found${NC}"
-        record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "No labels found"
-        return 0
-    fi
-
-    echo "  Available labels: ${labels}"
-
-    # Check for expected labels
-    local expected_labels=("job" "container")
-    local missing_labels=""
-
-    for label in "${expected_labels[@]}"; do
-        if echo "${labels}" | grep -q "${label}"; then
-            echo -e "  ${GREEN}✓${NC} Label '${label}' present"
-        else
-            echo -e "  ${YELLOW}⚠${NC} Label '${label}' missing"
-            missing_labels="${missing_labels} ${label}"
-        fi
-    done
-
-    if [[ -z "${missing_labels}" ]]; then
-        record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "All expected labels present"
-        return 0
-    else
-        record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "Missing labels:${missing_labels}"
-        return 0
-    fi
-}
-
-# Test LogQL query
-test_logql_query() {
-    local start
-
-    start=$(date +%s)
-    local test_id="LOGQL-QUERY"
-
-    echo -e "\n${BLUE}[${test_id}] Testing LogQL Query${NC}"
-
-    # Query for a specific container (grafana)
+    # Query Loki for any docker logs in the last 5 minutes
     local query_result
     local start_time
 
-    start_time="$(date -u -d '10 minutes ago' +%s)${NANOSECONDS_SUFFIX}"
+    start_time="$(date -u -d '5 minutes ago' +%s)${NANOSECONDS_SUFFIX}"
     local end_time
 
     end_time="$(date -u +%s)${NANOSECONDS_SUFFIX}"
 
     query_result=$(curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
-        --data-urlencode 'query={container="grafana"}' \
-        --data-urlencode "start=${start_time}" \
-        --data-urlencode "end=${end_time}" \
-        --data-urlencode "limit=5" 2>/dev/null)
+      --data-urlencode 'query={job="docker"}' \
+      --data-urlencode "start=${start_time}" \
+      --data-urlencode "end=${end_time}" \
+      --data-urlencode "limit=10" 2> /dev/null)
 
+    # Check if we got results
     local result_count
-    result_count=$(echo "${query_result}" | jq -r '.data.result | length' 2>/dev/null || echo "0")
+    result_count=$(echo "${query_result}" | jq -r '.data.result | length' 2> /dev/null || echo "0")
 
     if [[ "${result_count}" -gt 0 ]]; then
-        echo -e "${GREEN}✓ LogQL query successful (${result_count} streams)${NC}"
-        record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "LogQL query successful"
-        return 0
-    else
-        echo -e "${YELLOW}⚠ No results for Grafana container (may not have logs yet)${NC}"
-        record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "No results for specific container"
-        return 0
+      echo -e "${GREEN}✓ Found ${result_count} log streams${NC}"
+
+      # Save sample logs
+      echo "${query_result}" | jq '.' > "${REPORT_DIR}/loki-query-result.json"
+
+      # Extract some sample log lines
+      local sample_logs
+      sample_logs=$(echo "${query_result}" | jq -r '.data.result[0].values[0][1]' 2> /dev/null || echo "")
+      if [[ -n "${sample_logs}" ]]; then
+        echo "  Sample log: ${sample_logs}"
+      fi
+
+      record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "Logs ingested successfully (${result_count} streams)"
+      return 0
     fi
+
+    if [[ ${attempt} -lt ${RETRY_ATTEMPTS} ]]; then
+      echo "  No logs found yet, waiting ${RETRY_INTERVAL}s..."
+      sleep ${RETRY_INTERVAL}
+    fi
+  done
+
+  echo -e "${RED}✗ No logs found after ${RETRY_ATTEMPTS} attempts${NC}"
+  record_test_result "${test_id}" "FAIL" $(($(date +%s) - start)) "No logs found"
+  return 1
+}
+
+# Test log labels
+test_log_labels() {
+  local start
+
+  start=$(date +%s)
+  local test_id="LOG-LABELS"
+
+  echo -e "\n${BLUE}[${test_id}] Testing Log Labels${NC}"
+
+  # Query Loki for available labels
+  local labels_result
+  labels_result=$(curl -s "http://localhost:3100/loki/api/v1/labels" 2> /dev/null)
+
+  local labels
+  labels=$(echo "${labels_result}" | jq -r '.data[]' 2> /dev/null | tr '\n' ' ')
+
+  if [[ -z "${labels}" ]]; then
+    echo -e "${YELLOW}⚠ No labels found${NC}"
+    record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "No labels found"
+    return 0
+  fi
+
+  echo "  Available labels: ${labels}"
+
+  # Check for expected labels
+  local expected_labels=("job" "container")
+  local missing_labels=""
+
+  for label in "${expected_labels[@]}"; do
+    if echo "${labels}" | grep -q "${label}"; then
+      echo -e "  ${GREEN}✓${NC} Label '${label}' present"
+    else
+      echo -e "  ${YELLOW}⚠${NC} Label '${label}' missing"
+      missing_labels="${missing_labels} ${label}"
+    fi
+  done
+
+  if [[ -z "${missing_labels}" ]]; then
+    record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "All expected labels present"
+    return 0
+  else
+    record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "Missing labels:${missing_labels}"
+    return 0
+  fi
+}
+
+# Test LogQL query
+test_logql_query() {
+  local start
+
+  start=$(date +%s)
+  local test_id="LOGQL-QUERY"
+
+  echo -e "\n${BLUE}[${test_id}] Testing LogQL Query${NC}"
+
+  # Query for a specific container (grafana)
+  local query_result
+  local start_time
+
+  start_time="$(date -u -d '10 minutes ago' +%s)${NANOSECONDS_SUFFIX}"
+  local end_time
+
+  end_time="$(date -u +%s)${NANOSECONDS_SUFFIX}"
+
+  query_result=$(curl -G -s "http://localhost:3100/loki/api/v1/query_range" \
+    --data-urlencode 'query={container="grafana"}' \
+    --data-urlencode "start=${start_time}" \
+    --data-urlencode "end=${end_time}" \
+    --data-urlencode "limit=5" 2> /dev/null)
+
+  local result_count
+  result_count=$(echo "${query_result}" | jq -r '.data.result | length' 2> /dev/null || echo "0")
+
+  if [[ "${result_count}" -gt 0 ]]; then
+    echo -e "${GREEN}✓ LogQL query successful (${result_count} streams)${NC}"
+    record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "LogQL query successful"
+    return 0
+  else
+    echo -e "${YELLOW}⚠ No results for Grafana container (may not have logs yet)${NC}"
+    record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "No results for specific container"
+    return 0
+  fi
 }
 
 # Test log-trace correlation configuration
 test_trace_correlation_config() {
-    local start
+  local start
 
-    start=$(date +%s)
-    local test_id="TRACE-CORRELATION-CONFIG"
+  start=$(date +%s)
+  local test_id="TRACE-CORRELATION-CONFIG"
 
-    echo -e "\n${BLUE}[${test_id}] Testing Trace Correlation Configuration${NC}"
+  echo -e "\n${BLUE}[${test_id}] Testing Trace Correlation Configuration${NC}"
 
-    # Check Grafana datasource configuration for Loki
-    local datasource_file="${TEST_DIR}/../../../config/grafana/provisioning/datasources/datasources.yaml"
+  # Check Grafana datasource configuration for Loki
+  local datasource_file="${TEST_DIR}/../../../config/grafana/provisioning/datasources/datasources.yaml"
 
-    if [[ ! -f "${datasource_file}" ]]; then
-        echo -e "${RED}✗ Datasource configuration file not found${NC}"
-        record_test_result "${test_id}" "FAIL" $(( $(date +%s) - start )) "Datasource config not found"
-        return 1
-    fi
+  if [[ ! -f "${datasource_file}" ]]; then
+    echo -e "${RED}✗ Datasource configuration file not found${NC}"
+    record_test_result "${test_id}" "FAIL" $(($(date +%s) - start)) "Datasource config not found"
+    return 1
+  fi
 
-    # Check for derivedFields configuration
-    if grep -q "derivedFields" "${datasource_file}"; then
-        echo -e "${GREEN}✓ Loki datasource has derivedFields configuration${NC}"
+  # Check for derivedFields configuration
+  if grep -q "derivedFields" "${datasource_file}"; then
+    echo -e "${GREEN}✓ Loki datasource has derivedFields configuration${NC}"
 
-        # Check for traceID pattern
-        if grep -q "traceID" "${datasource_file}"; then
-            echo -e "${GREEN}✓ TraceID correlation configured${NC}"
-            record_test_result "${test_id}" "PASS" $(( $(date +%s) - start )) "Trace correlation configured"
-            return 0
-        else
-            echo -e "${YELLOW}⚠ TraceID pattern not found${NC}"
-            record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "TraceID pattern missing"
-            return 0
-        fi
+    # Check for traceID pattern
+    if grep -q "traceID" "${datasource_file}"; then
+      echo -e "${GREEN}✓ TraceID correlation configured${NC}"
+      record_test_result "${test_id}" "PASS" $(($(date +%s) - start)) "Trace correlation configured"
+      return 0
     else
-        echo -e "${YELLOW}⚠ derivedFields not configured${NC}"
-        record_test_result "${test_id}" "WARN" $(( $(date +%s) - start )) "derivedFields not configured"
-        return 0
+      echo -e "${YELLOW}⚠ TraceID pattern not found${NC}"
+      record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "TraceID pattern missing"
+      return 0
     fi
+  else
+    echo -e "${YELLOW}⚠ derivedFields not configured${NC}"
+    record_test_result "${test_id}" "WARN" $(($(date +%s) - start)) "derivedFields not configured"
+    return 0
+  fi
 }
 
 # Generate summary report
 generate_summary_report() {
-    local end_time
+  local end_time
 
-    end_time=$(date +%s)
-    local total_duration=$((end_time - START_TIME))
+  end_time=$(date +%s)
+  local total_duration=$((end_time - START_TIME))
 
-    local passed=0
-    local failed=0
-    local warned=0
+  local passed=0
+  local failed=0
+  local warned=0
 
-    for test_id in "${!TEST_RESULTS[@]}"; do
-        case "${TEST_RESULTS[${test_id}]}" in
-            "PASS") ((passed++)) ;;
-            "FAIL") ((failed++)) ;;
-            "WARN") ((warned++)) ;;
-        esac
-    done
+  for test_id in "${!TEST_RESULTS[@]}"; do
+    case "${TEST_RESULTS[${test_id}]}" in
+      "PASS") ((passed++)) ;;
+      "FAIL") ((failed++)) ;;
+      "WARN") ((warned++)) ;;
+    esac
+  done
 
-    local total=$((passed + failed + warned))
+  local total=$((passed + failed + warned))
 
-    # Create summary report
-    cat > "${REPORT_DIR}/summary.md" << EOF
+  # Create summary report
+  cat > "${REPORT_DIR}/summary.md" << EOF
 # Loki Log Aggregation Acceptance Test - Summary
 
 **Test ID:** OBS-ACCEPTANCE-LOKI-001
@@ -354,27 +354,27 @@ generate_summary_report() {
 |---------|--------|----------|---------|
 EOF
 
-    # Add test results
-    for test_id in "${!TEST_RESULTS[@]}"; do
-        local result="${TEST_RESULTS[${test_id}]}"
-        local duration="${TEST_DURATIONS[${test_id}]}"
-        local symbol
-        case "${result}" in
-            "PASS") symbol="✓" ;;
-            "FAIL") symbol="✗" ;;
-            "WARN") symbol="⚠" ;;
-        esac
+  # Add test results
+  for test_id in "${!TEST_RESULTS[@]}"; do
+    local result="${TEST_RESULTS[${test_id}]}"
+    local duration="${TEST_DURATIONS[${test_id}]}"
+    local symbol
+    case "${result}" in
+      "PASS") symbol="✓" ;;
+      "FAIL") symbol="✗" ;;
+      "WARN") symbol="⚠" ;;
+    esac
 
-        # Get message from CSV
-        local message
-        message=$(grep "^TEST: ${test_id}" "${REPORT_DIR}/test-results.csv" | cut -d'|' -f4 | sed 's/^ MESSAGE: //')
+    # Get message from CSV
+    local message
+    message=$(grep "^TEST: ${test_id}" "${REPORT_DIR}/test-results.csv" | cut -d'|' -f4 | sed 's/^ MESSAGE: //')
 
-        echo "| ${test_id} | ${symbol} ${result} | ${duration}s | ${message} |" >> "${REPORT_DIR}/summary.md"
-    done
+    echo "| ${test_id} | ${symbol} ${result} | ${duration}s | ${message} |" >> "${REPORT_DIR}/summary.md"
+  done
 
-    # Add conclusion
-    if [[ ${failed} -eq 0 ]]; then
-        cat >> "${REPORT_DIR}/summary.md" << EOF
+  # Add conclusion
+  if [[ ${failed} -eq 0 ]]; then
+    cat >> "${REPORT_DIR}/summary.md" << EOF
 
 ## Conclusion
 
@@ -383,10 +383,10 @@ EOF
 All critical tests passed. Loki log aggregation is operational.
 
 EOF
-        touch "${SUCCESS_FILE}"
-        return 0
-    else
-        cat >> "${REPORT_DIR}/summary.md" << EOF
+    touch "${SUCCESS_FILE}"
+    return 0
+  else
+    cat >> "${REPORT_DIR}/summary.md" << EOF
 
 ## Conclusion
 
@@ -395,41 +395,41 @@ EOF
 ${failed} test(s) failed. Review the test logs for details.
 
 EOF
-        touch "${FAILURE_FILE}"
-        return 1
-    fi
+    touch "${FAILURE_FILE}"
+    return 1
+  fi
 }
 
 # Main test execution
 main() {
-    initialize_test
+  initialize_test
 
-    local overall_result=0
+  local overall_result=0
 
-    # Run health checks
-    check_loki_health || overall_result=1
-    check_alloy_health || overall_result=1
+  # Run health checks
+  check_loki_health || overall_result=1
+  check_alloy_health || overall_result=1
 
-    # Run functional tests
-    test_log_ingestion || overall_result=1
-    test_log_labels || overall_result=1
-    test_logql_query || overall_result=1
-    test_trace_correlation_config || overall_result=1
+  # Run functional tests
+  test_log_ingestion || overall_result=1
+  test_log_labels || overall_result=1
+  test_logql_query || overall_result=1
+  test_trace_correlation_config || overall_result=1
 
-    # Generate report
-    echo ""
-    echo "========================================"
-    generate_summary_report || overall_result=1
-    echo "========================================"
+  # Generate report
+  echo ""
+  echo "========================================"
+  generate_summary_report || overall_result=1
+  echo "========================================"
 
-    # Display summary
-    cat "${REPORT_DIR}/summary.md"
+  # Display summary
+  cat "${REPORT_DIR}/summary.md"
 
-    echo ""
-    echo "Report saved to: ${REPORT_DIR}/summary.md"
-    echo "Full logs: ${LOG_FILE}"
+  echo ""
+  echo "Report saved to: ${REPORT_DIR}/summary.md"
+  echo "Full logs: ${LOG_FILE}"
 
-    exit ${overall_result}
+  exit ${overall_result}
 }
 
 # Run the tests

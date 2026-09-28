@@ -170,11 +170,11 @@ Events recorded during each scenario:
 ```python
 @dataclass
 class ChaosEvent:
-    timestamp: str          # ISO 8601 UTC
-    event_type: str         # failure_start|failure_end|recovery_start|recovery_end|metric
-    service: str            # loki|prometheus|otel-collector|tempo|grafana|alloy
-    description: str        # Human-readable
-    metadata: dict          # duration_ms, data_loss_pct, gap_seconds, etc.
+    timestamp: str  # ISO 8601 UTC
+    event_type: str  # failure_start|failure_end|recovery_start|recovery_end|metric
+    service: str  # loki|prometheus|otel-collector|tempo|grafana|alloy
+    description: str  # Human-readable
+    metadata: dict  # duration_ms, data_loss_pct, gap_seconds, etc.
 ```
 
 ### 4.2 ChaosReportGenerator (from `chaos_report.py`)

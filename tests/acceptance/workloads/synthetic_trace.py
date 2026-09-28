@@ -18,11 +18,11 @@ from __future__ import annotations
 import random
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any
 
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.resources import Resource
 
 # Lazy imports for exporter choice
 _HTTP_EXPORTER = None
@@ -176,8 +176,8 @@ class SyntheticTraceWorkload:
 
     def simulate_web_request(
         self,
-        pattern: Optional[int] = None,
-        extra_attrs: Optional[dict[str, str]] = None,
+        pattern: int | None = None,
+        extra_attrs: dict[str, str] | None = None,
     ) -> str:
         """Simulate a web request trace. Returns 32-char hex trace_id."""
         if self._tracer is None:

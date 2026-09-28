@@ -4,10 +4,11 @@ Step definitions for AI Observability Pipeline (OBS-AI) feature.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 import yaml
-from pathlib import Path
-from pytest_bdd import then, parsers
+from pytest_bdd import parsers, then
 
 from tests.acceptance.runtime import ObservabilityStack
 

@@ -5,9 +5,10 @@ Step definitions for Core Observability Substrate (M1) feature.
 from __future__ import annotations
 
 import subprocess
-import yaml
 from pathlib import Path
-from pytest_bdd import given, then, parsers
+
+import yaml
+from pytest_bdd import given, parsers, then
 
 from tests.acceptance.runtime import ObservabilityStack
 
@@ -15,7 +16,7 @@ from tests.acceptance.runtime import ObservabilityStack
 @given("the compose.yaml is loaded")
 def compose_loaded(stack: ObservabilityStack) -> None:
     """Compose.yaml is loaded via the stack fixture."""
-    pass  # Stack fixture handles this
+    # Stack fixture handles this
 
 
 @then(parsers.parse('no service should use the "{tag}" image tag'))

@@ -10,7 +10,7 @@ metadata:
 
 # Skill: Security Review
 
-> **Load trigger:** `"load security-review skill"` > **DORA:** Cap 1 (AI Policy)
+> **Load trigger:** `"load security-review skill"` > **DORA:** AI Capability 4: Strong version control practices
 > **Token cost:** Low
 
 ## Pre-Merge Security Checklist

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from pytest_bdd import then, parsers
+from pytest_bdd import parsers, then
 
 from tests.acceptance.runtime import ObservabilityStack
 

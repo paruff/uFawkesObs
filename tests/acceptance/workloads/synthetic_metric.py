@@ -12,7 +12,7 @@ exporter (OpenMetrics convention).
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     OTLPMetricExporter,
@@ -66,8 +66,8 @@ class SyntheticMetricWorkload:
         self,
         name: str,
         value: float = 1.0,
-        labels: Optional[dict[str, str]] = None,
-        known_test_id: Optional[str] = None,
+        labels: dict[str, str] | None = None,
+        known_test_id: str | None = None,
     ) -> str:
         """Emit a counter metric. Returns test_id for correlation.
 
@@ -91,8 +91,8 @@ class SyntheticMetricWorkload:
         self,
         name: str,
         value: float = 100.0,
-        labels: Optional[dict[str, str]] = None,
-        known_test_id: Optional[str] = None,
+        labels: dict[str, str] | None = None,
+        known_test_id: str | None = None,
     ) -> str:
         """Emit a histogram metric. Returns test_id for correlation.
 
@@ -116,7 +116,7 @@ class SyntheticMetricWorkload:
         self,
         name: str,
         value: float = 1.0,
-        labels: Optional[dict[str, str]] = None,
+        labels: dict[str, str] | None = None,
     ) -> str:
         """Emit an up-down counter (can go negative). Shares test_id."""
         if self._meter is None:

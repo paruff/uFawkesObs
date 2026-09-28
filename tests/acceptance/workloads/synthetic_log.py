@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     OTLPLogExporter,
@@ -113,8 +113,8 @@ class SyntheticLogWorkload:
         self,
         body: dict[str, Any],
         severity_text: str = "INFO",
-        severity_number: Optional[int] = None,
-        extra_attributes: Optional[dict[str, str]] = None,
+        severity_number: int | None = None,
+        extra_attributes: dict[str, str] | None = None,
     ) -> str:
         """Emit a structured JSON log entry. Returns test_id for correlation.
 

@@ -27,11 +27,11 @@ Example:
 ```python
 def test_missing_receiver_fails():
     """Test that missing required receiver is caught."""
-    with open(fixtures_dir / 'otel' / 'invalid_missing_receiver.yaml', 'r') as f:
+    with open(fixtures_dir / "otel" / "invalid_missing_receiver.yaml", "r") as f:
         config = yaml.safe_load(f)
 
     # Should fail validation
-    assert 'otlp' not in config.get('receivers', {})
+    assert "otlp" not in config.get("receivers", {})
 ```
 
 ## Adding Fixtures

@@ -325,6 +325,7 @@ logs.set_logger_provider(provider)
 
 # Use with standard logging
 import logging
+
 handler = LoggingHandler(logger_provider=provider)
 logging.basicConfig(level=logging.INFO, handlers=[handler])
 

@@ -5,9 +5,9 @@ Tests that Alloy collects logs, dashboards display data, and correlations work.
 
 import os
 import time
-import requests
-import pytest
 
+import pytest
+import requests
 
 # Configuration
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")

@@ -5,7 +5,6 @@ Tests that the River configuration is valid and meets requirements.
 
 import os
 
-
 # Configuration
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ALLOY_CONFIG_FILE = os.path.join(PROJECT_ROOT, "config", "alloy", "config.river")

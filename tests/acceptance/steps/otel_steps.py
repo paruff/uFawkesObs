@@ -6,7 +6,7 @@ Additional steps specific to the OTel pipeline beyond shared steps.
 from __future__ import annotations
 
 import pytest
-from pytest_bdd import when, then
+from pytest_bdd import then, when
 
 from tests.acceptance.runtime import ObservabilityStack
 

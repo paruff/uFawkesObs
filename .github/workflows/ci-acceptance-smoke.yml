@@ -30,7 +30,7 @@ jobs:
       # compose.yaml stopped defaulting this to "admin" (#380/PR #386);
       # previously this comment claimed secrets would populate it but nothing
       # ever wired that up, silently masked by the old default until now.
-      GRAFANA_ADMIN_PASSWORD: ci-acceptance-smoke-not-a-real-secret
+      GRAFANA_ADMIN_PASSWORD: ci-acceptance-smoke-not-a-real-secret  # pragma: allowlist secret
       # Compose's `secrets: slack_webhook_url: environment:` source requires
       # this var to exist (even empty) or `docker compose up` refuses to
       # start ANY service under core, not just alertmanager. Empty is fine —

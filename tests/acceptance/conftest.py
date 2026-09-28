@@ -10,49 +10,48 @@ we re-publish step fixture names into conftest.py's namespace.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, Optional
 
 import pytest
 import requests
 
-from tests.acceptance.evidence.collector import (
-    EvidenceCollector,
-    get_evidence_collector,
-)
-from tests.acceptance.runtime import (
-    ObservabilityStack,
-    GrafanaClient,
-    LokiClient,
-    OTLPClient,
-    PromQLClient,
-    SERVICE_HEALTH_URLS,
-)
+import tests.acceptance.steps.adr_docs_steps as _adr_docs_steps
+import tests.acceptance.steps.ai_observability_steps as _ai_observability_steps
+import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
+import tests.acceptance.steps.chaos_steps as _chaos_steps
+import tests.acceptance.steps.core_substrate_steps as _core_substrate_steps
+import tests.acceptance.steps.dashboard_steps as _dashboard_steps
+import tests.acceptance.steps.loki_steps as _loki_steps
+import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
+import tests.acceptance.steps.nonfunctional_requirements_steps as _nonfunctional_requirements_steps
+import tests.acceptance.steps.otel_steps as _otel_steps
+import tests.acceptance.steps.prometheus_rules_steps as _prometheus_rules_steps
+import tests.acceptance.steps.repo_hardening_steps as _repo_hardening_steps
 
 # ── Import step definitions ─────────────────────────────────────────
 # Import modules first so their @given/@when/@then decorators fire.
 # Then re-publish step fixtures in conftest.py's namespace so pytest's
 # fixture discovery can find them.
-
 import tests.acceptance.steps.shared_steps as _shared_steps
-import tests.acceptance.steps.otel_steps as _otel_steps
-import tests.acceptance.steps.loki_steps as _loki_steps
-import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
-import tests.acceptance.steps.dashboard_steps as _dashboard_steps
-import tests.acceptance.steps.multi_plane_steps as _multi_plane_steps
 import tests.acceptance.steps.slo_steps as _slo_steps
-import tests.acceptance.steps.chaos_steps as _chaos_steps
-import tests.acceptance.steps.prometheus_rules_steps as _prometheus_rules_steps
-import tests.acceptance.steps.ai_observability_steps as _ai_observability_steps
-import tests.acceptance.steps.core_substrate_steps as _core_substrate_steps
-import tests.acceptance.steps.nonfunctional_requirements_steps as _nonfunctional_requirements_steps
-import tests.acceptance.steps.repo_hardening_steps as _repo_hardening_steps
-import tests.acceptance.steps.adr_docs_steps as _adr_docs_steps
-import tests.acceptance.workloads.dora_events as _dora_events
 import tests.acceptance.workloads.app_traffic as _app_traffic
-import tests.acceptance.workloads.web_api as _web_api
 import tests.acceptance.workloads.batch_job as _batch_job
+import tests.acceptance.workloads.dora_events as _dora_events
 import tests.acceptance.workloads.log_emitter as _log_emitter
+import tests.acceptance.workloads.web_api as _web_api
+from tests.acceptance.evidence.collector import (
+    EvidenceCollector,
+    get_evidence_collector,
+)
+from tests.acceptance.runtime import (
+    SERVICE_HEALTH_URLS,
+    GrafanaClient,
+    LokiClient,
+    ObservabilityStack,
+    OTLPClient,
+    PromQLClient,
+)
 
 for _step_mod in [
     _shared_steps,
@@ -246,7 +245,7 @@ def otlp(stack: ObservabilityStack) -> OTLPClient:
 
 
 @pytest.fixture(scope="function")
-def evidence_dir(request) -> Optional[Path]:
+def evidence_dir(request) -> Path | None:
     """Get the evidence directory path from CLI options."""
     path = request.config.getoption("--evidence-dir")
     if path:

@@ -26,9 +26,9 @@ from pytest_bdd import then, when
 
 from tests.acceptance.runtime import ObservabilityStack
 from tests.acceptance.steps.query_template_vars import resolve_query_template_vars
+from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
 from tests.acceptance.workloads.synthetic_metric import SyntheticMetricWorkload
 from tests.acceptance.workloads.synthetic_trace import SyntheticTraceWorkload
-from tests.acceptance.workloads.synthetic_log import SyntheticLogWorkload
 
 # ── Constants ──────────────────────────────────────────────────────────
 

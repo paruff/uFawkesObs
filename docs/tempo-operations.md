@@ -195,15 +195,11 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 # Configure OTLP exporter
-otlp_exporter = OTLPSpanExporter(
-    endpoint="http://localhost:4318/v1/traces"
-)
+otlp_exporter = OTLPSpanExporter(endpoint="http://localhost:4318/v1/traces")
 
 # Set up tracer
 trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(
-    BatchSpanProcessor(otlp_exporter)
-)
+trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 # Create spans
 tracer = trace.get_tracer(__name__)

@@ -15,7 +15,7 @@ import pytest_asyncio
 
 sys.path.insert(0, str(Path(__file__).parents[2] / "dora" / "ingestion"))
 
-from api import queue_sqlite as queue  # noqa: E402
+from api import queue_sqlite as queue
 
 pytestmark = pytest.mark.asyncio
 
@@ -99,7 +99,7 @@ async def test_mark_done_sets_status_and_processed_at():
 
     await queue.mark_done(event_id)
 
-    async with queue._connect() as conn:  # noqa: SLF001 - test introspection
+    async with queue._connect() as conn:
         row = await (
             await conn.execute(
                 "SELECT status, processed_at FROM event_queue WHERE id = ?",
@@ -115,7 +115,7 @@ async def test_mark_failed_requeues_until_max_attempts_then_errors():
     event_id = await queue.enqueue_event({"event_type": "deployment", "repo": "a"})
 
     await queue.mark_failed(event_id, max_attempts=2)
-    async with queue._connect() as conn:  # noqa: SLF001
+    async with queue._connect() as conn:
         row = await (
             await conn.execute(
                 "SELECT status, attempts FROM event_queue WHERE id = ?", (event_id,)
@@ -124,7 +124,7 @@ async def test_mark_failed_requeues_until_max_attempts_then_errors():
     assert row == ("pending", 1)
 
     await queue.mark_failed(event_id, max_attempts=2)
-    async with queue._connect() as conn:  # noqa: SLF001
+    async with queue._connect() as conn:
         row = await (
             await conn.execute(
                 "SELECT status, attempts FROM event_queue WHERE id = ?", (event_id,)
@@ -147,7 +147,7 @@ async def test_write_raw_event_round_trips_metadata_json():
         duration_seconds=42,
     )
 
-    async with queue._connect() as conn:  # noqa: SLF001
+    async with queue._connect() as conn:
         row = await (
             await conn.execute(
                 "SELECT outcome, duration_seconds, metadata FROM raw_events "

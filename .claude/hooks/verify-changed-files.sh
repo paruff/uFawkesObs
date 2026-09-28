@@ -21,13 +21,13 @@ except Exception:
 [ "$active" = "true" ] && exit 0
 
 cd "${CLAUDE_PROJECT_DIR:-.}"
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
-command -v pre-commit >/dev/null 2>&1 || exit 0
+git rev-parse --is-inside-work-tree > /dev/null 2>&1 || exit 0
+command -v pre-commit > /dev/null 2>&1 || exit 0
 [ -f .pre-commit-config.yaml ] || exit 0
 
 mapfile -t files < <(
   {
-    git diff --name-only --diff-filter=ACMR HEAD 2>/dev/null || true
+    git diff --name-only --diff-filter=ACMR HEAD 2> /dev/null || true
     git ls-files --others --exclude-standard
   } | sort -u
 )
