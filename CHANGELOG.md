@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.8-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.7-beta.1...v0.4.8-beta.1) (2026-09-30)
+
+
+### Docs
+
+* add ufawkesobs-knowledge skill for qmd search ([#531](https://github.com/paruff/uFawkesObs/issues/531)) ([0509e4c](https://github.com/paruff/uFawkesObs/commit/0509e4c439bbd35955b200b3655f1d92c8c1dbdf))
+* add ufawkesobs-knowledge skill for qmd search ([#531](https://github.com/paruff/uFawkesObs/issues/531)) ([03df798](https://github.com/paruff/uFawkesObs/commit/03df798a169794d72c4555df60cd772d3de5198e))
+* new-user walkthrough of the README Quick Start ([#496](https://github.com/paruff/uFawkesObs/issues/496)) ([83b0fdc](https://github.com/paruff/uFawkesObs/commit/83b0fdcc70c90a8bd0b2e4b06d59a6634ef6e82f))
+* new-user walkthrough of the README Quick Start ([#496](https://github.com/paruff/uFawkesObs/issues/496)) ([2f5bb46](https://github.com/paruff/uFawkesObs/commit/2f5bb46daa0bc694be3a916aed5ef9c2f9d26326))
+* state in the README that DORA uses SQLite by default ([#495](https://github.com/paruff/uFawkesObs/issues/495)) ([bdd8215](https://github.com/paruff/uFawkesObs/commit/bdd8215687a6a7b2f551480df7472ded5bb6d70b))
+
 ## [0.4.7-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.6-beta.1...v0.4.7-beta.1) (2026-09-30)
 
 
