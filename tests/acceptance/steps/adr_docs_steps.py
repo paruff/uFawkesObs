@@ -50,8 +50,10 @@ def arch_version_matches_compose(
     service_def = compose_services.get(service)
     assert service_def is not None, f"Service '{service}' not found in compose.yaml"
     compose_image = service_def.get("image", "")
-    # Extract version from image (e.g., "prom/prometheus:v3.5.4" -> "v3.5.4")
-    compose_version = compose_image.split(":")[-1] if ":" in compose_image else ""
+    # compose.yaml pins each image with both a tag and a digest, but the
+    # acceptance step should compare the tag portion only.
+    compose_tag = compose_image.partition("@")[0]
+    compose_version = compose_tag.split(":")[-1] if ":" in compose_tag else ""
 
     # Get version from ARCHITECTURE.md
     arch_path = Path(arch_file)
