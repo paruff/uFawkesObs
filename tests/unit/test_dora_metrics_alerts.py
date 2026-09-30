@@ -16,6 +16,8 @@ dashboards and the threshold alerts where 0 can never cross them.
 """
 
 import pathlib
+import re
+from urllib.parse import urlparse
 
 import yaml
 
@@ -54,6 +56,33 @@ def _by_kind(rules, key):
         for group in rules["groups"]
         for rule in group["rules"]
         if key in rule
+    }
+
+
+def _expected_runbook_targets():
+    return {
+        "DORADeploymentFrequencyLow": "#deployment-frequency-low",
+        "DORADeploymentFrequencyLowAbsent": "#deployment-frequency-absent",
+        "DORALeadTimeHigh": "#lead-time-high",
+        "DORALeadTimeHighAbsent": "#lead-time-absent",
+        "DORAChangeFailureRateHigh": "#change-failure-rate-high",
+        "DORAChangeFailureRateCritical": "#change-failure-rate-critical",
+        "DORAChangeFailureRateHighAbsent": "#change-failure-rate-absent",
+        "DORAFDRTHigh": "#fdrt-high",
+        "DORAFDRTHighAbsent": "#fdrt-absent",
+        "DORAReworkRateHigh": "#rework-rate-high",
+        "DORAReworkRateCritical": "#rework-rate-critical",
+        "DORAReworkRateHighAbsent": "#rework-rate-absent",
+        "DORARegressionDeploymentFrequencyDrop": "#deployment-frequency-drop",
+        "DORARegressionDeploymentFrequencyDropAbsent": "#deployment-frequency-drop-absent",
+        "DORARegressionLeadTimeIncrease": "#lead-time-increase",
+        "DORARegressionLeadTimeIncreaseAbsent": "#lead-time-increase-absent",
+        "DORARegressionFDRTSpike": "#fdrt-spike",
+        "DORARegressionFDRTSpikeAbsent": "#fdrt-spike-absent",
+        "DORARegressionCFRSpike": "#cfr-spike",
+        "DORARegressionCFRSpikeAbsent": "#cfr-spike-absent",
+        "DORARegressionReworkRateClimb": "#rework-rate-climb",
+        "DORARegressionReworkRateClimbAbsent": "#rework-rate-climb-absent",
     }
 
 
@@ -155,6 +184,36 @@ class TestAlertConventionsKept:
             annotations = rule.get("annotations", {})
             assert "runbook_url" in annotations, f"{name} missing runbook_url"
             assert "summary" in annotations, f"{name} missing summary"
+
+    def test_all_runbook_urls_resolve_to_existing_files_and_anchors(self, project_root):
+        alerts = _by_kind(_load_rules(project_root), "alert")
+        repo_root = pathlib.Path(project_root)
+        expected_anchor_map = _expected_runbook_targets()
+
+        for name, rule in alerts.items():
+            annotations = rule.get("annotations", {})
+            url = annotations["runbook_url"]
+            parsed = urlparse(url)
+            assert parsed.scheme == "https", f"{name} runbook_url should be HTTPS: {url}"
+            assert "github.com/paruff/uFawkesObs" in parsed.netloc + parsed.path, (
+                f"{name} runbook_url should point to the uFawkesObs repo: {url}"
+            )
+            assert "/blob/main/docs/runbooks/dora.md" in url, (
+                f"{name} runbook_url should target docs/runbooks/dora.md: {url}"
+            )
+
+            expected_anchor = expected_anchor_map.get(name)
+            assert expected_anchor is not None, f"No expected anchor mapping for {name}"
+            assert parsed.fragment == expected_anchor[1:], (
+                f"{name} should target anchor {expected_anchor}, got {parsed.fragment!r}"
+            )
+
+            runbook_path = repo_root / "docs" / "runbooks" / "dora.md"
+            assert runbook_path.exists(), f"Missing runbook file for {name}: {runbook_path}"
+            text = runbook_path.read_text(encoding="utf-8")
+            assert expected_anchor in text, (
+                f"{name} anchor {expected_anchor} missing in {runbook_path}"
+            )
 
     def test_rule_file_wired_into_prometheus(self, project_root):
         config_path = (
