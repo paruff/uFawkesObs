@@ -141,11 +141,13 @@ test-integration: install-integration-deps
 	@echo "========================================"
 	@echo "🟠 Integration Tests"
 	@echo "========================================"
+	@GRAFANA_ADMIN_PASSWORD="$${GRAFANA_ADMIN_PASSWORD:-$$(sed -nE "s/^[[:space:]]*GRAFANA_ADMIN_PASSWORD[[:space:]]*=[[:space:]]*['\"]?([^'\"]*)['\"]?[[:space:]]*$$/\\1/p" .env 2>/dev/null | tail -n 1)}"; \
+	if [ -z "$$GRAFANA_ADMIN_PASSWORD" ]; then GRAFANA_ADMIN_PASSWORD=admin; fi; \
 	PROMETHEUS_URL=http://localhost:9090 \
 	OTEL_METRICS_URL=http://localhost:8888 \
 	GRAFANA_URL=http://localhost:3000 \
 	GRAFANA_USER=admin \
-	GRAFANA_PASSWORD=admin \
+	GRAFANA_ADMIN_PASSWORD="$$GRAFANA_ADMIN_PASSWORD" \
 	TEMPO_URL=http://localhost:3200 \
 	LOKI_URL=http://localhost:3100 \
 	pytest tests/integration/ -v --tb=short

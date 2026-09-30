@@ -12,7 +12,9 @@ import requests
 # Configuration
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 GRAFANA_USER = os.getenv("GRAFANA_USER", "admin")
-GRAFANA_PASSWORD = os.getenv("GRAFANA_PASSWORD", "admin")
+GRAFANA_PASSWORD = os.getenv(
+    "GRAFANA_ADMIN_PASSWORD", os.getenv("GRAFANA_PASSWORD", "admin")
+)
 LOKI_URL = os.getenv("LOKI_URL", "http://localhost:3100")
 ALLOY_URL = os.getenv("ALLOY_URL", "http://localhost:12345")
 TEMPO_URL = os.getenv("TEMPO_URL", "http://localhost:3200")
