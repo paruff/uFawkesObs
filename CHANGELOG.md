@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.9-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.8-beta.1...v0.4.9-beta.1) (2026-09-30)
+
+
+### Fixed
+
+* **alerting:** raw series fire DORA absent guards; Low needs data ([#533](https://github.com/paruff/uFawkesObs/issues/533)) ([fd2aba9](https://github.com/paruff/uFawkesObs/commit/fd2aba9b2b59d272df3cb3d2919ad5e5496d6c94))
+* **alerting:** raw series fire DORA absent guards; Low needs data ([#533](https://github.com/paruff/uFawkesObs/issues/533)) ([759711a](https://github.com/paruff/uFawkesObs/commit/759711a3babeebb8cc4c1f4e1d0c9b78d2543dc2))
+
 ## [0.4.8-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.7-beta.1...v0.4.8-beta.1) (2026-09-30)
 
 
