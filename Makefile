@@ -188,8 +188,8 @@ test-conformance:
 	cat "$$inspec_log"; \
 	summary_line=$$(grep -E "Profile Summary:" "$$inspec_log" | tail -n 1 || true); \
 	if [ -z "$$summary_line" ]; then echo "ERROR: InSpec summary line missing; aborting conformance run." >&2; exit 1; fi; \
-	success_count=$$(echo "$$summary_line" | awk -F'[^0-9]+' '{print $$2}'); \
-	failure_count=$$(echo "$$summary_line" | awk -F'[^0-9]+' '{print $$3}'); \
+	success_count=$$(echo "$$summary_line" | sed -n 's/.*Profile Summary:[[:space:]]*\([0-9][0-9]*\)[[:space:]]*successful controls.*/\1/p'); \
+	failure_count=$$(echo "$$summary_line" | sed -n 's/.*successful controls,[[:space:]]*\([0-9][0-9]*\)[[:space:]]*control failures.*/\1/p'); \
 	if [ -z "$$success_count" ] || [ -z "$$failure_count" ]; then echo "ERROR: unable to parse InSpec profile summary: $$summary_line" >&2; exit 1; fi; \
 	if [ "$$success_count" -eq 0 ] && [ "$$failure_count" -eq 0 ]; then \
 		echo "ERROR: InSpec executed zero controls; refusing false-green result." >&2; \
