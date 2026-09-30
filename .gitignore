@@ -83,3 +83,7 @@ graphify-out/
 .claude/settings.local.json
 .claude/worktrees/
 .claude/hillclimb/
+
+# QMD search index (local build artifact; .qmd/index.yml config is committed)
+.qmd/*
+!.qmd/index.yml
