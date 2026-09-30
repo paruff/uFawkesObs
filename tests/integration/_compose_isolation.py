@@ -38,28 +38,28 @@ def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
     return mapped_ports
 
 
-
-
 def _ephemeral_data_volume(volume: Any) -> Any:
     if isinstance(volume, str):
         parts = volume.split(":")
         if len(parts) >= 2 and parts[0].startswith("./data/"):
-            target = parts[1]
-            mode = parts[2] if len(parts) > 2 else ""
-            return f"{target}:{mode}" if mode else target
+            rewritten: dict[str, Any] = {"type": "volume", "target": parts[1]}
+            if len(parts) > 2 and "ro" in parts[2].split(","):
+                rewritten["read_only"] = True
+            return rewritten
         return volume
 
     if isinstance(volume, dict):
         source = str(volume.get("source", ""))
         mount_type = volume.get("type")
         if mount_type == "bind" and source.startswith("./data/"):
-            rewritten = {"target": volume["target"]}
+            rewritten = {"type": "volume", "target": volume["target"]}
             if volume.get("read_only"):
                 rewritten["read_only"] = True
             return rewritten
         return volume
 
     return volume
+
 
 def _write_isolated_compose_file(repo_root: pathlib.Path) -> str:
     compose_path = repo_root / "compose.yaml"
@@ -119,46 +119,48 @@ def isolated_compose(
     protected_services: list[str] | None = None,
 ) -> Iterator[DockerCompose]:
     isolated_compose_file = _write_isolated_compose_file(repo_root)
-    original_project_name = os.environ.get("COMPOSE_PROJECT_NAME")
-    original_grafana_password = os.environ.get("GRAFANA_ADMIN_PASSWORD")
-    original_slack_webhook = os.environ.get("SLACK_WEBHOOK_URL")
-    isolated_project_name = f"tc-{uuid.uuid4().hex[:10]}"
-    protected_before = _project_container_ids(protected_project, protected_services)
-
-    os.environ["COMPOSE_PROJECT_NAME"] = isolated_project_name
-    os.environ.setdefault("GRAFANA_ADMIN_PASSWORD", "admin")
-    os.environ.setdefault("SLACK_WEBHOOK_URL", "")
     try:
-        with DockerCompose(
-            context=str(repo_root),
-            compose_file_name=isolated_compose_file,
-            env_file=env_file,
-            profiles=profiles,
-            services=services,
-            wait=True,
-        ) as compose:
-            yield compose
-    finally:
-        if original_project_name is None:
-            os.environ.pop("COMPOSE_PROJECT_NAME", None)
-        else:
-            os.environ["COMPOSE_PROJECT_NAME"] = original_project_name
+        original_project_name = os.environ.get("COMPOSE_PROJECT_NAME")
+        original_grafana_password = os.environ.get("GRAFANA_ADMIN_PASSWORD")
+        original_slack_webhook = os.environ.get("SLACK_WEBHOOK_URL")
+        isolated_project_name = f"tc-{uuid.uuid4().hex[:10]}"
+        protected_before = _project_container_ids(protected_project, protected_services)
 
-        if original_grafana_password is None:
-            os.environ.pop("GRAFANA_ADMIN_PASSWORD", None)
-        else:
-            os.environ["GRAFANA_ADMIN_PASSWORD"] = original_grafana_password
+        os.environ["COMPOSE_PROJECT_NAME"] = isolated_project_name
+        os.environ.setdefault("GRAFANA_ADMIN_PASSWORD", "admin")
+        os.environ.setdefault("SLACK_WEBHOOK_URL", "")
+        try:
+            with DockerCompose(
+                context=str(repo_root),
+                compose_file_name=isolated_compose_file,
+                env_file=env_file,
+                profiles=profiles,
+                services=services,
+                wait=True,
+            ) as compose:
+                yield compose
+        finally:
+            if original_project_name is None:
+                os.environ.pop("COMPOSE_PROJECT_NAME", None)
+            else:
+                os.environ["COMPOSE_PROJECT_NAME"] = original_project_name
 
-        if original_slack_webhook is None:
-            os.environ.pop("SLACK_WEBHOOK_URL", None)
-        else:
-            os.environ["SLACK_WEBHOOK_URL"] = original_slack_webhook
+            if original_grafana_password is None:
+                os.environ.pop("GRAFANA_ADMIN_PASSWORD", None)
+            else:
+                os.environ["GRAFANA_ADMIN_PASSWORD"] = original_grafana_password
 
-        os.unlink(isolated_compose_file)
+            if original_slack_webhook is None:
+                os.environ.pop("SLACK_WEBHOOK_URL", None)
+            else:
+                os.environ["SLACK_WEBHOOK_URL"] = original_slack_webhook
 
-        if protected_before:
             protected_after = _project_container_ids(protected_project, protected_services)
-            assert protected_after == protected_before, (
-                f"Fixture teardown modified running '{protected_project}' containers: "
-                f"before={sorted(protected_before)} after={sorted(protected_after)}"
-            )
+            if protected_after != protected_before:
+                raise RuntimeError(
+                    f"Fixture teardown modified running '{protected_project}' containers: "
+                    f"before={sorted(protected_before)} after={sorted(protected_after)}"
+                )
+    finally:
+        if os.path.exists(isolated_compose_file):
+            os.unlink(isolated_compose_file)
