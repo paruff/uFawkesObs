@@ -16,30 +16,29 @@ import time
 
 import pytest
 import requests
-from testcontainers.compose import DockerCompose
+from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
 def tempo_stack():
-    with DockerCompose(
-        context=str(REPO_ROOT),
-        compose_file_name="compose.yaml",
+    with isolated_compose(
+        repo_root=REPO_ROOT,
         services=["tempo"],
         profiles=["core"],
-        wait=True,
+        protected_services=["tempo"],
     ) as compose:
         yield compose
 
 
-def _host_port(stack: DockerCompose, container_port: int) -> tuple[str, int]:
+def _host_port(stack, container_port: int) -> tuple[str, int]:
     host, port = stack.get_service_host_and_port("tempo", container_port)
     return host, int(port)
 
 
 @pytest.fixture(scope="module")
-def tempo_url(tempo_stack: DockerCompose) -> str:
+def tempo_url(tempo_stack) -> str:
     host, port = _host_port(tempo_stack, 3200)
     url = f"http://{host}:{port}"
 
@@ -63,22 +62,22 @@ def tempo_url(tempo_stack: DockerCompose) -> str:
 
 
 @pytest.fixture(scope="module")
-def tempo_grpc_addr(tempo_stack: DockerCompose) -> tuple[str, int]:
+def tempo_grpc_addr(tempo_stack) -> tuple[str, int]:
     return _host_port(tempo_stack, 9095)
 
 
 @pytest.fixture(scope="module")
-def jaeger_grpc_addr(tempo_stack: DockerCompose) -> tuple[str, int]:
+def jaeger_grpc_addr(tempo_stack) -> tuple[str, int]:
     return _host_port(tempo_stack, 14250)
 
 
 @pytest.fixture(scope="module")
-def jaeger_http_addr(tempo_stack: DockerCompose) -> tuple[str, int]:
+def jaeger_http_addr(tempo_stack) -> tuple[str, int]:
     return _host_port(tempo_stack, 14268)
 
 
 @pytest.fixture(scope="module")
-def zipkin_addr(tempo_stack: DockerCompose) -> tuple[str, int]:
+def zipkin_addr(tempo_stack) -> tuple[str, int]:
     return _host_port(tempo_stack, 9411)
 
 
@@ -116,7 +115,7 @@ class TestTempoHealth:
 class TestTempoPorts:
     """Test that Tempo's ports are accessible."""
 
-    def test_tempo_http_port_open(self, tempo_stack: DockerCompose):
+    def test_tempo_http_port_open(self, tempo_stack):
         assert _port_open(_host_port(tempo_stack, 3200)), (
             "Tempo HTTP port should be open"
         )

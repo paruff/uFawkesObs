@@ -22,30 +22,29 @@ import time
 
 import pytest
 import requests
-from testcontainers.compose import DockerCompose
+from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
 def loki_stack():
-    with DockerCompose(
-        context=str(REPO_ROOT),
-        compose_file_name="compose.yaml",
+    with isolated_compose(
+        repo_root=REPO_ROOT,
         services=["loki"],
         profiles=["core"],
-        wait=True,
+        protected_services=["loki"],
     ) as compose:
         yield compose
 
 
-def _host_port(stack: DockerCompose, container_port: int) -> tuple[str, int]:
+def _host_port(stack, container_port: int) -> tuple[str, int]:
     host, port = stack.get_service_host_and_port("loki", container_port)
     return host, int(port)
 
 
 @pytest.fixture(scope="module")
-def loki_url(loki_stack: DockerCompose) -> str:
+def loki_url(loki_stack) -> str:
     host, port = _host_port(loki_stack, 3100)
     url = f"http://{host}:{port}"
 
@@ -94,7 +93,7 @@ class TestLokiHealth:
 class TestLokiPorts:
     """Test that Loki's ports are accessible."""
 
-    def test_loki_http_port_open(self, loki_stack: DockerCompose):
+    def test_loki_http_port_open(self, loki_stack):
         host, port = _host_port(loki_stack, 3100)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
@@ -103,7 +102,7 @@ class TestLokiPorts:
         finally:
             sock.close()
 
-    def test_loki_grpc_port_open(self, loki_stack: DockerCompose):
+    def test_loki_grpc_port_open(self, loki_stack):
         host, port = _host_port(loki_stack, 9096)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
