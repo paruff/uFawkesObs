@@ -33,6 +33,27 @@ def _reset_stale_compose_stack() -> None:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+
+    stale_containers = subprocess.run(
+        ["docker", "ps", "-aq", "--filter", "name=ufawkesobs-"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    stale_containers += subprocess.run(
+        ["docker", "ps", "-aq", "--filter", "name=tmp-ufawkesobs-"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    for container_id in {cid for cid in stale_containers if cid}:
+        subprocess.run(
+            ["docker", "rm", "-f", container_id],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
     for name in [
         "alertmanager",
         "prometheus",
@@ -64,12 +85,17 @@ def _reset_stale_compose_stack() -> None:
             )
 
 
-def _write_temp_env(path: Path, *, grafana_password: str) -> None:
-    """Create an env file that satisfies compose.yaml's required stack vars."""
+def _write_temp_env(path: Path, *, grafana_password: str) -> dict[str, str]:
+    """Create an env file and exported values that satisfy compose.yaml's required stack vars."""
+    values = {
+        "GRAFANA_ADMIN_USER": "admin",
+        "GRAFANA_ADMIN_PASSWORD": grafana_password,
+        "SLACK_WEBHOOK_URL": os.environ.get("SLACK_WEBHOOK_URL", ""),
+    }
     with path.open("w", encoding="utf-8") as handle:
-        handle.write(f"GRAFANA_ADMIN_USER=admin\n")
-        handle.write(f"GRAFANA_ADMIN_PASSWORD={grafana_password}\n")
-        handle.write(f"SLACK_WEBHOOK_URL={os.environ.get('SLACK_WEBHOOK_URL', '')}\n")
+        for key, value in values.items():
+            handle.write(f"{key}={value}\n")
+    return values
 
 
 def _remap_port(mapping: str) -> str:
@@ -83,7 +109,7 @@ def _remap_port(mapping: str) -> str:
     return mapping
 
 
-def _build_isolated_compose(prefix: str, *, grafana_password: str) -> tuple[Path, Path, str]:
+def _build_isolated_compose(prefix: str, *, grafana_password: str) -> tuple[Path, Path, str, dict[str, str]]:
     """Create a full per-test Compose file with isolated project metadata and writable data dirs."""
     config_path = REPO_ROOT / "compose.yaml"
     with config_path.open("r", encoding="utf-8") as handle:
@@ -139,8 +165,8 @@ def _build_isolated_compose(prefix: str, *, grafana_password: str) -> tuple[Path
         yaml.safe_dump(config, handle, sort_keys=False)
 
     env_path = Path(tempfile.mkdtemp(prefix="compose-env-", dir="/tmp")) / ".env"
-    _write_temp_env(env_path, grafana_password=grafana_password)
-    return compose_path, env_path, project_name
+    env_values = _write_temp_env(env_path, grafana_password=grafana_password)
+    return compose_path, env_path, project_name, env_values
 
 
 @contextmanager
@@ -155,10 +181,14 @@ def compose_stack(
     """Start a module-local stack in an isolated Compose project."""
     _reset_stale_compose_stack()
     previous_project = os.environ.get("COMPOSE_PROJECT_NAME")
-    compose_path, env_path, project_name = _build_isolated_compose(
+    compose_path, env_path, project_name, env_values = _build_isolated_compose(
         prefix, grafana_password=grafana_password
     )
     os.environ["COMPOSE_PROJECT_NAME"] = project_name
+    env = {**os.environ, **env_values}
+    original_env = os.environ.copy()
+    os.environ.clear()
+    os.environ.update(env)
     try:
         with DockerCompose(
             context=str(REPO_ROOT),
@@ -170,6 +200,8 @@ def compose_stack(
         ) as compose:
             yield compose
     finally:
+        os.environ.clear()
+        os.environ.update(original_env)
         if previous_project is None:
             os.environ.pop("COMPOSE_PROJECT_NAME", None)
         else:

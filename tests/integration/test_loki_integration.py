@@ -16,8 +16,10 @@ CI step runs alongside.
 
 from __future__ import annotations
 
+import os
 import pathlib
 import socket
+import tempfile
 import time
 
 import pytest
@@ -27,6 +29,7 @@ from testcontainers.compose import DockerCompose
 from tests.integration.conftest import compose_stack
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
 
 
 @pytest.fixture(scope="module")
@@ -35,8 +38,27 @@ def loki_stack():
         yield compose
 
 
-def _host_port(stack: DockerCompose, container_port: int) -> tuple[str, int]:
-    host, port = stack.get_service_host_and_port("loki", container_port)
+@pytest.fixture(scope="module")
+def alloy_stack():
+    with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as f:
+        f.write(f"GRAFANA_ADMIN_PASSWORD={GRAFANA_ADMIN_PASSWORD}\n")
+        f.write(f"SLACK_WEBHOOK_URL={os.environ.get('SLACK_WEBHOOK_URL', '')}\n")
+        env_file_path = f.name
+
+    try:
+        with compose_stack(
+            "alloy-loki",
+            env_file=env_file_path,
+            services=["grafana", "prometheus", "tempo", "loki", "alloy"],
+            profiles=["core"],
+        ) as compose:
+            yield compose
+    finally:
+        os.unlink(env_file_path)
+
+
+def _host_port(stack: DockerCompose, service: str, container_port: int) -> tuple[str, int]:
+    host, port = stack.get_service_host_and_port(service, container_port)
     return host, int(port)
 
 
