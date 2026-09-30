@@ -9,7 +9,7 @@
     "ufawkes",
     "delivery-metrics"
   ],
-  "description": "Five DORA delivery metrics: current values, 30/90-day trends, and tier classifications per the DORA 2025 framework. Reads from Prometheus (time-series) and Postgres (snapshots).",
+  "description": "Five DORA delivery metrics: current values and 30/90-day trends. DORA retired the Elite/High/Medium/Low tier bands after 2024; this dashboard shows raw values and repository alert thresholds instead.",
   "time": {
     "from": "now-30d",
     "to": "now"
@@ -88,7 +88,7 @@
       },
       "transparent": true,
       "options": {
-        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA 2025 framework \u2014 Five delivery metrics</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from Prometheus pushgateway + Postgres</span>\n  </div>\n</div>",
+        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA delivery metrics \u2014 five core signals</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from the Prometheus /metrics scrape</span>\n  </div>\n</div>",
         "mode": "html"
       }
     },
@@ -1064,7 +1064,7 @@
       "panels": [
         {
           "id": 15,
-          "title": "DORA 2025 Tier Thresholds",
+          "title": "DORA Alert Thresholds",
           "type": "table",
           "gridPos": {
             "h": 7,

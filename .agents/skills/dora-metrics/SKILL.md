@@ -1,6 +1,6 @@
 ---
 name: dora-metrics
-description: "DORA metric queries for uFawkesObs: PromQL expressions for deployment frequency, lead time, change failure rate, and FDRT sourced from deployment spans processed by the OTel Collector. Load when writing DORA dashboards or interpreting DORA metric data in Prometheus."
+description: "DORA metric queries for uFawkesObs: PromQL expressions for the real GitHub Actions → dora-api → Prometheus pipeline. Use this when writing DORA dashboards or validating recording rules in Prometheus."
 license: MIT
 compatibility: Claude Code, GitHub Copilot, OpenCode, Cursor, Codex, Gemini CLI
 metadata:
@@ -10,122 +10,96 @@ metadata:
 
 # Skill: DORA Metrics (uFawkesObs)
 
-## How DORA Metrics Reach Prometheus
+## Real pipeline in this repo
 
-Services emit OTLP span events → OTel Collector → spanmetrics processor converts spans to Prometheus counters → Prometheus scrapes → Grafana queries.
+The current pipeline is not spanmetrics-based. The actual flow is:
 
-**Required spans from services:**
+GitHub Actions `deploy.yml` → `scripts/send-dora-deployment-event.sh` → `dora-api` `POST /event` → SQLite event store → background compute → Prometheus `/metrics` scrape → recording rules in `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
 
-```
-deployment.completed  { service, version, environment, duration_ms, status }
-deployment.failed     { service, version, environment, error }
-incident.opened       { service, severity }
-incident.resolved     { service, severity, duration_ms }
-```
+Key implementation points:
 
-**If these spans are not emitted:** DORA metrics will be absent from Prometheus. Verify with: `curl -s http://localhost:9090/api/v1/label/__name__/values | grep deployment`
+- `deploy.yml` emits deployment events with `DORA_COMMIT_SHA` and the deployment metadata.
+- The API lives in `dora/ingestion/api/` and accepts REST events (`/event`, `/event/batch`).
+- `dora-api` writes to SQLite and exposes computed DORA metrics on `/metrics`.
+- Prometheus scrapes the `dora-api` target and then applies the recording rules in `ufawkesobs-dora-metrics.yml`.
+- the legacy span-based deployment counters do not exist in this repo; they are stale documentation from an abandoned OTLP-spans plan.
 
-## PromQL Queries
+## Prometheus metrics and recording rules
 
-### Deployment Frequency (deployments per day)
+The authoritative series are the recording rules generated from the DORA compute path:
 
 ```promql
-increase(deployment_completed_total{environment="prod"}[1d])
+dora:deployment_frequency:rate30d
+dora:lead_time_hours:p50_30d
+dora:change_failure_rate:ratio30d
+dora:fdrt_hours:p50_30d
+dora:rework_rate:ratio
+```
+
+Use these for dashboards and alerting. If you need to validate the rule file locally, run:
+
+```bash
+promtool check rules config/prometheus/rules/ufawkesobs-dora-metrics.yml
+```
+
+## Example queries
+
+### Deployment Frequency
+
+```promql
+# successful production deployments over the last 30d
+dora:deployment_frequency:rate30d
+```
+
+### Lead Time for Changes
+
+```promql
+dora:lead_time_hours:p50_30d
 ```
 
 ### Change Failure Rate
 
 ```promql
-sum(rate(deployment_failed_total{environment="prod"}[7d]))
-/
-sum(rate(deployment_completed_total{environment="prod"}[7d])) * 100
+dora:change_failure_rate:ratio30d
 ```
 
 ### Failed Deployment Recovery Time (FDRT)
 
 ```promql
-# Average recovery duration in seconds
-avg(incident_duration_seconds{severity=~"critical|high"})
+dora:fdrt_hours:p50_30d
 ```
 
-### Lead Time (proxy — PR merge to deployment)
+### Rework Rate
 
 ```promql
-# Requires deployment spans to carry commit_timestamp attribute
-# If available:
-avg(deployment_lead_time_seconds{environment="prod"})
+# Official DORA rework definition: work later identified as rework / reverted
+dora:rework_rate:ratio
 ```
 
-**Note:** Lead time is the hardest to measure via spans alone. If `deployment_lead_time_seconds` is absent from Prometheus, lead time tracking requires integration with the GitHub API or DevLake (the approach used in full fawkes deployments).
+## Alerting notes
 
-## DORA Thresholds for Alert Rules
+This repo uses repository-specific alert thresholds and absent()-based guards, not the retired Elite/High/Medium/Low tier bands. The relevant check is currently the `dora:` recording rules file itself.
 
-| Metric               | Warning         | Critical          |
-| -------------------- | --------------- | ----------------- |
-| Change failure rate  | > 15%           | > 30%             |
-| FDRT                 | > 1 day         | > 7 days          |
-| Deployment frequency | Declining trend | Zero for > 7 days |
+Examples:
 
-## Grafana DORA Dashboard Variables
-
-```json
-"templating": {
-  "list": [
-    {
-      "name": "service",
-      "type": "query",
-      "datasource": { "uid": "prometheus" },
-      "query": "label_values(deployment_completed_total, service)"
-    },
-    {
-      "name": "environment",
-      "type": "query",
-      "datasource": { "uid": "prometheus" },
-      "query": "label_values(deployment_completed_total, environment)",
-      "current": { "value": "prod" }
-    },
-    {
-      "name": "range",
-      "type": "interval",
-      "options": ["1d", "7d", "30d", "90d"],
-      "current": { "value": "30d" }
-    }
-  ]
-}
+```promql
+(dora:rework_rate:ratio or vector(0)) > 0.10
+(dora:rework_rate:ratio or vector(0)) > 0.20
 ```
 
-## OTel Collector spanmetrics Processor Config
+## Validation checklist
 
-To convert deployment spans to Prometheus metrics, the collector needs the spanmetrics connector:
+Before writing rules or dashboards against a new metric, confirm all of the following:
 
-```yaml
-# In config/otel-collector-config.yaml
-connectors:
-  spanmetrics:
-    histogram:
-      explicit:
-        buckets: [10ms, 100ms, 500ms, 1s, 5s, 30s]
-    dimensions:
-      - name: service
-      - name: environment
-      - name: version
-      - name: status
-    metrics_flush_interval: 15s
+1. The series exists in `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
+2. Prometheus scrapes `dora-api:8088/metrics`.
+3. `dora-api` is receiving deployment events via `.github/workflows/deploy.yml` and `scripts/send-dora-deployment-event.sh`.
+4. `promtool check rules ...` succeeds for the rule file you touched.
 
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [otlp/tempo, spanmetrics]
-    metrics/from-spans:
-      receivers: [spanmetrics]
-      exporters: [prometheusremotewrite]
-```
+## Do not use
 
-**Verify spanmetrics is working:**
+Do not rely on these stale names or assumptions:
 
-```bash
-curl -s http://localhost:9090/api/v1/query?query=calls_total | python3 -m json.tool
-# Should return span-derived metrics if spans are being received
-```
+- `spanmetrics` processing of deployment spans
+- legacy deployment counters that do not exist in this repo
+- the retired Elite/High/Medium/Low band wording unless a directly cited report is being used
