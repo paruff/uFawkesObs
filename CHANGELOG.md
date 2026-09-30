@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.6-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.5-beta.1...v0.4.6-beta.1) (2026-09-29)
+
+
+### Added
+
+* **ci:** sync 4-agent roster, unified pre-commit, devcontainer, harness parity ([ee3c187](https://github.com/paruff/uFawkesObs/commit/ee3c187fff525fe93445cfdfa0a989ea3193dc82))
+* **ci:** unified pre-commit, unit-test suites, devcontainer, harness parity ([4039c03](https://github.com/paruff/uFawkesObs/commit/4039c03deed131aeda2ab3bbe4593c1e907543f9))
+* **devcontainer:** use unified GHCR image ghcr.io/paruff/ufawkesai-devcontainer:latest ([2d96419](https://github.com/paruff/uFawkesObs/commit/2d96419108b8a2030ac7cf7839071bf18289efa5))
+
+
+### Fixed
+
+* **dora:** catch OSError/ConnectionError in _push_metrics for network failures ([11c823f](https://github.com/paruff/uFawkesObs/commit/11c823f4099d1dbf832f494e1eb05fdf503395e0))
+* **opencode:** translate MCP config to opencode schema (type/command/enabled) ([e69de52](https://github.com/paruff/uFawkesObs/commit/e69de526f6c263d9f320a910a399c8efb5805826))
+* **secret-detection:** placeholder rules for .get() code RHS and test values ([7dd45c9](https://github.com/paruff/uFawkesObs/commit/7dd45c915413976057a220743bf7c3de2bbfdb6f))
+* **secret-detection:** placeholder rules for .get() code RHS and test values ([4fa4886](https://github.com/paruff/uFawkesObs/commit/4fa4886fcee03651a983ee412803a3355f6a0b4b))
+* **suite:** sync 4 agents, hooks, model routing from uFawkesAI template ([61dfb91](https://github.com/paruff/uFawkesObs/commit/61dfb91dc37037002166ed489485fe6dc3c3d648))
+* **suite:** sync 4 agents, hooks, model routing from uFawkesAI template ([91e5768](https://github.com/paruff/uFawkesObs/commit/91e576829146846595c88aa72219594b69aeb6e6))
+
 ## [0.4.5-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.4-beta.1...v0.4.5-beta.1) (2026-09-27)
 
 
