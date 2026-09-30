@@ -52,40 +52,33 @@
    undetected without this. Verified live: `make up` + `wait-healthy.sh`,
    all 7 core services healthy.
 3. ⚠️ **`sleep N` audit — mostly not a bug.** Re-read every occurrence
-   instead of trusting the grep count from the original audit. 5 of 6 are
-   deliberate fixed-duration "steady state" soak periods (`ci-chaos-nightly`,
-   `ci-acceptance-smoke`, `ci-acceptance-full`, plus one in `ci-tests.yml`) —
-   waiting for a *time* to elapse so metrics accumulate or the system
-   settles, which has no poll-able condition and is correctly a fixed sleep.
-   `opencode.yml`'s sleep is already inside a proper `for`-loop polling a
-   health endpoint — also correct. Only one occurrence
-   (`ci-tests.yml`'s `apps-test` job) was a genuine "wait for readiness"
-   case; fixed to poll the demo app's own endpoint instead. That job's
-   target port (`8080`) isn't even in `compose.yaml` currently, so it was
-   dead code either way — fixed correctly anyway rather than left broken
-   for whenever it's re-enabled.
+   instead of trusting the grep count from the original audit. Most of the
+   remaining fixed waits are deliberate steady-state soak periods for
+   acceptance/chaos jobs or intentionally slow data-generation steps — they
+   wait for a *time* to elapse because there is no reliable pollable signal.
+   The truly problematic pattern was a shared `docker compose up` plus a
+   fixed warm-up before integration tests. That pattern is now largely
+   replaced by Testcontainers, which gives each integration test its own
+   container lifecycle and readiness waits. The one genuine "wait for
+   readiness" case in the earlier audit (`ci-tests.yml`'s `apps-test` job)
+   was fixed by polling the demo app's endpoint instead of sleeping.
 4. ✅ **Dependabot policy for the lock files' source files** — added `pip`
    ecosystem entries for all 5 requirements directories. Dependabot bumps
    the *source* `requirements.txt` (loose ranges); `make relock` still
    needs a human/CI step afterward to regenerate the matching lock —
    documented in the new dependabot.yml comment.
-5. ⏳ **Re-audit against Testcontainers (#417, partial).** The `apps-test`
-   fix above (item 3) and this section's "5 of 6 are deliberate" verdict
-   were written before `tests/integration/`'s Testcontainers migration
-   (`docs/TESTING_PYRAMID.md`) started. Re-checked now that 3 of ~8 files
-   have moved: **not yet moot.** `ci-tests.yml`'s Integration Tests job
-   still runs one shared `docker compose up` + `sleep 20` warm-up because
-   the still-unmigrated files (`test_prometheus_scraping.py`, the original
-   `test_otel_collector.py`, `test_grafana_integration.py`,
-   `test_dashboards.py`, `test_alloy_and_dashboards.py`) still need it —
-   that sleep can only be removed once every file in the job self-
-   provisions. The migrated files no longer depend on it (each proved via
-   live runs: `test_tempo_integration.py` needed its own explicit `/ready`
-   retry-wait beyond Testcontainers' `wait=True`, since that only confirms
-   a port is open, not that the service's own readiness check passes —
-   a genuinely new failure mode this migration surfaced, not one the
-   original sleep-audit could have found). Revisit this item again once
-   `docs/TESTING_PYRAMID.md`'s file-by-file checklist is fully checked off.
+5. ✅ **Re-audit against Testcontainers (#417).** The migration to
+   Testcontainers changed the relevant failure mode: the shared-stack `sleep`
+   warm-up is no longer the default integration-test pattern. Each migrated
+   test now self-provisions its own services and either relies on
+   Testcontainers' `wait=True` or adds a service-specific readiness retry
+   when the port opens before the app reports healthy. That makes the old
+   blanket "remove all sleeps from integration tests" conclusion too broad;
+   the remaining fixed sleeps are intentionally used for real soak windows or
+   queues that do not expose a direct polling endpoint. In practice, the
+   Testcontainers pattern has reduced the need for the earlier shared-stack
+   warm-up, and the remaining `sleep` calls in the repo are not all the same
+   class of issue.
 
 ## Future (larger, aspirational — not a near-term ask)
 
