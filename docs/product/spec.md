@@ -116,7 +116,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 | **OpenTelemetry Collector** | `0.120.0` | Telemetry processing and fanout | None | `config/otel/collector.yaml` |
 | **OpenTelemetry Collector (DORA)** | _(removed)_ | Second collector instance, `dora` profile. Container removed — it received no traffic and crash-looped; config retained as inert for the ADR-006 span path | None | `config/otel/collector-dora.yaml` |
 | **Prometheus** | `v3.5.4` | Metrics TSDB & scrape engine | `./data/prometheus` | `config/prometheus/prometheus.yaml` |
-| **Alertmanager** | `v0.28.0` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
+| **Alertmanager** | `v0.34.1` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
 | **Tempo** | `2.10.5` | Distributed trace database | `./data/tempo` | `config/tempo/tempo.yaml` |
 | **Loki** | `3.3.2` | Log indexer & backend | `./data/loki` | `config/loki/loki.yaml` |
 | **Alloy** | `v1.12.2` | Container log discovery & forwarding | `./data/alloy` | `config/alloy/config.river` |

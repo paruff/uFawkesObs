@@ -19,7 +19,7 @@ Feature: Core Observability Substrate (M1)
     Then service "prometheus" should have image "prom/prometheus:v3.5.4"
 
   Scenario: Alertmanager uses the correct image
-    Then service "alertmanager" should have image "prom/alertmanager:v0.28.0"
+    Then service "alertmanager" should have image "prom/alertmanager:v0.34.1"
 
   Scenario: Grafana uses the correct image
     Then service "grafana" should have image "grafana/grafana:12.3.7"
