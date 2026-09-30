@@ -56,10 +56,21 @@ jobs:
         run: |
           set -euo pipefail
           compose_json="$(docker compose config --format json)"
+          prometheus_image="$(jq -r '.services.prometheus.image' <<<"$compose_json")"
+          otel_image="$(jq -r '.services["otel-collector"].image' <<<"$compose_json")"
+          tempo_image="$(jq -r '.services.tempo.image' <<<"$compose_json")"
+
+          for resolved in "$prometheus_image" "$otel_image" "$tempo_image"; do
+            if [ -z "$resolved" ] || [ "$resolved" = "null" ]; then
+              echo "::error::Failed to resolve validator image from compose.yaml"
+              exit 1
+            fi
+          done
+
           {
-            echo "PROMETHEUS_IMAGE=$(jq -r '.services.prometheus.image' <<<"$compose_json")"
-            echo "OTEL_IMAGE=$(jq -r '.services[\"otel-collector\"].image' <<<"$compose_json")"
-            echo "TEMPO_IMAGE=$(jq -r '.services.tempo.image' <<<"$compose_json")"
+            echo "PROMETHEUS_IMAGE=$prometheus_image"
+            echo "OTEL_IMAGE=$otel_image"
+            echo "TEMPO_IMAGE=$tempo_image"
           } >> "$GITHUB_ENV"
 
       - name: Validate Prometheus config

@@ -27,7 +27,7 @@ def test_ci_validate_configs_uses_images_derived_from_compose() -> None:
     assert "Resolve validator images from compose.yaml" in content
     assert "docker compose config --format json" in content
     assert ".services.prometheus.image" in content
-    assert '.services[\\"otel-collector\\"].image' in content
+    assert '.services["otel-collector"].image' in content
     assert ".services.tempo.image" in content
     assert '"$PROMETHEUS_IMAGE"' in content
     assert '"$OTEL_IMAGE"' in content
