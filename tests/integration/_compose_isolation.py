@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
+import sys
 import tempfile
 import uuid
 from collections.abc import Iterator
@@ -38,10 +39,13 @@ def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
     return mapped_ports
 
 
+_HOST_DATA_PREFIX = "./data/"
+
+
 def _ephemeral_data_volume(volume: Any) -> Any:
     if isinstance(volume, str):
         parts = volume.split(":")
-        if len(parts) >= 2 and parts[0].startswith("./data/"):
+        if len(parts) >= 2 and parts[0].startswith(_HOST_DATA_PREFIX):
             rewritten: dict[str, Any] = {"type": "volume", "target": parts[1]}
             if len(parts) > 2 and "ro" in parts[2].split(","):
                 rewritten["read_only"] = True
@@ -51,7 +55,7 @@ def _ephemeral_data_volume(volume: Any) -> Any:
     if isinstance(volume, dict):
         source = str(volume.get("source", ""))
         mount_type = volume.get("type")
-        if mount_type == "bind" and source.startswith("./data/"):
+        if mount_type == "bind" and source.startswith(_HOST_DATA_PREFIX):
             rewritten = {"type": "volume", "target": volume["target"]}
             if volume.get("read_only"):
                 rewritten["read_only"] = True
@@ -157,10 +161,13 @@ def isolated_compose(
 
             protected_after = _project_container_ids(protected_project, protected_services)
             if protected_after != protected_before:
-                raise RuntimeError(
+                message = (
                     f"Fixture teardown modified running '{protected_project}' containers: "
                     f"before={sorted(protected_before)} after={sorted(protected_after)}"
                 )
+                if sys.exc_info()[0] is None:
+                    raise RuntimeError(message)
+                print(message, file=sys.stderr)
     finally:
         if os.path.exists(isolated_compose_file):
             os.unlink(isolated_compose_file)
