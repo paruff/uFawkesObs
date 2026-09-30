@@ -179,8 +179,6 @@ cat config/docker-compose.integration.yml
 docker compose -f config/docker-compose.integration.yml --profile placeholder config
 ```
 
-**Key sections.** Copy only the `observability` network.
-
 **Key sections:**
 
 ```yaml
