@@ -213,6 +213,41 @@ class TestVerifyChangedFilesHook:
 
 
 class TestClaudeCodeWiring:
+    def test_repo_skill_names_do_not_collide_with_reserved_names(self):
+        reserved = {
+            "doctor",
+            "review",
+            "help",
+            "clear",
+            "compact",
+            "init",
+            "model",
+            "mcp",
+            "plugin",
+            "context",
+            "hooks",
+            "permissions",
+            "config",
+            "cost",
+            "export",
+            "login",
+            "logout",
+            "memory",
+            "pr-comments",
+            "resume",
+            "status",
+            "agents",
+            "bug",
+            "vim",
+            "terminal-setup",
+            "security-review",
+        }
+        for skill_file in sorted((REPO_ROOT / ".agents" / "skills").glob("*/SKILL.md")):
+            name = skill_file.parent.name
+            assert name not in reserved, (
+                f"skill '{name}' collides with a reserved/built-in name"
+            )
+
     def test_hooks_are_registered_in_settings(self):
         hooks = json.loads(SETTINGS.read_text())["hooks"]
         pre = [h["command"] for g in hooks["PreToolUse"] for h in g["hooks"]]
