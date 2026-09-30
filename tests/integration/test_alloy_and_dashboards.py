@@ -12,7 +12,7 @@ import requests
 # Configuration
 GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
 GRAFANA_USER = os.getenv("GRAFANA_USER", "admin")
-GRAFANA_PASSWORD = os.getenv(
+GRAFANA_ADMIN_PASSWORD = os.getenv(
     "GRAFANA_ADMIN_PASSWORD", os.getenv("GRAFANA_PASSWORD", "admin")
 )
 LOKI_URL = os.getenv("LOKI_URL", "http://localhost:3100")
@@ -50,7 +50,7 @@ def wait_for_alloy(alloy_url: str) -> None:
 @pytest.fixture(scope="session")
 def grafana_auth() -> tuple:
     """Provide Grafana authentication credentials."""
-    return (GRAFANA_USER, GRAFANA_PASSWORD)
+    return (GRAFANA_USER, GRAFANA_ADMIN_PASSWORD)
 
 
 class TestAlloyHealth:
