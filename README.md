@@ -41,7 +41,9 @@ credential, and health-check command, and
 come up cleanly.
 
 To run additional profiles (demo telemetry generator, Discord alerts, DORA
-metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles).
+metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles). The DORA
+metrics profile uses **SQLite by default — no external database is required**
+(the Postgres backend was decommissioned in #275).
 
 ---
 
