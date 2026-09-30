@@ -24,18 +24,14 @@ import pytest
 import requests
 from testcontainers.compose import DockerCompose
 
+from tests.integration.conftest import compose_stack
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
 def loki_stack():
-    with DockerCompose(
-        context=str(REPO_ROOT),
-        compose_file_name="compose.yaml",
-        services=["loki"],
-        profiles=["core"],
-        wait=True,
-    ) as compose:
+    with compose_stack("loki", services=["loki"], profiles=["core"]) as compose:
         yield compose
 
 

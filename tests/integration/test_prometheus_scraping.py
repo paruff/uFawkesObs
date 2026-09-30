@@ -26,6 +26,8 @@ import pytest
 import requests
 from testcontainers.compose import DockerCompose
 
+from tests.integration.conftest import compose_stack
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRAPE_SLA_SECONDS = 1.0  # Scrape should complete in under 1 second
 GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
@@ -48,12 +50,10 @@ def prometheus_stack():
         env_file_path = f.name
 
     try:
-        with DockerCompose(
-            context=str(REPO_ROOT),
-            compose_file_name="compose.yaml",
+        with compose_stack(
+            "prometheus",
             env_file=env_file_path,
             profiles=["core"],
-            wait=True,
         ) as compose:
             yield compose
     finally:

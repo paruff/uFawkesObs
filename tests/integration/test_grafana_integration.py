@@ -21,6 +21,8 @@ import pytest
 import requests
 from testcontainers.compose import DockerCompose
 
+from tests.integration.conftest import compose_stack
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
 
@@ -38,13 +40,11 @@ def grafana_stack():
         env_file_path = f.name
 
     try:
-        with DockerCompose(
-            context=str(REPO_ROOT),
-            compose_file_name="compose.yaml",
+        with compose_stack(
+            "grafana",
             env_file=env_file_path,
             services=["grafana", "prometheus", "tempo", "loki"],
             profiles=["core"],
-            wait=True,
         ) as compose:
             yield compose
     finally:

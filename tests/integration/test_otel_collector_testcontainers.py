@@ -20,6 +20,8 @@ import pytest
 import requests
 from testcontainers.compose import DockerCompose
 
+from tests.integration.conftest import compose_stack
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
@@ -29,12 +31,10 @@ def otel_stack():
     tempo, loki) for this test module only, torn down on exit regardless
     of test outcome — the isolation property the shared-stack pattern
     doesn't have."""
-    with DockerCompose(
-        context=str(REPO_ROOT),
-        compose_file_name="compose.yaml",
+    with compose_stack(
+        "otel-collector",
         services=["otel-collector"],
         profiles=["core"],
-        wait=True,  # DockerCompose's own readiness wait, not a fixed sleep
     ) as compose:
         yield compose
 

@@ -3,15 +3,78 @@ Pytest configuration and shared fixtures for integration tests.
 """
 
 import os
+import subprocess
 import time
+import uuid
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Any
 
 import pytest
 import requests
+from testcontainers.compose import DockerCompose
 
 # Configuration
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
 OTEL_COLLECTOR_URL = os.getenv("OTEL_COLLECTOR_URL", "http://localhost:8888")
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _reset_stale_compose_stack() -> None:
+    """Remove any leftover repo stack so each module starts with a clean Docker state."""
+    env = {**os.environ, "COMPOSE_PROJECT_NAME": "ufawkesobs"}
+    subprocess.run(
+        ["docker", "compose", "--profile", "core", "down", "-v", "--remove-orphans"],
+        cwd=str(REPO_ROOT),
+        env=env,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    for name in [
+        "alertmanager",
+        "prometheus",
+        "tempo",
+        "loki",
+        "grafana",
+        "alloy",
+        "otel-collector",
+    ]:
+        subprocess.run(
+            ["docker", "rm", "-f", name],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+
+@contextmanager
+def compose_stack(
+    prefix: str,
+    *,
+    env_file: str | list[str] | None = None,
+    services: list[str] | None = None,
+    profiles: list[str] | None = None,
+):
+    """Start a module-local stack while keeping the Compose project namespace isolated from the shared repo stack."""
+    _reset_stale_compose_stack()
+    previous_project = os.environ.get("COMPOSE_PROJECT_NAME")
+    os.environ["COMPOSE_PROJECT_NAME"] = f"ufawkesobs-{prefix}-{uuid.uuid4().hex[:8]}"
+    try:
+        with DockerCompose(
+            context=str(REPO_ROOT),
+            compose_file_name="compose.yaml",
+            env_file=env_file,
+            services=services,
+            profiles=profiles,
+            wait=True,
+        ) as compose:
+            yield compose
+    finally:
+        if previous_project is None:
+            os.environ.pop("COMPOSE_PROJECT_NAME", None)
+        else:
+            os.environ["COMPOSE_PROJECT_NAME"] = previous_project
 
 
 @pytest.fixture(scope="session")
