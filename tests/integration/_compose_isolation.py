@@ -14,6 +14,7 @@ import yaml
 from testcontainers.compose import DockerCompose
 
 _HOST_DATA_PREFIX = "./data/"
+_COMPOSE_FILENAME = "compose.yaml"
 
 
 def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
@@ -21,6 +22,9 @@ def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
     for port in ports:
         if isinstance(port, str):
             port_spec, _, protocol = port.partition("/")
+            # This keeps only the container-side port from short syntax forms
+            # used in this repo (e.g. host:container and host_ip:host:container).
+            # IPv6 host-bind variants are out of scope for this stack today.
             container_port = port_spec.split(":")[-1].strip()
             if not container_port:
                 continue
@@ -94,7 +98,7 @@ def _rewrite_volume(volume: Any, repo_root: pathlib.Path) -> Any:
 
 
 def _write_isolated_compose_file(repo_root: pathlib.Path) -> str:
-    compose_path = repo_root / "compose.yaml"
+    compose_path = repo_root / _COMPOSE_FILENAME
     compose_config = yaml.safe_load(compose_path.read_text(encoding="utf-8"))
 
     compose_config.pop("name", None)
@@ -210,14 +214,15 @@ def isolated_compose(
                         f"before={sorted(protected_before)} after={sorted(protected_after)}"
                     )
                     if had_failure:
-                        print(message)
+                        warnings.warn(message, stacklevel=2)
                     else:
                         raise RuntimeError(message)
             except Exception as error:
                 if had_failure:
-                    print(
+                    warnings.warn(
                         "Failed to verify protected project state after fixture teardown: "
-                        f"{error}"
+                        f"{error}",
+                        stacklevel=2,
                     )
                 else:
                     raise
