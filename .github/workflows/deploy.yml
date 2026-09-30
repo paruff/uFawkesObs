@@ -110,6 +110,13 @@ jobs:
         with:
           base: ${{ steps.base.outputs.sha }}
           ref: ${{ github.event.workflow_run.head_sha }}
+          # Under the default 'some' quantifier dorny/paths-filter ORs all
+          # patterns, so the '!…' exclusions below invert into inclusions of
+          # "everything else": non_reloadable_config matched every changed
+          # file, config-reload never ran, and every non-empty merge hit
+          # compose-restart (#381). Exclusions only apply under this quantifier;
+          # the all-positive compose and reload groups are unaffected.
+          predicate-quantifier: some-with-excludes
           filters: |
             compose:
               - 'compose.yaml'
