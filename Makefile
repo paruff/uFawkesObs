@@ -37,9 +37,9 @@ init:
 check-env:
 	./scripts/check-env.sh
 
-## up: start the core observability stack
+## up: start the observability stack and demo app that emits metrics, logs, and traces
 up: check-env
-	docker compose --profile core up -d
+	docker compose --profile core --profile apps up -d
 
 ## up-apps: start the core stack plus demo telemetry generator
 up-apps: check-env
