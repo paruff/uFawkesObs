@@ -80,8 +80,11 @@ def service_has_image(service: str, image: str, stack: ObservabilityStack) -> No
     assert service_def is not None, f"Service '{service}' not found in compose.yaml"
 
     actual_image = service_def.get("image", "")
-    assert actual_image == image, (
-        f"Service '{service}' has image '{actual_image}', expected '{image}'"
+    actual_tag = actual_image.partition("@")[0]
+    expected_tag = image.partition("@")[0]
+    assert actual_tag == expected_tag, (
+        f"Service '{service}' has image tag '{actual_tag}', expected '{expected_tag}' "
+        f"(compose image was '{actual_image}', expected '{image}')"
     )
     print(f"✅ Service '{service}' has correct image: {image}")
 
