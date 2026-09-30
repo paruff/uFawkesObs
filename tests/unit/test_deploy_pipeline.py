@@ -296,6 +296,41 @@ class TestDrillPathClassification:
         assert not _in_group(path_filters["non_reloadable_config"], known_path)
 
 
+class TestFilterPredicateQuantifier:
+    """dorny/paths-filter's default quantifier ('some') ORs all patterns, so a
+    '!…' exclusion compiles to an inverted *inclusion* — "any path not under
+    config/prometheus/**". non_reloadable_config therefore matched every
+    changed file in any non-empty diff: config-reload never ran once and every
+    merge was routed to compose-restart (#381). The negation patterns only
+    mean what _in_group above simulates when the action itself runs with
+    'some-with-excludes', so pin that input here.
+    """
+
+    def _filter_step(self, deploy_workflow: dict[str, Any]) -> dict[str, Any]:
+        steps = deploy_workflow["jobs"]["detect-changes"]["steps"]
+        return next(step for step in steps if step.get("id") == "filter")
+
+    def test_detect_changes_pins_some_with_excludes(
+        self, deploy_workflow: dict[str, Any]
+    ) -> None:
+        with_block = self._filter_step(deploy_workflow)["with"]
+        assert with_block.get("predicate-quantifier") == "some-with-excludes", (
+            "without 'some-with-excludes', exclusion patterns under the default "
+            "'some' quantifier invert into inclusions and non_reloadable_config "
+            "matches every changed file (#381)"
+        )
+
+    def test_non_reloadable_group_actually_contains_exclusions(
+        self, path_filters: dict[str, list[str]]
+    ) -> None:
+        assert any(
+            pattern.startswith("!") for pattern in path_filters["non_reloadable_config"]
+        ), (
+            "non_reloadable_config relies on '!' exclusions — if they are gone, "
+            "the pinned quantifier above should be re-evaluated with them"
+        )
+
+
 class TestCommentSummary:
     """Commit comments must explain why deploy did or did not happen."""
 
