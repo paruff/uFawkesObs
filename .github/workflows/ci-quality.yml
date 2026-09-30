@@ -60,9 +60,11 @@ jobs:
           otel_image="$(jq -r '.services["otel-collector"].image' <<<"$compose_json")"
           tempo_image="$(jq -r '.services.tempo.image' <<<"$compose_json")"
 
-          for resolved in "$prometheus_image" "$otel_image" "$tempo_image"; do
-            if [ -z "$resolved" ] || [ "$resolved" = "null" ]; then
-              echo "::error::Failed to resolve validator image from compose.yaml"
+          for pair in             "PROMETHEUS_IMAGE:$prometheus_image"             "OTEL_IMAGE:$otel_image"             "TEMPO_IMAGE:$tempo_image"; do
+            key="${pair%%:*}"
+            value="${pair#*:}"
+            if [ -z "$value" ] || [ "$value" = "null" ]; then
+              echo "::error::Failed to resolve $key from compose.yaml"
               exit 1
             fi
           done
