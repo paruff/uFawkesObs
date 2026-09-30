@@ -146,6 +146,27 @@ built-in support for distributing services across multiple nodes.
 
 ---
 
+### No CPU Caps on the Deploy Host (CFS Bandwidth Missing)
+
+**Limitation:** `compose.yaml` no longer sets `deploy.resources.*.cpus` for any
+service. The deploy host (synology-ds920, Synology kernel 4.4.302+, cgroup v1)
+lacks CFS bandwidth support, so Docker rejects every container create that
+carries `cpus:` ("NanoCPUs can not be set, as your kernel does not support CPU
+CFS scheduler or the cgroup is not mounted"). That error had broken every
+compose-restart deploy until the caps were removed (issue #381).
+
+**Impact:** Services are not hard-capped on CPU — on a busy host one service
+can consume more CPU than intended. `memory` limits and reservations still
+apply.
+
+**Workaround:** None on that kernel (caps need `cpu.cfs_quota_us` from CFS
+bandwidth). If the host kernel/package ever gains support, the caps can be
+reintroduced; the guard test
+`tests/unit/test_compose_versions.py::TestNoCpuLimits` must be updated in the
+same change.
+
+---
+
 ## Alloy (Log Collection)
 
 ### Docker Socket Access Required
