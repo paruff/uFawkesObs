@@ -272,10 +272,12 @@ class TestClaudeCodeWiring:
                 no_description.append(skill_file.parent.name)
                 continue
             text = description.group(1).strip().strip("'\"")
-            if not re.search(r"(?:Use|Load)\b.*\bwhen(?:ever)?\b", text, re.I):
+            if not re.search(r"(?:Use|Load)\b.*\bwhen(?:ever)?\b", text, re.IGNORECASE):
                 missing.append(skill_file.parent.name)
 
-        assert not no_description, f"Skills missing description frontmatter: {no_description}"
+        assert not no_description, (
+            f"Skills missing description frontmatter: {no_description}"
+        )
         assert not missing, f"Skills without when-to-use trigger language: {missing}"
 
     def test_protect_tests_matcher_covers_edit_write_and_bash(self):
