@@ -168,3 +168,36 @@ class TestComposeLocalhostBindings:
             f"Service '{service}' must include localhost-only binding "
             f"'{expected_port_binding}', found: {ports}"
         )
+
+
+class TestNoCpuLimits:
+    """The deploy host kernel cannot enforce CPU caps (issue #381).
+
+    synology-ds920 runs Synology's 4.4.302+ kernel with cgroup v1 but without
+    CFS bandwidth support: every container create with ``cpus:`` fails with
+    "NanoCPUs can not be set, as your kernel does not support CPU CFS
+    scheduler or the cgroup is not mounted", which broke every compose-restart
+    deploy. Keep ``deploy.resources.*.cpus`` out of compose.yaml so the stack
+    stays creatable on that host.
+    """
+
+    def test_no_service_sets_cpus(self, compose_data: dict) -> None:
+        """Assert no service sets cpus:/cpu_quota: anywhere."""
+        services = compose_data.get("services") or {}
+        offenders: list[str] = []
+        for name, svc in services.items():
+            if not isinstance(svc, dict):
+                continue
+            for legacy_key in ("cpus", "cpu_quota"):
+                if legacy_key in svc:
+                    offenders.append(f"{name}.{legacy_key}")
+            resources = (svc.get("deploy") or {}).get("resources") or {}
+            for section in ("limits", "reservations"):
+                section_data = resources.get(section) or {}
+                if "cpus" in section_data:
+                    offenders.append(f"{name}.deploy.resources.{section}.cpus")
+        assert not offenders, (
+            "cpus:/cpu_quota: break container creation on the deploy host "
+            "(Synology kernel 4.4.302+ has no CFS bandwidth — issue #381). "
+            f"Remove: {', '.join(offenders)}"
+        )
