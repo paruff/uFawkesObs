@@ -21,7 +21,7 @@ It's a Docker Compose stack — OpenTelemetry, Prometheus, Loki, Tempo, Alertman
 
 ## Quick Start
 
-**Prerequisites:** Docker 20.10+, Docker Compose v2.0+, 4GB free RAM, and the ports listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#ports--access) available.
+**Prerequisites:** Docker 20.10+, Docker Compose v2.0+, make, git, 4GB free RAM, and the ports listed in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#ports--access) available.
 
 ```bash
 git clone https://github.com/paruff/uFawkesObs.git

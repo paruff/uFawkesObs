@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.11-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.10-beta.1...v0.4.11-beta.1) (2026-09-30)
+
+
+### Docs
+
+* add make and git to Quick Start prerequisites ([12155d6](https://github.com/paruff/uFawkesObs/commit/12155d6783e8fd5c40b604d824b460dd42c138c7))
+
+
+### Chores
+
+* **alertmanager:** defer bump until upstream grpc fix is released ([049d6b8](https://github.com/paruff/uFawkesObs/commit/049d6b8b9864b02940e01bcb1ec4651feafc4d54))
+
+## [0.4.10-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.9-beta.1...v0.4.10-beta.1) (2026-09-30)
+
+
+### Fixed
+
+* **compose:** drop cpu caps unusable on deploy host ([#381](https://github.com/paruff/uFawkesObs/issues/381)) ([b4173fb](https://github.com/paruff/uFawkesObs/commit/b4173fb9ea1dc33b6ecc9701c47e6a25a530ad99))
+* **compose:** drop cpu caps unusable on deploy host ([#381](https://github.com/paruff/uFawkesObs/issues/381)) ([9191898](https://github.com/paruff/uFawkesObs/commit/9191898e36ae2ff2964ba2c8f570533587967b94))
+
+
+### Docs
+
+* record missing deploy-host cpu caps in limits file ([#381](https://github.com/paruff/uFawkesObs/issues/381)) ([4a50f88](https://github.com/paruff/uFawkesObs/commit/4a50f884c060c4223818612c4ef8394898704e4b))
+
 ## [0.4.9-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.8-beta.1...v0.4.9-beta.1) (2026-09-30)
 
 

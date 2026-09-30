@@ -233,10 +233,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
           memory: 1G
         reservations:
-          cpus: "0.25"
           memory: 256M
     # NOTE: no healthcheck (#272) — otel/opentelemetry-collector-contrib:0.120.0
     # is distroless: no sh/wget/curl, and the otelcol-contrib binary itself has
@@ -282,10 +280,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0"
           memory: 4G
         reservations:
-          cpus: "0.5"
           memory: 512M
     # NOTE: healthcheck removed — Tempo v2.10+ uses distroless image without wget/curl/sh.
     # See: https://github.com/grafana/tempo/issues/6536
@@ -320,10 +316,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2.0"
           memory: 2G
         reservations:
-          cpus: "0.5"
           memory: 512M
     healthcheck:
       test:
@@ -378,10 +372,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: "0.1"
           memory: 128M
     healthcheck:
       # grafana/alloy image has no wget/curl; /dev/tcp is a bash builtin, not sh, so invoke bash explicitly.
@@ -435,10 +427,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
           memory: 2G
         reservations:
-          cpus: "0.5"
           memory: 512M
     healthcheck:
       test:
@@ -494,10 +484,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: "0.1"
           memory: 128M
     healthcheck:
       test:
@@ -563,10 +551,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
           memory: 64M
         reservations:
-          cpus: "0.05"
           memory: 32M
     logging:
       driver: json-file
@@ -615,10 +601,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
           memory: 1G
         reservations:
-          cpus: "0.25"
           memory: 256M
     healthcheck:
       test:
@@ -666,10 +650,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
           memory: 256M
         reservations:
-          cpus: "0.1"
           memory: 64M
     healthcheck:
       # python:3.11-slim has no wget/curl; use the stdlib instead.
@@ -717,10 +699,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
           memory: 128M
         reservations:
-          cpus: "0.05"
           memory: 32M
     healthcheck:
       test:
@@ -774,10 +754,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: "0.1"
           memory: 128M
     healthcheck:
       # python:3.13-slim has no wget/curl; use the stdlib instead.
