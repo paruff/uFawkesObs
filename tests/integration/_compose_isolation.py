@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import pathlib
 import subprocess
-import sys
 import tempfile
 import uuid
 from collections.abc import Iterator
@@ -12,6 +11,8 @@ from typing import Any
 
 import yaml
 from testcontainers.compose import DockerCompose
+
+_HOST_DATA_PREFIX = "./data/"
 
 
 def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
@@ -39,17 +40,29 @@ def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
     return mapped_ports
 
 
-_HOST_DATA_PREFIX = "./data/"
+def _absolutize(relative_path: str, repo_root: pathlib.Path) -> str:
+    return str((repo_root / relative_path.removeprefix("./")).resolve())
 
 
-def _ephemeral_data_volume(volume: Any) -> Any:
+def _rewrite_volume(volume: Any, repo_root: pathlib.Path) -> Any:
     if isinstance(volume, str):
         parts = volume.split(":")
-        if len(parts) >= 2 and parts[0].startswith(_HOST_DATA_PREFIX):
-            rewritten: dict[str, Any] = {"type": "volume", "target": parts[1]}
-            if len(parts) > 2 and "ro" in parts[2].split(","):
-                rewritten["read_only"] = True
-            return rewritten
+        if len(parts) >= 2:
+            source = parts[0]
+            target = parts[1]
+            mode = parts[2] if len(parts) > 2 else ""
+
+            if source.startswith(_HOST_DATA_PREFIX):
+                rewritten: dict[str, Any] = {"type": "volume", "target": target}
+                if mode and "ro" in mode.split(","):
+                    rewritten["read_only"] = True
+                return rewritten
+
+            if source.startswith("./"):
+                source = _absolutize(source, repo_root)
+                if mode:
+                    return f"{source}:{target}:{mode}"
+                return f"{source}:{target}"
         return volume
 
     if isinstance(volume, dict):
@@ -59,6 +72,10 @@ def _ephemeral_data_volume(volume: Any) -> Any:
             rewritten = {"type": "volume", "target": volume["target"]}
             if volume.get("read_only"):
                 rewritten["read_only"] = True
+            return rewritten
+        if mount_type == "bind" and source.startswith("./"):
+            rewritten = dict(volume)
+            rewritten["source"] = _absolutize(source, repo_root)
             return rewritten
         return volume
 
@@ -70,45 +87,53 @@ def _write_isolated_compose_file(repo_root: pathlib.Path) -> str:
     compose_config = yaml.safe_load(compose_path.read_text(encoding="utf-8"))
 
     compose_config.pop("name", None)
+
     for service in compose_config.get("services", {}).values():
         service.pop("container_name", None)
+
         if "ports" in service:
             service["ports"] = _ephemeral_port_mappings(service["ports"])
+
         if "volumes" in service:
             service["volumes"] = [
-                _ephemeral_data_volume(volume) for volume in service["volumes"]
+                _rewrite_volume(volume, repo_root) for volume in service["volumes"]
             ]
 
+        build = service.get("build")
+        if isinstance(build, dict) and isinstance(build.get("context"), str):
+            if build["context"].startswith("./"):
+                build["context"] = _absolutize(build["context"], repo_root)
+
+    for config in compose_config.get("configs", {}).values():
+        config_file = config.get("file") if isinstance(config, dict) else None
+        if isinstance(config_file, str) and config_file.startswith("./"):
+            config["file"] = _absolutize(config_file, repo_root)
+
     with tempfile.NamedTemporaryFile(
-        "w", prefix=".testcontainers-isolated-", suffix=".yaml", dir=repo_root, delete=False
+        "w", prefix="testcontainers-isolated-", suffix=".yaml", delete=False
     ) as isolated_file:
         yaml.safe_dump(compose_config, isolated_file, sort_keys=False)
         return isolated_file.name
 
 
-def _project_container_ids(project_name: str, services: list[str] | None = None) -> set[str]:
-    command = [
-        "docker",
-        "ps",
-        "-a",
-        "--filter",
-        f"label=com.docker.compose.project={project_name}",
-        "--format",
-        "{{.ID}} {{.Label \"com.docker.compose.service\"}}",
-    ]
+def _docker_ps_ids(filters: list[str]) -> set[str]:
+    command = ["docker", "ps", "-a", "--format", "{{.ID}}"]
+    for filter_value in filters:
+        command.extend(["--filter", filter_value])
     result = subprocess.run(command, capture_output=True, text=True, check=True)
-    service_filter = set(services or [])
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
+
+
+def _project_container_ids(project_name: str, services: list[str] | None = None) -> set[str]:
+    project_filter = f"label=com.docker.compose.project={project_name}"
+
+    if not services:
+        return _docker_ps_ids([project_filter])
 
     container_ids: set[str] = set()
-    for line in result.stdout.splitlines():
-        parts = line.strip().split(maxsplit=1)
-        if not parts:
-            continue
-        container_id = parts[0]
-        service_name = parts[1] if len(parts) > 1 else ""
-        if service_filter and service_name not in service_filter:
-            continue
-        container_ids.add(container_id)
+    for service in services:
+        service_filter = f"label=com.docker.compose.service={service}"
+        container_ids.update(_docker_ps_ids([project_filter, service_filter]))
     return container_ids
 
 
@@ -133,6 +158,8 @@ def isolated_compose(
         os.environ["COMPOSE_PROJECT_NAME"] = isolated_project_name
         os.environ.setdefault("GRAFANA_ADMIN_PASSWORD", "admin")
         os.environ.setdefault("SLACK_WEBHOOK_URL", "")
+
+        had_failure = False
         try:
             with DockerCompose(
                 context=str(repo_root),
@@ -143,6 +170,9 @@ def isolated_compose(
                 wait=True,
             ) as compose:
                 yield compose
+        except Exception:
+            had_failure = True
+            raise
         finally:
             if original_project_name is None:
                 os.environ.pop("COMPOSE_PROJECT_NAME", None)
@@ -165,9 +195,10 @@ def isolated_compose(
                     f"Fixture teardown modified running '{protected_project}' containers: "
                     f"before={sorted(protected_before)} after={sorted(protected_after)}"
                 )
-                if sys.exc_info()[0] is None:
+                if had_failure:
+                    print(message)
+                else:
                     raise RuntimeError(message)
-                print(message, file=sys.stderr)
     finally:
         if os.path.exists(isolated_compose_file):
             os.unlink(isolated_compose_file)
