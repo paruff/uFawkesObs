@@ -5,6 +5,7 @@ import pathlib
 import subprocess
 import tempfile
 import uuid
+import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
@@ -21,6 +22,8 @@ def _ephemeral_port_mappings(ports: list[Any]) -> list[str]:
         if isinstance(port, str):
             port_spec, _, protocol = port.partition("/")
             container_port = port_spec.split(":")[-1].strip()
+            if not container_port:
+                continue
             if protocol and protocol != "tcp":
                 mapped_ports.append(f"{container_port}/{protocol}")
             else:
@@ -53,6 +56,10 @@ def _rewrite_volume(volume: Any, repo_root: pathlib.Path) -> Any:
             mode = parts[2] if len(parts) > 2 else ""
 
             if source.startswith(_HOST_DATA_PREFIX):
+                warnings.warn(
+                    f"Replacing data bind mount {source} with ephemeral volume at {target}",
+                    stacklevel=2,
+                )
                 rewritten: dict[str, Any] = {"type": "volume", "target": target}
                 if mode and "ro" in mode.split(","):
                     rewritten["read_only"] = True
@@ -69,6 +76,10 @@ def _rewrite_volume(volume: Any, repo_root: pathlib.Path) -> Any:
         source = str(volume.get("source", ""))
         mount_type = volume.get("type")
         if mount_type == "bind" and source.startswith(_HOST_DATA_PREFIX):
+            warnings.warn(
+                f"Replacing data bind mount {source} with ephemeral volume at {volume['target']}",
+                stacklevel=2,
+            )
             rewritten = {"type": "volume", "target": volume["target"]}
             if volume.get("read_only"):
                 rewritten["read_only"] = True
@@ -189,16 +200,27 @@ def isolated_compose(
             else:
                 os.environ["SLACK_WEBHOOK_URL"] = original_slack_webhook
 
-            protected_after = _project_container_ids(protected_project, protected_services)
-            if protected_after != protected_before:
-                message = (
-                    f"Fixture teardown modified running '{protected_project}' containers: "
-                    f"before={sorted(protected_before)} after={sorted(protected_after)}"
+            try:
+                protected_after = _project_container_ids(
+                    protected_project, protected_services
                 )
+                if protected_after != protected_before:
+                    message = (
+                        f"Fixture teardown modified running '{protected_project}' containers: "
+                        f"before={sorted(protected_before)} after={sorted(protected_after)}"
+                    )
+                    if had_failure:
+                        print(message)
+                    else:
+                        raise RuntimeError(message)
+            except Exception as error:
                 if had_failure:
-                    print(message)
+                    print(
+                        "Failed to verify protected project state after fixture teardown: "
+                        f"{error}"
+                    )
                 else:
-                    raise RuntimeError(message)
+                    raise
     finally:
         if os.path.exists(isolated_compose_file):
             os.unlink(isolated_compose_file)
