@@ -28,5 +28,5 @@
   "forwardPorts": [9090, 3000],
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
-  "postCreateCommand": "bash -lc 'set -e; export PATH=\"$HOME/.local/bin:/usr/local/bin:$PATH\"; ./.devcontainer/install-tools.sh; sudo apt-get update -qq; sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends shellcheck; python3 -m pip install --user --quiet \"pre-commit==4.5.1\"; pre-commit install --hook-type commit-msg; echo \"uFawkesObs devcontainer ready — all tools pre-installed\"'"
+  "postCreateCommand": "bash -lc 'set -e; export PATH=\"$HOME/.local/bin:/usr/local/bin:$PATH\"; ./.devcontainer/install-tools.sh'"
 }
