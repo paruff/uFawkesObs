@@ -9,7 +9,7 @@
     "ufawkes",
     "delivery-metrics"
   ],
-  "description": "Five DORA delivery metrics: current values, 30/90-day trends, and tier classifications per the DORA 2025 framework. Reads from Prometheus (time-series) and Postgres (snapshots).",
+  "description": "Five DORA delivery metrics: current values and 30/90-day trends. DORA retired the Elite/High/Medium/Low tier bands after 2024; this dashboard shows raw values and repository alert thresholds instead.",
   "time": {
     "from": "now-30d",
     "to": "now"
@@ -88,7 +88,7 @@
       },
       "transparent": true,
       "options": {
-        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA 2025 framework \u2014 Five delivery metrics</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from Prometheus pushgateway + Postgres</span>\n  </div>\n</div>",
+        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA delivery metrics \u2014 five core signals</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from the Prometheus /metrics scrape</span>\n  </div>\n</div>",
         "mode": "html"
       }
     },
@@ -100,7 +100,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "How often code is successfully deployed to production. DORA 2025 classifications: Elite = On-demand (multiple/day), High = 1/week\u20131/day, Medium = 1/month\u20131/week, Low = < 1/month",
+      "description": "How often code is successfully deployed to production. Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard.",
       "gridPos": {
         "h": 6,
         "w": 5,
@@ -186,7 +186,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Time from first commit to running in production (P50). DORA 2025 classifications: Elite = < 1 hour, High = 1 day\u20131 week, Medium = 1 week\u20131 month, Low = > 1 month",
+      "description": "Time from first commit to running in production (P50). Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard.",
       "gridPos": {
         "h": 6,
         "w": 5,
@@ -276,7 +276,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Time from a failed deployment to the next successful deployment of the same service. DORA 2025 reclassified FDRT from Stability to Throughput. DORA 2025: Elite = < 1 hour, High = < 1 day, Medium = 1 day\u20131 week, Low = > 1 week. This is NOT MTTR \u2014 MTTR measured incident resolution time, FDRT measures deployment recovery.",
+      "description": "Time from a failed deployment to the next successful deployment of the same service. Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard. This is NOT MTTR \u2014 MTTR measured incident resolution time, FDRT measures deployment recovery.",
       "gridPos": {
         "h": 6,
         "w": 5,
@@ -363,7 +363,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of deployments causing a production failure requiring remediation. DORA 2025: Elite = 0\u20135%, High = 5\u201310%, Medium = 10\u201315%, Low = > 15%",
+      "description": "Percentage of deployments causing a production failure requiring remediation. Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard.",
       "gridPos": {
         "h": 6,
         "w": 5,
@@ -1053,7 +1053,7 @@
     {
       "id": 14,
       "type": "row",
-      "title": "Tier Legend",
+      "title": "Repository Alert Thresholds",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1064,7 +1064,7 @@
       "panels": [
         {
           "id": 15,
-          "title": "DORA 2025 Tier Thresholds",
+          "title": "DORA Alert Thresholds",
           "type": "table",
           "gridPos": {
             "h": 7,
@@ -1078,7 +1078,7 @@
               "group": [],
               "metricColumn": "none",
               "rawQuery": true,
-              "rawSql": "SELECT 'Deployment Frequency' AS metric, 'On-demand (multiple/day)' AS elite, '1/week \u2013 1/day' AS high, '1/month \u2013 1/week' AS medium, '< 1/month' AS low\nUNION ALL\nSELECT 'Lead Time for Changes', '< 1 hour', '1 day \u2013 1 week', '1 week \u2013 1 month', '> 1 month'\nUNION ALL\nSELECT 'FDRT', '< 1 hour', '< 1 day', '1 day \u2013 1 week', '> 1 week'\nUNION ALL\nSELECT 'Change Failure Rate', '0 \u2013 5%', '5 \u2013 10%', '10 \u2013 15%', '> 15%'\nUNION ALL\nSELECT 'Rework Rate', 'TBD [VERIFY at dora.dev]', 'TBD [VERIFY]', 'TBD [VERIFY]', 'TBD [VERIFY]'",
+              "rawSql": "SELECT 'Deployment Frequency' AS metric, 'watch: < 1/week' AS watch, 'alert: < 1/day' AS alert, 'critical: < 1/day' AS critical, 'Repository threshold model' AS note\nUNION ALL\nSELECT 'Lead Time for Changes', 'watch: > 24h', 'alert: > 7d', 'critical: > 30d', 'Repository threshold model'\nUNION ALL\nSELECT 'FDRT', 'watch: > 4h', 'alert: > 24h', 'critical: > 168h', 'Repository threshold model'\nUNION ALL\nSELECT 'Change Failure Rate', 'watch: > 5%', 'alert: > 15%', 'critical: > 30%', 'Repository threshold model'\nUNION ALL\nSELECT 'Rework Rate', 'watch: > 10%', 'alert: > 20%', 'critical: > 30%', 'Repository threshold model'",
               "refId": "A",
               "select": [
                 [

@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "DORA 2026 metrics dashboard \u2014 Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate with performance band thresholds (Elite/High/Medium/Low). Data from Prometheus recording rules and uFawkesRes PostgreSQL snapshots.",
+  "description": "DORA metrics dashboard \u2014 Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate. Data from the Prometheus recording rules in this repo; the retired Elite/High/Medium/Low tier bands are intentionally not used.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -64,7 +64,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Successful production deployments per 30 days.\n\n**DORA 2026 Performance Bands:**\n- Elite: On-demand (multiple per day)\n- High: <= 1/week\n- Medium: <= 1/month\n- Low: < 1/month",
+      "description": "Successful production deployments per 30 days.\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -138,7 +138,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Median lead time from commit to production deployment (hours).\n\n**DORA 2026 Performance Bands:**\n- Elite: < 1 hour\n- High: < 1 day (24h)\n- Medium: < 1 week (168h)\n- Low: > 1 week",
+      "description": "Median lead time from commit to production deployment (hours).\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -212,7 +212,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of production deployments that resulted in failures or incidents (30d).\n\n**DORA 2026 Performance Bands:**\n- Elite: 0-5%\n- High: 5-15%\n- Medium: 15-30%\n- Low: > 30%",
+      "description": "Percentage of production deployments that resulted in failures or incidents (30d).\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -287,7 +287,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Median time to restore service after an incident (hours, 30d).\n\n**DORA 2026 Performance Bands:**\n- Elite: < 1 hour\n- High: < 4 hours\n- Medium: < 1 day (24h)\n- Low: > 1 week (168h)",
+      "description": "Median time to restore service after an incident (hours, 30d).\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -361,7 +361,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric, DORA 2024, a Software Delivery Instability metric).\n\n**DORA Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
+      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric).\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -436,7 +436,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric, DORA 2024, a Software Delivery Instability metric).\n\n**DORA Performance Bands:**\n- Elite: < 5%\n- High: < 10%\n- Medium: < 20%\n- Low: >= 20%",
+      "description": "Percentage of deployments that are unplanned work to fix a user-facing bug or production incident, outside the planned release train (5th DORA metric).\n\nRepository alert thresholds are used for operational guidance; the retired four-tier DORA band framing is not used in this dashboard.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1564,7 +1564,7 @@
     {
       "datasource": {
         "type": "postgres",
-        "uid": "ufawkesres-postgres"
+        "uid": "prometheus"
       },
       "description": "Latest DORA metric snapshots from uFawkesRes PostgreSQL. This table shows point-in-time metric values computed by uFawkesDORA's compute engine and stored in the shared database.",
       "fieldConfig": {
@@ -1614,7 +1614,7 @@
         {
           "datasource": {
             "type": "postgres",
-            "uid": "ufawkesres-postgres"
+            "uid": "prometheus"
           },
           "format": "table",
           "rawSql": "SELECT snapshot_date, deployment_frequency, lead_time_hours, change_failure_rate, mttr_hours, performance_level FROM dora_metrics ORDER BY snapshot_date DESC LIMIT 30;",
