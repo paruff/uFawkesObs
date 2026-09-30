@@ -4,6 +4,7 @@ Pytest configuration and shared fixtures for integration tests.
 
 import os
 import subprocess
+import tempfile
 import time
 import uuid
 from contextlib import contextmanager
@@ -12,6 +13,7 @@ from typing import Any
 
 import pytest
 import requests
+import yaml
 from testcontainers.compose import DockerCompose
 
 # Configuration
@@ -46,6 +48,99 @@ def _reset_stale_compose_stack() -> None:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+    network_names = subprocess.run(
+        ["docker", "network", "ls", "--format", "{{.Name}}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    for network_name in network_names:
+        if network_name.startswith("observability-lab") or network_name.startswith("ufawkesobs-"):
+            subprocess.run(
+                ["docker", "network", "rm", network_name],
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+
+def _write_temp_env(path: Path, *, grafana_password: str) -> None:
+    """Create an env file that satisfies compose.yaml's required stack vars."""
+    with path.open("w", encoding="utf-8") as handle:
+        handle.write(f"GRAFANA_ADMIN_USER=admin\n")
+        handle.write(f"GRAFANA_ADMIN_PASSWORD={grafana_password}\n")
+        handle.write(f"SLACK_WEBHOOK_URL={os.environ.get('SLACK_WEBHOOK_URL', '')}\n")
+
+
+def _remap_port(mapping: str) -> str:
+    """Allocate an ephemeral host port for each per-test Compose stack."""
+    parts = mapping.split(":")
+    if len(parts) == 2:
+        return f"127.0.0.1:0:{parts[1]}"
+    if len(parts) >= 3:
+        host = parts[0] if not parts[0].isdigit() else "127.0.0.1"
+        return f"{host}:0:{':'.join(parts[2:])}"
+    return mapping
+
+
+def _build_isolated_compose(prefix: str, *, grafana_password: str) -> tuple[Path, Path, str]:
+    """Create a full per-test Compose file with isolated project metadata and writable data dirs."""
+    config_path = REPO_ROOT / "compose.yaml"
+    with config_path.open("r", encoding="utf-8") as handle:
+        config = yaml.safe_load(handle) or {}
+
+    project_name = f"ufawkesobs-{prefix}-{uuid.uuid4().hex[:8]}"
+    network_name = f"observability-lab-{uuid.uuid4().hex[:8]}"
+    config["name"] = project_name
+
+    networks = config.get("networks") or {}
+    if isinstance(networks, dict) and "observability" in networks:
+        networks["observability"]["name"] = network_name
+
+    temp_data_root = Path(tempfile.mkdtemp(prefix=f"{prefix}-data-", dir="/tmp"))
+    for data_dir in [
+        "data/prometheus",
+        "data/tempo",
+        "data/loki",
+        "data/grafana",
+        "data/alertmanager",
+        "data/alloy",
+    ]:
+        path = temp_data_root / data_dir
+        path.mkdir(parents=True, exist_ok=True)
+        try:
+            path.chmod(0o777)
+        except PermissionError:
+            pass
+
+    for service in config.get("services", {}).values():
+        service.pop("container_name", None)
+        ports = service.get("ports")
+        if isinstance(ports, list):
+            service["ports"] = [
+                _remap_port(str(mapping)) if isinstance(mapping, str) else mapping
+                for mapping in ports
+            ]
+
+        volumes = service.get("volumes")
+        if isinstance(volumes, list):
+            rewritten = []
+            for volume in volumes:
+                if not isinstance(volume, str) or not volume.startswith("./data/"):
+                    rewritten.append(volume)
+                    continue
+                source, target, *rest = volume.split(":")
+                target_path = temp_data_root / source.lstrip("./")
+                rewritten.append(f"{target_path}:{target}:{':'.join(rest)}" if rest else f"{target_path}:{target}")
+            service["volumes"] = rewritten
+
+    compose_path = REPO_ROOT / f".compose-{prefix}-{uuid.uuid4().hex[:8]}.yaml"
+    with compose_path.open("w", encoding="utf-8") as handle:
+        yaml.safe_dump(config, handle, sort_keys=False)
+
+    env_path = Path(tempfile.mkdtemp(prefix="compose-env-", dir="/tmp")) / ".env"
+    _write_temp_env(env_path, grafana_password=grafana_password)
+    return compose_path, env_path, project_name
 
 
 @contextmanager
@@ -55,16 +150,20 @@ def compose_stack(
     env_file: str | list[str] | None = None,
     services: list[str] | None = None,
     profiles: list[str] | None = None,
+    grafana_password: str = "admin",
 ):
-    """Start a module-local stack while keeping the Compose project namespace isolated from the shared repo stack."""
+    """Start a module-local stack in an isolated Compose project."""
     _reset_stale_compose_stack()
     previous_project = os.environ.get("COMPOSE_PROJECT_NAME")
-    os.environ["COMPOSE_PROJECT_NAME"] = f"ufawkesobs-{prefix}-{uuid.uuid4().hex[:8]}"
+    compose_path, env_path, project_name = _build_isolated_compose(
+        prefix, grafana_password=grafana_password
+    )
+    os.environ["COMPOSE_PROJECT_NAME"] = project_name
     try:
         with DockerCompose(
             context=str(REPO_ROOT),
-            compose_file_name="compose.yaml",
-            env_file=env_file,
+            compose_file_name=str(compose_path),
+            env_file=env_file or str(env_path),
             services=services,
             profiles=profiles,
             wait=True,
@@ -75,6 +174,15 @@ def compose_stack(
             os.environ.pop("COMPOSE_PROJECT_NAME", None)
         else:
             os.environ["COMPOSE_PROJECT_NAME"] = previous_project
+        if compose_path.exists():
+            compose_path.unlink()
+        if env_path.exists():
+            env_path.unlink()
+        if env_path.parent.exists():
+            try:
+                env_path.parent.rmdir()
+            except OSError:
+                pass
 
 
 @pytest.fixture(scope="session")
