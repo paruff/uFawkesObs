@@ -57,3 +57,18 @@ class TestDoraDashboards:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
         assert "ufawkesobs" in data.get("tags", [])
+
+    def test_dora_metrics_skill_mentions_real_pipeline(self):
+        skill_path = (
+            pathlib.Path(__file__).resolve().parents[2]
+            / ".agents"
+            / "skills"
+            / "dora-metrics"
+            / "SKILL.md"
+        )
+        skill_text = skill_path.read_text(encoding="utf-8")
+        assert "send-dora-deployment-event.sh" in skill_text
+        assert "deployment_completed_total" not in skill_text
+        assert "spanmetrics" not in skill_text.lower()
+        assert "dora-api" in skill_text
+        assert "send-dora-deployment-event.sh" in skill_text

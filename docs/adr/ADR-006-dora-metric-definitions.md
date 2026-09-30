@@ -35,7 +35,7 @@
 
 ## Context
 
-uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the five DORA 2025/2026 key metrics:
+uFawkesObs is the observability plane of the Fawkes IDP platform. It provides the telemetry substrate (metrics, logs, traces) that feeds into uFawkesDORA — the DORA metrics compute plane. uFawkesDORA requires a well-defined data contract to calculate the five DORA delivery metrics used in this repo:
 
 1. **Deployment Frequency** — How often code is deployed to production
 2. **Lead Time for Changes** — Time from commit to production
@@ -127,7 +127,7 @@ uFawkesObs provides the following Prometheus recording rules that uFawkesDORA co
 
 **Rule file location:** `config/prometheus/rules/ufawkesobs-dora-metrics.yml`
 
-All rules are guarded with `or vector(0)` to prevent gaps during cold start.
+All rules are guarded with `or vector(0)` to prevent gaps during cold start. The database remains SQLite-only; no resource-plane Postgres datasource is provisioned in this repo.
 
 ---
 
@@ -180,9 +180,9 @@ All alerts carry `category: dora` label for routing.
 The DORA metrics dashboard is provisioned at:
 - File: `dashboards/platform/dora-metrics.json`
 - Grafana folder: `Platform`
-- Datasources: `Prometheus` (UID: `prometheus`), `PostgreSQL` (UID: `ufawkesres-postgres`)
+- Datasource: `Prometheus` (UID: `prometheus`)
 
-The dashboard shows the five DORA indicators with DORA 2025/2026 performance bands (Elite/High/Medium/Low).
+The dashboard shows the five DORA indicators using the repo-defined Prometheus recording rules; the retired Elite/High/Medium/Low band framing is intentionally not used in this repo.
 
 ---
 
@@ -192,7 +192,7 @@ The dashboard shows the five DORA indicators with DORA 2025/2026 performance ban
 
 2. **Contract enables cross-plane integration** — uFawkesDORA's ingestion API can rely on a stable schema. Changes to this contract require an ADR update.
 
-3. **DORA 2025/2026 alignment** — The five key metrics and their recording rules follow the DORA 2025 report and DORA 2026 AI Capabilities Model definitions, with performance bands (Elite/High/Medium/Low) matching industry benchmarks.
+3. **Current alignment** — The five key metrics and their recording rules follow the live repo implementation and the DORA rework definition used in the current recording rules; the retired four-tier performance bands are not used.
 
 4. **Separation of concerns** — uFawkesObs provides telemetry and recording rules; uFawkesDORA computes final metrics. This ADR defines the interface between them.
 
@@ -243,7 +243,7 @@ The dashboard shows the five DORA indicators with DORA 2025/2026 performance ban
 4. [ ] Create `config/prometheus/rules/ufawkesobs-dora-alerts.yml` (alert rules — consolidated into recording rules file)
 5. [x] Add `dora` profile to `compose.yaml` with OTel Collector exporter to uFawkesDORA
 6. [x] Create `config/otel/collector-dora.yaml` for DORA profile
-7. [x] Add Grafana Postgres datasource provisioning (`ufawkesres-postgres`)
+7. [x] Remove the retired Grafana Postgres datasource path; this repo uses the Prometheus datasource only and stores DORA data in SQLite.
 8. [ ] Create `dashboards/platform/dora-metrics.json`
 9. [x] Update `docs/adr/README.md` index
 10. [x] Add Alertmanager route for `category: dora` alerts

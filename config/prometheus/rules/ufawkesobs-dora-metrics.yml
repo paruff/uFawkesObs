@@ -231,7 +231,7 @@
 # 2. Lead Time for Changes
 # 3. Change Failure Rate
 # 4. Failed Deployment Recovery Time (FDRT)
-# 5. Rework Rate — fraction of AI output requiring rework (DORA 2026)
+# 5. Rework Rate — share of completed work later identified as rework / reverted after merge (official DORA definition; not AI output requiring rework)
 
 groups:
   # DORA recording rules — two variants per metric (issue #533):
@@ -294,7 +294,9 @@ groups:
       # rework-rate computation (real merged-work-later-reverted data, not
       # an AI-suggestion-acceptance proxy). Already a 0-1 ratio, matching
       # this rule's "ratio" name.
-      # DORA 2026 thresholds: Elite < 5%, High < 10%, Medium < 20%, Low >= 20%
+      # Repo alert thresholds are used here, not the retired four-tier DORA
+      # band model. The 2025 AI Capabilities Model watch/stop thresholds are
+      # >10% and >20% respectively.
       - record: dora:rework_rate:ratio
         expr: |
           avg(dora_rework_rate_pct)
@@ -329,7 +331,8 @@ groups:
             This may indicate stalled development or deployment pipeline issues.
             Only fires while DORA data is present; pipeline gaps raise
             DORADeploymentFrequencyLowAbsent instead.
-            DORA 2025: Elite > 1/day, High > 1/week, Medium > 1/month, Low < 1/month.
+            This repo tracks the value against the repository threshold, not
+            the retired four-tier DORA bands.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-low"
 
       - alert: DORADeploymentFrequencyLowAbsent
@@ -359,7 +362,8 @@ groups:
           summary: "Lead time for changes exceeds 24 hours"
           description: |
             Median lead time from commit to production deployment exceeds 24 hours.
-            DORA 2025: Elite < 1h, High < 1d, Medium < 1w, Low > 1w.
+            This repo uses the repository alert threshold, not the retired
+            four-tier DORA bands.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#lead-time-high"
 
       - alert: DORALeadTimeHighAbsent
@@ -388,8 +392,9 @@ groups:
           summary: "Change failure rate exceeds 15%"
           description: |
             Change failure rate has exceeded 15% over the last 30 days.
-            DORA 2025: Elite < 5%, High < 15%, Medium < 30%, Low > 30%.
-            Review deployment quality and testing practices.
+            Review deployment quality and testing practices. This repo tracks
+            the value against the repository alert threshold rather than the
+            retired four-tier DORA bands.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#change-failure-rate-high"
 
       - alert: DORAChangeFailureRateCritical
@@ -403,8 +408,8 @@ groups:
           summary: "Change failure rate exceeds 30% — stop features"
           description: |
             Change failure rate has exceeded 30% over the last 30 days.
-            DORA 2025: Low performance band. Stop new features, fix deployment quality.
-            Review AGENTS.md and CI/CD pipeline for root causes.
+            Stop new features and fix deployment quality. Review AGENTS.md and
+            the CI/CD pipeline for root causes.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#change-failure-rate-critical"
 
       - alert: DORAChangeFailureRateHighAbsent
@@ -434,8 +439,9 @@ groups:
           summary: "Failed deployment recovery time exceeds 4 hours"
           description: |
             Median time to restore service after incidents exceeds 4 hours.
-            DORA 2025: Elite < 1h, High < 4h, Medium < 1d, Low > 1w.
-            Review incident response procedures and on-call runbooks.
+            Review incident response procedures and on-call runbooks. This repo
+            tracks the value against the repository alert threshold, not the
+            retired four-tier DORA bands.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-high"
 
       - alert: DORAFDRTHighAbsent
@@ -465,8 +471,8 @@ groups:
           summary: "AI rework rate exceeds 10% — watch threshold"
           description: |
             Rework rate has exceeded 10% over the last 30 days.
-            DORA 2026: Elite < 5%, High < 10%, Medium < 20%, Low >= 20%.
-            Rising rework above 10% signals AI instructions may need attention.
+            The 2025 AI Capabilities Model watches this at >10%; rising rework
+            above 10% signals AI instructions may need attention.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-high"
 
       - alert: DORAReworkRateCritical
@@ -480,9 +486,8 @@ groups:
           summary: "AI rework rate exceeds 20% — stop features, fix instructions"
           description: |
             Rework rate has exceeded 20% over the last 30 days.
-            DORA 2026: Low performance band. AI-generated code is creating more
-            problems than it solves. Review AGENTS.md and PROMPT_LIBRARY.md
-            before adding new features.
+            This exceeds the 2025 AI Capabilities Model stop-features threshold.
+            Review AGENTS.md and PROMPT_LIBRARY.md before adding new features.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-critical"
 
       - alert: DORAReworkRateHighAbsent
