@@ -1,6 +1,6 @@
 ---
 name: alloy-river
-description: Grafana Alloy River configuration syntax reference for uFawkesObs. Covers the River DSL, Docker container log discovery, label manipulation, and hot-reload compatibility constraints.
+description: "Grafana Alloy River configuration syntax reference for uFawkesObs. Use when configuring or debugging Grafana Alloy River pipelines, log collection, relabeling, or hot-reload changes."
 license: MIT
 compatibility: opencode
 ---
