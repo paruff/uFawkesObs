@@ -106,7 +106,7 @@ fi
 #    names. NOT EXHAUSTIVE — extend this list whenever a new collision is
 #    found, the way `doctor` was found (and renamed to `oc-health`) this
 #    session.
-RESERVED_NAMES="doctor review help clear compact init model mcp plugin context hooks permissions config cost export login logout memory pr-comments resume status agents bug vim terminal-setup"
+RESERVED_NAMES="doctor review help clear compact init model mcp plugin context hooks permissions config cost export login logout memory pr-comments resume status agents bug vim terminal-setup security-review"
 collision_found=0
 for f in .agents/commands/*.md; do
   [ -e "$f" ] || continue
