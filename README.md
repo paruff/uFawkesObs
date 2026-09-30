@@ -40,6 +40,10 @@ credential, and health-check command, and
 [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) if something doesn't
 come up cleanly.
 
+First time here? [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) walks through
+every command above — what it does, what you should see, and what to do
+if you don't.
+
 To run additional profiles (demo telemetry generator, Discord alerts, DORA
 metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles). The DORA
 metrics profile uses **SQLite by default — no external database is required**
