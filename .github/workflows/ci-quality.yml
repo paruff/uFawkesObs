@@ -52,13 +52,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Resolve validator images from compose.yaml
+        run: |
+          set -euo pipefail
+          compose_json="$(docker compose config --format json)"
+          {
+            echo "PROMETHEUS_IMAGE=$(jq -r '.services.prometheus.image' <<<"$compose_json")"
+            echo "OTEL_IMAGE=$(jq -r '.services[\"otel-collector\"].image' <<<"$compose_json")"
+            echo "TEMPO_IMAGE=$(jq -r '.services.tempo.image' <<<"$compose_json")"
+          } >> "$GITHUB_ENV"
+
       - name: Validate Prometheus config
         if: hashFiles('config/prometheus/prometheus.yaml') != ''
         run: |
           docker run --rm \
             -v $PWD/config/prometheus:/etc/prometheus \
             --entrypoint promtool \
-            prom/prometheus:v3.5.4 \
+            "$PROMETHEUS_IMAGE" \
             check config /etc/prometheus/prometheus.yaml
 
       - name: Validate OTel config
@@ -66,7 +76,7 @@ jobs:
         run: |
           docker run --rm \
             -v $PWD/config/otel/collector.yaml:/etc/otel/config.yaml \
-            otel/opentelemetry-collector-contrib:0.120.0 \
+            "$OTEL_IMAGE" \
             validate --config=/etc/otel/config.yaml
 
       - name: Validate Tempo config
@@ -74,7 +84,7 @@ jobs:
         run: |
           docker run --rm \
             -v $PWD/config/tempo/tempo.yaml:/etc/tempo.yaml \
-            grafana/tempo:2.4.1 \
+            "$TEMPO_IMAGE" \
             -config.file=/etc/tempo.yaml -config.verify=true
 
   # ─── PR Size Gate ────────────────────────────────────────────────────────
