@@ -213,10 +213,6 @@ global:
   # smtp_auth_password: ''
   # smtp_require_tls: false
 
-# Templates for notification messages
-templates:
-  - "/etc/alertmanager/templates/*.tmpl"
-
 # Route defines the routing tree and notification destinations
 route:
   # Default receiver for all alerts
