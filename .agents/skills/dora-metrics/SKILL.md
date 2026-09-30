@@ -12,7 +12,7 @@ metadata:
 
 ## Real pipeline in this repo
 
-The current pipeline is not spanmetrics-based. The actual flow is:
+The actual flow is:
 
 GitHub Actions `deploy.yml` → `scripts/send-dora-deployment-event.sh` → `dora-api` `POST /event` → SQLite event store → background compute → Prometheus `/metrics` scrape → recording rules in `config/prometheus/rules/ufawkesobs-dora-metrics.yml`.
 
@@ -100,6 +100,6 @@ Before writing rules or dashboards against a new metric, confirm all of the foll
 
 Do not rely on these stale names or assumptions:
 
-- `spanmetrics` processing of deployment spans
+- stale deployment-counter names from the abandoned OTLP-spans plan
 - legacy deployment counters that do not exist in this repo
 - the retired Elite/High/Medium/Low band wording unless a directly cited report is being used
