@@ -234,8 +234,14 @@
 # 5. Rework Rate — fraction of AI output requiring rework (DORA 2026)
 
 groups:
-  # DORA recording rules
-  # All rules use or vector(0) to prevent absent() gaps
+  # DORA recording rules — two variants per metric (issue #533):
+  #   * fallback rules (…or vector(0)): dashboards + threshold alerts read
+  #     these so gaps never render as nulls. The vector(0) also means the
+  #     series ALWAYS exists, so absent() on them can never fire and a
+  #     zero reading can mean "no data" as easily as "zero".
+  #   * raw rules (raw…): the same aggregation with NO fallback, so the
+  #     series disappears when dora-api stops producing data. absent()
+  #     guards and DORADeploymentFrequencyLow read these.
   - name: ufawkesobs_dora_metrics
     interval: 60s
     rules:
@@ -247,11 +253,19 @@ groups:
           sum(dora_deployment_frequency_per_week)
           or vector(0)
 
+      - record: dora:deployment_frequency:raw30d
+        expr: |
+          sum(dora_deployment_frequency_per_week)
+
       # Lead Time for Changes: org-wide average of each team's p50 lead time.
       - record: dora:lead_time_hours:p50_30d
         expr: |
           avg(dora_lead_time_p50_hours)
           or vector(0)
+
+      - record: dora:lead_time_hours:raw_p50_30d
+        expr: |
+          avg(dora_lead_time_p50_hours)
 
       # Change Failure Rate: org-wide average CFR across teams (already a
       # 0-1 ratio in dora_cfr_pct, matching this rule's own "ratio30d" name
@@ -261,12 +275,20 @@ groups:
           avg(dora_cfr_pct)
           or vector(0)
 
+      - record: dora:change_failure_rate:raw_ratio30d
+        expr: |
+          avg(dora_cfr_pct)
+
       # Failed Deployment Recovery Time (FDRT): org-wide average of each
       # team's p50 recovery time.
       - record: dora:fdrt_hours:p50_30d
         expr: |
           avg(dora_fdrt_p50_hours)
           or vector(0)
+
+      - record: dora:fdrt_hours:raw_p50_30d
+        expr: |
+          avg(dora_fdrt_p50_hours)
 
       # Rework Rate: org-wide average, sourced from dora-compute's own
       # rework-rate computation (real merged-work-later-reverted data, not
@@ -278,6 +300,10 @@ groups:
           avg(dora_rework_rate_pct)
           or vector(0)
 
+      - record: dora:rework_rate:raw_ratio
+        expr: |
+          avg(dora_rework_rate_pct)
+
   # DORA alerting rules
   # All alerts have category: dora label
   # All alerts have paired absent() guards
@@ -285,9 +311,13 @@ groups:
     interval: 60s
     rules:
       # Deployment Frequency Low
+      # Reads the RAW series: with the fallback rule a stack that never
+      # produced DORA data evaluates as 0 and pages after 7d even though
+      # nothing is wrong. Absent data is DORADeploymentFrequencyLowAbsent's
+      # job, not this alert's (issue #533).
       - alert: DORADeploymentFrequencyLow
         expr: |
-          dora:deployment_frequency:rate30d < 1
+          dora:deployment_frequency:raw30d < 1
         for: 7d
         labels:
           severity: warning
@@ -297,21 +327,24 @@ groups:
           description: |
             Deployment frequency has dropped below 1 deployment per 30 days.
             This may indicate stalled development or deployment pipeline issues.
+            Only fires while DORA data is present; pipeline gaps raise
+            DORADeploymentFrequencyLowAbsent instead.
             DORA 2025: Elite > 1/day, High > 1/week, Medium > 1/month, Low < 1/month.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-low"
 
       - alert: DORADeploymentFrequencyLowAbsent
         expr: |
-          absent(dora:deployment_frequency:rate30d)
-        for: 7d
+          absent(dora:deployment_frequency:raw30d)
+        for: 1d
         labels:
           severity: warning
           category: dora
         annotations:
           summary: "Deployment frequency metrics are missing"
           description: |
-            DORA deployment frequency metric is absent. Deployment spans may not be flowing.
-            Check CI/CD pipeline telemetry configuration.
+            DORA deployment frequency data is absent — dora-api is down,
+            unscraped, or has no teams/events yet. Check the dora profile
+            and the CI/CD deploy-event flow.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-absent"
 
       # Lead Time High
@@ -331,16 +364,16 @@ groups:
 
       - alert: DORALeadTimeHighAbsent
         expr: |
-          absent(dora:lead_time_hours:p50_30d)
-        for: 7d
+          absent(dora:lead_time_hours:raw_p50_30d)
+        for: 1d
         labels:
           severity: warning
           category: dora
         annotations:
           summary: "Lead time metrics are missing"
           description: |
-            Lead time metric is absent. Deployment spans may not include lead_time_hours.
-            Check CI/CD pipeline is emitting lead_time_hours attribute.
+            Lead time data is absent — dora-api is down, unscraped, or has no
+            deployment history yet. Check the dora profile and deploy-event flow.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#lead-time-absent"
 
       # Change Failure Rate High
@@ -376,16 +409,17 @@ groups:
 
       - alert: DORAChangeFailureRateHighAbsent
         expr: |
-          absent(dora:change_failure_rate:ratio30d)
-        for: 7d
+          absent(dora:change_failure_rate:raw_ratio30d)
+        for: 1d
         labels:
           severity: warning
           category: dora
         annotations:
           summary: "Change failure rate metrics are missing"
           description: |
-            Change failure rate metric is absent. Deployment failure/success metrics may not be flowing.
-            Check CI/CD pipeline is emitting deployment status.
+            Change failure rate data is absent — dora-api is down, unscraped,
+            or no deployment outcomes have been recorded. Check the dora
+            profile and the deploy-event flow.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#change-failure-rate-absent"
 
       # FDRT High
@@ -406,17 +440,17 @@ groups:
 
       - alert: DORAFDRTHighAbsent
         expr: |
-          absent(dora:fdrt_hours:p50_30d)
-        for: 7d
+          absent(dora:fdrt_hours:raw_p50_30d)
+        for: 1d
         labels:
           severity: warning
           category: dora
         annotations:
           summary: "FDRT metrics are missing"
           description: |
-            Failed deployment recovery time metric is absent. Incident duration
-            metrics may not be flowing. Check Alertmanager alerts are firing
-            and resolving with duration_hours attribute.
+            Failed deployment recovery time data is absent — dora-api is down,
+            unscraped, or no incident durations have been recorded. Check the
+            dora profile and that incidents resolve with duration data.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-absent"
 
       # Rework Rate High
@@ -453,14 +487,15 @@ groups:
 
       - alert: DORAReworkRateHighAbsent
         expr: |
-          absent(dora:rework_rate:ratio)
-        for: 7d
+          absent(dora:rework_rate:raw_ratio)
+        for: 1d
         labels:
           severity: warning
           category: dora
         annotations:
           summary: "Rework rate metrics are missing"
           description: |
-            AI rework rate metric is absent. AI SDK suggestion telemetry may not be
-            flowing or ai-rules.yml recording rules may not be configured.
+            Rework rate data is absent — dora-api is down, unscraped, or the
+            dora-compute rework computation has produced nothing yet. Check
+            the dora profile and deploy/revert event flow.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-absent"
