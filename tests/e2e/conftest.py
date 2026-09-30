@@ -178,22 +178,14 @@ def query_grafana_datasource(
     Returns:
         Query result
     """
-    query_payload = dict(query_params)
-    if (
-        datasource_uid == "tempo"
-        and query_payload.get("queryType") == "traceql"
-        and "tableType" not in query_payload
-    ):
-        query_payload["tableType"] = "traces"
-
     response = requests.post(
         f"{grafana_url}/api/ds/query",
         auth=grafana_auth,
-        json={"queries": [{"datasource": {"uid": datasource_uid}, **query_payload}]},
+        json={"queries": [{"datasource": {"uid": datasource_uid}, **query_params}]},
         timeout=timeout,
     )
+    print(f"ℹ️ Grafana datasource '{datasource_uid}' query returned HTTP {response.status_code}")
     response.raise_for_status()
-    print(f"✅ Grafana datasource '{datasource_uid}' query returned HTTP {response.status_code}")
     return response.json()
 
 
