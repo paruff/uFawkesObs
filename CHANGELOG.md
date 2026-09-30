@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.6-beta.1...v0.4.7-beta.1) (2026-09-30)
+
+
+### Fixed
+
+* **alertmanager:** upgrade v0.28.0 → v0.34.1 for CVE fixes ([766897a](https://github.com/paruff/uFawkesObs/commit/766897a6028caf9783773c02143688b79a4b439f))
+
 ## [0.4.6-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.5-beta.1...v0.4.6-beta.1) (2026-09-29)
 
 
