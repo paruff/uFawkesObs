@@ -243,7 +243,9 @@ class TestClaudeCodeWiring:
         }
         for skill_file in sorted((REPO_ROOT / ".agents" / "skills").glob("*/SKILL.md")):
             name = skill_file.parent.name
-            assert name not in reserved, f"skill '{name}' collides with a reserved/built-in name"
+            assert name not in reserved, (
+                f"skill '{name}' collides with a reserved/built-in name"
+            )
 
     def test_hooks_are_registered_in_settings(self):
         hooks = json.loads(SETTINGS.read_text())["hooks"]
