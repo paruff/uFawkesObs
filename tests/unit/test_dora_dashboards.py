@@ -59,7 +59,13 @@ class TestDoraDashboards:
         assert "ufawkesobs" in data.get("tags", [])
 
     def test_dora_metrics_skill_mentions_real_pipeline(self):
-        skill_path = pathlib.Path(__file__).resolve().parents[2] / ".agents" / "skills" / "dora-metrics" / "SKILL.md"
+        skill_path = (
+            pathlib.Path(__file__).resolve().parents[2]
+            / ".agents"
+            / "skills"
+            / "dora-metrics"
+            / "SKILL.md"
+        )
         skill_text = skill_path.read_text(encoding="utf-8")
         assert "send-dora-deployment-event.sh" in skill_text
         assert "deployment_completed_total" not in skill_text
