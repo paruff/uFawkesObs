@@ -287,15 +287,18 @@ class TestDoraComputeFiles:
         ingestion_dockerfile = (DORA_DIR / "ingestion" / "Dockerfile").read_text(
             encoding="utf-8"
         )
-        assert 'CMD ["./run.sh"]' in compute_dockerfile, (
-            "compute image must start the script directly in exec form so it can "
-            "receive SIGTERM as PID 1"
+        assert 'CMD ["/bin/sh", "./run.sh"]' in compute_dockerfile, (
+            "compute image must invoke the shell in exec form so PID 1 receives "
+            "SIGTERM while the script still runs under /bin/sh"
         )
         assert 'CMD ["uvicorn", "ingestion.api.main:app", "--host", "0.0.0.0", "--port", "8088"]' in ingestion_dockerfile, (
             "ingestion image must keep the uvicorn entrypoint in exec form"
         )
-        assert 'CMD ["/bin/sh"' not in compute_dockerfile, (
-            "compute Dockerfile must not wrap the script in /bin/sh -c"
+        assert 'chmod +x ./run.sh' in compute_dockerfile, (
+            "compute script must be executable before direct exec-form CMD"
+        )
+        assert '\nCMD uvicorn' not in ingestion_dockerfile, (
+            "ingestion Dockerfile must not use plain shell-form CMD"
         )
 
 
