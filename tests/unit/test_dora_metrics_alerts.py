@@ -204,15 +204,16 @@ class TestAlertConventionsKept:
 
             expected_anchor = expected_anchor_map.get(name)
             assert expected_anchor is not None, f"No expected anchor mapping for {name}"
-            assert parsed.fragment == expected_anchor[1:], (
-                f"{name} should target anchor {expected_anchor}, got {parsed.fragment!r}"
+            fragment = expected_anchor.lstrip("#")
+            assert parsed.fragment == fragment, (
+                f"{name} should target anchor {fragment}, got {parsed.fragment!r}"
             )
 
             runbook_path = repo_root / "docs" / "runbooks" / "dora.md"
             assert runbook_path.exists(), f"Missing runbook file for {name}: {runbook_path}"
             text = runbook_path.read_text(encoding="utf-8")
-            assert expected_anchor in text, (
-                f"{name} anchor {expected_anchor} missing in {runbook_path}"
+            assert f'<a id="{fragment}"></a>' in text, (
+                f"{name} anchor id {fragment} missing in {runbook_path}"
             )
 
     def test_rule_file_wired_into_prometheus(self, project_root):
