@@ -280,6 +280,24 @@ class TestDoraComputeFiles:
             f"expected dora/compute/{rel} — issue #205 did not land"
         )
 
+    def test_dockerfile_uses_exec_form_cmd(self) -> None:
+        compute_dockerfile = (DORA_DIR / "compute" / "Dockerfile").read_text(
+            encoding="utf-8"
+        )
+        ingestion_dockerfile = (DORA_DIR / "ingestion" / "Dockerfile").read_text(
+            encoding="utf-8"
+        )
+        assert 'CMD ["./run.sh"]' in compute_dockerfile, (
+            "compute image must start the script directly in exec form so it can "
+            "receive SIGTERM as PID 1"
+        )
+        assert 'CMD ["uvicorn", "ingestion.api.main:app", "--host", "0.0.0.0", "--port", "8088"]' in ingestion_dockerfile, (
+            "ingestion image must keep the uvicorn entrypoint in exec form"
+        )
+        assert 'CMD ["/bin/sh"' not in compute_dockerfile, (
+            "compute Dockerfile must not wrap the script in /bin/sh -c"
+        )
+
 
 # ---------------------------------------------------------------------------
 # dora-api background worker fold-in (issue #205)

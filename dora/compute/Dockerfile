@@ -41,10 +41,6 @@ USER ufawkes
 # No HTTP endpoint — run.sh writes a heartbeat file after each successful
 # compute cycle; unhealthy if it goes stale for more than 2x the interval.
 HEALTHCHECK --interval=5m --timeout=10s --start-period=2m --retries=3 \
-    CMD python3 -c "\
-import os, sys, time; \
-p = '/tmp/dora-compute-heartbeat'; \
-stale_after = int(os.environ.get('DORA_COMPUTE_INTERVAL_SECONDS', '3600')) * 2; \
-sys.exit(0 if os.path.exists(p) and time.time() - os.path.getmtime(p) < stale_after else 1)"
+   CMD ["python3", "-c", "import os, sys, time; p = '/tmp/dora-compute-heartbeat'; stale_after = int(os.environ.get('DORA_COMPUTE_INTERVAL_SECONDS', '3600')) * 2; sys.exit(0 if os.path.exists(p) and time.time() - os.path.getmtime(p) < stale_after else 1)"]
 
-CMD ["/bin/sh", "run.sh"]
+CMD ["./run.sh"]
