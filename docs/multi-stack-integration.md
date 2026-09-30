@@ -179,10 +179,7 @@ cat config/docker-compose.integration.yml
 docker compose -f config/docker-compose.integration.yml --profile placeholder config
 ```
 
-**Key sections.** Copy only the `observability` network. The template's
-`fawkes-backbone-net` block belongs to the retired uFawkesRes integration (§4).
-Removing it from the template is tracked separately, because editing `config/**`
-triggers a deploy.
+**Key sections.** Copy only the `observability` network.
 
 **Key sections:**
 
@@ -191,10 +188,6 @@ networks:
   observability:
     external: true
     name: observability-lab
-
-  fawkes-backbone-net:
-    external: true
-    name: ufawkes-resources_fawkes-backbone-net
 ```
 
 > **Do not deploy this file directly.** Copy the `networks:` block and adapt the example services into your plane's own `docker-compose.yml`.
