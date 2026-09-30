@@ -117,7 +117,7 @@ test-unit:
 ##   commit the regenerated lock alongside it. See docs/DETERMINISM.md.
 relock:
 	@set -e; \
-	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt; do \
+	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt apps/telemetry-generator/requirements.txt; do \
 		out="$${src%.txt}"; \
 		if [ "$$src" = "dora/ingestion/requirements-ingestion.txt" ]; then out="dora/ingestion/requirements-ingestion"; fi; \
 		echo "🔒 Relocking $$src -> $$out.lock"; \
