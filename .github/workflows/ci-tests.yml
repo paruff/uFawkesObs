@@ -80,23 +80,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r tests/integration/requirements.lock
 
-      - name: Create data directories
-        run: |
-          mkdir -p data/prometheus data/grafana data/tempo data/loki data/alertmanager
-          chmod -R 777 data/
-
-      - name: Start observability stack
-        run: docker compose --profile core up -d --build
-
-      - name: Wait for services
-        run: |
-          timeout 90 bash -c 'until curl -sf http://localhost:9090/-/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3200/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3100/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:8888/metrics; do sleep 2; done'
-          sleep 20
-
       - name: Run OTel Collector tests
         # Migrated to Testcontainers (#413/#416) -- self-provisions,
         # doesn't read OTEL_METRICS_URL. The original test_otel_collector.py
@@ -140,22 +123,12 @@ jobs:
         # Migrated to Testcontainers (#416) -- self-provisions the whole
         # `core` profile (test_all_configured_targets_are_up needs every
         # scrape target up), doesn't read PROMETHEUS_URL.
-        # Must be the LAST step that touches Docker Compose: the fixture
-        # joins this job's shared `ufawkesobs` project (compose.yaml pins
-        # the name), and its teardown -- `docker compose --profile core
-        # down --volumes`, no service list -- removes the ENTIRE shared
-        # stack, which broke every later step that still used it (#471).
         run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
 
-      - name: Show logs on failure
-        if: failure()
-        run: |
-          docker compose ps
-          docker compose logs --tail=50 prometheus grafana otel-collector tempo loki alloy
-
-      - name: Shutdown
-        if: always()
-        run: docker compose --profile core down -v
+      - name: Run Alloy + dashboard tests
+        # Migrated to Testcontainers (#416) -- self-provisions the full
+        # Grafana/Prometheus/Tempo/Loki/Alloy stack for the test module.
+        run: pytest tests/integration/test_alloy_and_dashboards.py -v --tb=short
 
       - name: Upload test results
         if: always()

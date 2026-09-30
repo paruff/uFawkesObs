@@ -18,18 +18,14 @@ import pytest
 import requests
 from testcontainers.compose import DockerCompose
 
+from tests.integration.conftest import compose_stack
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture(scope="module")
 def tempo_stack():
-    with DockerCompose(
-        context=str(REPO_ROOT),
-        compose_file_name="compose.yaml",
-        services=["tempo"],
-        profiles=["core"],
-        wait=True,
-    ) as compose:
+    with compose_stack("tempo", services=["tempo"], profiles=["core"]) as compose:
         yield compose
 
 
