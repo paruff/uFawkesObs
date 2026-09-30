@@ -186,7 +186,7 @@ test-conformance:
 		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
 		exec /profile --chef-license=accept-silent --no-distinct-exit > "$$inspec_log" 2>&1 || { cat "$$inspec_log"; exit 1; }; \
 	cat "$$inspec_log"; \
-	if grep -q "Profile Summary: 0 successful controls, 0 control failures" "$$inspec_log"; then \
+	if grep -Eq "Profile Summary:[[:space:]]*0 successful controls,[[:space:]]*0 control failures" "$$inspec_log"; then \
 		echo "ERROR: InSpec executed zero controls; refusing false-green result." >&2; \
 		exit 1; \
 	fi
