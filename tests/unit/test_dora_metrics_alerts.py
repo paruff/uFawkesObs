@@ -217,7 +217,9 @@ class TestAlertConventionsKept:
             url = annotations.get("runbook_url")
             assert url is not None, f"{name} missing runbook_url"
             parsed = urlparse(url)
-            assert parsed.scheme == "https", f"{name} runbook_url should be HTTPS: {url}"
+            assert parsed.scheme == "https", (
+                f"{name} runbook_url should be HTTPS: {url}"
+            )
             assert parsed.netloc == "github.com", (
                 f"{name} runbook_url should point to github.com: {url}"
             )
