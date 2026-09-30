@@ -21,7 +21,9 @@ def _walk(node):
 def test_workflows_pin_runner_images(project_root: Path) -> None:
     """All GitHub-hosted workflow jobs must use pinned runner images."""
     workflow_dir = project_root / ".github" / "workflows"
-    for workflow_path in sorted(workflow_dir.glob("*.yml")) + sorted(workflow_dir.glob("*.yaml")):
+    for workflow_path in sorted(workflow_dir.glob("*.yml")) + sorted(
+        workflow_dir.glob("*.yaml")
+    ):
         text = workflow_path.read_text(encoding="utf-8")
         assert "ubuntu-latest" not in text, (
             f"{workflow_path.name} still uses ubuntu-latest; pin runner images to a fixed image like ubuntu-24.04"
@@ -31,7 +33,9 @@ def test_workflows_pin_runner_images(project_root: Path) -> None:
 def test_workflows_pin_python_patch_versions(project_root: Path) -> None:
     """Python setup steps must use exact patch-version pins, not floating minors."""
     workflow_dir = project_root / ".github" / "workflows"
-    for workflow_path in sorted(workflow_dir.glob("*.yml")) + sorted(workflow_dir.glob("*.yaml")):
+    for workflow_path in sorted(workflow_dir.glob("*.yml")) + sorted(
+        workflow_dir.glob("*.yaml")
+    ):
         workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
         for key, value in _walk(workflow):
             if key == "python-version" and isinstance(value, str):
