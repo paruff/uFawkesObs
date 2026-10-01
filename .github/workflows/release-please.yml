@@ -60,6 +60,9 @@ jobs:
           archive="${TAG}.tar.gz"
           checksum="${archive}.sha256"
 
+          # release-please creates the tag via the API after checkout, so it
+          # is not in this clone yet; fetch it before archiving.
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
           git archive --format=tar.gz --output "${archive}" "${TAG}"
           sha256sum "${archive}" > "${checksum}"
           gh release upload "${TAG}" "${archive}" "${checksum}" --clobber
