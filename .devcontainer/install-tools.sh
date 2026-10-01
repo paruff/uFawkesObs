@@ -35,6 +35,14 @@ install_bin() {
   echo "install-tools: $name installed"
 }
 
+if ! command -v shellcheck > /dev/null 2>&1; then
+  sudo apt-get update -qq
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends shellcheck
+fi
+
+python3 -m pip install --user --quiet "pre-commit==4.5.1"
+pre-commit install --hook-type commit-msg
+
 GH=https://github.com
 
 # actionlint — GitHub Actions workflow linter
@@ -87,3 +95,5 @@ SHA=(
 install_bin act \
   "$GH/nektos/act/releases/download/v$V/act_Linux_${ACT_ARCH[$ARCH]}.tar.gz" \
   "${SHA[$ARCH]}" act
+
+echo "uFawkesObs devcontainer ready — all tools pre-installed"
