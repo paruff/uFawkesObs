@@ -27,7 +27,10 @@ def test_ci_validate_configs_uses_images_derived_from_compose() -> None:
     content = WORKFLOW_PATH.read_text(encoding="utf-8")
 
     assert "Resolve validator images from compose.yaml" in content
-    assert "docker compose config --format json" in content
+    assert (
+        "docker compose --env-file .env.example --profile '*' config --format json"
+        in content
+    )
     assert ".services.prometheus.image" in content
     assert '.services["otel-collector"].image' in content
     assert ".services.tempo.image" in content
