@@ -174,7 +174,7 @@ test-conformance:
 		-v $(PWD)/compose.yaml:/compose.yaml:ro \
 		-v $(PWD)/inspec/ufawkesobs-conformance:/profile \
 		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
-		exec /profile --chef-license=accept-silent --no-distinct-exit
+		exec /profile --chef-license=accept-silent --no-distinct-exit --no-color
 
 # Match CI's DORA compute cadence. compose.yaml defaults
 # DORA_COMPUTE_INTERVAL_SECONDS to 3600, while ci-acceptance-full.yml sets 15 --
