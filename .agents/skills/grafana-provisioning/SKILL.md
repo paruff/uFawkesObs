@@ -1,6 +1,6 @@
 ---
 name: grafana-provisioning
-description: Grafana dashboard JSON and provisioning configuration rules for uFawkesObs. Covers UID-based datasource references, provisioning file structure, and dashboard JSON conventions.
+description: "Grafana dashboard JSON and provisioning configuration rules for uFawkesObs. Use when creating or editing Grafana dashboard JSON or provisioning YAML, especially datasource UIDs, folder layout, or dashboard config."
 license: MIT
 compatibility: opencode
 ---

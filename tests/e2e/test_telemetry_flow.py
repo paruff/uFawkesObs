@@ -403,7 +403,12 @@ class TestTracesFlow:
                 # Check actual UID with: curl -u admin:admin http://localhost:3000/api/datasources
                 result = grafana_query(
                     "tempo",  # Tempo datasource UID (may need adjustment)
-                    {"queryType": "traceql", "query": trace_id, "refId": "A"},
+                    {
+                        "queryType": "traceql",
+                        "query": trace_id,
+                        "tableType": "traces",
+                        "refId": "A",
+                    },
                 )
 
                 if result and "results" in result:
@@ -454,29 +459,37 @@ class TestCorrelation:
 
         # Then: Query metrics by trace_id
         metric_found = False
-        _start_time = time.time()
+        labels: dict[str, str] = {}
+        query_start = time.time()
+        query_timeout = 30  # 2x 15s scrape interval worst-case propagation window
 
-        try:
-            result = prometheus_query(
-                f'app_metrics_e2e_test_counter_total{{trace_id="{trace_id}"}}'
-            )
+        while time.time() - query_start < query_timeout:
+            result = None
+            try:
+                result = prometheus_query(
+                    f'app_metrics_e2e_test_counter_total{{trace_id="{trace_id}"}}'
+                )
+            except Exception as e:
+                print(f"⏳ Correlation metric query retry: {e}")
 
-            if result["status"] == "success" and len(result["data"]["result"]) > 0:
-                metric_data = result["data"]["result"][0]
-                labels = metric_data["metric"]
-
-                assert "trace_id" in labels, "Metric should have trace_id label"
-                assert labels["trace_id"] == trace_id, "trace_id should match"
-                assert "test_id" in labels, "Metric should have test_id label"
-                assert labels["test_id"] == test_id, "test_id should match"
-
+            if (
+                result
+                and result["status"] == "success"
+                and len(result["data"]["result"]) > 0
+            ):
+                labels = result["data"]["result"][0]["metric"]
                 metric_found = True
                 print(f"✅ Metric found with trace_id={trace_id}")
                 print(f"   Labels: {labels}")
-        except Exception as e:
-            print(f"❌ Failed to query metric: {e}")
+                break
+
+            time.sleep(2)
 
         assert metric_found, f"Metric with trace_id={trace_id} not found"
+        assert "trace_id" in labels, "Metric should have trace_id label"
+        assert labels["trace_id"] == trace_id, "trace_id should match"
+        assert "test_id" in labels, "Metric should have test_id label"
+        assert labels["test_id"] == test_id, "test_id should match"
 
         # And: Verify trace exists
 
@@ -527,15 +540,15 @@ class TestEndToEndLatency:
         while time.time() - send_time < max_wait:
             try:
                 result = prometheus_query(
-                    f'app_metrics_e2e_test_duration_sum{{test_id="{test_id}"}}'
+                    f'app_metrics_e2e_test_duration_milliseconds_sum{{test_id="{test_id}"}}'
                 )
 
                 if result["status"] == "success" and len(result["data"]["result"]) > 0:
                     actual_latency = time.time() - send_time
                     metric_found = True
                     break
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"⏳ Retry: {e}")
 
             time.sleep(0.5)
 

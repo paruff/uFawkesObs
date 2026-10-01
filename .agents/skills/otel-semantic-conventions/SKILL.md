@@ -1,6 +1,6 @@
 ---
 name: otel-semantic-conventions
-description: OpenTelemetry semantic convention reference for uFawkesObs, focused on gen_ai.* metric and span attribute namespace for AI observability (Wave 5).
+description: "OpenTelemetry semantic convention reference for uFawkesObs. Use when adding or reviewing gen_ai.* metrics, spans, or attribute names for AI observability."
 license: MIT
 compatibility: opencode
 ---
