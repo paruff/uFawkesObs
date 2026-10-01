@@ -39,3 +39,7 @@ updates:
     directory: "/dora/ingestion"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "pip"
+    directory: "/apps/telemetry-generator"
+    schedule:
+      interval: "weekly"

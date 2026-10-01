@@ -19,7 +19,8 @@ from typing import Any
 
 import pytest
 import requests
-from testcontainers.compose import DockerCompose
+
+from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
@@ -38,28 +39,25 @@ def grafana_stack():
         env_file_path = f.name
 
     try:
-        with DockerCompose(
-            context=str(REPO_ROOT),
-            compose_file_name="compose.yaml",
+        with isolated_compose(
+            repo_root=REPO_ROOT,
             env_file=env_file_path,
             services=["grafana", "prometheus", "tempo", "loki"],
             profiles=["core"],
-            wait=True,
+            protected_services=["grafana", "prometheus", "tempo", "loki"],
         ) as compose:
             yield compose
     finally:
         os.unlink(env_file_path)
 
 
-def _host_port(
-    stack: DockerCompose, service: str, container_port: int
-) -> tuple[str, int]:
+def _host_port(stack, service: str, container_port: int) -> tuple[str, int]:
     host, port = stack.get_service_host_and_port(service, container_port)
     return host, int(port)
 
 
 @pytest.fixture(scope="module")
-def grafana_url(grafana_stack: DockerCompose) -> str:
+def grafana_url(grafana_stack) -> str:
     host, port = _host_port(grafana_stack, "grafana", 3000)
     url = f"http://{host}:{port}"
 
