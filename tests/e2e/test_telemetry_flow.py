@@ -472,7 +472,11 @@ class TestCorrelation:
             except Exception as e:
                 print(f"⏳ Correlation metric query retry: {e}")
 
-            if result and result["status"] == "success" and len(result["data"]["result"]) > 0:
+            if (
+                result
+                and result["status"] == "success"
+                and len(result["data"]["result"]) > 0
+            ):
                 labels = result["data"]["result"][0]["metric"]
                 metric_found = True
                 print(f"✅ Metric found with trace_id={trace_id}")

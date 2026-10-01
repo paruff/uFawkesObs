@@ -184,7 +184,9 @@ def query_grafana_datasource(
         json={"queries": [{"datasource": {"uid": datasource_uid}, **query_params}]},
         timeout=timeout,
     )
-    print(f"ℹ️ Grafana datasource '{datasource_uid}' query returned HTTP {response.status_code}")
+    print(
+        f"ℹ️ Grafana datasource '{datasource_uid}' query returned HTTP {response.status_code}"
+    )
     response.raise_for_status()
     return response.json()
 
