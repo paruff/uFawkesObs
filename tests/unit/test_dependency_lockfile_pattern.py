@@ -5,7 +5,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def test_telemetry_generator_has_matching_lock_file() -> None:
     lock_path = REPO_ROOT / "apps" / "telemetry-generator" / "requirements.lock"
-    assert lock_path.is_file(), "apps/telemetry-generator requires a matching requirements.lock"
+    assert lock_path.is_file(), (
+        "apps/telemetry-generator requires a matching requirements.lock"
+    )
     content = lock_path.read_text(encoding="utf-8")
     assert "Flask==" in content
     assert "opentelemetry-sdk==" in content
