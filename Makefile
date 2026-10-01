@@ -162,19 +162,40 @@ test-conformance:
 	@echo "🟤 Conformance Tests (InSpec, AGENTS.md §4)"
 	@echo "========================================"
 	@set -e; \
-	tmpbin=$$(mktemp -d); \
+	tmpbin=$$(mktemp -d "$(PWD)/.tmp-test-conformance.XXXXXX"); \
 	trap 'rm -rf "$$tmpbin"' EXIT; \
+	docker_cli="$$tmpbin/docker"; \
 	cid=$$(docker create docker:27-cli@sha256:851f91d241214e7c6db86513b270d58776379aacc5eb9c4a87e5b47115e3065c); \
-	docker cp "$$cid:/usr/local/bin/docker" "$$tmpbin/docker"; \
+	docker cp "$$cid:/usr/local/bin/docker" "$$docker_cli"; \
 	docker rm "$$cid" > /dev/null; \
-	chmod +x "$$tmpbin/docker"; \
+	if [ ! -f "$$docker_cli" ]; then echo "ERROR: expected staged docker CLI at $$docker_cli" >&2; exit 1; fi; \
+	chmod +x "$$docker_cli"; \
+	if ! docker run --rm \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v "$$docker_cli:/usr/local/bin/docker:ro" \
+		docker:27-cli@sha256:851f91d241214e7c6db86513b270d58776379aacc5eb9c4a87e5b47115e3065c \
+		/bin/sh -ec 'test -f /usr/local/bin/docker && test -x /usr/local/bin/docker && /usr/local/bin/docker version > /dev/null'; then \
+		echo "ERROR: staged docker CLI is unusable inside container; aborting conformance run." >&2; \
+		exit 1; \
+	fi; \
+	inspec_log="$$tmpbin/inspec.log"; \
 	docker run --rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v "$$tmpbin/docker:/usr/local/bin/docker:ro" \
+		-v "$$docker_cli:/usr/local/bin/docker:ro" \
 		-v $(PWD)/compose.yaml:/compose.yaml:ro \
 		-v $(PWD)/inspec/ufawkesobs-conformance:/profile \
 		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
-		exec /profile --chef-license=accept-silent --no-distinct-exit
+		exec /profile --chef-license=accept-silent --no-distinct-exit > "$$inspec_log" 2>&1 || { cat "$$inspec_log"; exit 1; }; \
+	cat "$$inspec_log"; \
+	summary_line=$$(grep -E "Profile Summary:" "$$inspec_log" | tail -n 1 || true); \
+	if [ -z "$$summary_line" ]; then echo "ERROR: InSpec summary line missing; aborting conformance run." >&2; exit 1; fi; \
+	success_count=$$(echo "$$summary_line" | sed -n 's/.*Profile Summary:[[:space:]]*\([0-9][0-9]*\)[[:space:]]*successful controls.*/\1/p'); \
+	failure_count=$$(echo "$$summary_line" | sed -n 's/.*successful controls,[[:space:]]*\([0-9][0-9]*\)[[:space:]]*control failures.*/\1/p'); \
+	if [ -z "$$success_count" ] || [ -z "$$failure_count" ]; then echo "ERROR: unable to parse InSpec profile summary: $$summary_line" >&2; exit 1; fi; \
+	if [ "$$success_count" -eq 0 ] && [ "$$failure_count" -eq 0 ]; then \
+		echo "ERROR: InSpec executed zero controls; refusing false-green result." >&2; \
+		exit 1; \
+	fi
 
 # Match CI's DORA compute cadence. compose.yaml defaults
 # DORA_COMPUTE_INTERVAL_SECONDS to 3600, while ci-acceptance-full.yml sets 15 --
