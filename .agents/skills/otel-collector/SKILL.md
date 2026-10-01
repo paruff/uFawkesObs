@@ -1,6 +1,6 @@
 ---
 name: otel-collector
-description: OpenTelemetry Collector configuration rules for uFawkesObs. Covers pipeline anatomy, common wiring errors, and the specific constraints of the Docker Compose deployment.
+description: "OpenTelemetry Collector configuration rules for uFawkesObs. Use when changing receiver, processor, exporter, or pipeline wiring in the collector, or debugging telemetry drops or backpressure."
 license: MIT
 compatibility: opencode
 ---

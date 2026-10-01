@@ -29,7 +29,14 @@ jobs:
       - name: job-start
         run: echo "job-start workflow=release-please job=release-please sha=${{ github.event.workflow_run.head_sha }} time=$(date -u +%FT%TZ)"
 
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           target-branch: main
           # PRs/pushes made with the default GITHUB_TOKEN don't trigger
@@ -42,6 +49,20 @@ jobs:
           # secret isn't set yet, so this doesn't newly break anything --
           # see docs/RELEASE_PROCESS.md for how to create it.
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Attach source tarball and SHA256 to GitHub Release
+        if: ${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          set -euo pipefail
+          archive="${TAG}.tar.gz"
+          checksum="${archive}.sha256"
+
+          git archive --format=tar.gz --output "${archive}" "${TAG}"
+          sha256sum "${archive}" > "${checksum}"
+          gh release upload "${TAG}" "${archive}" "${checksum}" --clobber
 
       - name: job-finish
         if: always()
