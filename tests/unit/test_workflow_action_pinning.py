@@ -100,11 +100,19 @@ def test_release_workflow_uploads_source_tarball_and_sha256() -> None:
     steps = release_job.get("steps", [])
 
     upload_step = next(
-        (step for step in steps if isinstance(step, dict) and step.get("name") == "Attach source tarball and SHA256 to GitHub Release"),
+        (
+            step
+            for step in steps
+            if isinstance(step, dict)
+            and step.get("name") == "Attach source tarball and SHA256 to GitHub Release"
+        ),
         None,
     )
     assert upload_step is not None, "release workflow is missing the asset upload step"
-    assert upload_step.get("if") == "${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}"
+    assert (
+        upload_step.get("if")
+        == "${{ steps.release.outputs.release_created == 'true' && steps.release.outputs.tag_name != '' }}"
+    )
 
     run_steps = [step.get("run", "") for step in steps if isinstance(step, dict)]
     assert any("gh release upload" in run for run in run_steps)
