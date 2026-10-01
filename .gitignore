@@ -43,6 +43,8 @@ reports/coverage/
 # InSpec regenerates this on every `make test-conformance` run; this
 # profile has no depends: so it's never more than an empty list (#414)
 inspec/*/inspec.lock
+# Local conformance docker-cli staging dir (must be Docker-shared on macOS/colima)
+.tmp-test-conformance.*
 
 # Python
 __pycache__/

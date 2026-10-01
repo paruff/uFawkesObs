@@ -11,6 +11,7 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -253,6 +254,31 @@ class TestClaudeCodeWiring:
         stop = [h["command"] for g in hooks["Stop"] for h in g["hooks"]]
         assert any("protect-tests.py" in c for c in pre)
         assert any("verify-changed-files.sh" in c for c in stop)
+
+    def test_skill_descriptions_state_when_to_use_them(self):
+        skill_files = sorted((REPO_ROOT / ".agents" / "skills").glob("*/SKILL.md"))
+        assert skill_files
+
+        missing = []
+        no_description = []
+        for skill_file in skill_files:
+            # Skill description entries are intentionally single-line YAML scalars so
+            # the routing eval can inspect a single frontmatter value without
+            # handling block-style multiline YAML.
+            description = re.search(
+                r"^description:\s*(.+)$", skill_file.read_text(), re.MULTILINE
+            )
+            if not description:
+                no_description.append(skill_file.parent.name)
+                continue
+            text = description.group(1).strip().strip("'\"")
+            if not re.search(r"(?:Use|Load)\b.*\bwhen(?:ever)?\b", text, re.IGNORECASE):
+                missing.append(skill_file.parent.name)
+
+        assert not no_description, (
+            f"Skills missing description frontmatter: {no_description}"
+        )
+        assert not missing, f"Skills without when-to-use trigger language: {missing}"
 
     def test_protect_tests_matcher_covers_edit_write_and_bash(self):
         hooks = json.loads(SETTINGS.read_text())["hooks"]["PreToolUse"]
