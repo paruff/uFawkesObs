@@ -85,17 +85,18 @@ grafana-folder-descriptions:
 ##   Security Gates / Validate Configs in CI exactly. Requires Docker only,
 ##   no stack needs to be running.
 validate-configs:
+	$(call require,yq)
 	@echo "========================================"
 	@echo "🟡 Config Validation (Prometheus/OTel/Tempo)"
 	@echo "========================================"
 	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
-		--entrypoint promtool prom/prometheus:v3.5.4 \
+		--entrypoint promtool $(call compose_image,prometheus) \
 		check config /etc/prometheus/prometheus.yaml
 	docker run --rm -v $(PWD)/config/otel/collector.yaml:/etc/otel/config.yaml \
-		otel/opentelemetry-collector-contrib:0.120.0 \
+		$(call compose_image,otel-collector) \
 		validate --config=/etc/otel/config.yaml
 	docker run --rm -v $(PWD)/config/tempo/tempo.yaml:/etc/tempo.yaml \
-		grafana/tempo:2.4.1 \
+		$(call compose_image,tempo) \
 		-config.file=/etc/tempo.yaml -config.verify=true
 	@echo "✅ All configs valid"
 
@@ -276,7 +277,7 @@ pr:
 # .devcontainer/install-tools.sh; config validators run the exact image
 # compose.yaml pins, read with yq so the two can't drift.
 require = @command -v $(1) >/dev/null || { echo "❌ $(1) not found -- run .devcontainer/install-tools.sh"; exit 1; }
-compose_image = $(shell yq -r '.services.$(1).image' compose.yaml)
+compose_image = $(shell yq -r '.services["$(1)"].image' compose.yaml)
 
 ## lint-tools: run lint-workflows, lint-dockerfiles, validate-alertmanager, validate-alloy
 lint-tools: lint-workflows lint-dockerfiles validate-alertmanager validate-alloy

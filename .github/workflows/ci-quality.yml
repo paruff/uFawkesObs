@@ -52,13 +52,40 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Resolve validator images from compose.yaml
+        run: |
+          set -euo pipefail
+          compose_json="$(docker compose config --format json)"
+          prometheus_image="$(jq -r '.services.prometheus.image' <<<"$compose_json")"
+          otel_image="$(jq -r '.services["otel-collector"].image' <<<"$compose_json")"
+          tempo_image="$(jq -r '.services.tempo.image' <<<"$compose_json")"
+
+          require_resolved_image() {
+            key="$1"
+            value="$2"
+            if [ -z "$value" ] || [ "$value" = "null" ]; then
+              echo "::error::Failed to resolve $key from compose.yaml"
+              exit 1
+            fi
+          }
+
+          require_resolved_image "PROMETHEUS_IMAGE" "$prometheus_image"
+          require_resolved_image "OTEL_IMAGE" "$otel_image"
+          require_resolved_image "TEMPO_IMAGE" "$tempo_image"
+
+          {
+            echo "PROMETHEUS_IMAGE=$prometheus_image"
+            echo "OTEL_IMAGE=$otel_image"
+            echo "TEMPO_IMAGE=$tempo_image"
+          } >> "$GITHUB_ENV"
+
       - name: Validate Prometheus config
         if: hashFiles('config/prometheus/prometheus.yaml') != ''
         run: |
           docker run --rm \
             -v $PWD/config/prometheus:/etc/prometheus \
             --entrypoint promtool \
-            prom/prometheus:v3.5.4 \
+            "$PROMETHEUS_IMAGE" \
             check config /etc/prometheus/prometheus.yaml
 
       - name: Validate OTel config
@@ -66,7 +93,7 @@ jobs:
         run: |
           docker run --rm \
             -v $PWD/config/otel/collector.yaml:/etc/otel/config.yaml \
-            otel/opentelemetry-collector-contrib:0.120.0 \
+            "$OTEL_IMAGE" \
             validate --config=/etc/otel/config.yaml
 
       - name: Validate Tempo config
@@ -74,7 +101,7 @@ jobs:
         run: |
           docker run --rm \
             -v $PWD/config/tempo/tempo.yaml:/etc/tempo.yaml \
-            grafana/tempo:2.4.1 \
+            "$TEMPO_IMAGE" \
             -config.file=/etc/tempo.yaml -config.verify=true
 
   # ─── PR Size Gate ────────────────────────────────────────────────────────
