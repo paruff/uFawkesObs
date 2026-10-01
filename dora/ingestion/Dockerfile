@@ -52,6 +52,6 @@ USER ufawkes
 EXPOSE 8088
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8088/health')" || exit 1
+    CMD ["python", "-c", "import sys, urllib.request; urllib.request.urlopen('http://localhost:8088/health'); sys.exit(0)"]
 
 CMD ["uvicorn", "ingestion.api.main:app", "--host", "0.0.0.0", "--port", "8088"]
