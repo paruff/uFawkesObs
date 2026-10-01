@@ -30,11 +30,11 @@ semver rules that apply to it.
 
 ### Public contract
 
-This is a snapshot of `origin/main` at `1e63ef5`
-(`docker compose --env-file .env.example --profile '*' config`).
-**Re-verify it against the `v1.0.0-rc` tag before release.** The tagged
-`compose.yaml` and `.env.example` are authoritative; this table is a
-review aid.
+This table was re-verified against `origin/main` at `155ef5a`
+(`docker compose --env-file .env.example --profile '*' config`): all 11
+services, their profiles, every published port and all 7 `.env.example`
+variables match. The tagged `compose.yaml` and `.env.example` remain
+authoritative.
 
 **Compose services and published ports**
 
