@@ -1,6 +1,6 @@
 ---
 name: promql
-description: PromQL correctness rules for uFawkesObs. Covers the specific failure modes that agents without this skill consistently produce: missing absent() guards, rate() on gauges, missing or vector(0), and irate() in recording rules.
+description: "PromQL correctness rules for uFawkesObs. Use when writing, checking, or debugging PromQL expressions, alerts, or recording rules."
 license: MIT
 compatibility: opencode
 ---
