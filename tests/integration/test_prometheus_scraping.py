@@ -24,7 +24,8 @@ from typing import Any
 
 import pytest
 import requests
-from testcontainers.compose import DockerCompose
+
+from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCRAPE_SLA_SECONDS = 1.0  # Scrape should complete in under 1 second
@@ -48,12 +49,20 @@ def prometheus_stack():
         env_file_path = f.name
 
     try:
-        with DockerCompose(
-            context=str(REPO_ROOT),
-            compose_file_name="compose.yaml",
+        with isolated_compose(
+            repo_root=REPO_ROOT,
             env_file=env_file_path,
             profiles=["core"],
-            wait=True,
+            protected_services=[
+                "prometheus",
+                "grafana",
+                "otel-collector",
+                "tempo",
+                "loki",
+                "alertmanager",
+                "alloy",
+                "node-exporter",
+            ],
         ) as compose:
             yield compose
     finally:
@@ -61,7 +70,7 @@ def prometheus_stack():
 
 
 @pytest.fixture(scope="module")
-def prometheus_url(prometheus_stack: DockerCompose) -> str:
+def prometheus_url(prometheus_stack) -> str:
     host, port = prometheus_stack.get_service_host_and_port("prometheus", 9090)
     url = f"http://{host}:{int(port)}"
 

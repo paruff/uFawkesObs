@@ -101,15 +101,16 @@ and the chown step is normally not needed.
 make up
 ```
 
-What it does: `docker compose --profile core up -d` — eight containers:
-**alertmanager, alloy, grafana, loki, node-exporter, otel-collector,
-prometheus, tempo**.
+What it does: `docker compose --profile core --profile apps up -d` — the
+core observability stack plus the demo `telemetry-generator` app that emits
+metrics, logs, and traces.
 
 - **First boot pulls images** and can take several minutes on a cold cache.
   The RG-1 run measured **42 s total** (init → healthy) against an already
   warm image cache.
-- Check progress with `docker compose ps`. Six containers will show
-  `(healthy)`; **otel-collector and tempo deliberately have no compose
+- Check progress with `docker compose ps`. The app comes up alongside the
+  core services and is the source of the live traces/logs/metrics you see in
+  Grafana; **otel-collector and tempo deliberately have no compose
   healthcheck** (distroless images) — the next step probes them over HTTP
   instead, so their blank health column is not a failure.
 
@@ -149,14 +150,15 @@ Tempo, Alertmanager) are pre-provisioned — there is nothing to configure.
 | Logs | Grafana → Explore → **Loki** | `{compose_project!=""}` | Streams from the stack's own containers (project label is your directory name lowercased, e.g. `ufawkesobs`) |
 | Traces | Grafana → Explore → **Tempo** | start the generator first (below) | A waterfall for a generator request trace |
 
-The stack doesn't generate traces by itself. Start the demo generator:
+The default `make up` already starts the demo app, so you don't need to add a
+second step. If you later stop it, bring it back with:
 
 ```bash
 docker compose --profile apps up -d telemetry-generator
 ```
 
-Wait ~30 s, generate some traffic through it, then search Tempo for
-`telemetry-generator` traces. Stop it when done:
+Then wait ~30 s, generate some traffic through it, and search Tempo for
+`telemetry-generator` traces. When you're done, stop it with:
 
 ```bash
 docker compose --profile apps stop telemetry-generator
@@ -168,8 +170,8 @@ docker compose --profile apps stop telemetry-generator
 
 | Command | Profiles started | What you get |
 |---|---|---|
-| `make up` | `core` | The observability stack (8 containers) |
-| `make up-apps` | `core` + `apps` | + demo telemetry generator |
+| `make up` | `core` + `apps` | The default quick-start stack: observability services plus the demo telemetry generator for live metrics/logs/traces |
+| `make up-apps` | `core` + `apps` | Explicit app-profile helper for the same stack; use it when you want the app profile by name, but `make up` remains the recommended default |
 | `make up-dora` | `core` + `dora` | + DORA metrics API (self-contained, SQLite-only — no external database) |
 | `make up-full` | `core` + `apps` + `dora` | Everything the full acceptance suite expects |
 
