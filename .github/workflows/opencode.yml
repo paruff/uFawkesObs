@@ -91,7 +91,7 @@ jobs:
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
