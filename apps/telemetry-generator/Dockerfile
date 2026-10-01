@@ -2,8 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
+# Install dependencies from the exact-pinned lock for determinism
+COPY requirements.lock requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
