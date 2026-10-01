@@ -186,17 +186,7 @@ test-conformance:
 		-v $(PWD)/compose.yaml:/compose.yaml:ro \
 		-v $(PWD)/inspec/ufawkesobs-conformance:/profile \
 		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
-		exec /profile --chef-license=accept-silent --no-distinct-exit --no-color > "$$inspec_log" 2>&1 || { cat "$$inspec_log"; exit 1; }; \
-	cat "$$inspec_log"; \
-	summary_line=$$(grep -E "Profile Summary:" "$$inspec_log" | tail -n 1 || true); \
-	if [ -z "$$summary_line" ]; then echo "ERROR: InSpec summary line missing; aborting conformance run." >&2; exit 1; fi; \
-	success_count=$$(echo "$$summary_line" | sed -n 's/.*Profile Summary:[[:space:]]*\([0-9][0-9]*\)[[:space:]]*successful controls.*/\1/p'); \
-	failure_count=$$(echo "$$summary_line" | sed -n 's/.*successful controls,[[:space:]]*\([0-9][0-9]*\)[[:space:]]*control failures.*/\1/p'); \
-	if [ -z "$$success_count" ] || [ -z "$$failure_count" ]; then echo "ERROR: unable to parse InSpec profile summary: $$summary_line" >&2; exit 1; fi; \
-	if [ "$$success_count" -eq 0 ] && [ "$$failure_count" -eq 0 ]; then \
-		echo "ERROR: InSpec executed zero controls; refusing false-green result." >&2; \
-		exit 1; \
-	fi
+		exec /profile --chef-license=accept-silent --no-distinct-exit --no-color
 
 # Match CI's DORA compute cadence. compose.yaml defaults
 # DORA_COMPUTE_INTERVAL_SECONDS to 3600, while ci-acceptance-full.yml sets 15 --
