@@ -15,7 +15,7 @@ jobs:
   pre-commit-changed:
     name: Pre-commit (Changed Files)
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
