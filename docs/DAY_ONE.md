@@ -8,7 +8,7 @@ completed the Quick Start in the README (`make init && make up`).
 
 ## What just started
 
-`make up` started seven services:
+`make up` started eight services:
 
 | Service | What it does | Where to find it |
 |---|---|---|
@@ -18,6 +18,7 @@ completed the Quick Start in the README (`make init && make up`).
 | **Loki** | Stores and queries logs | `localhost:3100` |
 | **Tempo** | Stores and queries traces | `localhost:3200` |
 | **Alloy** | Collects container logs from Docker Engine | `localhost:12345` |
+| **Node Exporter** | Exposes host CPU, memory and disk metrics | `localhost:9100/metrics` |
 | **Grafana** | Visualizes everything | `localhost:3000` |
 
 All datasources (Prometheus, Loki, Tempo, Alertmanager) are pre-configured.
@@ -46,7 +47,7 @@ Open <http://localhost:3000> and log in with the credentials from your `.env` fi
 1. **Explore → Prometheus**: Run the query `up` — you should see a 1 for each
    platform service being scraped.
 
-2. **Explore → Loki**: Run `{job="docker"}` — you'll see container log streams
+2. **Explore → Loki**: Run `{compose_project!=""}` — you'll see container log streams
    from the running stack itself.
 
 3. **Explore → Tempo**: If you've already sent a trace (see Step 3), you can
@@ -121,9 +122,10 @@ pytest tests/unit/
 
 ## What this stack does not do (yet)
 
-- **DORA metrics**: uFawkesObs provides the substrate. Calculated DORA dashboards
-  live in [uFawkesDORA](https://github.com/paruff/ufawkesdora), which wires in
-  deployment and commit events from [uFawkesPipe](https://github.com/paruff/ufawkespipe).
+- **DORA metrics by default**: DORA is an opt-in profile. Run `make up-dora`
+  to start it (SQLite-only, no external database). The dashboards are
+  `dora-overview` and `dora-metrics` under `dashboards/platform/`. Deployment
+  and commit events come from [uFawkesPipe](https://github.com/paruff/ufawkespipe).
 - **Multi-tenancy**: All telemetry shares one instance. See
   [KNOWN_LIMITATIONS.md](./KNOWN_LIMITATIONS.md).
 - **TLS**: Default config is localhost-only plaintext. See
@@ -140,7 +142,7 @@ pytest tests/unit/
 | Harden for a shared environment | [production-hardening.md](./production-hardening.md) |
 | Understand the architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Add a Prometheus alert rule | [config/prometheus/](../config/prometheus/) + run `pytest tests/unit/test_prometheus_config_validation.py` |
-| Add DORA metrics | [uFawkesDORA](https://github.com/paruff/ufawkesdora) |
+| Add DORA metrics | `make up-dora` (see [`dora/`](../dora/)) |
 | Report a bug | [GitHub Issues](https://github.com/paruff/uFawkesObs/issues) |
 | Ask a question | [GitHub Discussions](https://github.com/paruff/uFawkesObs/discussions) |
 | Contribute a change | [CONTRIBUTING.md](../CONTRIBUTING.md) |

@@ -57,6 +57,7 @@ metrics profile uses **SQLite by default — no external database is required**
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)                       | Services, ports, profiles, config file layout, data flow diagram       |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)                 | Port conflicts, permission errors, resetting the stack                 |
+| [docs/UPGRADING.md](docs/UPGRADING.md)                             | Upgrading from 0.4.x to 1.0.0, and rolling back                        |
 | [docs/production-hardening.md](docs/production-hardening.md)       | Correct permissions, TLS, secret management, when NOT to use this tool |
 | [docs/multi-stack-integration.md](docs/multi-stack-integration.md) | Connecting other Docker Compose applications                           |
 | [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)             | Known issues and workarounds                                           |
