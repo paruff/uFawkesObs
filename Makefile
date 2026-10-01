@@ -37,9 +37,9 @@ init:
 check-env:
 	./scripts/check-env.sh
 
-## up: start the core observability stack
+## up: start the observability stack and demo app that emits metrics, logs, and traces
 up: check-env
-	docker compose --profile core up -d
+	docker compose --profile core --profile apps up -d
 
 ## up-apps: start the core stack plus demo telemetry generator
 up-apps: check-env
@@ -117,7 +117,7 @@ test-unit:
 ##   commit the regenerated lock alongside it. See docs/DETERMINISM.md.
 relock:
 	@set -e; \
-	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt; do \
+	for src in tests/unit/requirements.txt tests/integration/requirements.txt tests/acceptance/requirements.txt dora/compute/requirements.txt dora/ingestion/requirements-ingestion.txt apps/telemetry-generator/requirements.txt; do \
 		out="$${src%.txt}"; \
 		if [ "$$src" = "dora/ingestion/requirements-ingestion.txt" ]; then out="dora/ingestion/requirements-ingestion"; fi; \
 		echo "🔒 Relocking $$src -> $$out.lock"; \
