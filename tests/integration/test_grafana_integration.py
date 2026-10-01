@@ -19,6 +19,7 @@ from typing import Any
 
 import pytest
 import requests
+
 from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -50,9 +51,7 @@ def grafana_stack():
         os.unlink(env_file_path)
 
 
-def _host_port(
-    stack, service: str, container_port: int
-) -> tuple[str, int]:
+def _host_port(stack, service: str, container_port: int) -> tuple[str, int]:
     host, port = stack.get_service_host_and_port(service, container_port)
     return host, int(port)
 

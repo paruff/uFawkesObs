@@ -16,6 +16,7 @@ import time
 
 import pytest
 import requests
+
 from tests.integration._compose_isolation import isolated_compose
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]

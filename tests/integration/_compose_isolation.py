@@ -139,7 +139,9 @@ def _docker_ps_ids(filters: list[str]) -> set[str]:
     return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 
-def _project_container_ids(project_name: str, services: list[str] | None = None) -> set[str]:
+def _project_container_ids(
+    project_name: str, services: list[str] | None = None
+) -> set[str]:
     project_filter = f"label=com.docker.compose.project={project_name}"
 
     if not services:
