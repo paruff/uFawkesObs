@@ -185,7 +185,7 @@ test-conformance:
 		-v $(PWD)/compose.yaml:/compose.yaml:ro \
 		-v $(PWD)/inspec/ufawkesobs-conformance:/profile \
 		chef/inspec:5.22.3@sha256:46b3152c0a70b4235ff732fe1013712353b6a5efb40e4ea10334242bb539a8bb \
-		exec /profile --chef-license=accept-silent --no-distinct-exit > "$$inspec_log" 2>&1 || { cat "$$inspec_log"; exit 1; }; \
+		exec /profile --chef-license=accept-silent --no-distinct-exit --no-color > "$$inspec_log" 2>&1 || { cat "$$inspec_log"; exit 1; }; \
 	cat "$$inspec_log"; \
 	summary_line=$$(grep -E "Profile Summary:" "$$inspec_log" | tail -n 1 || true); \
 	if [ -z "$$summary_line" ]; then echo "ERROR: InSpec summary line missing; aborting conformance run." >&2; exit 1; fi; \
