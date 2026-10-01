@@ -141,11 +141,12 @@ test-integration: install-integration-deps
 	@echo "========================================"
 	@echo "🟠 Integration Tests"
 	@echo "========================================"
+	@set -a; [ -f .env ] && . ./.env; set +a; \
 	PROMETHEUS_URL=http://localhost:9090 \
 	OTEL_METRICS_URL=http://localhost:8888 \
 	GRAFANA_URL=http://localhost:3000 \
 	GRAFANA_USER=admin \
-	GRAFANA_PASSWORD=admin \
+	GRAFANA_ADMIN_PASSWORD="$${GRAFANA_ADMIN_PASSWORD:-admin}" \
 	TEMPO_URL=http://localhost:3200 \
 	LOKI_URL=http://localhost:3100 \
 	pytest tests/integration/ -v --tb=short
