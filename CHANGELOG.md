@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.12-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.11-beta.1...v0.4.12-beta.1) (2026-10-01)
+
+
+### Fixed
+
+* **devcontainer:** install pinned toolchain and stabilize guardrail eval worktrees ([8868923](https://github.com/paruff/uFawkesObs/commit/8868923d51c6f0b34b925d4b0cbdce3c1278ab40))
+* **dora:** convert Docker CMD to exec form ([9179689](https://github.com/paruff/uFawkesObs/commit/9179689f7d0b655037b5094747ed21579ab8ee3d))
+* **eval:** disable git signing in temp guardrail worktrees ([f3e8375](https://github.com/paruff/uFawkesObs/commit/f3e8375b09485d656a44561bb0c7a43da7c1fb75))
+* **hooks:** make verify-changed-files bash 3.2 compatible ([#521](https://github.com/paruff/uFawkesObs/issues/521)) ([e73dfd6](https://github.com/paruff/uFawkesObs/commit/e73dfd642e4d9b918b8ca56d0e9106f19aacb121))
+* **hooks:** make verify-changed-files.sh bash 3.2 compatible ([b2dbdb4](https://github.com/paruff/uFawkesObs/commit/b2dbdb43cef9e5620ed760b453b100a4e4a050de))
+* **make:** align local integration Grafana auth env with post-[#416](https://github.com/paruff/uFawkesObs/issues/416) naming ([6d99685](https://github.com/paruff/uFawkesObs/commit/6d996855c0546201bcbb777ee5ba991ec563c56a))
+* **make:** anchor inspec summary parsing to keywords ([4ce59c2](https://github.com/paruff/uFawkesObs/commit/4ce59c23d28f10ad62cb954ef5b8c2dd681517ae))
+* **make:** harden test-conformance docker cli staging ([#525](https://github.com/paruff/uFawkesObs/issues/525)) ([2e6d649](https://github.com/paruff/uFawkesObs/commit/2e6d649e8a95ff529e303348c258d948920d3729))
+* **make:** parse inspec summary before zero-control guard ([f934a77](https://github.com/paruff/uFawkesObs/commit/f934a7770587c6c87bad38e510d8f428d6333ff5))
+* **make:** pass resolved GRAFANA_ADMIN_PASSWORD directly to pytest ([51985db](https://github.com/paruff/uFawkesObs/commit/51985dbccf3bced3a49acc344c4c3bb14363f205))
+* **make:** prevent false-green conformance runs on colima ([22dc699](https://github.com/paruff/uFawkesObs/commit/22dc699d50e9d23a1594abc0d9ea03aa07da1d32))
+* **make:** relax zero-control summary match ([0f6383c](https://github.com/paruff/uFawkesObs/commit/0f6383cde932cc452bd5e5148065835f395335fc))
+* **make:** use GRAFANA_ADMIN_PASSWORD for test-integration auth ([476fad2](https://github.com/paruff/uFawkesObs/commit/476fad24c3f474c1407bd4924101f143e991d41f))
+* **release:** attach source tarball and SHA256 to GitHub Releases ([8990422](https://github.com/paruff/uFawkesObs/commit/89904229b83669bbcd5a69fd363c3646605e866c))
+* **tests:** load Grafana admin password consistently in integration path ([b97f6e1](https://github.com/paruff/uFawkesObs/commit/b97f6e1193498b54efdeebb6ccd7c877ab8b0849))
+
+
+### Docs
+
+* **skills:** state when to use each skill in metadata ([8177dde](https://github.com/paruff/uFawkesObs/commit/8177dde28ea273a62d3f9d716066d19531981554))
+* trim AGENTS.md to a repo index ([c615cfd](https://github.com/paruff/uFawkesObs/commit/c615cfd80764762ce9bc87b1052f42b2136e3164))
+
 ## [0.4.11-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.10-beta.1...v0.4.11-beta.1) (2026-09-30)
 
 
