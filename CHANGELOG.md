@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.1](https://github.com/paruff/uFawkesObs/compare/v0.4.12-beta.1...v1.0.0-rc.1) (2026-10-01)
+
+
+### Fixed
+
+* **ci:** pass env file to compose config in Validate Configs ([96bf588](https://github.com/paruff/uFawkesObs/commit/96bf588c327acd719ad77364cbd9b3d5732f7705))
+* **ci:** pass env file to compose config in Validate Configs ([c5f587b](https://github.com/paruff/uFawkesObs/commit/c5f587b1a59cea4d3d1230cd900ab3db072db847))
+
+
+### Docs
+
+* 0.4.x to 1.0.0 upgrade notes and DAY_ONE fixes ([155ef5a](https://github.com/paruff/uFawkesObs/commit/155ef5a85822979200d16bfdc5be4ba254d8f68f))
+* add 0.4.x to 1.0.0 upgrade notes ([188c41c](https://github.com/paruff/uFawkesObs/commit/188c41cc56410b6b67cc5c7895bd5c9befa3c799)), closes [#498](https://github.com/paruff/uFawkesObs/issues/498)
+* **DAY_ONE:** fix service count, Loki query, retired DORA links ([4eee153](https://github.com/paruff/uFawkesObs/commit/4eee1532a05fad317d09f3e657b02262162ad8da)), closes [#529](https://github.com/paruff/uFawkesObs/issues/529)
+* **v1.0.0:** record contract re-verification for rc.1 ([18f94d9](https://github.com/paruff/uFawkesObs/commit/18f94d9d13e3819215859ca71e95c6045649d182))
+* **v1.0.0:** record contract re-verification, release 1.0.0-rc.1 ([cb38e6b](https://github.com/paruff/uFawkesObs/commit/cb38e6b24ad543b08d0f6f7b34edfc47accdbadd))
+
 ## [0.4.12-beta.1](https://github.com/paruff/uFawkesObs/compare/v0.4.11-beta.1...v0.4.12-beta.1) (2026-10-01)
 
 
