@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "ci-quality.yml"
@@ -13,7 +12,10 @@ WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "ci-quality.yml"
 def test_makefile_validate_configs_uses_compose_image_macro() -> None:
     content = MAKEFILE_PATH.read_text(encoding="utf-8")
 
-    assert "compose_image = $(shell yq -r '.services[\"$(1)\"].image' compose.yaml)" in content
+    assert (
+        "compose_image = $(shell yq -r '.services[\"$(1)\"].image' compose.yaml)"
+        in content
+    )
     assert "$(call require,yq)" in content
     assert "$(call compose_image,prometheus)" in content
     assert "$(call compose_image,otel-collector)" in content
