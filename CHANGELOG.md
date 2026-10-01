@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.0-rc.1...v1.0.1-rc.1) (2026-10-01)
+
+
+### Fixed
+
+* **ci:** fetch release tag before attaching tarball ([6e00a34](https://github.com/paruff/uFawkesObs/commit/6e00a34f43f100ba0f7e70c9106c4063f37ee97a))
+* **ci:** fetch release tag before attaching tarball and SHA256 ([d23c047](https://github.com/paruff/uFawkesObs/commit/d23c047291c01d86cc394f0430a0f983113a7751))
+* **ci:** pin Main CI Guard to real uFawkesPipe v1.2.1 SHA ([df60247](https://github.com/paruff/uFawkesObs/commit/df602476ea2312e9ef06e6c149717863117946e5))
+* **ci:** pin Main CI Guard to the real uFawkesPipe v1.2.1 SHA ([64b4953](https://github.com/paruff/uFawkesObs/commit/64b4953c8109c4f3f50f1c5191d48c9551ce41e6))
+
 ## [1.0.0-rc.1](https://github.com/paruff/uFawkesObs/compare/v0.4.12-beta.1...v1.0.0-rc.1) (2026-10-01)
 
 
