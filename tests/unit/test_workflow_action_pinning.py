@@ -118,3 +118,8 @@ def test_release_workflow_uploads_source_tarball_and_sha256() -> None:
     assert any("gh release upload" in run for run in run_steps)
     assert any("sha256sum" in run for run in run_steps)
     assert any("git archive" in run for run in run_steps)
+    # release-please creates the tag via the API after checkout, so the runner's
+    # clone does not have it; it must be fetched before `git archive <tag>`.
+    upload_run = upload_step.get("run", "")
+    assert 'git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"' in upload_run
+    assert upload_run.index("git fetch") < upload_run.index("git archive")
