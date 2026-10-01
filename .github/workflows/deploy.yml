@@ -39,7 +39,7 @@ jobs:
       - name: "job-start"
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -69,7 +69,7 @@ jobs:
       - name: "job-start"
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
@@ -613,7 +613,7 @@ jobs:
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
           echo "✅ Post-deployment verification passed"
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.tag-candidate.outputs.tag }}
 
