@@ -102,6 +102,8 @@ def make_workspace(seeds: dict, variant: str) -> Path:
         "user.name=dev",
         "-c",
         "user.email=dev@localhost",
+        "-c",
+        "commit.gpgsign=false",
         "commit",
         "-q",
         "--no-verify",
