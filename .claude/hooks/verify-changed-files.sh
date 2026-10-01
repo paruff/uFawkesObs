@@ -25,7 +25,10 @@ git rev-parse --is-inside-work-tree > /dev/null 2>&1 || exit 0
 command -v pre-commit > /dev/null 2>&1 || exit 0
 [ -f .pre-commit-config.yaml ] || exit 0
 
-mapfile -t files < <(
+files=()
+while IFS= read -r file; do
+  [ -n "$file" ] && files+=("$file")
+done < <(
   {
     git diff --name-only --diff-filter=ACMR HEAD 2> /dev/null || true
     git ls-files --others --exclude-standard
