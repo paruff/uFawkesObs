@@ -81,3 +81,37 @@ def test_acceptance_full_workflow_sets_short_dora_compute_interval(
         f"DORA_COMPUTE_INTERVAL_SECONDS={interval} is too long for the "
         "existing 60s steady-state window to reliably include a recompute"
     )
+
+
+def test_make_up_starts_demo_app_profile(project_root: Path) -> None:
+    """README Quick Start must reach a real signal path without a hidden extra step.
+
+    `make up` is the default command users follow on a clean host. It must
+    include the demo app profile, or Grafana never receives the live metrics,
+    logs, and traces the release gate expects.
+    """
+    makefile = project_root / "Makefile"
+    content = makefile.read_text(encoding="utf-8")
+
+    lines = content.splitlines()
+    up_index = next(i for i, line in enumerate(lines) if line.startswith("up:"))
+    up_target_lines = []
+    for line in lines[up_index + 1 :]:
+        if not line.strip():
+            break
+        if line.startswith("\t"):
+            up_target_lines.append(line)
+            continue
+        if line.startswith("## "):
+            continue
+        if line.endswith(":") and not line.startswith("\t"):
+            break
+        up_target_lines.append(line)
+
+    command = "\n".join(up_target_lines)
+
+    assert "--profile core" in command, "make up must include the core profile"
+    assert "--profile apps" in command, (
+        "make up must include the demo app profile so a fresh quick-start run "
+        "emits metrics, logs, and traces without an undocumented extra command"
+    )

@@ -30,7 +30,7 @@ cd uFawkesObs
 cp .env.example .env
 $EDITOR .env   # set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD
 
-make init && make up   # make init sets up data/ dirs with correct permissions
+make init && make up   # makes the core stack + demo app that emits real metrics/logs/traces
 ./scripts/wait-healthy.sh
 ```
 
