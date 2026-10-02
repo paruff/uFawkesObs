@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.1-rc.1...v1.0.2-rc.1) (2026-10-02)
+
+
+### Fixed
+
+* **ci:** pin the artifact-chain runner image to ubuntu-24.04 ([c575851](https://github.com/paruff/uFawkesObs/commit/c5758519bc84b544b0a04f3878ff02449a972f36))
+* **ci:** stop the artifact-chain test leaking into the real repo ([0ebd694](https://github.com/paruff/uFawkesObs/commit/0ebd694134a4ec9bf6ba5d03d873ca587bffad94))
+
 ## [1.0.1-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.0-rc.1...v1.0.1-rc.1) (2026-10-01)
 
 
