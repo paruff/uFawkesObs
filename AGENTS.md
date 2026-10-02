@@ -47,3 +47,17 @@ The detailed enforcement lives in the rule files and skills, not in this index:
 - This repo is the Compose-tier uFawkes observability plane.
 - Check `docs/CHANGE_IMPACT_MAP.md` and `docs/KNOWN_LIMITATIONS.md` before changing shared config, deployments, or cross-plane integrations.
 - The model policy is in `docs/MODEL_POLICY.md`; keep policy details there rather than duplicating them here.
+
+## Design and brand
+
+Fawkes and the uFawkes suite share one design reference, owned by
+uFawkes.dev: [DESIGN.md](https://github.com/paruff/uFawkes.dev/blob/main/DESIGN.md) and the machine-readable tokens at
+<https://ufawkes.dev/design/tokens.json>. Read it before changing colours, logos, fonts or UI copy in this
+repo. Link to it; don't copy it here.
+
+- The action colour (buttons, links, focus rings) is Indigo `#4f46e5`.
+- Orange (Flame `#f06300`) is for marks and large graphics only. Green means
+  pass or live, never decoration.
+- Text must meet 4.5:1 contrast. `#16a34a` on white is 3.30:1 and fails.
+- If this repo needs a value the reference does not have, propose it in
+  uFawkes.dev rather than adding a local one.
