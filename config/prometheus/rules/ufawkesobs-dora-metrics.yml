@@ -231,7 +231,12 @@
 # 2. Lead Time for Changes
 # 3. Change Failure Rate
 # 4. Failed Deployment Recovery Time (FDRT)
-# 5. Rework Rate — share of completed work later identified as rework / reverted after merge (official DORA definition; not AI output requiring rework)
+# 5. Rework Rate — user-visible rework events (hotfix, rollback or patch, matched to a
+#    deployment by commit SHA) divided by total deployments, per
+#    dora/compute/metrics_db_sqlite.py. dora.dev words the metric as the share of
+#    deployments that are unplanned because of a production incident; this one is
+#    narrower, because only events with user_visible=true count. It is not a
+#    measure of reverted merges and not of AI output requiring rework.
 
 groups:
   # DORA recording rules — two variants per metric (issue #533):
@@ -291,9 +296,9 @@ groups:
           avg(dora_fdrt_p50_hours)
 
       # Rework Rate: org-wide average, sourced from dora-compute's own
-      # rework-rate computation (real merged-work-later-reverted data, not
-      # an AI-suggestion-acceptance proxy). Already a 0-1 ratio, matching
-      # this rule's "ratio" name.
+      # rework-rate computation (user-visible rework events matched to
+      # deployments, not an AI-suggestion-acceptance proxy). Already a 0-1
+      # ratio, matching this rule's "ratio" name.
       # Repo alert thresholds are used here, not the retired four-tier DORA
       # band model. The 2025 AI Capabilities Model watch/stop thresholds are
       # >10% and >20% respectively.
