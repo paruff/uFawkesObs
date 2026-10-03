@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.2-rc.1...v1.0.3-rc.1) (2026-10-03)
+
+
+### Docs
+
+* **design:** point to the suite design reference ([7f1bb39](https://github.com/paruff/uFawkesObs/commit/7f1bb39c64f913bc6f3b190885d93bb4a2b1e4ab))
+* **design:** point to the suite design reference ([074cbba](https://github.com/paruff/uFawkesObs/commit/074cbba4de417b1a54e9f9685984a47bd9d45a26))
+
 ## [1.0.2-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.1-rc.1...v1.0.2-rc.1) (2026-10-02)
 
 
