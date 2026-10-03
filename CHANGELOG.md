@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.4-rc.1...v1.0.5-rc.1) (2026-10-03)
+
+
+### Chores
+
+* **devcontainer:** use the shared fawkes-space CDE (2.0.0-rc.1) ([4bb78a1](https://github.com/paruff/uFawkesObs/commit/4bb78a15a326a88149d86d68266dc820b41dc572))
+
 ## [1.0.4-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.3-rc.1...v1.0.4-rc.1) (2026-10-03)
 
 
