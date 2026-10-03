@@ -96,6 +96,12 @@ Retired from the active suite (2026-08-18): **uFawkesRes** (resources plane — 
 - ✅ **Declarative** — all configuration is explicit and file-based
 - ✅ **Boring technology** — reliable, well-documented, production-ready tools
 
+## Design and brand
+
+This repo follows the shared Fawkes and uFawkes design reference:
+[DESIGN.md](https://github.com/paruff/uFawkes.dev/blob/main/DESIGN.md), with tokens at <https://ufawkes.dev/design/tokens.json>. It is owned by
+[uFawkes.dev](https://github.com/paruff/uFawkes.dev).
+
 ## License
 
 [Apache License 2.0](LICENSE)
