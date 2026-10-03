@@ -25,6 +25,11 @@ fetch() {
 # install_bin <name> <url> <sha256> [<path-in-tarball>]
 install_bin() {
   local name="$1" url="$2" sha="$3" member="${4:-}"
+  # The fawkes-space CDE already ships most of these; only fill the gaps.
+  if command -v "$name" > /dev/null 2>&1; then
+    echo "install-tools: $name already present ($(command -v "$name"))"
+    return 0
+  fi
   local file="$TMP/$name.download"
   fetch "$url" "$sha" "$file"
   if [ -n "$member" ]; then
@@ -35,12 +40,20 @@ install_bin() {
   echo "install-tools: $name installed"
 }
 
+# The fawkes-space CDE has no curl; fetch() needs it.
+if ! command -v curl > /dev/null 2>&1; then
+  sudo apt-get update -qq
+  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates
+fi
+
 if ! command -v shellcheck > /dev/null 2>&1; then
   sudo apt-get update -qq
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends shellcheck
 fi
 
-python3 -m pip install --user --quiet "pre-commit==4.5.1"
+# fawkes-space ships pre-commit; Debian 13 also refuses `pip install --user`
+# (externally managed), so install only where it's missing.
+command -v pre-commit > /dev/null 2>&1 || python3 -m pip install --user --quiet "pre-commit==4.5.1"
 pre-commit install --hook-type commit-msg
 
 GH=https://github.com
