@@ -30,5 +30,9 @@
   ],
   "remoteUser": "dev",
   "updateRemoteUserUID": true,
-  "postCreateCommand": "bash -c 'set -e; export PATH=\"$HOME/.local/bin:/usr/local/bin:$PATH\"; ./.devcontainer/install-tools.sh'"
+  "postCreateCommand": "bash -c 'set -e; export PATH=\"$HOME/.local/bin:/usr/local/bin:$PATH\"; ./.devcontainer/install-tools.sh'",
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb"
+  }
 }
