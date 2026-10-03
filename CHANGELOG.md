@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.3-rc.1...v1.0.4-rc.1) (2026-10-03)
+
+
+### Fixed
+
+* **ci:** install OpenCode from npm, pinned, in the opencode workflow ([76be379](https://github.com/paruff/uFawkesObs/commit/76be37934b5754f6aea0affaa6e4948bb5b917c6))
+* **ci:** install OpenCode from npm, pinned, in the opencode workflow ([b3e5443](https://github.com/paruff/uFawkesObs/commit/b3e5443ab37dcbac7b463c45a7d9689a2b76887f))
+
+
+### Docs
+
+* **dora:** correct the rework-rate comments in the rules file ([dfd4fc9](https://github.com/paruff/uFawkesObs/commit/dfd4fc98535881a30995f16a326322b05d6367b1))
+* **dora:** correct the rework-rate comments in the rules file ([2592307](https://github.com/paruff/uFawkesObs/commit/2592307fd9d8b7369466e2c18cd5a0d2a2787e6a))
+
 ## [1.0.3-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.2-rc.1...v1.0.3-rc.1) (2026-10-03)
 
 
