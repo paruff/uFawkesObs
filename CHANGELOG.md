@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.6-rc.1...v1.0.7-rc.1) (2026-10-03)
+
+
+### Chores
+
+* **devcontainer:** declare hostRequirements (2 CPUs, 4 GB) ([9fb3c8b](https://github.com/paruff/uFawkesObs/commit/9fb3c8b75630d7f2cc0e2f887ad06f2bff815f54))
+
 ## [1.0.6-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.5-rc.1...v1.0.6-rc.1) (2026-10-03)
 
 
