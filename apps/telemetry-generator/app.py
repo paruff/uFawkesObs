@@ -181,4 +181,5 @@ def _self_traffic_loop() -> None:
 if __name__ == "__main__":
     logger.info(f"{SERVICE_NAME} starting up")
     threading.Thread(target=_self_traffic_loop, daemon=True).start()
+    # nosemgrep -- runs in a container, where it must listen on all interfaces
     app.run(host="0.0.0.0", port=5000, debug=False)

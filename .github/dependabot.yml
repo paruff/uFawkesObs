@@ -6,6 +6,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -19,30 +21,44 @@ updates:
   # internal consistency, since a lock needs atomic regeneration via
   # `pip freeze`, not a single-line edit. After a bump here merges, run
   # `make relock` to regenerate the matching lock file.
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/tests/unit"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/tests/integration"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/tests/acceptance"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/dora/compute"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/dora/ingestion"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/apps/telemetry-generator"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:

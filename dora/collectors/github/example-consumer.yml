@@ -239,7 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Emit deployment to uFawkesDORA
-        uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@v1
+        uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
         with:
           status: success
           environment: production
@@ -255,7 +255,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Emit PR event to uFawkesDORA
-        uses: paruff/uFawkesObs/dora/collectors/github/dora-pr-event.yml@v1
+        uses: paruff/uFawkesObs/dora/collectors/github/dora-pr-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
         with:
           pr_number: ${{ github.event.pull_request.number }}
           # Optional:
