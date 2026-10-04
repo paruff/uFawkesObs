@@ -29,6 +29,25 @@
             "timeout": 300
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/shift-left.sh\" agent-gate",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/shift-left.sh\" doctor --quiet || true"
+          }
+        ]
       }
     ]
   }
