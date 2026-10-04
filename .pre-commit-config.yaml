@@ -141,7 +141,7 @@ repos:
           - LICENSE
           - --comment-style
           - "#"
-        exclude: ^(\.github/|\.pre-commit-config\.yaml|\.yamllint|platform/apps/.*/upstream/|tests/)
+        exclude: ^(\.github/|\.pre-commit-config\.yaml|\.shift-left\.yml|\.yamllint|platform/apps/.*/upstream/|tests/)
 
   # ============================================================================
   # Commit Message Validation (commit-msg stage)
