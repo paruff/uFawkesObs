@@ -1,4 +1,4 @@
-fastapi>=0.141.1
-aiosqlite>=0.22.1
-uvicorn>=0.54.0
-jsonschema>=4.26.0
+fastapi==0.142.2
+aiosqlite==0.22.1
+uvicorn==0.54.0
+jsonschema==4.26.0
