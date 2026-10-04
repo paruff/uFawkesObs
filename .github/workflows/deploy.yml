@@ -39,7 +39,7 @@ jobs:
       - name: "job-start"
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -69,7 +69,7 @@ jobs:
       - name: "job-start"
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
@@ -613,7 +613,7 @@ jobs:
           echo "health_result=passed" >> "$GITHUB_OUTPUT"
           echo "✅ Post-deployment verification passed"
 
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.tag-candidate.outputs.tag }}
 
@@ -801,7 +801,7 @@ jobs:
         run: 'echo "job-start: $(date -u +%Y-%m-%dT%H:%M:%SZ)"'
 
       - name: Comment on triggering commit
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const acceptanceConclusion = `${{ github.event.workflow_run.conclusion || 'unknown' }}`;

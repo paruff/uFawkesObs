@@ -212,7 +212,7 @@
 # Usage:
 #   jobs:
 #     emit-deployment:
-#       uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@v1
+#       uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
 #       with:
 #         status: success
 #         environment: production
