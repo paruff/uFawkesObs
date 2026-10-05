@@ -202,9 +202,10 @@
 
 # SPDX-License-Identifier: Apache-2.0
 # DORA 2025/2026 Metrics Recording Rules
-# Computed from dora-compute's Pushgateway output (dora-api -> dora-compute ->
-# Pushgateway -> Prometheus), the same pipeline dora-overview.json's panels
-# read directly. Consumed by the DORA dashboard and alerting.
+# Computed by dora-api's in-process compute loop (dora/compute/metrics.py) and
+# scraped from dora-api:8088/metrics (job_name "dora-api") — the same source
+# dora-overview.json's panels read directly. Consumed by the DORA dashboard
+# and alerting.
 #
 # Previously computed from a separate, never-fed OTel-native pipeline
 # (dora.deployment.* / dora.incident.* spans via otel-collector-dora) —
@@ -218,8 +219,8 @@
 # rebuilt without redesigning it. These rules don't depend on either.
 #
 # Metric naming: Uses "dora:" namespace per ADR-006.
-# Source metrics from dora-compute (dora/compute/metrics.py), pushed as
-# Pushgateway gauges labeled by team_id/tier:
+# Source metrics from dora-api's in-process compute (dora/compute/metrics.py),
+# served as Prometheus gauges labeled by team_id/tier:
 #   - dora_deployment_frequency_per_week
 #   - dora_lead_time_p50_hours
 #   - dora_cfr_pct       (0-1 ratio despite the name — see metrics.py:420)
@@ -295,7 +296,7 @@ groups:
         expr: |
           avg(dora_fdrt_p50_hours)
 
-      # Rework Rate: org-wide average, sourced from dora-compute's own
+      # Rework Rate: org-wide average, sourced from dora-api's own
       # rework-rate computation (user-visible rework events matched to
       # deployments, not an AI-suggestion-acceptance proxy). Already a 0-1
       # ratio, matching this rule's "ratio" name.
@@ -506,6 +507,6 @@ groups:
           summary: "Rework rate metrics are missing"
           description: |
             Rework rate data is absent — dora-api is down, unscraped, or the
-            dora-compute rework computation has produced nothing yet. Check
+            in-process rework computation has produced nothing yet. Check
             the dora profile and deploy/revert event flow.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-absent"

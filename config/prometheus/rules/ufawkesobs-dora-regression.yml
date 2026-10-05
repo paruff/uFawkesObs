@@ -201,14 +201,14 @@
 #    limitations under the License.
 
 # SPDX-License-Identifier: Apache-2.0
-# DORA Regression Alerts — trend-based alerts on the pushed metrics from
-# dora-compute (issue #205), routed through pushgateway. Distinct from the
-# scrape-based recording rules in ufawkesobs-dora-metrics.yml: these fire on
+# DORA Regression Alerts — trend-based alerts on the metrics scraped from
+# dora-api (issue #205). Distinct from the scrape-based recording rules in
+# ufawkesobs-dora-metrics.yml: these fire on
 # short-window vs. long-window drift within the same metric, rather than on
 # an absolute threshold.
 #
-# Source metrics (pushed by dora/compute/metrics.py via pushgateway,
-# labeled by team_id):
+# Source metrics (computed in-process by dora-api from
+# dora/compute/metrics.py, labeled by team_id):
 #   - dora_deployment_frequency_per_week (gauge)
 #   - dora_lead_time_p50_hours / dora_lead_time_p95_hours (gauge)
 #   - dora_fdrt_p50_hours (gauge)
@@ -256,8 +256,9 @@ groups:
         annotations:
           summary: "Deployment frequency metric missing"
           description: |
-            dora_deployment_frequency_per_week is absent. dora-compute may not
-            be pushing to pushgateway — check the dora-compute container.
+            dora_deployment_frequency_per_week is absent — dora-api may not be
+            computing or being scraped. Check up{job="dora-api"} and the
+            dora-api container logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#deployment-frequency-drop-absent"
 
       - alert: DORARegressionLeadTimeIncrease
@@ -288,8 +289,8 @@ groups:
         annotations:
           summary: "Lead time metric missing"
           description: |
-            dora_lead_time_p50_hours is absent. dora-compute may not be
-            pushing to pushgateway — check the dora-compute container.
+            dora_lead_time_p50_hours is absent — dora-api may not be computing
+            or being scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#lead-time-increase-absent"
 
       - alert: DORARegressionFDRTSpike
@@ -316,8 +317,8 @@ groups:
         annotations:
           summary: "FDRT metric missing"
           description: |
-            dora_fdrt_p50_hours is absent. dora-compute may not be pushing to
-            pushgateway — check the dora-compute container.
+            dora_fdrt_p50_hours is absent — dora-api may not be computing or
+            being scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-spike-absent"
 
       - alert: DORARegressionCFRSpike
@@ -350,8 +351,8 @@ groups:
         annotations:
           summary: "CFR metric missing"
           description: |
-            dora_cfr_pct is absent. dora-compute may not be pushing to
-            pushgateway — check the dora-compute container.
+            dora_cfr_pct is absent — dora-api may not be computing or being
+            scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-spike-absent"
 
       - alert: DORARegressionReworkRateClimb
@@ -380,6 +381,6 @@ groups:
         annotations:
           summary: "Rework Rate metric missing"
           description: |
-            dora_rework_rate_pct is absent. dora-compute may not be pushing to
-            pushgateway — check the dora-compute container.
+            dora_rework_rate_pct is absent — dora-api may not be computing or
+            being scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-climb-absent"
