@@ -6,7 +6,7 @@ The DORA data path is:
 
 - `dora-api` exposes the computed DORA metrics on `/metrics`
 - Prometheus scrapes `dora-api:8088`
-- `dora-compute` produces the deployment, lead-time, failure, and rework series
+- `dora-api`'s in-process compute loop produces the deployment, lead-time, failure, and rework series
 - The dashboard and alert rules consume the `dora:*` recording rules
 
 When a DORA alert fires, first confirm whether the metric is genuinely low or absent because the compute pipeline stopped producing data. The most common root causes are a broken `dora` profile, a failed `dora-api` scrape, or an interrupted deploy-event flow.

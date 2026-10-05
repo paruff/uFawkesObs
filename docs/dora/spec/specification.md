@@ -2,6 +2,13 @@
 
 *Version: 0.1.0-draft*
 *Status: Pre-implementation — reviewed against DORA 2025/2026 primary sources and verified library APIs*
+
+> **Implementation note (post-ADR-007):** implemented in uFawkesObs as
+> `dora-api` — SQLite-only backend, in-process compute, `/metrics` for
+> Prometheus pull. Sections below describing PostgreSQL/TimescaleDB, a cron
+> compute job, or pushgateway export record the pre-implementation design,
+> not the running system; see `docs/runbooks/dora.md` for the current path.
+
 *Companion document: DESIGN.md*
 
 ---
@@ -412,8 +419,8 @@ in `uFawkesDORA/dashboards/` and are provisioned by being copied to the uFawkesO
 `grafana/provisioning/dashboards/` directory.
 
 Two datasource types are used:
-- **Prometheus**: for time-series trend panels (data pushed via pushgateway from
-  the compute job)
+- **Prometheus**: for time-series trend panels (metrics scraped from
+  `dora-api:8088/metrics`)
 - **Postgres**: for current snapshots, archetype history, wellbeing survey data,
   and VSM stage breakdown tables (via the Grafana PostgreSQL datasource plugin)
 
