@@ -37,6 +37,18 @@ ALLOWED_NAMES = {
         "config/prometheus/rules/ufawkesobs-dora-metrics.yml",
         "otel-collector-dora",
     ): "comments document the container's removal (issue #266), not a live path",
+    (
+        "docs/ai-sdlc/dora-current-state/plan.md",
+        "dora-compute",
+    ): "the plan records what this change removed; it is the change record, not the stack",
+    (
+        "docs/ai-sdlc/dora-current-state/plan.md",
+        "pushgateway",
+    ): "the plan records what this change removed; it is the change record, not the stack",
+    (
+        "docs/ai-sdlc/dora-current-state/plan.md",
+        "otel-collector-dora",
+    ): "the plan records what this change removed; it is the change record, not the stack",
 }
 
 
