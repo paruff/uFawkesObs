@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails doctor
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -316,3 +316,6 @@ release-preview:
 ## eval-guardrails: run the agent guardrail eval (claude -p, Sonnet; costs API credit)
 eval-guardrails:
 	python3 evals/run_guardrails.py $(EVAL_ARGS)
+
+doctor: ## Are this clone's checks actually running? (hooks installed, tools, stamps, CI parity)
+	@bash scripts/shift-left.sh doctor

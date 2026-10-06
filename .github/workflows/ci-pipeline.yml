@@ -24,7 +24,7 @@ jobs:
   # Fastest feedback: pre-commit hooks, PR size, commit format, secret detection
   preflight:
     name: Pre-flight
-    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@80a9f96f9c82089cc7e85b264214d49d3e0766bc # v1.4.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@56226a057899ec3407c7a5c6bd5182d88783d2d2 # v1.11.0-beta.1
     with:
       commit-format: ${{ startsWith(github.head_ref, 'copilot/') && 'none' || 'conventional' }}
 

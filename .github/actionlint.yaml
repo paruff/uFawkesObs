@@ -2,3 +2,9 @@ self-hosted-runner:
   # deploy.yml runs on the self-hosted Synology deploy host
   labels:
     - synology
+# The shellcheck actionlint runs on `run:` blocks is held to the same floor as
+# the repo's shellcheck hook (--severity=warning): info and style are ignored.
+paths:
+  .github/workflows/**/*.{yml,yaml}:
+    ignore:
+      - 'shellcheck reported issue in this script: SC\d+:(info|style):'
