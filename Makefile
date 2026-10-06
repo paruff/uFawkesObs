@@ -20,7 +20,7 @@ init:
 	install -d -m 755 data/loki
 	install -d -m 755 data/tempo
 	install -d -m 755 data/alloy
-	# ponytail: dora-api/dora-compute run as a system-assigned (non-fixed)
+	# ponytail: dora-api runs as a system-assigned (non-fixed)
 	# UID, so 777 avoids a per-build UID lookup for one local SQLite file;
 	# tighten with a documented UID if this ever needs to be more locked down.
 	install -d -m 777 data/dora

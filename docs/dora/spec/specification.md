@@ -419,8 +419,8 @@ in `uFawkesDORA/dashboards/` and are provisioned by being copied to the uFawkesO
 `grafana/provisioning/dashboards/` directory.
 
 Two datasource types are used:
-- **Prometheus**: for time-series trend panels (metrics scraped from
-  `dora-api:8088/metrics`)
+- **Prometheus**: for time-series trend panels (data pushed via pushgateway from
+  the compute job)
 - **Postgres**: for current snapshots, archetype history, wellbeing survey data,
   and VSM stage breakdown tables (via the Grafana PostgreSQL datasource plugin)
 
