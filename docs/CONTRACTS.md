@@ -153,18 +153,17 @@ to compute the five DORA metrics.
 
 ### Receivers
 
-Two Collector instances run, both accepting standard OTLP on the same
-ports (`config/otel/collector.yaml` for `core`, `config/otel/collector-dora.yaml`
-for the `dora` profile's `otel-collector-dora` service):
+One Collector instance runs, accepting standard OTLP on these ports
+(`config/otel/collector.yaml`, `core` profile):
 
 | Protocol | Endpoint |
 |---|---|
 | OTLP gRPC | `0.0.0.0:4317` |
 | OTLP HTTP | `0.0.0.0:4318` |
 
-Send traces, metrics, and logs to whichever collector instance is
-appropriate for your service — there is no schema-level difference between
-the two receivers, only downstream routing differs (see below).
+Send traces, metrics, and logs to this collector — there is no
+schema-level difference between receivers, only downstream routing
+differs (see below).
 
 ### No enforced resource-attribute schema
 

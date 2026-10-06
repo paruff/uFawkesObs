@@ -124,7 +124,7 @@ alloy         → depends_on: loki (healthy)
 | `core`  | otel-collector, tempo, loki, alloy, prometheus, alertmanager, grafana, node-exporter |
 | `apps`  | telemetry-generator                                                                  |
 | `notifications` | alertmanager-discord (Alertmanager → Discord bridge)                    |
-| `dora`  | dora-api, dora-compute, pushgateway, otel-collector-dora (self-contained, SQLite-only) |
+| `dora`  | dora-api (self-contained, SQLite-only) |
 
 Start the full stack:
 

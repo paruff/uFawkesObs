@@ -785,10 +785,6 @@ services:
       - observability
     profiles: ["dora"]
 
-# Prometheus pushgateway — receives batch-pushed DORA metrics from
-# dora-compute, since it's a periodic job rather than a scrape target
-# (see ADR-007 amendment; issue #205).
-
 secrets:
   # Alertmanager does not expand ${VAR} inside its own config file — that
   # substitution only applies to compose.yaml itself. api_url_file (native

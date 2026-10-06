@@ -1,5 +1,14 @@
 # Design: uFawkesDORA Two-Plane Architecture
 
+> **Status: historical design record.** This document describes the
+> pre-consolidation two-plane architecture (PostgreSQL/TimescaleDB resource
+> plane, cron compute job, pushgateway metric export) as designed for the
+> standalone uFawkesDORA repo and migrated verbatim by ADR-007. The running
+> system has since moved to an SQLite-only backend (issue #275) with
+> in-process compute inside `dora-api`, exposed on `/metrics` for Prometheus
+> pull. For the current data path see `docs/ARCHITECTURE.md` and
+> `docs/runbooks/dora.md`. Do not treat the flows below as current.
+
 ## 1. Architectural Philosophy: The Two-Plane Model
 
 To satisfy the requirement that uFawkesDORA supports reliable, long-term storage of DORA event data while allowing the compute layer to be freely redeployed, the design follows a strict two-plane separation:

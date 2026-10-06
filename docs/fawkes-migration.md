@@ -124,7 +124,7 @@ dashboards in Grafana, not the dashboard provisioning mechanism itself.
 
 Worth calling out explicitly: uFawkesObs computes DORA metrics itself (the
 `dora/` directory, consolidated from the former uFawkesDORA repo) and writes
-snapshots to Postgres/SQLite plus a Prometheus pushgateway. Fawkes's
+snapshots to SQLite, serving computed metrics on /metrics for Prometheus pull. Fawkes's
 architecture doc describes **DevLake** as the DORA metrics engine, feeding
 Grafana directly via its own API (`DevLake->>Grafana: expose metrics via
 API`). These are two different DORA pipelines, not the same pipeline on two
