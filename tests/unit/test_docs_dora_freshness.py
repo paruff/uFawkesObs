@@ -7,10 +7,14 @@ stack (ADR-007 fold; issues #266/#275): the `dora` profile adds only
 replacement rationale in ``config/prometheus/prometheus.yaml``).
 
 Deliberately allowlisted as historical records, not current-state claims:
-CHANGELOG, ADRs, the migrated pre-consolidation design/spec docs (each
-carries a status banner), and prometheus.yaml itself (which documents the
-replacement). Every finding is printed in the assertion message — a silent
-pass here would be indistinguishable from a check that never ran.
+ADRs and dated notes (point-in-time records), the migrated
+pre-consolidation design/spec docs (each carries a status banner), and
+prometheus.yaml itself (which documents the replacement). Nothing is
+excluded by directory: whole-tree allowlisting is limited to files that are
+historical records by construction, and every other exception is a written
+per-(file, name) pair below. Every finding is printed in the assertion
+message — a silent pass here would be indistinguishable from a check that
+never ran.
 """
 
 from pathlib import Path
@@ -18,15 +22,11 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 RETIRED = ("dora-compute", "pushgateway", "otel-collector-dora")
 
+# Files that are historical records by construction — allowlisted whole.
 ALLOWLIST = (
-    "CHANGELOG.md",
     "config/prometheus/prometheus.yaml",  # replacement rationale comment
-    "docs/adr/",  # ADRs are point-in-time records (incl. ADR-006/007)
-    "docs/dora/design/",  # pre-consolidation design record, bannered
-    "docs/dora/spec/",  # pre-implementation spec, bannered
     "docs/CONTRACTS.md",  # keeps a "not deployed" section for the inert collector
     "docs/product/design.md",  # supersession banner: "parts below no longer run"
-    "docs/notes/",  # dated point-in-time plans (cite incidents by name)
     "config/otel/collector-dora.yaml",  # inert config retained deliberately (#534)
 )
 
@@ -49,6 +49,34 @@ ALLOWED_NAMES = {
         "docs/ai-sdlc/dora-current-state/plan.md",
         "otel-collector-dora",
     ): "the plan records what this change removed; it is the change record, not the stack",
+    (
+        "docs/adr/ADR-006-dora-metric-definitions.md",
+        "dora-compute",
+    ): "ADR-006 is a point-in-time metric-definition record",
+    (
+        "docs/adr/ADR-006-dora-metric-definitions.md",
+        "pushgateway",
+    ): "ADR-006 is a point-in-time metric-definition record",
+    (
+        "docs/adr/ADR-007-dora-consolidation.md",
+        "dora-compute",
+    ): "ADR-007 is the record of the fold itself",
+    (
+        "docs/adr/ADR-007-dora-consolidation.md",
+        "otel-collector-dora",
+    ): "ADR-007 is the record of the fold itself",
+    (
+        "docs/dora/design/design.md",
+        "pushgateway",
+    ): "pre-consolidation design record, bannered",
+    (
+        "docs/dora/spec/specification.md",
+        "pushgateway",
+    ): "pre-implementation spec, bannered",
+    (
+        "docs/notes/week-plan-2026-09-14.md",
+        "pushgateway",
+    ): "dated point-in-time plan (cites the incident by service name)",
 }
 
 
@@ -56,7 +84,7 @@ def _current_state_files():
     files = []
     for base in ("docs", "config"):
         files += [p for p in (REPO / base).rglob("*") if p.is_file()]
-    for extra in ("compose.yaml", "README.md"):
+    for extra in ("compose.yaml", "README.md", ".env.example", "Makefile"):
         p = REPO / extra
         if p.is_file():
             files.append(p)
@@ -84,8 +112,8 @@ def test_no_retired_dora_service_references():
         "retired DORA service references in current-state docs/config:\n"
         + "\n".join(offenders)
         + "\n(dora profile = dora-api only; pull model, job_name=dora-api. "
-        "If this is a deliberate historical record, extend ALLOWLIST with a "
-        "comment saying why.)"
+        "If this is a deliberate historical record, extend ALLOWED_NAMES "
+        "with a per-(file, name) entry and a written reason.)"
     )
 
 
