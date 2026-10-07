@@ -241,3 +241,17 @@ class TestWriteSnapshot:
         )
         row = await cursor.fetchone()
         assert row == ("a", 3.5, 12.0, 0.1, 2.0, 0.05, 0, "elite")
+
+
+async def test_querying_before_connect_says_so():
+    """A MetricsDB used outside `async with` fails with a message that names the fix,
+    not 'NoneType has no attribute execute' (found by mypy over dora/)."""
+    db = MetricsDB(dsn="sqlite://:memory:")
+    now = datetime.now(UTC).replace(tzinfo=None)
+    for call in (
+        db.deployment_frequency(30, None),
+        db.rework_rate(30, None),
+        db.write_snapshot({}, now, now),
+    ):
+        with pytest.raises(RuntimeError, match="not connected"):
+            await call
