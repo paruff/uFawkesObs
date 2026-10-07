@@ -336,6 +336,19 @@ repos:
         name: Validate dependabot.yml schema
 
   # ============================================================================
+  # Type-check the production Python (shift-left spec R2, decided 2026-10-06):
+  # mypy, non-strict, over dora/. It runs without the project's dependencies, so
+  # missing imports are ignored; tests are checked by running them.
+  # ============================================================================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.4.0
+    hooks:
+      - id: mypy
+        name: Type-check Python (mypy)
+        args: ["--ignore-missing-imports"]
+        files: ^dora/.*\.py$
+
+  # ============================================================================
   # Shared shift-left hooks from uFawkesPipe (keep last: the stamps record that
   # every hook above ran). Tools that aren't hooks run through scripts/shift-left.sh.
   # ============================================================================

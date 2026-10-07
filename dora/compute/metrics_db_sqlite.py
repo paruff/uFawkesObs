@@ -96,6 +96,15 @@ class MetricsDB:
     async def __aexit__(self, *args):
         await self.close()
 
+    @property
+    def _live(self) -> aiosqlite.Connection:
+        """The open connection, or a clear error when used outside `async with`."""
+        if self.conn is None:
+            raise RuntimeError(
+                "MetricsDB is not connected: use `async with MetricsDB()` or await connect() first"
+            )
+        return self.conn
+
     # ── Row fetch helpers ───────────────────────────────────────────────────
 
     def _cutoff(self, window_days: int) -> str:
@@ -127,7 +136,7 @@ class MetricsDB:
         if team and team != "all":
             sql += " AND source = ?"
             params.append(team)
-        cursor = await self.conn.execute(sql, params)
+        cursor = await self._live.execute(sql, params)
         return await cursor.fetchall()
 
     # ── Metric queries ──────────────────────────────────────────────────────
@@ -264,7 +273,7 @@ class MetricsDB:
         ``rework.metadata.deployment_sha == deployment.metadata.commit_sha``.
         """
         deploy_rows = await self._deployment_rows(window_days, team)
-        cursor = await self.conn.execute(
+        cursor = await self._live.execute(
             "SELECT source, metadata FROM raw_events "
             "WHERE event_type = 'rework' AND recorded_at >= ?",
             [self._cutoff(window_days)],
@@ -296,7 +305,7 @@ class MetricsDB:
 
     async def write_snapshot(self, record: dict[str, Any], window_start, window_end):
         """Write one team's metric record to the dora_snapshots table."""
-        await self.conn.execute(
+        await self._live.execute(
             """
             INSERT INTO dora_snapshots
                 (team_id, deployment_frequency, lead_time_hours,
@@ -319,4 +328,4 @@ class MetricsDB:
                 window_end.isoformat(" "),
             ),
         )
-        await self.conn.commit()
+        await self._live.commit()
