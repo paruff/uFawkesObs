@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.6-rc.1...v1.1.0-rc.1) (2026-10-06)
+
+
+### Added
+
+* **shift-left:** adopt uFawkesPipe's shared shift-left hooks ([52c3e38](https://github.com/paruff/uFawkesObs/commit/52c3e38d6b82300dc0079ca7c74140e38b3ce460))
+* **shift-left:** adopt uFawkesPipe's shared shift-left hooks ([5b127dd](https://github.com/paruff/uFawkesObs/commit/5b127ddff150f76ebc7c8148a77e3046c4179a19))
+
+
+### Fixed
+
+* **ci:** capture dora logs without dead services or a silent true ([05cbb95](https://github.com/paruff/uFawkesObs/commit/05cbb958e1c019e909659fea51ee93b5f15731ad))
+* **ci:** clear what the shared shift-left hooks find in uFawkesObs (C3a) ([4b5b6ac](https://github.com/paruff/uFawkesObs/commit/4b5b6ac358ba0e034bad1490b3b2c8840fd53268))
+* **ci:** pin actions to commit SHAs; fix the example's missing v1 tag ([966ba89](https://github.com/paruff/uFawkesObs/commit/966ba89d706ba21d4566af47b3d64f850388b3a2))
+* **config:** drop dead DORA service refs from rules and compose ([f1e725d](https://github.com/paruff/uFawkesObs/commit/f1e725dbb0f88c9768142812e74d6a5c8e728ef7))
+* **config:** stop naming dora-compute in .env.example and Makefile ([badcf2c](https://github.com/paruff/uFawkesObs/commit/badcf2ce37fb940ea943adc23cd1557a1a1efc32))
+* **deps:** pin Python requirements exactly, as ADR-034 requires ([eda6bcb](https://github.com/paruff/uFawkesObs/commit/eda6bcb600718f81b1fadf25183874e34ff79eab))
+* **docs:** restore historical spec wording and correct the plan record ([07cdae9](https://github.com/paruff/uFawkesObs/commit/07cdae90d3fe964b0ef56865f57e51ba97bbf9c0))
+* **dora:** follow-ups from the [#618](https://github.com/paruff/uFawkesObs/issues/618) post-merge review ([898ac48](https://github.com/paruff/uFawkesObs/commit/898ac485d1bfedb70062f2fe9a0d95c8f9d45272))
+* **telemetry-generator:** note why the app binds all interfaces ([304b80c](https://github.com/paruff/uFawkesObs/commit/304b80cfa35472907a71e7d355e3f464372c412e))
+* **telemetry-generator:** put nosemgrep where semgrep reads it ([c6d82f8](https://github.com/paruff/uFawkesObs/commit/c6d82f84a9f7a5ce041eaebd8a186ef20b0e1c72))
+
+
+### Docs
+
+* **ai-sdlc:** add DORA current-state plan for this PR ([87ad1cb](https://github.com/paruff/uFawkesObs/commit/87ad1cb690ad37dd8d0f4a771250f915b0198930))
+* correct retired DORA service topology in current-state docs ([3ffc23e](https://github.com/paruff/uFawkesObs/commit/3ffc23e52af416da9ef9a79dc724bcda120ce1ba))
+* correct retired DORA service topology in current-state docs (refs [#534](https://github.com/paruff/uFawkesObs/issues/534) §3–4) ([63b73ad](https://github.com/paruff/uFawkesObs/commit/63b73ad7cef336cf49010b9f0858383086539d1c))
+
+
+### Chores
+
+* **deps:** wait 7 days before Dependabot updates ([fe1d6bc](https://github.com/paruff/uFawkesObs/commit/fe1d6bc19eec38a36ebc24e112d41fff60855f46))
+* **devcontainer:** declare hostRequirements (2 CPUs, 4 GB) ([9fb3c8b](https://github.com/paruff/uFawkesObs/commit/9fb3c8b75630d7f2cc0e2f887ad06f2bff815f54))
+
 ## [1.0.6-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.0.5-rc.1...v1.0.6-rc.1) (2026-10-03)
 
 
