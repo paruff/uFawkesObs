@@ -1,0 +1,19 @@
+# .github/ISSUE_TEMPLATE/security.yml
+name: 🔒 Security Vulnerability
+description: Report a security vulnerability in uFawkesObs
+title: "[Security]: "
+# No `labels:` key: this repo has no `security` label, and neither does any
+# other suite repo, so declaring one here would be a dangling reference that
+# GitHub silently refuses to apply. The form is a redirect to private
+# reporting, so a triage label adds nothing anyway.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **STOP!** If this is a security vulnerability, please DO NOT create a public issue.
+
+        Instead, please use GitHub's [Private Vulnerability Reporting](https://github.com/paruff/uFawkesObs/security/advisories/new) — this keeps the report confidential until a fix is published.
+
+        If you cannot use private reporting, contact the maintainer via the email on the [paruff GitHub profile](https://github.com/paruff) with subject `[uFawkesObs] Security report`.
+
+        See also [SECURITY.md](https://github.com/paruff/uFawkesObs/blob/main/SECURITY.md).
