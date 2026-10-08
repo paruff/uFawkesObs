@@ -1,0 +1,62 @@
+# .github/ISSUE_TEMPLATE/bug_report.yml
+name: 🐛 Bug Report
+description: Report a bug in uFawkesObs (Prometheus, Grafana, Loki, Tempo, Alertmanager)
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the form below to help us investigate.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: e.g., Prometheus scrape fails with 401 on new scrape config
+      validations:
+        required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Prometheus
+        - Grafana
+        - Loki
+        - Tempo
+        - Alertmanager
+        - OpenTelemetry Collector
+        - Alloy
+        - Makefile / Scripts
+        - Documentation
+      validations:
+        required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Run `make up`
+        2. Visit http://localhost:9090
+        3. Observe error
+      validations:
+        required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: uFawkesObs Version / Tag
+      description: What version are you running? (e.g., v1.2.0-rc.1)
+      placeholder: v1.2.0-rc.1
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs / Output
+      description: Paste relevant logs, error messages, or command output.
+      render: shell

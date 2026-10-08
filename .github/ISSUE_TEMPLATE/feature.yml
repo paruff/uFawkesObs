@@ -1,0 +1,58 @@
+# .github/ISSUE_TEMPLATE/feature.yml
+name: ✨ Feature Request
+description: Propose a new feature or enhancement for uFawkesObs
+title: "[Feature]: "
+labels: ["enhancement", "area:unknown"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Summary & Motivation
+        Briefly describe the feature and why it's needed.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this solve? Who is affected?
+      validations:
+        required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your proposed solution or implementation approach.
+      validations:
+        required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Component
+      options:
+        - Prometheus
+        - Grafana
+        - Loki
+        - Tempo
+        - Alertmanager
+        - OpenTelemetry Collector
+        - Alloy
+        - Makefile / Scripts
+        - Documentation
+      validations:
+        required: true
+
+  - type: textarea
+    id: design
+    attributes:
+      label: Design Notes
+      description: Any design considerations, configs, or API changes needed.
+
+  - type: checkboxes
+    id: copilot
+    attributes:
+      label: Copilot Readiness
+      options:
+        - label: This issue is ready for a Copilot agent to implement (clear scope, tests defined)
+          required: false
