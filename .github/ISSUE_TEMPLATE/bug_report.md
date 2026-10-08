@@ -2,7 +2,7 @@
 name: Bug Report
 about: Report a bug in the uFawkesObs observability stack
 title: "fix: "
-labels: bug, needs-triage
+labels: bug
 assignees: ""
 ---
 
