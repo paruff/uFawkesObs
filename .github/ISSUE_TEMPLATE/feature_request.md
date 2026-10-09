@@ -2,7 +2,7 @@
 name: Feature Request
 about: Suggest a new feature for uFawkesObs
 title: "feat: "
-labels: enhancement, needs-triage
+labels: enhancement
 assignees: ""
 ---
 
