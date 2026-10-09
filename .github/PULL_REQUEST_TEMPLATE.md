@@ -2,6 +2,10 @@
 
 <!-- One sentence. -->
 
+**Services affected**
+
+<!-- e.g. Prometheus, Loki, Tempo, Alloy. "None" if no service changes. -->
+
 ## Closes
 
 <!-- Issue number(s): Closes #N -->
@@ -10,7 +14,7 @@
 
 ## AI-Assisted Review Block
 
-<!-- REQUIRED. Complete before requesting review. Use Copilot or `/review-agents` to help fill this in. -->
+<!-- REQUIRED. Complete before requesting review. Use Copilot or your AI assistant to help fill this in. -->
 <!-- DORA 2025 (REVIEW-01): Structured review blocks reduce review time by making context explicit. -->
 
 **What does this PR do in one sentence?**
@@ -30,10 +34,12 @@
 <!-- Ask Copilot: "Does this diff violate any rules in AGENTS.md or .github/copilot-instructions.md?" -->
 
 - [ ] No secrets or credentials in any changed file
+- [ ] `.env` files not included in diff
+- [ ] Port or volume changes are intentional and documented
 - [ ] No modifications to AGENTS.md (edit source, not symlinks)
 - [ ] No `--no-verify` or hook bypasses
 - [ ] Changes to `docs/ai-sdlc/**/` include intent → spec → plan chain
-- [ ] `make verify` passes locally before requesting review
+- [ ] `pre-commit run --all-files` passes locally before requesting review
 - [ ] Symlinks (CLAUDE.md, .cursorrules, .github/copilot-instructions.md) still point to AGENTS.md
 - [ ] Prometheus rules follow alerting best practices (no missing labels, no flappy thresholds)
 - [ ] Grafana dashboards have UID, version, and refresh interval set
@@ -47,10 +53,10 @@
 
 ## Checklist
 
-- [ ] `make verify` passes (lint + typecheck + tests + artifact-chain)
+- [ ] `make pre-commit-run` and `make test-unit` pass (lint + tests)
 - [ ] PR is < 400 changed lines, OR `large-pr-approved` label has been applied by a human
 - [ ] No secrets or credentials in any changed file
 - [ ] New features are behind a feature flag (if applicable)
 - [ ] `docs/` updated if any public service or utility function changed
 - [ ] Prometheus alerts have `runbook_url` and severity labels
-- [ ] Grafana dashboards have `ufawkesobs/` UID prefix
+- [ ] Grafana dashboards have an explicit `uid` set (`platform-` or `ufawkesobs-` prefix)

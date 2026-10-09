@@ -17,3 +17,12 @@ body:
         If you cannot use private reporting, contact the maintainer via the email on the [paruff GitHub profile](https://github.com/paruff) with subject `[uFawkesObs] Security report`.
 
         See also [SECURITY.md](https://github.com/paruff/uFawkesObs/blob/main/SECURITY.md).
+
+  - type: checkboxes
+    id: acknowledgment
+    attributes:
+      label: Acknowledgment
+      description: Please confirm you understand the security reporting process
+      options:
+        - label: I understand this template is for non-sensitive security discussions only. I will use private reporting for actual vulnerabilities.
+          required: true
