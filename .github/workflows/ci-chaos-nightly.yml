@@ -96,6 +96,8 @@ jobs:
 
       - name: Run chaos tests
         run: |
+          # pipefail: without it the exit status is tee's, and a failing pytest passes.
+          set -euo pipefail
           mkdir -p reports/chaos-evidence
           pytest tests/acceptance/ \
             -m "chaos" \
@@ -104,7 +106,6 @@ jobs:
             --evidence-dir=reports/chaos-evidence \
             --junit-xml=reports/chaos-results.xml \
             -o junit_family=legacy 2>&1 | tee reports/chaos-output.log
-        continue-on-error: true
 
       - name: Generate chaos evidence report
         if: always()
@@ -145,10 +146,11 @@ jobs:
             FAILURES=$(grep -o 'failures="[0-9]*"' reports/chaos-results.xml | grep -o '[0-9]*')
             echo "Chaos test failures: $FAILURES"
             if [ "$FAILURES" -gt 0 ]; then
-              echo "❌ Chaos tests have $FAILURES failures"
-            else
-              echo "✅ All chaos tests passed"
+              echo "::error::Chaos tests have $FAILURES failures"
+              exit 1
             fi
+            echo "✅ All chaos tests passed"
           else
-            echo "⚠️ No test results file found"
+            echo "::error::No chaos test results file: the run died before pytest wrote one"
+            exit 1
           fi
