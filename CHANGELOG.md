@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.2.0-rc.1...v1.2.1-rc.1) (2026-10-10)
+
+
+### Fixed
+
+* **ci:** make the chaos nightly and the agent guardrail eval able to fail ([#180](https://github.com/paruff/uFawkesObs/issues/180)) ([#631](https://github.com/paruff/uFawkesObs/issues/631)) ([44d651b](https://github.com/paruff/uFawkesObs/commit/44d651b84bce23be5c21f2f0de5b312e06fb2381))
+* **templates:** make the security form valid and merge the duplicate PR template ([#630](https://github.com/paruff/uFawkesObs/issues/630)) ([67d9f4a](https://github.com/paruff/uFawkesObs/commit/67d9f4a71d0104179f6629ba75ba164ba6ecf3cd))
+
+
+### Docs
+
+* **pr-template:** add standardized PR template ([#627](https://github.com/paruff/uFawkesObs/issues/627)) ([7346156](https://github.com/paruff/uFawkesObs/commit/73461561acd1d409a3a45341527f519efa501b7f))
+
+
+### Chores
+
+* **templates:** add missing security issue template; drop dangling needs-triage ([#629](https://github.com/paruff/uFawkesObs/issues/629)) ([3fb24c9](https://github.com/paruff/uFawkesObs/commit/3fb24c9c8733bd017fcd32ecc390c2dc62d9dca4))
+
 ## [1.2.0-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.1.0-rc.1...v1.2.0-rc.1) (2026-10-07)
 
 
