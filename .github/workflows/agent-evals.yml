@@ -77,14 +77,19 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          # pipefail, and keep the script's status: through `| tee` a failing
+          # eval would otherwise pass. The summary is written either way.
+          set -uo pipefail
+          status=0
           python3 evals/run_guardrails.py --model sonnet --reps 1 --jobs 4 \
-            --max-budget-usd 1 --out eval-results | tee eval-summary.txt
+            --max-budget-usd 1 --out eval-results | tee eval-summary.txt || status=$?
           {
             echo '## Agent guardrail eval'
             echo '```'
             cat eval-summary.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
 
       - name: Upload eval results
         if: always() && steps.key.outputs.present == 'true'
