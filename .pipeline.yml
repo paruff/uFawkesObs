@@ -341,3 +341,19 @@ notifications:
     - github-actions
   success:
     - github-actions
+
+# Steps that report but must not block (ci-pipeline R5). Everything else that
+# can fail the build does fail it. The step name in the workflow says
+# "(informational)".
+informational:
+  - workflow: opencode.yml
+    step: Start nim-proxy (NVIDIA NIM rate-limit proxy) (informational)
+    reason: >-
+      Optional rate-limit proxy. If it does not come up the job falls back to
+      another provider (the step after it demotes NVIDIA), so it must not fail
+      the job.
+  - workflow: opencode.yml
+    step: Stop nim-proxy (informational)
+    reason: >-
+      Cleanup of a helper container; if it is already gone there is nothing to
+      stop.
