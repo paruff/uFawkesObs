@@ -102,7 +102,7 @@ jobs:
       # If neither NVIDIA_API_KEY nor NVIDIA_API_KEYS is set the proxy step
       # is skipped and PROVIDER_ORDER is updated so NVIDIA is tried last (or
       # the fallback runs directly to Gemini / OpenCode Zen).
-      - name: Start nim-proxy (NVIDIA NIM rate-limit proxy)
+      - name: Start nim-proxy (NVIDIA NIM rate-limit proxy) (informational)
         id: nim_proxy
         continue-on-error: true  # workflow continues even if proxy fails
         env:
@@ -274,7 +274,7 @@ jobs:
             -- "${PROMPT}"
 
       # ── 6. Tear down nim-proxy ────────────────────────────────────────────────
-      - name: Stop nim-proxy
+      - name: Stop nim-proxy (informational)
         if: always()
         run: docker rm -f nim-proxy 2>/dev/null || true
 
