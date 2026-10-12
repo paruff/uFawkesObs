@@ -24,8 +24,10 @@ jobs:
   # Fastest feedback: pre-commit hooks, PR size, commit format, secret detection
   preflight:
     name: Pre-flight
-    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@56226a057899ec3407c7a5c6bd5182d88783d2d2 # v1.11.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
     with:
+      # CI's hook stages run in the suite's CI image (ci-pipeline spec R4).
+      ci-image: ghcr.io/paruff/ufawkes-ci@sha256:e85db8b3554da7c3362303d0e1e9681997d78093269b641e3535989f9c66f4da
       commit-format: ${{ startsWith(github.head_ref, 'copilot/') && 'none' || 'conventional' }}
 
   # ─── Stage 1: Static Analysis (Lint) ────────────────────────────────────
@@ -33,7 +35,7 @@ jobs:
   lint:
     name: Static Analysis
     needs: [preflight]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@80a9f96f9c82089cc7e85b264214d49d3e0766bc # v1.4.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-lint.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
 
   # ─── Stage 2: Security Scanning ─────────────────────────────────────────
   # Static security: secrets (Gitleaks), vulnerabilities (Trivy), dependencies
@@ -41,7 +43,7 @@ jobs:
   security:
     name: Security Scanning
     needs: [lint]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml@80a9f96f9c82089cc7e85b264214d49d3e0766bc # v1.4.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-security-scanning.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
     with:
       scan-type: all
       severity-threshold: MEDIUM
@@ -53,7 +55,7 @@ jobs:
   dependency-review:
     name: Dependency Review
     needs: [lint]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml@80a9f96f9c82089cc7e85b264214d49d3e0766bc # v1.4.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-dependency-review.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
     with:
       fail-on-severity: high
       comment-summary-in-pr: "true"
@@ -63,7 +65,7 @@ jobs:
   build:
     name: Build & Validate
     needs: [security, dependency-review]
-    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@80a9f96f9c82089cc7e85b264214d49d3e0766bc # v1.4.0-beta.1
+    uses: paruff/ufawkespipe/.github/workflows/reusable-build.yml@41f3e92d6fb63b3779595bed3e44333c67d37028 # v1.15.0-beta.1
     with:
       validate-prometheus: true
       validate-otel: true
