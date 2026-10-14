@@ -31,7 +31,7 @@ Feature: Core Observability Substrate (M1)
     Then service "tempo" should have image "grafana/tempo:2.10.5"
 
   Scenario: Alloy uses the correct image
-    Then service "alloy" should have image "grafana/alloy:v1.12.2"
+    Then service "alloy" should have image "grafana/alloy:v1.14.2"
 
   Scenario: Node Exporter uses the correct image
     Then service "node-exporter" should have image "prom/node-exporter:v1.8.1"
