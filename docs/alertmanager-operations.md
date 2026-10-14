@@ -103,14 +103,14 @@ docker compose logs alertmanager --timestamps
 Out of the box Alertmanager sends notifications to the local webhook test sink
 only (`http://host.docker.internal:5001/webhook`). To make alerts reach a human,
 enable the **tested** Slack or Discord recipes below. Both are commented out in
-`config/alertmanager/alertmanager.yml` by default and use webhook URLs from
-`.env` — never hardcode a webhook URL in the config.
+`config/alertmanager/alertmanager.yml` by default and read webhook URLs from
+`.env` (Slack) or a gitignored file (Discord) — never hardcode a webhook URL in
+the config.
 
-The webhook variables live in `.env` (see `.env.example`):
+The Slack webhook variable lives in `.env` (see `.env.example`):
 
 ```bash
 SLACK_WEBHOOK_URL=REPLACE_ME
-DISCORD_WEBHOOK_URL=REPLACE_ME
 ```
 
 ### Slack Notifications
@@ -160,48 +160,44 @@ different channel name causes Slack to reject the message with
 
 ### Discord Notifications
 
-Alertmanager has **no native Discord integration**, so the `discord-notifications`
-receiver posts to the `alertmanager-discord` bridge container
-(`rogerrum/alertmanager-discord:1.0.7`), which translates Alertmanager webhooks
-into Discord embeds. The bridge lives in its own `notifications` profile — the
-default `core` stack is unchanged.
+Alertmanager supports Discord natively via `discord_configs`, so the
+`discord-notifications` receiver posts straight to the Discord webhook — there
+is no bridge container. The webhook URL is read from a file
+(`webhook_url_file`) so it never lands in the config.
 
 **Setup steps:**
 
 1. **Create a Discord channel webhook**: open the target channel → *Channel
    Settings* → *Integrations* → *Webhooks* → *New Webhook*, then copy the
    webhook URL.
-2. **Set the webhook URL** in `.env`:
+2. **Save the URL** in the gitignored file Alertmanager reads:
 
    ```bash
-   DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/<ID>/<TOKEN>
+   echo 'https://discord.com/api/webhooks/<ID>/<TOKEN>' > config/alertmanager/discord_webhook_url
    ```
 
-3. **Start the bridge** (adds `alertmanager-discord` alongside the core stack):
+3. **Mount it** into the `alertmanager` service in `compose.yaml` (add to its
+   `volumes:`):
 
-   ```bash
-   docker compose --profile core --profile notifications up -d
+   ```yaml
+   - ./config/alertmanager/discord_webhook_url:/etc/alertmanager/discord_webhook_url:ro
    ```
 
-   > The bridge intentionally fails to start when `DISCORD_WEBHOOK_URL` is
-   > empty — set step 2 first.
 4. **Uncomment** the `discord-notifications` receiver and its catch-all route in
    `config/alertmanager/alertmanager.yml` (search for `[RECIPE] Discord notifications`).
-5. **Reload Alertmanager**:
+5. **Recreate and reload Alertmanager** (the new mount needs a recreate):
 
    ```bash
+   docker compose up -d alertmanager
    curl -X POST http://localhost:9093/-/reload
    ```
 
-6. **Verify** (see below): fire a test alert and confirm the Discord embed
-   arrives in the channel. The bridge logs its delivery attempts:
+6. **Verify** (see below): fire a test alert and confirm the Discord message
+   arrives in the channel. Delivery failures appear in Alertmanager's own log:
 
    ```bash
-   docker compose logs alertmanager-discord --tail=20
+   docker compose logs alertmanager --tail=20
    ```
-
-   A delivered message shows the successful Discord API response; failures log
-   the Discord error body.
 
 ### Sending a Test Alert
 
@@ -240,8 +236,8 @@ curl -s http://localhost:9093/api/v2/alerts | jq '.[] | select(.labels.alertname
 # Slack: check your chosen channel (the one picked when the webhook was created)
 # Discord: check the channel — embed titled "[FIRING:1] LB-03 Slack/Discord test alert"
 
-# Discord bridge delivery log
-docker compose logs alertmanager-discord --tail=20
+# Discord delivery log
+docker compose logs alertmanager --tail=20
 ```
 
 ## Alert Runbooks

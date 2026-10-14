@@ -49,13 +49,11 @@ authoritative.
 | `alloy` | core | `127.0.0.1:12345` |
 | `node-exporter` | core | `127.0.0.1:9100` |
 | `dora-api` | dora | `127.0.0.1:8088` |
-| `alertmanager-discord` | notifications | none |
 | `telemetry-generator` | apps | `*:5001→5000` |
 
 **`.env.example` variables:** `GRAFANA_ADMIN_USER`,
 `GRAFANA_ADMIN_PASSWORD`, `DORA_COMPUTE_WINDOW_DAYS`,
-`DORA_COMPUTE_INTERVAL_SECONDS`, `DORA_API_KEY`, `SLACK_WEBHOOK_URL`,
-`DISCORD_WEBHOOK_URL`
+`DORA_COMPUTE_INTERVAL_SECONDS`, `DORA_API_KEY`, `SLACK_WEBHOOK_URL`
 
 ### Semver rules
 

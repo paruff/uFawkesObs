@@ -111,8 +111,7 @@ live `make up` (`core` profile) stack before wiring anything into CI:
   every declared port mapping is actually bound as declared, and no
   anonymous volumes exist on any container.
 - **8 controls skipped**, not failed — `telemetry-generator` (`apps`
-  profile), `dora-api` (`dora` profile), and `alertmanager-discord`
-  (`notifications` profile) weren't running at check time, so their
+  profile) and `dora-api` (`dora` profile) weren't running at check time, so their
   controls' `only_if` guard skipped rather than reporting a false failure.
 - **Net finding: nothing found.** The `core` stack's actually-running
   containers are fully conformant with AGENTS.md §4 as declared in
