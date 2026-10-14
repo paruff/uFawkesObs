@@ -31,7 +31,7 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "alertmanager": "prom/alertmanager:v0.34.1",
     "tempo": "grafana/tempo:2.10.5",
     "loki": "grafana/loki:3.3.2",
-    "alloy": "grafana/alloy:v1.12.2",
+    "alloy": "grafana/alloy:v1.14.2",
     "grafana": "grafana/grafana:12.3.7",
     "alertmanager-discord": "rogerrum/alertmanager-discord:1.0.7",
 }
