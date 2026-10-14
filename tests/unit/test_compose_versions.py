@@ -32,7 +32,7 @@ EXPECTED_VERSIONS: dict[str, str] = {
     "tempo": "grafana/tempo:2.10.5",
     "loki": "grafana/loki:3.6.17",
     "alloy": "grafana/alloy:v1.14.2",
-    "grafana": "grafana/grafana:12.3.7",
+    "grafana": "grafana/grafana:12.4.13",
 }
 
 EXPECTED_LOCALHOST_BINDINGS: dict[str, str] = {
