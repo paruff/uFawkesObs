@@ -129,9 +129,8 @@ jobs:
   # ─── Conformance Tests (InSpec) ──────────────────────────────────────────
   # AGENTS.md §4: checks the actually-running containers against declared
   # compose.yaml (healthcheck status, image digest, port bindings, no
-  # anonymous volumes) via inspec/ufawkesobs-conformance (#414). Not yet a
-  # required branch-protection check (#415) -- runs and reports on every PR
-  # so its false-positive rate can be observed before gating merges on it.
+  # anonymous volumes) via inspec/ufawkesobs-conformance (#414). A required
+  # check in the main-protection ruleset (#415).
   conformance-tests:
     name: Conformance Tests (InSpec)
     runs-on: ubuntu-24.04

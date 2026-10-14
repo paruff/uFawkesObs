@@ -124,7 +124,7 @@ live `make up` (`core` profile) stack before wiring anything into CI:
 
 - [x] [#413](https://github.com/paruff/uFawkesObs/issues/413) — Testcontainers spike: migrate one integration test file (on `main`)
 - [x] [#414](https://github.com/paruff/uFawkesObs/issues/414) — InSpec profile for AGENTS.md §4 conformance (on `main`)
-- [ ] [#415](https://github.com/paruff/uFawkesObs/issues/415) — Wire InSpec profile into CI (depends on #414). CI job on `main`, reporting on every PR. Still needed: adding it to branch protection's required checks (maintainer action, AGENTS.md §5) once its false-positive rate is confirmed low across real runs.
+- [x] [#415](https://github.com/paruff/uFawkesObs/issues/415) — Wire InSpec profile into CI (depends on #414). CI job on `main`, reporting on every PR. Added to the `main-protection` ruleset's required checks after 31/31 recent `ci-tests.yml` runs passed the InSpec job.
 - [ ] [#416](https://github.com/paruff/uFawkesObs/issues/416) — Migrate remaining `tests/integration/` to Testcontainers (depends on #413). File-by-file status (each a separate PR, kept under the 400-line gate):
   - [x] `test_otel_collector_testcontainers.py` — spike (#413, on `main`), expanded to full coverage and the original retired (below)
   - [x] `test_tempo_integration.py` — single-service, no `depends_on:` (PR open)
