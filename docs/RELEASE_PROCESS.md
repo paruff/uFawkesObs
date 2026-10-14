@@ -88,6 +88,14 @@ flip this to `false` so releases stop being marked prerelease. This is a
 manual one-line config change, not automatic — release-please has no
 way to know when "late beta" is reached.
 
+## Forcing v1.0.0 (one-time)
+
+`bump-minor-pre-major` means release-please never proposes `1.0.0` on its
+own. `release-please-config.json` therefore pins `"release-as": "1.0.0"` and
+`"prerelease": false` for the stable cut (#600). **Remove `release-as` in the
+first PR after `v1.0.0` ships**, or every later release PR will keep
+proposing `1.0.0`. After 1.0 the `bump-*-pre-major` flags no longer apply.
+
 ## Keeping the manifest in sync with manual releases
 
 `.release-please-manifest.json` is release-please's own record of "the
