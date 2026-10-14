@@ -34,7 +34,7 @@ Feature: Core Observability Substrate (M1)
     Then service "alloy" should have image "grafana/alloy:v1.12.2"
 
   Scenario: Node Exporter uses the correct image
-    Then service "node-exporter" should have image "prom/node-exporter:v1.8.1"
+    Then service "node-exporter" should have image "prom/node-exporter:v1.12.1"
 
   Scenario: All core services are on the observability network
     Then service "otel-collector" should be in network "observability"
