@@ -1,0 +1,14 @@
+grafana	Up About a minute (healthy)
+otel-collector	Up About a minute
+alloy	Up About a minute (healthy)
+prometheus	Up 2 minutes (healthy)
+tempo	Up 2 minutes
+loki	Up 2 minutes (healthy)
+telemetry-generator	Up 2 minutes (healthy)
+alertmanager	Up 2 minutes (healthy)
+node-exporter	Up 2 minutes (healthy)
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+Docker version 29.1.3, build 29.1.3-0ubuntu3~24.04.2
+Docker Compose version 2.40.3+ds1-0ubuntu1~24.04.1
+16d98e7b54263228b556f546cfe97d5f1738c101
