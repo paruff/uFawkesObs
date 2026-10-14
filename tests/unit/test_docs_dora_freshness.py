@@ -28,6 +28,7 @@ ALLOWLIST = (
     "docs/CONTRACTS.md",  # keeps a "not deployed" section for the inert collector
     "docs/product/design.md",  # supersession banner: "parts below no longer run"
     "config/otel/collector-dora.yaml",  # inert config retained deliberately (#534)
+    "docs/notes/rg1-",  # dated clean-install evidence (raw logs, screenshots), not current-state docs
 )
 
 # (path, name) pairs: a file may discuss one retired name as removal history
