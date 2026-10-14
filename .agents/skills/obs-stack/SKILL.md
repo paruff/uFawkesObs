@@ -18,7 +18,7 @@ metadata:
 | Prometheus     | v3.5.4   | 9090                 | 9090                 | `config/prometheus/prometheus.yaml`              |
 | Alertmanager   | v0.34.1  | 9093                 | 9093                 | `config/alertmanager/alertmanager.yml`           |
 | Tempo          | 2.10.5   | 3200/9095/9411/14250/14268 | 3200/9095/9411/14250/14268 | `config/tempo/tempo.yaml`                |
-| Loki           | 3.3.2    | 3100/9096            | 3100/9096             | `config/loki/loki.yaml`                          |
+| Loki           | 3.6.17   | 3100/9096            | 3100/9096             | `config/loki/loki.yaml`                          |
 | Alloy          | v1.12.2  | 12345                | 12345                | `config/alloy/config.river`                      |
 | Grafana        | 12.3.7   | 3000                 | 3000                 | `config/grafana/` (provisioning)                 |
 | Node Exporter  | v1.8.1   | 9100                 | 9100                 | — (no custom config)                             |

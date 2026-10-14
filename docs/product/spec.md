@@ -118,7 +118,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 | **Prometheus** | `v3.5.4` | Metrics TSDB & scrape engine | `./data/prometheus` | `config/prometheus/prometheus.yaml` |
 | **Alertmanager** | `v0.34.1` | Notification aggregator & router | `./data/alertmanager` | `config/alertmanager/alertmanager.yml` |
 | **Tempo** | `2.10.5` | Distributed trace database | `./data/tempo` | `config/tempo/tempo.yaml` |
-| **Loki** | `3.3.2` | Log indexer & backend | `./data/loki` | `config/loki/loki.yaml` |
+| **Loki** | `3.6.17` | Log indexer & backend | `./data/loki` | `config/loki/loki.yaml` |
 | **Alloy** | `v1.12.2` | Container log discovery & forwarding | `./data/alloy` | `config/alloy/config.river` |
 | **Grafana** | `12.3.7` | Metrics, logs, & trace dashboard UI | `./data/grafana` | `config/grafana/grafana.ini` |
 | **Node Exporter** | `v1.8.1` | Host system exporter | Host read mounts | None |

@@ -300,7 +300,7 @@ services:
     profiles: ["core"]
 
   loki:
-    image: grafana/loki:3.3.2@sha256:8af2de1abbdd7aa92b27c9bcc96f0f4140c9096b507c77921ffddf1c6ad6c48f
+    image: grafana/loki:3.6.17@sha256:cd5471d6ae439eb0a7a9055b9b2fb3fd3c5485934dd576473a6289d3936b8b27
     container_name: loki
     restart: unless-stopped
     command:

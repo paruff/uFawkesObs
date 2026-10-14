@@ -25,7 +25,7 @@ Feature: Core Observability Substrate (M1)
     Then service "grafana" should have image "grafana/grafana:12.3.7"
 
   Scenario: Loki uses the correct image
-    Then service "loki" should have image "grafana/loki:3.3.2"
+    Then service "loki" should have image "grafana/loki:3.6.17"
 
   Scenario: Tempo uses the correct image
     Then service "tempo" should have image "grafana/tempo:2.10.5"
