@@ -153,9 +153,9 @@ jobs:
   scan-images:
     name: Scan Compose Images
     runs-on: ubuntu-24.04
-    # 6 of 9 pinned images have fixable CRITICALs on main today (alloy, grafana,
-    # loki, otel-collector, node-exporter, alertmanager-discord). Report-only until
-    # those are bumped; then drop continue-on-error so the gate bites (#474).
+    # 4 of 9 pinned images have fixable CRITICALs (loki, otel-collector,
+    # node-exporter, alertmanager-discord). Report-only until those are bumped;
+    # then drop continue-on-error so the gate bites (#474).
     continue-on-error: true
     timeout-minutes: 20
     steps:
