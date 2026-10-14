@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/paruff/uFawkesObs/compare/v1.2.0-rc.1...v1.0.0) (2026-10-14)
+
+
+### Fixed
+
+* **ci:** make the chaos nightly and the agent guardrail eval able to fail ([#180](https://github.com/paruff/uFawkesObs/issues/180)) ([#631](https://github.com/paruff/uFawkesObs/issues/631)) ([44d651b](https://github.com/paruff/uFawkesObs/commit/44d651b84bce23be5c21f2f0de5b312e06fb2381))
+* **ci:** mark nim-proxy informational; stop swallowing curl ([#180](https://github.com/paruff/uFawkesObs/issues/180)) ([#632](https://github.com/paruff/uFawkesObs/issues/632)) ([0caea14](https://github.com/paruff/uFawkesObs/commit/0caea148133d2875ca2c6794684a10df2b39966c))
+* **make:** make down and make logs select profiled services ([#617](https://github.com/paruff/uFawkesObs/issues/617)) ([#638](https://github.com/paruff/uFawkesObs/issues/638)) ([16d98e7](https://github.com/paruff/uFawkesObs/commit/16d98e7b54263228b556f546cfe97d5f1738c101))
+* **templates:** make the security form valid and merge the duplicate PR template ([#630](https://github.com/paruff/uFawkesObs/issues/630)) ([67d9f4a](https://github.com/paruff/uFawkesObs/commit/67d9f4a71d0104179f6629ba75ba164ba6ecf3cd))
+
+
+### Docs
+
+* add the Linux chown step to the README Quick Start (REL-02) ([#639](https://github.com/paruff/uFawkesObs/issues/639)) ([c2c2681](https://github.com/paruff/uFawkesObs/commit/c2c2681b0971cc2887e6c9a5aacec20200f0a5d4))
+* **pr-template:** add standardized PR template ([#627](https://github.com/paruff/uFawkesObs/issues/627)) ([7346156](https://github.com/paruff/uFawkesObs/commit/73461561acd1d409a3a45341527f519efa501b7f))
+
+
+### Chores
+
+* **ci:** adopt Pipe v1.15.0-beta.1 and the CI image ([#181](https://github.com/paruff/uFawkesObs/issues/181)) ([#633](https://github.com/paruff/uFawkesObs/issues/633)) ([79bdefa](https://github.com/paruff/uFawkesObs/commit/79bdefa81786353ff6476c054835a53ee16d0d91))
+* **ci:** bump uFawkesPipe reusables to v1.16.0-beta.1 ([#635](https://github.com/paruff/uFawkesObs/issues/635)) ([0493932](https://github.com/paruff/uFawkesObs/commit/04939327150798a3282111e2b22298a143e1df55))
+* **infra:** adopt the OpenCode shift-left plugin ([#153](https://github.com/paruff/uFawkesObs/issues/153)) ([#634](https://github.com/paruff/uFawkesObs/issues/634)) ([4a385c6](https://github.com/paruff/uFawkesObs/commit/4a385c6de9b98d61ec794cd6cd7919fe924fb529))
+* **release:** pin release-as 1.0.0 and drop prerelease for the stable cut ([#640](https://github.com/paruff/uFawkesObs/issues/640)) ([ecc7ef3](https://github.com/paruff/uFawkesObs/commit/ecc7ef34aaf92cdbc92ae42d981a8dfcacbbcd43))
+* **templates:** add missing security issue template; drop dangling needs-triage ([#629](https://github.com/paruff/uFawkesObs/issues/629)) ([3fb24c9](https://github.com/paruff/uFawkesObs/commit/3fb24c9c8733bd017fcd32ecc390c2dc62d9dca4))
+
 ## [1.2.0-rc.1](https://github.com/paruff/uFawkesObs/compare/v1.1.0-rc.1...v1.2.0-rc.1) (2026-10-07)
 
 
