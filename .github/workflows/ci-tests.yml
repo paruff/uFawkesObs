@@ -60,12 +60,8 @@ jobs:
       # so a plain value here (not a GitHub secret) is fine. Required since
       # compose.yaml stopped defaulting this to "admin" (#380/PR #386); this
       # job never set it at all before, unlike the other CI workflows.
-      # Must be "admin" — the "Run dashboard tests" step below hardcodes
-      # GRAFANA_PASSWORD: admin for its API assertions (a *different* env
-      # var name than this one), so any other value here 401s against the
-      # stack this starts. The Grafana integration test file itself no
-      # longer reads a separate GRAFANA_PASSWORD (#416) -- it self-
-      # provisions and reads this same GRAFANA_ADMIN_PASSWORD directly.
+      # Every integration file self-provisions its own stack (#416) and reads
+      # this GRAFANA_ADMIN_PASSWORD directly; there is no shared stack.
       GRAFANA_ADMIN_PASSWORD: admin
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -80,23 +76,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r tests/integration/requirements.lock
 
-      - name: Create data directories
-        run: |
-          mkdir -p data/prometheus data/grafana data/tempo data/loki data/alertmanager
-          chmod -R 777 data/
-
-      - name: Start observability stack
-        run: docker compose --profile core up -d --build
-
-      - name: Wait for services
-        run: |
-          timeout 90 bash -c 'until curl -sf http://localhost:9090/-/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3200/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:3100/ready; do sleep 2; done'
-          timeout 90 bash -c 'until curl -sf http://localhost:8888/metrics; do sleep 2; done'
-          sleep 20
-
       - name: Run OTel Collector tests
         # Migrated to Testcontainers (#413/#416) -- self-provisions,
         # doesn't read OTEL_METRICS_URL. The original test_otel_collector.py
@@ -105,18 +84,19 @@ jobs:
 
       - name: Run Tempo integration tests
         # Migrated to Testcontainers (#416) -- self-provisions its own Tempo
-        # container via the docker socket, doesn't read TEMPO_URL or depend
-        # on this job's shared stack. Runs here alongside the rest of this
-        # job only because the other files below still need that stack;
-        # revisit this job's shared docker compose up once they migrate too.
+        # container via the docker socket, doesn't read TEMPO_URL.
         run: pytest tests/integration/test_tempo_integration.py -v --tb=short
 
       - name: Run Loki integration tests
-        # Loki's own tests migrated to Testcontainers (#416) -- self-
-        # provision, don't read LOKI_URL. TestAlloyIntegration in this same
-        # file still depends on this job's shared stack (Alloy depends on
-        # both Loki and Prometheus; not in scope for this file's migration).
+        # Migrated to Testcontainers (#416) -- self-provisions, doesn't
+        # read LOKI_URL.
         run: pytest tests/integration/test_loki_integration.py -v --tb=short
+
+      - name: Run Alloy and dashboard data-flow tests
+        # Migrated to Testcontainers (#416) -- self-provisions the whole
+        # `core` profile (Alloy needs Loki + Prometheus), doesn't read
+        # ALLOY_URL/LOKI_URL/TEMPO_URL/PROMETHEUS_URL/GRAFANA_URL.
+        run: pytest tests/integration/test_alloy_and_dashboards.py -v --tb=short
 
       - name: Run dashboard tests
         # Migrated to Testcontainers (#416) -- self-provisions Grafana +
@@ -135,16 +115,6 @@ jobs:
         # `core` profile (test_all_configured_targets_are_up needs every
         # scrape target up), doesn't read PROMETHEUS_URL.
         run: pytest tests/integration/test_prometheus_scraping.py -v --tb=short
-
-      - name: Show logs on failure
-        if: failure()
-        run: |
-          docker compose ps
-          docker compose logs --tail=50 prometheus grafana otel-collector tempo loki alloy
-
-      - name: Shutdown
-        if: always()
-        run: docker compose --profile core down -v
 
       - name: Upload test results
         if: always()

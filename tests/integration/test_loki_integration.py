@@ -5,13 +5,6 @@ Migrated to Testcontainers (#416, following #413/Tempo's pattern): provisions
 its own Loki container per test-module run instead of assuming `make up`
 already started a shared stack. Loki has no `depends_on:` in compose.yaml,
 so its own tests are a clean single-service migration.
-
-TestAlloyIntegration below is intentionally NOT migrated here -- it tests a
-different service (Alloy), which depends on both Loki and Prometheus
-(compose.yaml `depends_on:`), so it belongs with test_alloy_and_dashboards.py's
-own entry in docs/TESTING_PYRAMID.md's migration checklist instead of being
-bundled into this file's scope. It still assumes the shared stack this file's
-CI step runs alongside.
 """
 
 from __future__ import annotations
@@ -195,28 +188,3 @@ class TestLokiDataRetention:
     def test_loki_storage_accessible(self, loki_url: str):
         response = requests.get(f"{loki_url}/ready", timeout=10)
         assert response.status_code == 200, "Loki should have accessible storage"
-
-
-class TestAlloyIntegration:
-    """Test Grafana Alloy integration with Loki.
-
-    Not migrated -- Alloy depends on both Loki and Prometheus (compose.yaml
-    `depends_on:`), so this belongs with test_alloy_and_dashboards.py's own
-    migration (docs/TESTING_PYRAMID.md), not this file's single-service
-    scope. Still assumes the shared stack this file's CI step runs alongside.
-    """
-
-    def test_alloy_is_running(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
-        try:
-            result = sock.connect_ex(("localhost", 12345))
-            assert result == 0, "Alloy HTTP port 12345 should be open"
-        finally:
-            sock.close()
-
-    def test_alloy_metrics_endpoint(self):
-        response = requests.get("http://localhost:12345/metrics", timeout=10)
-
-        if response.status_code == 200:
-            assert len(response.text) > 0, "Alloy should expose metrics"

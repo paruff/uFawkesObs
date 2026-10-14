@@ -154,6 +154,25 @@ def _project_container_ids(
     return container_ids
 
 
+def _remove_project(project_name: str) -> None:
+    """Remove everything left in the throwaway project.
+
+    DockerCompose's own teardown only removes the services named in
+    `services=`, leaving their `depends_on:` containers (prometheus, loki,
+    tempo, ...) running after the module finishes.
+    """
+    result = subprocess.run(
+        ["docker", "compose", "-p", project_name, "down", "-v", "--remove-orphans"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        warnings.warn(
+            f"Failed to remove isolated project {project_name}: {result.stderr}",
+            stacklevel=2,
+        )
+
+
 @contextmanager
 def isolated_compose(
     *,
@@ -191,6 +210,7 @@ def isolated_compose(
             had_failure = True
             raise
         finally:
+            _remove_project(isolated_project_name)
             if original_project_name is None:
                 os.environ.pop("COMPOSE_PROJECT_NAME", None)
             else:

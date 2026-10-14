@@ -1,53 +1,120 @@
 """
 Integration tests for Alloy and dashboard metrics/logs/traces validation.
 Tests that Alloy collects logs, dashboards display data, and correlations work.
+
+Migrated to Testcontainers (#416): provisions the whole `core` profile per
+test-module run (Alloy depends on Loki and Prometheus; the dashboard tests
+need Grafana's datasources) instead of assuming `make up` already started a
+shared stack. Also absorbs the former TestAlloyIntegration from
+test_loki_integration.py, whose two checks (port open, metrics endpoint)
+duplicate TestAlloyHealth below.
 """
 
+from __future__ import annotations
+
 import os
+import pathlib
+import socket
+import tempfile
 import time
 
 import pytest
 import requests
 
-# Configuration
-GRAFANA_URL = os.getenv("GRAFANA_URL", "http://localhost:3000")
-GRAFANA_USER = os.getenv("GRAFANA_USER", "admin")
-GRAFANA_ADMIN_PASSWORD = os.getenv(
-    "GRAFANA_ADMIN_PASSWORD", os.getenv("GRAFANA_PASSWORD", "admin")
-)
-LOKI_URL = os.getenv("LOKI_URL", "http://localhost:3100")
-ALLOY_URL = os.getenv("ALLOY_URL", "http://localhost:12345")
-TEMPO_URL = os.getenv("TEMPO_URL", "http://localhost:3200")
-PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")
+from tests.integration._compose_isolation import isolated_compose
+
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+GRAFANA_USER = "admin"
+GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD", "admin")
+
+# Ready-check path per service, polled before any test touches it:
+# Testcontainers' wait=True only confirms the port opened (#416/Tempo saw
+# 503s on a bare port-open wait).
+READY_PATHS = {
+    "alloy": (12345, "/-/ready"),
+    "loki": (3100, "/ready"),
+    "tempo": (3200, "/ready"),
+    "prometheus": (9090, "/-/ready"),
+    "grafana": (3000, "/api/health"),
+}
 
 
-@pytest.fixture(scope="session")
-def alloy_url() -> str:
-    """Provide Alloy URL."""
-    return ALLOY_URL
+@pytest.fixture(scope="module")
+def core_stack():
+    # Same .env-precedence and SLACK_WEBHOOK_URL requirements as the
+    # Prometheus/Grafana migrations (whole-profile start, no explicit
+    # services=): an explicit env_file beats the repo's own auto-loaded .env.
+    with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as f:
+        f.write(f"GRAFANA_ADMIN_PASSWORD={GRAFANA_ADMIN_PASSWORD}\n")
+        f.write(f"SLACK_WEBHOOK_URL={os.environ.get('SLACK_WEBHOOK_URL', '')}\n")
+        env_file_path = f.name
+
+    try:
+        with isolated_compose(
+            repo_root=REPO_ROOT,
+            env_file=env_file_path,
+            profiles=["core"],
+            protected_services=[
+                "prometheus",
+                "grafana",
+                "otel-collector",
+                "tempo",
+                "loki",
+                "alertmanager",
+                "alloy",
+                "node-exporter",
+            ],
+        ) as compose:
+            yield compose
+    finally:
+        os.unlink(env_file_path)
 
 
-@pytest.fixture(scope="session")
-def wait_for_alloy(alloy_url: str) -> None:
-    """Wait for Alloy to be ready."""
-    max_retries = 60
-    retry_interval = 2
+def _service_url(stack, service: str) -> str:
+    container_port, ready_path = READY_PATHS[service]
+    host, port = stack.get_service_host_and_port(service, container_port)
+    url = f"http://{host}:{int(port)}"
 
-    for attempt in range(max_retries):
+    last_error = "no response"
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
         try:
-            response = requests.get(f"{alloy_url}/metrics", timeout=5)
+            response = requests.get(f"{url}{ready_path}", timeout=5)
             if response.status_code == 200:
-                print(f"✅ Alloy is ready after {attempt + 1} attempts")
-                return
-        except requests.exceptions.RequestException:
-            pass
-
-        time.sleep(retry_interval)
-
-    pytest.fail("Alloy did not become ready in time")
+                return url
+            last_error = f"HTTP {response.status_code}"
+        except requests.exceptions.RequestException as error:
+            last_error = repr(error)
+        time.sleep(2)
+    pytest.fail(f"{service} not ready at {url}{ready_path} within 90s: {last_error}")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
+def alloy_url(core_stack) -> str:
+    return _service_url(core_stack, "alloy")
+
+
+@pytest.fixture(scope="module")
+def loki_url(core_stack) -> str:
+    return _service_url(core_stack, "loki")
+
+
+@pytest.fixture(scope="module")
+def tempo_url(core_stack) -> str:
+    return _service_url(core_stack, "tempo")
+
+
+@pytest.fixture(scope="module")
+def prometheus_url(core_stack) -> str:
+    return _service_url(core_stack, "prometheus")
+
+
+@pytest.fixture(scope="module")
+def grafana_url(core_stack) -> str:
+    return _service_url(core_stack, "grafana")
+
+
+@pytest.fixture(scope="module")
 def grafana_auth() -> tuple:
     """Provide Grafana authentication credentials."""
     return (GRAFANA_USER, GRAFANA_ADMIN_PASSWORD)
@@ -56,21 +123,20 @@ def grafana_auth() -> tuple:
 class TestAlloyHealth:
     """Test Alloy health and availability."""
 
-    def test_alloy_metrics_port_open(self):
+    def test_alloy_metrics_port_open(self, core_stack):
         """Test that Alloy metrics port is accessible."""
-        import socket
-
+        host, port = core_stack.get_service_host_and_port("alloy", 12345)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
 
         try:
-            result = sock.connect_ex(("localhost", 12345))
+            result = sock.connect_ex((host, int(port)))
             assert result == 0, "Alloy HTTP port 12345 should be open"
             print("✅ Alloy HTTP port (12345) is open")
         finally:
             sock.close()
 
-    def test_alloy_metrics_endpoint(self, wait_for_alloy, alloy_url: str):
+    def test_alloy_metrics_endpoint(self, alloy_url: str):
         """Test that Alloy exposes metrics."""
         response = requests.get(f"{alloy_url}/metrics", timeout=10)
 
@@ -85,7 +151,7 @@ class TestAlloyHealth:
 class TestAlloyDockerSource:
     """Test Alloy Docker source discovery."""
 
-    def test_alloy_has_docker_metrics(self, wait_for_alloy, alloy_url: str):
+    def test_alloy_has_docker_metrics(self, alloy_url: str):
         """Test that Alloy has Docker source metrics."""
         response = requests.get(f"{alloy_url}/metrics", timeout=10)
 
@@ -111,7 +177,7 @@ class TestAlloyDockerSource:
 class TestAlloyToLokiPipeline:
     """Test the Alloy → Loki pipeline."""
 
-    def test_alloy_can_write_to_loki(self, wait_for_alloy, alloy_url: str):
+    def test_alloy_can_write_to_loki(self, alloy_url: str):
         """Test that Alloy can connect to Loki."""
         response = requests.get(f"{alloy_url}/metrics", timeout=10)
 
@@ -133,10 +199,6 @@ class TestAlloyToLokiPipeline:
 
 class TestDashboardMetricsData:
     """Test that dashboards receive metrics from Prometheus."""
-
-    @pytest.fixture(scope="session")
-    def prometheus_url(self) -> str:
-        return PROMETHEUS_URL
 
     def test_prometheus_has_otel_metrics(self, prometheus_url: str):
         """Test that Prometheus scrapes OTel Collector metrics."""
@@ -193,7 +255,7 @@ class TestDashboardMetricsData:
 class TestDashboardLogsData:
     """Test that dashboards receive logs from Loki via Alloy."""
 
-    def test_loki_receives_docker_logs(self):
+    def test_loki_receives_docker_logs(self, loki_url: str):
         """Test that Loki has docker container logs."""
         import time as time_module
 
@@ -202,7 +264,7 @@ class TestDashboardLogsData:
         ten_min_ago = now - (10 * 60 * 1e9)
 
         response = requests.get(
-            f"{LOKI_URL}/loki/api/v1/query_range",
+            f"{loki_url}/loki/api/v1/query_range",
             params={
                 "query": '{job="docker"}',
                 "start": str(int(ten_min_ago)),
@@ -225,12 +287,12 @@ class TestDashboardLogsData:
         else:
             print(f"⚠️  Loki query returned {response.status_code}")
 
-    def test_loki_has_compose_service_labels(self):
+    def test_loki_has_compose_service_labels(self, loki_url: str):
         """Test that logs have compose_service labels for filtering."""
 
         # Query for logs with compose_service label
         response = requests.get(
-            f"{LOKI_URL}/loki/api/v1/labels/compose_service/values", timeout=10
+            f"{loki_url}/loki/api/v1/labels/compose_service/values", timeout=10
         )
 
         if response.status_code == 200:
@@ -246,17 +308,17 @@ class TestDashboardLogsData:
 class TestDashboardTracesData:
     """Test that dashboards receive traces from Tempo."""
 
-    def test_tempo_is_ready(self):
+    def test_tempo_is_ready(self, tempo_url: str):
         """Test that Tempo is ready to receive traces."""
-        response = requests.get(f"{TEMPO_URL}/ready", timeout=5)
+        response = requests.get(f"{tempo_url}/ready", timeout=5)
         assert response.status_code == 200, "Tempo should be ready"
 
         print("✅ Tempo is ready for traces")
 
-    def test_tempo_has_traces(self):
+    def test_tempo_has_traces(self, tempo_url: str):
         """Test that Tempo has received traces."""
         response = requests.get(
-            f"{TEMPO_URL}/api/traces", params={"limit": "10"}, timeout=10
+            f"{tempo_url}/api/traces", params={"limit": "10"}, timeout=10
         )
 
         # Tempo may return 400 if no data yet, that's okay
@@ -269,10 +331,12 @@ class TestDashboardTracesData:
 class TestDashboardMetricsLogsTracesCorrelation:
     """Test that dashboards can correlate metrics, logs, and traces."""
 
-    def test_loki_datasource_has_trace_correlation(self, grafana_auth: tuple):
+    def test_loki_datasource_has_trace_correlation(
+        self, grafana_url: str, grafana_auth: tuple
+    ):
         """Test that Loki datasource has trace correlation configured."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/datasources", auth=grafana_auth, timeout=10
+            f"{grafana_url}/api/datasources", auth=grafana_auth, timeout=10
         )
 
         datasources = response.json()
@@ -298,10 +362,12 @@ class TestDashboardMetricsLogsTracesCorrelation:
                 "⚠️  Loki datasource has no derived fields configured for trace correlation"
             )
 
-    def test_tempo_datasource_has_service_map(self, grafana_auth: tuple):
+    def test_tempo_datasource_has_service_map(
+        self, grafana_url: str, grafana_auth: tuple
+    ):
         """Test that Tempo datasource has service map configured."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/datasources", auth=grafana_auth, timeout=10
+            f"{grafana_url}/api/datasources", auth=grafana_auth, timeout=10
         )
 
         datasources = response.json()
@@ -321,10 +387,12 @@ class TestDashboardMetricsLogsTracesCorrelation:
 class TestDashboardRendering:
     """Test that dashboards render without errors."""
 
-    def test_infrastructure_dashboard_has_log_panel(self, grafana_auth: tuple):
+    def test_infrastructure_dashboard_has_log_panel(
+        self, grafana_url: str, grafana_auth: tuple
+    ):
         """Test that Infrastructure Overview dashboard has log data panels."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/dashboards/uid/infrastructure-overview",
+            f"{grafana_url}/api/dashboards/uid/infrastructure-overview",
             auth=grafana_auth,
             timeout=10,
         )
@@ -353,10 +421,12 @@ class TestDashboardRendering:
                     "⚠️  Infrastructure dashboard may not have log panels with queries"
                 )
 
-    def test_application_performance_dashboard_queries_valid(self, grafana_auth: tuple):
+    def test_application_performance_dashboard_queries_valid(
+        self, grafana_url: str, grafana_auth: tuple
+    ):
         """Test that Application Performance dashboard queries are properly formed."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/dashboards/uid/application-performance",
+            f"{grafana_url}/api/dashboards/uid/application-performance",
             auth=grafana_auth,
             timeout=10,
         )
@@ -382,10 +452,12 @@ class TestDashboardRendering:
             else:
                 print("⚠️  Application Performance dashboard queries may be incomplete")
 
-    def test_observability_stack_health_dashboard_panels(self, grafana_auth: tuple):
+    def test_observability_stack_health_dashboard_panels(
+        self, grafana_url: str, grafana_auth: tuple
+    ):
         """Test that Observability Stack Health dashboard panels are accessible."""
         response = requests.get(
-            f"{GRAFANA_URL}/api/dashboards/uid/observability-stack-health",
+            f"{grafana_url}/api/dashboards/uid/observability-stack-health",
             auth=grafana_auth,
             timeout=10,
         )
