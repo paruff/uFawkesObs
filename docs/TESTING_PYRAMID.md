@@ -128,10 +128,10 @@ live `make up` (`core` profile) stack before wiring anything into CI:
 - [ ] [#416](https://github.com/paruff/uFawkesObs/issues/416) — Migrate remaining `tests/integration/` to Testcontainers (depends on #413). File-by-file status (each a separate PR, kept under the 400-line gate):
   - [x] `test_otel_collector_testcontainers.py` — spike (#413, on `main`), expanded to full coverage and the original retired (below)
   - [x] `test_tempo_integration.py` — single-service, no `depends_on:` (PR open)
-  - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. `TestAlloyIntegration` in this same file left unmigrated -- Alloy depends on both Loki and Prometheus, so it belongs with the `test_alloy_and_dashboards.py` entry below instead (PR open)
+  - [x] `test_loki_integration.py` — single-service, no `depends_on:` for Loki itself. Its former `TestAlloyIntegration` moved into `test_alloy_and_dashboards.py`, whose Alloy checks cover the same two assertions
   - [x] `test_grafana_integration.py` — multi-service (Grafana + Prometheus + Tempo + Loki together, since Grafana's datasource provisioning needs them by Docker Compose service name)
   - [x] `test_dashboards.py` / `test_alloy_and_dashboards.py` — cross-service (Grafana+Prometheus+Tempo+Loki+Alloy all need to actually flow data) — hardest, do last
   - [x] `test_otel_collector.py` — retired; `test_otel_collector_testcontainers.py` (#413's spike) expanded to cover every assertion it had
   - [x] `test_prometheus_scraping.py` — migrated in place (whole file needs the full `core` profile since `test_all_configured_targets_are_up` checks every scrape target)
-  - [ ] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them
+  - [x] simplify `ci-tests.yml`'s Integration Tests job (drop the shared `docker compose up` / fixed-sleep waits) once nothing left in the job needs them
 - [x] [#417](https://github.com/paruff/uFawkesObs/issues/417) — Update `tests/README.md`'s pyramid diagram and re-audit `docs/DETERMINISM.md` against the landed Testcontainers + InSpec pattern. The repo now reflects the five-tier model in `tests/README.md`; the shared-stack `sleep` concern is no longer the default integration-test pattern and is treated as a distinct case rather than a blanket issue.
