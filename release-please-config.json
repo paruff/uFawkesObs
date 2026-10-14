@@ -3,10 +3,11 @@
   "release-type": "simple",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
-  "prerelease": true,
+  "prerelease": false,
   "draft": false,
   "packages": {
     ".": {
+      "release-as": "1.0.0",
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Added" },
