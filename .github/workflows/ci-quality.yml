@@ -104,6 +104,72 @@ jobs:
             "$TEMPO_IMAGE" \
             -config.file=/etc/tempo.yaml -config.verify=true
 
+      - name: Validate Alertmanager config
+        run: make validate-alertmanager
+
+      - name: Validate Alloy config
+        run: make validate-alloy
+
+  # ─── Lint (actionlint, hadolint) ─────────────────────────────────────────
+  # Versions and sha256s match .devcontainer/install-tools.sh (#467).
+  lint:
+    name: Lint Workflows & Dockerfiles
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install actionlint and hadolint
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o actionlint.tgz \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tgz" | sha256sum --check --quiet -
+          tar -xzf actionlint.tgz actionlint
+          curl -fsSL --retry 3 -o hadolint \
+            https://github.com/hadolint/hadolint/releases/download/v2.15.1/hadolint-linux-x86_64
+          echo "c7187db94eeeeca956519a6af171adc31453941a1e777961f6e680f697c8c507  hadolint" | sha256sum --check --quiet -
+          chmod +x hadolint
+          mkdir -p "$HOME/.local/bin"
+          mv actionlint hadolint "$HOME/.local/bin/"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Lint workflows
+        run: make lint-workflows
+
+      - name: Lint Dockerfiles
+        run: make lint-dockerfiles
+
+  # ─── Image scan (trivy) ──────────────────────────────────────────────────
+  scan-images:
+    name: Scan Compose Images
+    runs-on: ubuntu-24.04
+    # 6 of 9 pinned images have fixable CRITICALs on main today (alloy, grafana,
+    # loki, otel-collector, node-exporter, alertmanager-discord). Report-only until
+    # those are bumped; then drop continue-on-error so the gate bites (#474).
+    continue-on-error: true
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install trivy
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o trivy.tgz \
+            https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
+          echo "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a  trivy.tgz" | sha256sum --check --quiet -
+          tar -xzf trivy.tgz trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+
+      - name: Scan images (fail on fixable CRITICAL)
+        run: |
+          set -euo pipefail
+          docker compose --env-file .env.example --profile '*' config --images | grep / | sort -u | \
+            while read -r img; do
+              echo "── $img"
+              trivy image --quiet --severity CRITICAL --ignore-unfixed --exit-code 1 "$img"
+            done
+
   # ─── PR Size Gate ────────────────────────────────────────────────────────
   pr-size:
     name: PR Size
