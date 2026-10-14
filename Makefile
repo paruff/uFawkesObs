@@ -56,11 +56,11 @@ up-full: check-env
 
 ## down: stop all services
 down:
-	docker compose down
+	docker compose --profile '*' down
 
 ## logs: tail logs for all running services
 logs:
-	docker compose logs -f
+	docker compose --profile '*' logs -f
 
 ## status: show running containers and health endpoints
 status:
