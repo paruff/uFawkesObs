@@ -1,0 +1,11 @@
+Waiting for core observability services (timeout: 120s)
+✅ Alertmanager healthy (0s)
+========================================
+❌ Prometheus not healthy (120s)
+❌ Grafana not healthy (120s)
+❌ Loki not healthy (120s)
+❌ Tempo not healthy (120s)
+❌ Alloy not healthy (120s)
+❌ OTel Collector not healthy (120s)
+❌ Timeout waiting for services after 120s
+========================================

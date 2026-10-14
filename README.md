@@ -30,8 +30,21 @@ cd uFawkesObs
 cp .env.example .env
 $EDITOR .env   # set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD
 
-make init && make up   # makes the core stack + demo app that emits real metrics/logs/traces
+make init   # prints the Linux chown commands below
+make up     # starts the core stack + demo app that emits real metrics/logs/traces
 ./scripts/wait-healthy.sh
+```
+
+**On Linux, run these `chown` commands between `make init` and `make up`.** The
+containers run as non-root users and cannot write to the bind-mounted `data/`
+directories otherwise, so Prometheus, Loki and Tempo crash-loop and `make up`
+fails with `dependency failed to start`. macOS (Docker Desktop, colima) does
+not need this:
+
+```bash
+sudo chown -R 472 data/grafana
+sudo chown -R 65534 data/prometheus data/alertmanager
+sudo chown -R 10001 data/loki data/tempo
 ```
 
 Open Grafana at http://localhost:3000. See
