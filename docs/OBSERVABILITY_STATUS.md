@@ -17,7 +17,7 @@
 ✅ **Loki** (v3.3.2) - Log storage
 ✅ **Tempo** (v2.10.5) - Trace storage
 ✅ **Grafana** (v10.4.5) - Visualization
-✅ **OTel Collector** (v0.120.0) - Telemetry ingestion
+✅ **OTel Collector** (v0.162.0) - Telemetry ingestion
 ✅ **Alertmanager** (v0.27.0) - Alert routing
 ✅ **Alloy** (v1.12.2) - Log shipper (Docker container logs → Loki)
 

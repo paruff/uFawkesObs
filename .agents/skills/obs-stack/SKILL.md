@@ -14,7 +14,7 @@ metadata:
 
 | Service        | Version  | Internal port        | Host port            | Config file                                      |
 | -------------- | -------- | -------------------- | -------------------- | ------------------------------------------------ |
-| OTel Collector | 0.120.0  | 4317/4318/8888/8889  | 4317/4318/8888/8889  | `config/otel/collector.yaml`                     |
+| OTel Collector | 0.162.0  | 4317/4318/8888/8889  | 4317/4318/8888/8889  | `config/otel/collector.yaml`                     |
 | Prometheus     | v3.5.4   | 9090                 | 9090                 | `config/prometheus/prometheus.yaml`              |
 | Alertmanager   | v0.34.1  | 9093                 | 9093                 | `config/alertmanager/alertmanager.yml`           |
 | Tempo          | 2.10.5   | 3200/9095/9411/14250/14268 | 3200/9095/9411/14250/14268 | `config/tempo/tempo.yaml`                |
@@ -109,7 +109,7 @@ service:
     logs:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [loki, debug]
+      exporters: [otlphttp/loki, debug]
     metrics/ai:
       receivers: [otlp]
       processors: [memory_limiter, filter/ai, attributes/ai, batch]

@@ -26,7 +26,7 @@ COMPOSE_PATH = pathlib.Path(__file__).resolve().parents[2] / "compose.yaml"
 # registry/repo:tag string that must appear in compose.yaml.
 # ---------------------------------------------------------------------------
 EXPECTED_VERSIONS: dict[str, str] = {
-    "otel-collector": "otel/opentelemetry-collector-contrib:0.120.0",
+    "otel-collector": "otel/opentelemetry-collector-contrib:0.162.0",
     "prometheus": "prom/prometheus:v3.5.4",
     "alertmanager": "prom/alertmanager:v0.34.1",
     "tempo": "grafana/tempo:2.10.5",
