@@ -104,6 +104,15 @@ jobs:
             "$TEMPO_IMAGE" \
             -config.file=/etc/tempo.yaml -config.verify=true
 
+      - name: Install yq
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 -o yq \
+            https://github.com/mikefarah/yq/releases/download/v4.53.6/yq_linux_amd64
+          echo "c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385  yq" | sha256sum --check --quiet -
+          chmod +x yq
+          sudo install -m 0755 yq /usr/local/bin/yq
+
       - name: Validate Alertmanager config
         run: make validate-alertmanager
 
