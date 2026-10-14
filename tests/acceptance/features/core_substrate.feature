@@ -13,7 +13,7 @@ Feature: Core Observability Substrate (M1)
     Then all services should have a healthcheck
 
   Scenario: OTel Collector uses the correct image
-    Then service "otel-collector" should have image "otel/opentelemetry-collector-contrib:0.120.0"
+    Then service "otel-collector" should have image "otel/opentelemetry-collector-contrib:0.162.0"
 
   Scenario: Prometheus uses the correct image
     Then service "prometheus" should have image "prom/prometheus:v3.5.4"

@@ -210,7 +210,7 @@ name: ufawkesobs
 
 services:
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.120.0@sha256:85ac41c2db88d0df9bd6145e608a3cb023f5d8443868adbfbbf66efb51087917
+    image: otel/opentelemetry-collector-contrib:0.162.0@sha256:39923a8e431bd1f57be82411999d389fcfe40857492e4365456d97a4c1f74be6
     container_name: otel-collector
     restart: unless-stopped
     command: ["--config=/etc/otel/collector.yaml"]
@@ -236,7 +236,7 @@ services:
           memory: 1G
         reservations:
           memory: 256M
-    # NOTE: no healthcheck (#272) — otel/opentelemetry-collector-contrib:0.120.0
+    # NOTE: no healthcheck (#272) — otel/opentelemetry-collector-contrib:0.162.0
     # is distroless: no sh/wget/curl, and the otelcol-contrib binary itself has
     # no health-query subcommand (verified: `docker run --entrypoint sh/wget/curl`
     # all fail with "executable file not found"; `otelcol-contrib --help` lists

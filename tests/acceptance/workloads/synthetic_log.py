@@ -6,7 +6,7 @@ Loki log storage backend. Each log has a structured JSON body with
 well-known fields, plus OTel attributes for correlation.
 
 The OTel Collector is configured with a ``logs`` pipeline:
-  receivers: [otlp] → processors: [memory_limiter, batch] → exporters: [loki, debug]
+  receivers: [otlp] → processors: [memory_limiter, batch] → exporters: [otlphttp/loki, debug]
 """
 
 from __future__ import annotations
