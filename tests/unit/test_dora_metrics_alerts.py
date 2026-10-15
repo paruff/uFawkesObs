@@ -96,6 +96,8 @@ _EXPECTED_RUNBOOK_TARGETS = {
     "DORARegressionFDRTSpikeAbsent": "#fdrt-spike-absent",
     "DORARegressionCFRSpike": "#cfr-spike",
     "DORARegressionCFRSpikeAbsent": "#cfr-spike-absent",
+    "DORACFRRegressionRollback": "#cfr-rollback",
+    "DORACFRRegressionRollbackAbsent": "#cfr-rollback-absent",
     "DORARegressionReworkRateClimb": "#rework-rate-climb",
     "DORARegressionReworkRateClimbAbsent": "#rework-rate-climb-absent",
 }
