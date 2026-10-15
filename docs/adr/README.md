@@ -22,6 +22,7 @@ Each ADR follows the format:
 | [ADR-005](ADR-005-prometheus-v3-migration.md)| Upgrade Prometheus from 2.55.1 to 3.5.4 LTS                                  | Accepted     | 2026-06-28    |
 | [ADR-006](ADR-006-dora-metric-definitions.md)| DORA Metric Definitions and Data Contract                                   | Accepted     | 2026-06-30    |
 | [ADR-007](ADR-007-dora-consolidation.md)     | Merge uFawkesDORA Compute Plane into uFawkesObs                             | Accepted     | 2026-08-12    |
+| [ADR-008](ADR-008-otel-collector-yaml-over-alloy-river.md) | Standardise Telemetry-Pipeline Config on OTel Collector YAML | Proposed     | 2026-10-15    |
 
 ---
 
