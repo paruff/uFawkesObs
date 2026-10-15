@@ -140,9 +140,12 @@ def all_recording_rules_guarded() -> None:
         for rule in group.get("rules", []):
             # Recording rules have "record" field, alerting rules have "alert" field
             is_recording = "record" in rule
+            # `:raw` rules are deliberately unguarded so absent() can fire
+            # on them (see ufawkesobs-dora-metrics.yml, issue #533).
+            is_raw = ":raw" in rule.get("record", "")
 
             # Only check recording rules for vector(0) guards
-            if is_recording:
+            if is_recording and not is_raw:
                 expr = rule.get("expr", "")
                 # Check if expression contains vector(0) guard pattern
                 has_guard = (
