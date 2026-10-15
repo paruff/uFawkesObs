@@ -8,7 +8,7 @@
 2. `.github/workflows/cfr-rollback.yml`, `scripts/cfr-alert-firing.sh`,
    `scripts/rollback-latest-good.sh`: poll the alert, roll the host back to
    `deploy-latest-good`. Off unless `CFR_AUTO_ROLLBACK_ENABLED=true`.
-3. `docs/runbooks/cfr-rollback.md`.
+3. a CFR Rollback section in `docs/runbooks/dora.md`.
 
 ## Verification Strategy
 

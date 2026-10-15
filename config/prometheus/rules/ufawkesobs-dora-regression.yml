@@ -405,7 +405,7 @@ groups:
             {{ $labels.team_id }} CFR at {{ $value | humanizePercentage }},
             more than 10 points above its 30-day average. Rolls the host back
             to deploy-latest-good when CFR_AUTO_ROLLBACK_ENABLED is "true".
-          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/cfr-rollback.md"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-rollback"
 
       - alert: DORACFRRegressionRollbackAbsent
         expr: absent(dora_cfr_pct)
@@ -417,4 +417,4 @@ groups:
           summary: "CFR metric missing — rollback trigger cannot evaluate"
           description: |
             dora_cfr_pct is absent; check up{job="dora-api"} and its logs.
-          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/cfr-rollback.md#absent"
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-rollback-absent"
