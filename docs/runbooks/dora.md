@@ -575,3 +575,15 @@ git's perspective (no push, no revert), like the rollback job in `deploy.yml`.
 ## CFR Rollback Absent
 
 `dora_cfr_pct` is missing, so the rollback trigger cannot evaluate. Check `up{job="dora-api"}` and the dora-api logs.
+
+<a id="sigma-band-breach"></a>
+
+## Sigma Band Breach
+
+`DORASigmaBandBreach` fires when a DORA metric for a team has been more than 3σ worse than its own 30-day mean for 24h (`dora:badness_zscore_30d`, sign-adjusted so positive is worse). This is Stage 6 of the AI-SDLC loop (#602).
+
+`.github/workflows/sigma-breach-intent.yml` polls the alert hourly from the self-hosted runner and runs `scripts/sigma-breach-intent.sh`, which opens an `intent` issue in the repo named by `team_id` (a bare name gets `paruff/`). One open issue per team and metric: the body carries a `<!-- sigma-breach: ... -->` marker that suppresses duplicates.
+
+- **Off by default.** Set repository variable `SIGMA_INTENT_ENABLED=true` and secret `SUITE_ISSUES_TOKEN` (issues:write on the suite repos).
+- **Unsafe `team_id` values** (anything not `owner/repo`-shaped) are skipped with a warning.
+- **Unreachable Prometheus** fails the run; it is never read as "no breach".
