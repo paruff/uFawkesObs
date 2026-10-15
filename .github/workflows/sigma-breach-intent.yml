@@ -1,0 +1,32 @@
+name: Sigma-band breach intent
+
+# Stage 6 loop (#602): opens an `intent` issue in the affected repo when
+# DORASigmaBandBreach fires. Polls Prometheus because Alertmanager cannot call
+# GitHub (same reason as cfr-rollback.yml). Off unless repository variable
+# SIGMA_INTENT_ENABLED is "true"; SUITE_ISSUES_TOKEN needs issues:write on the
+# suite repos.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sigma-breach-intent
+  cancel-in-progress: false
+
+jobs:
+  open-intents:
+    name: "Open intent issues for σ-band breaches"
+    if: vars.SIGMA_INTENT_ENABLED == 'true'
+    runs-on: [self-hosted, synology]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Open intent issues
+        env:
+          GH_TOKEN: ${{ secrets.SUITE_ISSUES_TOKEN }}
+          PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL || 'http://localhost:9090' }}
+        run: ./scripts/sigma-breach-intent.sh --prometheus-url "${PROMETHEUS_URL}"
