@@ -90,3 +90,35 @@ def test_rule_and_workflow_are_wired(project_root):
     assert (
         "DORASigmaBandBreach" in (root / "scripts/sigma-breach-intent.sh").read_text()
     )
+
+
+def test_live_path_creates_issue_once_per_breach(project_root, tmp_path):
+    # Stub gh: "issue list" reports nothing open; "issue create" is recorded.
+    log = tmp_path / "gh.log"
+    gh = tmp_path / "gh"
+    gh.write_text(f'#!/bin/sh\necho "$@" >> {log}\n')
+    gh.chmod(0o755)
+    f = tmp_path / "alerts.json"
+    f.write_text(
+        json.dumps(
+            {
+                "status": "success",
+                "data": {
+                    "result": [
+                        {"metric": {"team_id": "paruff/demo", "metric": "dora_cfr_pct"}}
+                    ]
+                },
+            }
+        )
+    )
+    r = subprocess.run(
+        [f"{project_root}/scripts/sigma-breach-intent.sh", "--alerts-file", str(f)],
+        capture_output=True,
+        text=True,
+        env={"PATH": f"{tmp_path}:/usr/bin:/bin"},
+    )
+    assert r.returncode == 0, r.stderr
+    out = log.read_text()
+    assert out.count("issue create") == 1
+    assert "--repo paruff/demo" in out and "--label intent" in out
+    assert "sigma-breach: paruff/demo dora_cfr_pct" in out
