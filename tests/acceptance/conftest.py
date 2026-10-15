@@ -19,6 +19,7 @@ import requests
 import tests.acceptance.steps.adr_docs_steps as _adr_docs_steps
 import tests.acceptance.steps.ai_observability_steps as _ai_observability_steps
 import tests.acceptance.steps.alertmanager_steps as _alertmanager_steps
+import tests.acceptance.steps.cfr_rollback_steps as _cfr_rollback_steps
 import tests.acceptance.steps.chaos_steps as _chaos_steps
 import tests.acceptance.steps.core_substrate_steps as _core_substrate_steps
 import tests.acceptance.steps.dashboard_steps as _dashboard_steps
@@ -52,6 +53,7 @@ from tests.acceptance.runtime import (
     OTLPClient,
     PromQLClient,
 )
+from tests.acceptance.steps.cfr_rollback_steps import cfr_host  # noqa: F401  (fixture)
 
 for _step_mod in [
     _shared_steps,
@@ -62,6 +64,7 @@ for _step_mod in [
     _multi_plane_steps,
     _slo_steps,
     _chaos_steps,
+    _cfr_rollback_steps,
     _prometheus_rules_steps,
     _ai_observability_steps,
     _core_substrate_steps,

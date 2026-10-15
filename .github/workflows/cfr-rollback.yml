@@ -1,0 +1,68 @@
+name: CFR Rollback
+
+# Automated rollback when DORACFRRegressionRollback fires (#502); host-side
+# steps live in scripts/rollback-latest-good.sh. Polls Prometheus because
+# Alertmanager cannot call GitHub. Off unless repository variable
+# CFR_AUTO_ROLLBACK_ENABLED is "true".
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cfr-rollback
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: "CFR-triggered rollback"
+    if: vars.CFR_AUTO_ROLLBACK_ENABLED == 'true'
+    runs-on: [self-hosted, synology]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check whether the CFR rollback alert is firing
+        id: alert
+        env:
+          PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL || 'http://localhost:9090' }}
+        run: |
+          set -euo pipefail
+          count="$(./scripts/cfr-alert-firing.sh "${PROMETHEUS_URL}")"
+          echo "firing=${count}" >> "$GITHUB_OUTPUT"
+          echo "DORACFRRegressionRollback firing series: ${count}"
+
+      - name: Start SSH agent
+        if: steps.alert.outputs.firing != '0'
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Roll back on target host
+        if: steps.alert.outputs.firing != '0'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}" "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PATH:?Set repository variable DEPLOY_PATH}"
+          case "${DEPLOY_PATH}" in
+            /*) ;;
+            *) echo "::error::DEPLOY_PATH must be absolute"; exit 1 ;;
+          esac
+          case "${DEPLOY_PATH}" in
+            *"'"*|*..*|*[!A-Za-z0-9_./-]*) echo "::error::Unsafe DEPLOY_PATH"; exit 1 ;;
+          esac
+          mkdir -p ~/.ssh
+          if [ -n "${DEPLOY_HOST_KEY}" ]; then
+            printf '%s\n' "${DEPLOY_HOST_KEY}" >> ~/.ssh/known_hosts
+          else
+            ssh-keyscan -T 10 -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+          fi
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "REPO_DIR='${DEPLOY_PATH}' bash -s" < scripts/rollback-latest-good.sh

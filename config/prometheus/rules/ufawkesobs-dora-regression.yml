@@ -384,3 +384,37 @@ groups:
             dora_rework_rate_pct is absent — dora-api may not be computing or
             being scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-climb-absent"
+
+      # Rollback trigger (#502). dora_cfr_pct is a 0-1 ratio. Fires only when
+      # CFR is above 30% AND 10 points over the 30-day baseline, so a
+      # perpetually noisy team does not trigger rollbacks. The `action` label
+      # marks it for .github/workflows/cfr-rollback.yml, which polls it.
+      - alert: DORACFRRegressionRollback
+        expr: |
+          dora_cfr_pct > 0.30
+          and
+          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 0.10)
+        for: 15m
+        labels:
+          severity: critical
+          category: dora
+          action: rollback
+        annotations:
+          summary: "Change Failure Rate regressed — automated rollback requested"
+          description: |
+            {{ $labels.team_id }} CFR at {{ $value | humanizePercentage }},
+            more than 10 points above its 30-day average. Rolls the host back
+            to deploy-latest-good when CFR_AUTO_ROLLBACK_ENABLED is "true".
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/cfr-rollback.md"
+
+      - alert: DORACFRRegressionRollbackAbsent
+        expr: absent(dora_cfr_pct)
+        for: 1h
+        labels:
+          severity: warning
+          category: dora
+        annotations:
+          summary: "CFR metric missing — rollback trigger cannot evaluate"
+          description: |
+            dora_cfr_pct is absent; check up{job="dora-api"} and its logs.
+          runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/cfr-rollback.md#absent"

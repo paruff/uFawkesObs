@@ -42,3 +42,8 @@ Feature: Prometheus Recording and Alert Rules
     And an alert rule named "AITokenBudgetHighAbsent" should exist
     And an alert rule named "AIReworkRateHighAbsent" should exist
     And an alert rule named "AIReworkRateCriticalAbsent" should exist
+
+  Scenario: CFR regression requests an automated rollback
+    Then an alert rule named "DORACFRRegressionRollback" should exist
+    And an alert rule named "DORACFRRegressionRollbackAbsent" should exist
+    And alert rule "DORACFRRegressionRollback" should have label "action" equal to "rollback"
