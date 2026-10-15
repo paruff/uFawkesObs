@@ -109,6 +109,14 @@ Retired from the active suite (2026-08-18): **uFawkesRes** (resources plane — 
 - ✅ **Declarative** — all configuration is explicit and file-based
 - ✅ **Boring technology** — reliable, well-documented, production-ready tools
 
+## Research basis
+
+- DORA, [_2025 State of AI-assisted Software Development_](https://dora.dev/research/2025/dora-report/): AI amplifies existing strengths and dysfunctions, so measure delivery before adding AI; value stream management acts as a force multiplier.
+- DORA, [_The ROI of AI-assisted Software Development_](https://dora.dev/ai/roi/report/) (v2026.1): local speed has to convert into stable delivery, and expect a J-curve.
+- Forsgren et al., [_The SPACE of Developer Productivity_](https://queue.acm.org/detail.cfm?id=3454124) (ACM Queue, 2021): use several dimensions, never activity alone.
+
+Full findings and sources: [research foundation](https://github.com/paruff/uFawkes.dev/blob/main/docs/research-foundation.md), reviewed quarterly.
+
 ## Design and brand
 
 This repo follows the shared Fawkes and uFawkes design reference:
