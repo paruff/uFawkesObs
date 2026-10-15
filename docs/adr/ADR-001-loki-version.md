@@ -141,3 +141,12 @@ The original ADR text is preserved in the Git history of this file.
 - Schema v13 reference: <https://grafana.com/docs/loki/latest/operations/storage/schema/>
 - Loki 3.x release notes: <https://grafana.com/docs/loki/latest/release-notes/>
 - Migration PR: [#116](https://github.com/paruff/uFawkesObs/pull/116)
+
+---
+
+## Update (2026-10-14): patch to 3.6.17
+
+Loki 3.3.2 ships grpc v1.67.1 and Go 1.23.4, which carry fixable CRITICAL CVEs
+(CVE-2026-33186, CVE-2025-68121) flagged by the trivy image gate (#474). Bumped to
+`grafana/loki:3.6.17` (same 3.x line, schema v13 and TSDB unchanged). The existing
+`config/loki/loki.yaml` passes `-verify-config` on 3.6.17.

@@ -48,7 +48,7 @@ Feature: ADR and Docs Sync (M1.5)
 
   Scenario: obs-stack SKILL.md references correct Loki version
     When I check the content of ".agents/skills/obs-stack/SKILL.md"
-    Then it should contain "3.3.2"
+    Then it should contain "3.6.17"
 
   Scenario: obs-stack SKILL.md references correct Grafana version
     When I check the content of ".agents/skills/obs-stack/SKILL.md"

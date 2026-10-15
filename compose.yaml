@@ -229,7 +229,7 @@ services:
       tempo:
         condition: service_started
       loki:
-        condition: service_healthy
+        condition: service_started
     deploy:
       resources:
         limits:
@@ -300,7 +300,7 @@ services:
     profiles: ["core"]
 
   loki:
-    image: grafana/loki:3.3.2@sha256:8af2de1abbdd7aa92b27c9bcc96f0f4140c9096b507c77921ffddf1c6ad6c48f
+    image: grafana/loki:3.6.17@sha256:cd5471d6ae439eb0a7a9055b9b2fb3fd3c5485934dd576473a6289d3936b8b27
     container_name: loki
     restart: unless-stopped
     command:
@@ -319,20 +319,13 @@ services:
           memory: 2G
         reservations:
           memory: 512M
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3100/ready",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # NOTE: no healthcheck — grafana/loki:3.6.17 is distroless: no sh/wget/curl,
+    # and the loki binary has no health-query subcommand (verified: `docker run
+    # --entrypoint wget/sh grafana/loki:3.6.17` fails with "executable file not
+    # found"; 3.3.2-3.5.x shipped busybox wget but carry fixable CRITICAL CVEs, #474).
+    # Dependents use `condition: service_started`; readiness is polled externally
+    # at http://loki:3100/ready by scripts/wait-healthy.sh and the ci-*.yml
+    # "Wait for all services healthy" steps.
     logging:
       driver: json-file
       options:
@@ -366,7 +359,7 @@ services:
       - TZ=UTC
     depends_on:
       loki:
-        condition: service_healthy
+        condition: service_started
       prometheus:
         condition: service_healthy
     deploy:

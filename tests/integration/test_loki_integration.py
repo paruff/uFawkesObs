@@ -155,9 +155,10 @@ class TestLokiPushAPI:
 
     def test_loki_push_endpoint_accessible(self, loki_url: str):
         # Not pushing real logs -- just confirming the endpoint is reachable
-        # and responds (rejecting an empty payload is expected).
+        # and responds (rejecting an empty payload is expected: 400/415 on
+        # 3.3.x, 422 on 3.6.x).
         response = requests.post(f"{loki_url}/loki/api/v1/push", json={}, timeout=10)
-        assert response.status_code in (200, 204, 400, 415), (
+        assert response.status_code in (200, 204, 400, 415, 422), (
             f"Loki push endpoint should be accessible (got {response.status_code})"
         )
 
