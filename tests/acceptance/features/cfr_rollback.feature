@@ -1,4 +1,4 @@
-@offline @rollback
+@smoke @offline @rollback
 Feature: CFR-triggered rollback (#502)
   A change-failure-rate regression alert rolls the deploy host back to the
   last verified revision (deploy-latest-good), and does so exactly once.
