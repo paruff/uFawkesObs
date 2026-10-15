@@ -22,7 +22,7 @@ Feature: Core Observability Substrate (M1)
     Then service "alertmanager" should have image "prom/alertmanager:v0.34.1"
 
   Scenario: Grafana uses the correct image
-    Then service "grafana" should have image "grafana/grafana:12.3.7"
+    Then service "grafana" should have image "grafana/grafana:12.4.13"
 
   Scenario: Loki uses the correct image
     Then service "loki" should have image "grafana/loki:3.6.17"
