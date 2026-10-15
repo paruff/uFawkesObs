@@ -2,11 +2,11 @@
 
 Covers the tested Slack and Discord notification channel recipes in
 `config/alertmanager/alertmanager.yml`:
-  - the recipes must use `${SLACK_WEBHOOK_URL}` / the Discord bridge, never a
-    hardcoded webhook secret
+  - the Slack recipe must use a secret file and the Discord recipe the native
+    `discord_configs` receiver with `webhook_url_file`, never a hardcoded
+    webhook secret
   - the default stack must stay webhook-only (nothing enabled out of the box)
-  - the `alertmanager-discord` bridge service in compose.yaml must be pinned
-    and confined to the internal network
+  - no Discord bridge container exists in compose.yaml (#474)
 
 Run:  pytest tests/unit/test_alertmanager_config_validation.py -v
       (no running stack required — reads files statically)
@@ -25,7 +25,6 @@ ALERTMANAGER_CFG = (
 COMPOSE_PATH = Path(__file__).resolve().parents[2] / "compose.yaml"
 ENV_EXAMPLE_PATH = Path(__file__).resolve().parents[2] / ".env.example"
 
-EXPECTED_DISCORD_IMAGE = "rogerrum/alertmanager-discord:1.0.7"
 SLACK_WEBHOOK_PLACEHOLDER = "T0000000/B0000000/XXXX"
 
 
@@ -78,9 +77,13 @@ class TestDefaultRoutingUnchanged:
                 f"Receiver '{receiver['name']}' has active slack_configs — "
                 "must stay commented out (LB-03 recipe)"
             )
+            assert "discord_configs" not in receiver, (
+                f"Receiver '{receiver['name']}' has active discord_configs — "
+                "must stay commented out (LB-03 recipe)"
+            )
             for cfg in receiver.get("webhook_configs", []):
                 assert not str(cfg.get("url", "")).startswith(
-                    ("https://discord.com", "http://alertmanager-discord")
+                    ("https://discord.com",)
                 ), f"Receiver '{receiver['name']}' has an active Discord webhook"
 
 
@@ -121,71 +124,43 @@ class TestSlackRecipe:
 
 
 class TestDiscordRecipe:
-    """The Discord recipe must route through the pinned internal bridge."""
+    """The Discord recipe must use the native receiver and a webhook file."""
 
-    def test_discord_recipe_points_at_bridge(self, alertmanager_raw: str) -> None:
-        assert "http://alertmanager-discord:9094" in alertmanager_raw, (
-            "Discord recipe must reference the alertmanager-discord bridge"
+    def test_discord_recipe_uses_native_receiver_with_file(
+        self, alertmanager_raw: str
+    ) -> None:
+        assert "discord_configs:" in alertmanager_raw
+        assert "webhook_url_file: /etc/alertmanager/discord_webhook_url" in (
+            alertmanager_raw
         )
 
     def test_discord_recipe_is_fully_commented(self, alertmanager_raw: str) -> None:
         for ln in alertmanager_raw.splitlines():
-            if "alertmanager-discord:9094" in ln:
+            if "discord_configs" in ln or "webhook_url_file" in ln:
                 assert ln.lstrip().startswith("#"), (
                     "Discord receiver must stay commented out by default"
                 )
 
-    def test_bridge_service_present_and_pinned(self, compose_data: dict) -> None:
-        services = compose_data["services"]
-        assert "alertmanager-discord" in services
-        # Digest-pinned now too (docs/DETERMINISM.md): "repo:tag@sha256:...".
-        # Compare the tag portion, and separately require a digest.
-        actual_image = services["alertmanager-discord"]["image"]
-        actual_tag, _, digest = actual_image.partition("@")
-        assert digest, (
-            f"alertmanager-discord image '{actual_image}' has no @sha256:... digest pin"
-        )
-        assert actual_tag == EXPECTED_DISCORD_IMAGE
+    def test_no_discord_webhook_url_inline(self, alertmanager_raw: str) -> None:
+        for ln in alertmanager_raw.splitlines():
+            if "discord.com/api/webhooks/" in ln:
+                assert "<ID>/<TOKEN>" in ln, (
+                    f"Concrete-looking Discord webhook URL found: {ln.strip()}"
+                )
 
-    def test_bridge_is_in_notifications_profile(self, compose_data: dict) -> None:
-        profiles = compose_data["services"]["alertmanager-discord"].get("profiles", [])
-        assert "notifications" in profiles, (
-            "alertmanager-discord must be gated behind the 'notifications' profile "
-            "so the default core stack is unchanged"
+    def test_bridge_service_removed(self, compose_data: dict) -> None:
+        assert "alertmanager-discord" not in compose_data["services"], (
+            "the alertmanager-discord bridge was replaced by native discord_configs"
         )
-
-    def test_bridge_has_no_host_port_exposure(self, compose_data: dict) -> None:
-        ports = compose_data["services"]["alertmanager-discord"].get("ports")
-        assert not ports, (
-            f"alertmanager-discord must not publish host ports, found: {ports}"
-        )
-
-    def test_bridge_is_on_observability_network(self, compose_data: dict) -> None:
-        networks = compose_data["services"]["alertmanager-discord"].get("networks")
-        assert networks == ["observability"] or (
-            isinstance(networks, dict) and "observability" in networks
-        ), f"alertmanager-discord must join observability network, found: {networks}"
-
-    def test_bridge_webhook_env_is_interpolable(self, compose_data: dict) -> None:
-        """DISCORD_WEBHOOK must not fail compose interpolation when unset."""
-        env = compose_data["services"]["alertmanager-discord"].get("environment", [])
-        assert any("DISCORD_WEBHOOK" in str(item) for item in env), (
-            "alertmanager-discord must receive DISCORD_WEBHOOK from .env"
-        )
-        env_str = "\n".join(str(item) for item in env)
-        assert "DISCORD_WEBHOOK_URL" in env_str and ":?}" not in env_str.replace(
-            "${DISCORD_WEBHOOK_URL:-}", ""
-        ), "DISCORD_WEBHOOK must use a safe default (no required-var interpolation)"
 
 
 class TestEnvExample:
-    """.env.example must document both webhook variables with placeholders."""
+    """.env.example must document the Slack webhook variable with a placeholder."""
 
     @pytest.mark.parametrize(
         "var,placeholder",
         [
             ("SLACK_WEBHOOK_URL", "REPLACE_ME"),
-            ("DISCORD_WEBHOOK_URL", "REPLACE_ME"),
         ],
     )
     def test_webhook_vars_documented(

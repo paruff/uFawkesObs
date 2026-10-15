@@ -281,16 +281,16 @@ or increase `--storage.tsdb.retention.time` (requires more disk).
 
 **Limitation:** The default `config/alertmanager/alertmanager.yml` uses a webhook receiver
 for testing. No email, Slack, or Discord integration is enabled out of the box
-(the recipes are present but commented out, and the Discord bridge is gated
-behind the `notifications` profile).
+(the recipes are present but commented out).
 
 **Impact:** Alerts are not sent to a human notification channel by default.
 
 **Workaround:** Enable the tested Slack or Discord recipes documented in
 [`docs/alertmanager-operations.md`](alertmanager-operations.md) — set
-`SLACK_WEBHOOK_URL` and/or `DISCORD_WEBHOOK_URL` in `.env`, uncomment the
-receiver/route, and (for Discord) start the bridge with
-`docker compose --profile core --profile notifications up -d`.
+`SLACK_WEBHOOK_URL` in `.env` (Slack) or save the Discord webhook URL in the
+gitignored `config/alertmanager/discord_webhook_url` file and mount it
+(Discord uses the native `discord_configs` receiver), then uncomment the
+receiver/route.
 See [Alertmanager docs](https://prometheus.io/docs/alerting/latest/configuration/).
 
 ---

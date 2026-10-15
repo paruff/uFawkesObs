@@ -89,3 +89,6 @@ graphify-out/
 # QMD search index (local build artifact; .qmd/index.yml config is committed)
 .qmd/*
 !.qmd/index.yml
+
+# Discord webhook for the native alertmanager discord_configs recipe (secret)
+config/alertmanager/discord_webhook_url

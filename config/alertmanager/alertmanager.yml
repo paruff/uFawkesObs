@@ -399,21 +399,20 @@ receivers:
   #       icon_emoji: ":rotating_light:"
 
   # ── [RECIPE] Discord notifications — TESTED ───────────────────────────────
-  # Alertmanager has no native Discord integration. This receiver posts to the
-  # `alertmanager-discord` bridge container (compose service, `notifications`
-  # profile) which translates Alertmanager webhooks into Discord embeds.
+  # Uses Alertmanager's native `discord_configs` receiver (no bridge container).
+  # The webhook URL is read from a file so it never lands in this config.
   #
   # Enable in 4 steps:
   #   1. Create a Discord channel webhook (Channel Settings → Integrations →
-  #      Webhooks) and set it in .env:
-  #      DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/<ID>/<TOKEN>
-  #   2. Start the bridge:  docker compose --profile core --profile notifications up -d
+  #      Webhooks) and save its URL in a gitignored file:
+  #      echo 'https://discord.com/api/webhooks/<ID>/<TOKEN>' > config/alertmanager/discord_webhook_url
+  #   2. Mount it into the alertmanager service in compose.yaml:
+  #      - ./config/alertmanager/discord_webhook_url:/etc/alertmanager/discord_webhook_url:ro
   #   3. Uncomment this receiver AND its catch-all route in `route:` above.
   #   4. Reload Alertmanager:  curl -X POST http://localhost:9093/-/reload
   #
   # Walkthrough with a live test: docs/alertmanager-operations.md
   # - name: "discord-notifications"
-  #   webhook_configs:
-  #     - url: "http://alertmanager-discord:9094"
+  #   discord_configs:
+  #     - webhook_url_file: /etc/alertmanager/discord_webhook_url
   #       send_resolved: true
-  #       max_alerts: 0
