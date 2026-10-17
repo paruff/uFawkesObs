@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>io.ufawkes.obs-agent</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/otelcol-contrib</string>
+    <string>--config=/usr/local/etc/ufawkes-obs-agent.yaml</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOST_NAME</key><string>REPLACE_WITH_HOSTNAME</string>
+    <key>OBS_OTLP_ENDPOINT</key><string>192.168.1.10:4317</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardErrorPath</key><string>/tmp/ufawkes-obs-agent.log</string>
+</dict>
+</plist>
