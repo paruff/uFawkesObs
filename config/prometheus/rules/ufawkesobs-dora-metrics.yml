@@ -343,7 +343,7 @@ groups:
 
       - alert: DORADeploymentFrequencyLowAbsent
         expr: |
-          absent(dora:deployment_frequency:raw30d)
+          absent(dora:deployment_frequency:raw30d) and on() (up{job="dora-api"} == 1)
         for: 1d
         labels:
           severity: warning
@@ -374,7 +374,7 @@ groups:
 
       - alert: DORALeadTimeHighAbsent
         expr: |
-          absent(dora:lead_time_hours:raw_p50_30d)
+          absent(dora:lead_time_hours:raw_p50_30d) and on() (up{job="dora-api"} == 1)
         for: 1d
         labels:
           severity: warning
@@ -420,7 +420,7 @@ groups:
 
       - alert: DORAChangeFailureRateHighAbsent
         expr: |
-          absent(dora:change_failure_rate:raw_ratio30d)
+          absent(dora:change_failure_rate:raw_ratio30d) and on() (up{job="dora-api"} == 1)
         for: 1d
         labels:
           severity: warning
@@ -452,7 +452,7 @@ groups:
 
       - alert: DORAFDRTHighAbsent
         expr: |
-          absent(dora:fdrt_hours:raw_p50_30d)
+          absent(dora:fdrt_hours:raw_p50_30d) and on() (up{job="dora-api"} == 1)
         for: 1d
         labels:
           severity: warning
@@ -498,7 +498,7 @@ groups:
 
       - alert: DORAReworkRateHighAbsent
         expr: |
-          absent(dora:rework_rate:raw_ratio)
+          absent(dora:rework_rate:raw_ratio) and on() (up{job="dora-api"} == 1)
         for: 1d
         labels:
           severity: warning

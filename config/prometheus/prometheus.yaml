@@ -365,11 +365,23 @@ scrape_configs:
   # team_id label already on every sample. Nothing — no recording rule, no
   # dashboard — referenced that job label, so dropping it changes no query.
   - job_name: "dora-api"
-    static_configs:
-      - targets: ["dora-api:8088"]
-        labels:
-          plane: "obstackd"
-          component: "dora-api"
+    # dns_sd, not static_configs: the compose DNS name only resolves while the
+    # dora profile's container runs, so a default install has no dora-api
+    # target (and no permanently-down `up` series). Cost: a crashed dora-api
+    # drops out of DNS instead of raising ServiceDown; its healthcheck and
+    # restart policy cover that.
+    dns_sd_configs:
+      - names: ["dora-api"]
+        type: "A"
+        port: 8088
+        refresh_interval: 30s
+    relabel_configs:
+      - target_label: instance
+        replacement: "dora-api:8088"
+      - target_label: plane
+        replacement: "obstackd"
+      - target_label: component
+        replacement: "dora-api"
     scrape_interval: 15s
     metrics_path: "/metrics"
     scheme: "http"

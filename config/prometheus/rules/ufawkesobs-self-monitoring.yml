@@ -242,21 +242,7 @@ groups:
 
       - alert: UFawkesObsLokiIngestionDropped
         expr: |
-          (
-            (
-              sum(rate(loki_ingester_streams_created_total{job="loki"}[5m]))
-              <
-              (
-                sum(rate(loki_ingester_streams_created_total{job="loki"}[30m] offset 30m)) * 0.5
-              )
-            )
-            and
-            (
-              sum(rate(loki_ingester_streams_created_total{job="loki"}[30m] offset 30m)) > 0
-            )
-          ) or on() (
-            absent(loki_ingester_streams_created_total{job="loki"}) * 0
-          )
+          sum(increase(loki_discarded_samples_total{job="loki"}[10m])) > 0
         for: 10m
         labels:
           severity: warning
@@ -293,17 +279,9 @@ groups:
 
       - alert: UFawkesObsOtelCollectorDropped
         expr: |
-          (
-            (
-              sum(increase(otelcol_processor_dropped_spans{job="otel-collector"}[5m])) > 0
-            )
-            or
-            (
-              sum(increase(otelcol_exporter_send_failed_spans{job="otel-collector"}[5m])) > 0
-            )
-          ) or on() (
-            absent(otelcol_processor_dropped_spans{job="otel-collector"} or otelcol_exporter_send_failed_spans{job="otel-collector"}) * 0
-          )
+          sum(increase(otelcol_processor_dropped_spans{job="otel-collector"}[5m])) > 0
+          or
+          sum(increase(otelcol_exporter_send_failed_spans{job="otel-collector"}[5m])) > 0
         for: 5m
         labels:
           severity: critical
@@ -317,7 +295,9 @@ groups:
       - alert: UFawkesObsContainerRestarting
         expr: |
           (
-            changes(process_start_time_seconds{plane="obstackd", job=~"prometheus|alertmanager|grafana|otel-collector|loki|tempo|alloy|node-exporter"}[15m]) > 0
+            # A real restart moves the start time by the container's uptime; Docker
+            # Desktop VM clock jitter moves it by ~1 s, so require a >10 s shift.
+            (max_over_time(process_start_time_seconds{plane="obstackd", job=~"prometheus|alertmanager|grafana|otel-collector|loki|tempo|alloy|node-exporter"}[15m]) - min_over_time(process_start_time_seconds{plane="obstackd", job=~"prometheus|alertmanager|grafana|otel-collector|loki|tempo|alloy|node-exporter"}[15m])) > 10
           ) or on() (
             absent(process_start_time_seconds{plane="obstackd", job=~"prometheus|alertmanager|grafana|otel-collector|loki|tempo|alloy|node-exporter"}) * 0
           )
