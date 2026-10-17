@@ -11,7 +11,7 @@ cp io.ufawkes.obs-agent.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/io.ufawkes.obs-agent.plist
 ```
 
-Verify: Grafana -> Dashboards -> "Host Metrics (OTLP agents)", or in Prometheus
+Verify: Grafana -> Dashboards -> "Host Metrics (OTLP agents)" (separate PR), or in Prometheus
 `count by (host_name) ({__name__=~"app_metrics_system_.*"})`.
 
 Apps on the Mac: `export OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317`.
