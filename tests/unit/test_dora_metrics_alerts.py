@@ -28,6 +28,9 @@ RAW_RECORDINGS = {
     "dora:rework_rate:raw_ratio": "dora:rework_rate:ratio",
 }
 
+# Absent guards only apply where dora-api is scraped and up (dora profile).
+DORA_API_GATE = ' and on() (up{job="dora-api"} == 1)'
+
 ABSENT_ALERT_TARGETS = {
     "DORADeploymentFrequencyLowAbsent": "dora:deployment_frequency:raw30d",
     "DORALeadTimeHighAbsent": "dora:lead_time_hours:raw_p50_30d",
@@ -144,8 +147,9 @@ class TestAbsentGuardsCanFire:
         for alert_name, raw_target in ABSENT_ALERT_TARGETS.items():
             assert alert_name in alerts, f"Missing alert: {alert_name}"
             expr = alerts[alert_name]["expr"]
-            assert f"absent({raw_target})" == expr.strip(), (
-                f"{alert_name} must be absent({raw_target}); got: {expr.strip()}"
+            assert f"absent({raw_target})" + DORA_API_GATE == expr.strip(), (
+                f"{alert_name} must be absent({raw_target}){DORA_API_GATE}; "
+                f"got: {expr.strip()}"
             )
 
     def test_absent_alerts_never_target_fallback_series(self, project_root):

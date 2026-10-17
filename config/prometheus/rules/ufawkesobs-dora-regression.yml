@@ -248,7 +248,7 @@ groups:
 
       - alert: DORARegressionDeploymentFrequencyDropAbsent
         expr: |
-          absent(dora_deployment_frequency_per_week)
+          absent(dora_deployment_frequency_per_week) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -281,7 +281,7 @@ groups:
 
       - alert: DORARegressionLeadTimeIncreaseAbsent
         expr: |
-          absent(dora_lead_time_p50_hours)
+          absent(dora_lead_time_p50_hours) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -309,7 +309,7 @@ groups:
 
       - alert: DORARegressionFDRTSpikeAbsent
         expr: |
-          absent(dora_fdrt_p50_hours)
+          absent(dora_fdrt_p50_hours) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -343,7 +343,7 @@ groups:
 
       - alert: DORARegressionCFRSpikeAbsent
         expr: |
-          absent(dora_cfr_pct)
+          absent(dora_cfr_pct) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -373,7 +373,7 @@ groups:
 
       - alert: DORARegressionReworkRateClimbAbsent
         expr: |
-          absent(dora_rework_rate_pct)
+          absent(dora_rework_rate_pct) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -408,7 +408,7 @@ groups:
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-rollback"
 
       - alert: DORACFRRegressionRollbackAbsent
-        expr: absent(dora_cfr_pct)
+        expr: absent(dora_cfr_pct) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
