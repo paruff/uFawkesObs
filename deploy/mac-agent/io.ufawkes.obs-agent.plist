@@ -5,7 +5,7 @@
   <key>Label</key><string>io.ufawkes.obs-agent</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/opt/homebrew/bin/otelcol-contrib</string>
+    <string>/usr/local/bin/otelcol-contrib</string>
     <string>--config=/usr/local/etc/ufawkes-obs-agent.yaml</string>
   </array>
   <key>EnvironmentVariables</key>

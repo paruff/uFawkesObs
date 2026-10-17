@@ -4,8 +4,12 @@ Ships host metrics, logs and OTLP from a Mac to the stack's collector
 (`192.168.1.10:4317`, LAN only, unauthenticated).
 
 ```sh
-brew install opentelemetry-collector-contrib   # binary: otelcol-contrib
-sudo cp config.yaml /usr/local/etc/ufawkes-obs-agent.yaml
+# No brew formula exists. Download the release matching the NAS collector (0.162.0):
+ARCH=$(uname -m | sed 's/x86_64/amd64/')   # arm64 stays arm64
+cd "$(mktemp -d)" && curl -fsSLO https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.162.0/otelcol-contrib_0.162.0_darwin_${ARCH}.tar.gz
+tar xzf otelcol-contrib_*.tar.gz otelcol-contrib && sudo install otelcol-contrib /usr/local/bin/
+otelcol-contrib validate --config=config.yaml   # run from deploy/mac-agent/ after setting HOST_NAME
+cd - && sudo cp config.yaml /usr/local/etc/ufawkes-obs-agent.yaml
 # edit HOST_NAME in the plist, then:
 cp io.ufawkes.obs-agent.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/io.ufawkes.obs-agent.plist
