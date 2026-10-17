@@ -32,7 +32,7 @@ cd uFawkesObs && git pull
 scripts/backfill_dora_from_github.py paruff/uFawkesObs | head -3     # dry-run
 scripts/backfill_dora_from_github.py --post http://localhost:8088 \
   paruff/uFawkesObs paruff/uFawkesPipe paruff/uFawkesDevX paruff/uFawkesDojo \
-  paruff/uFawkesAI paruff/uFawkes.dev paruff/Fawkes                   # repo names: check
+  paruff/uFawkesAI paruff/uFawkes.dev paruff/fawkes
 ```
 
 If `DORA_API_KEY` is set on dora-api, export it first. A 40-PR/day cap warning
