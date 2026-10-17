@@ -2,7 +2,9 @@
 
 > **Status: PARTIALLY EXERCISED** — the rollback *mechanism* was demonstrated
 > working against the local Docker instance on 2026-09-02 (see
-> [Drill Results](#drill-results--2026-09-02-local-instance)). The full
+> [Drill Results](#drill-results--2026-09-02-local-instance)) and over SSH
+> against a Synology NAS on 2026-10-17 (see
+> [Drill Results](#drill-results--2026-10-17-synology-ds920plus-over-ssh)). The full
 > procedure below — SSH transport, `compose-restart` environment approval,
 > `workflow_run` triggering — has **not** been run and LB-04 is not closed.
 >
@@ -351,6 +353,47 @@ Workflow run: https://github.com/paruff/uFawkesObs/actions/runs/<RUN_ID>
 Step 5 → Step 6 recovery. These go into the results table.
 
 ---
+
+## Drill Results — 2026-10-17 (Synology DS920plus, over SSH)
+
+Run from the maintainer's workstation over SSH against `192.168.1.10`
+(DS920plus, Container Manager, Compose v2.20), `core` profile, `main` at
+`4314ed9`. **Not exercised:** `workflow_run` triggering, the `compose-restart`
+environment approval, `tag-candidate`, and `main` merge — GitHub-hosted runners
+cannot reach the LAN (§0a) and no self-hosted runner exists yet. LB-04 therefore
+stays open for those. `deploy-latest-good` was seeded as a **local** tag on the
+host only (not pushed).
+
+Recipe: the recommended one — `config/otel/collector.yaml` replaced with
+unparseable YAML, then `up -d --force-recreate otel-collector`.
+
+| # | Timestamp (UTC) | Event | Expected | Observed | Pass/Fail |
+|---|---|---|---|---|---|
+| 1 | 12:38 | Baseline `wait-healthy.sh` | exit 0 | 7/7 core healthy (Grafana ~6 min on first boot) | **PASS** |
+| 5 | 12:44:28 | Collector with bad config | crashes at boot | `failed to get config … not valid YAML`, restart loop; `up -d` exit 0 | **PASS** |
+| 6 | 12:45:12 | `post-deploy-verify` equivalent | fails | `❌ OTel Collector not healthy (31s)`, non-zero | **PASS** |
+| 9 | 12:45:12 | `git checkout --detach deploy-latest-good` | last good | config byte-identical to baseline | **PASS** |
+| 10 | 12:45:19 | `up -d --force-recreate otel-collector` | stack restarts | exit 0 | **PASS** |
+| 11 | 12:45:23 | Recovery `wait-healthy.sh` | exit 0 | exit 0; **11 s** from rollback start | **PASS** |
+| 12 | — | `deploy-latest-good` after drill | pre-drill SHA | `4314ed9`, unchanged | **PASS** |
+| 2–4, 7, 8 | — | PR merge, `tag-candidate`, approval, automatic `rollback` job, SSH `fetch --tags` | — | not run (see above) | **NOT RUN** |
+
+### Environment gaps found on the Synology (not rollback defects)
+
+Per the rules below, each needs its own follow-up issue.
+
+1. **Config unreadable by containers.** Clones under `/var/services/homes/<user>`
+   carry a DSM ACL granting "everyone" execute only, so containers running as
+   `nobody` (Prometheus) get `permission denied` on mounted config. Worked
+   around with a host-local compose override running services as the deploy
+   user (`user: "1026:100"`). §0d should say so.
+2. **Port 3000 taken** by another NAS service; Grafana was remapped to 3001 in a
+   host-local compose copy, and `wait-healthy.sh` hardcodes `localhost:3000`
+   (needs a port override).
+3. **No `make`, no sudo** on stock DSM, so `make up` is unusable; the
+   equivalent `docker compose --profile core up -d` was used.
+4. `/volume1/docker` is root-owned read-only for the admin user; §0d's suggested
+   path is not creatable without sudo.
 
 ## Drill Results — 2026-09-02 (local instance)
 
