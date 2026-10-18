@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0](https://github.com/paruff/uFawkesObs/compare/v1.0.0...v1.0.0) (2026-10-18)
+
+
+### Added
+
+* **alerting:** CFR-regression alert and gated automated rollback ([#502](https://github.com/paruff/uFawkesObs/issues/502)) ([#651](https://github.com/paruff/uFawkesObs/issues/651)) ([b52680d](https://github.com/paruff/uFawkesObs/commit/b52680de4ba9bbb08f51b0146e29e7b0a3321bba))
+* **alerting:** SLO burn-rate alerts for scrape availability ([#502](https://github.com/paruff/uFawkesObs/issues/502)) ([#650](https://github.com/paruff/uFawkesObs/issues/650)) ([a6f498e](https://github.com/paruff/uFawkesObs/commit/a6f498e829735ce9ac92c064274a018292e03c5e))
+* **alerting:** σ-band breach opens an intent issue in the affected repo ([#602](https://github.com/paruff/uFawkesObs/issues/602)) ([#653](https://github.com/paruff/uFawkesObs/issues/653)) ([ad6032f](https://github.com/paruff/uFawkesObs/commit/ad6032feb10fa298925e9b56c317407ffa19f574))
+* **dora:** backfill events from merged-PR history via gh ([#674](https://github.com/paruff/uFawkesObs/issues/674)) ([24d46c5](https://github.com/paruff/uFawkesObs/commit/24d46c55aac98ad47f26da977ddc6a1273f0538c))
+* **obs:** host-metrics dashboard for OTLP agents ([#673](https://github.com/paruff/uFawkesObs/issues/673)) ([08dd43f](https://github.com/paruff/uFawkesObs/commit/08dd43f426e34c2b03f0cf35ad6a538d1fba855e))
+* **obs:** Mac OTel agent config and host-metrics dashboard ([#672](https://github.com/paruff/uFawkesObs/issues/672)) ([a54e0ee](https://github.com/paruff/uFawkesObs/commit/a54e0eefd6bbda505bb953c08b7e89bfe1bb826d))
+
+
+### Fixed
+
+* **alerting:** healthy default install fires no alerts ([#670](https://github.com/paruff/uFawkesObs/issues/670)) ([#675](https://github.com/paruff/uFawkesObs/issues/675)) ([c9c27eb](https://github.com/paruff/uFawkesObs/commit/c9c27ebd410f59c4f38545887716e1958ab75b40))
+* **ci:** exclude agent-fed Host Metrics dashboard from OBS-SLI-006 gate ([#676](https://github.com/paruff/uFawkesObs/issues/676)) ([b4637bc](https://github.com/paruff/uFawkesObs/commit/b4637bc647554b1b535b57384cd9c8ee132b10d0))
+
+
+### Docs
+
+* **adr:** ADR-008 standardise on OTel Collector YAML over Alloy River ([#503](https://github.com/paruff/uFawkesObs/issues/503)) ([#652](https://github.com/paruff/uFawkesObs/issues/652)) ([30e7cc1](https://github.com/paruff/uFawkesObs/commit/30e7cc1ea915c05a40c46dd0cdc60c7cb076604f))
+* **drill:** record LB-04 rollback drill over SSH on Synology ([#182](https://github.com/paruff/uFawkesObs/issues/182)) ([#669](https://github.com/paruff/uFawkesObs/issues/669)) ([bd2bbc2](https://github.com/paruff/uFawkesObs/commit/bd2bbc2a3c00584a65d9104122121783fb9c2ea4))
+* **readme:** cite research basis (paruff/uFawkes.dev[#65](https://github.com/paruff/uFawkesObs/issues/65)) ([#654](https://github.com/paruff/uFawkesObs/issues/654)) ([ba2bfc7](https://github.com/paruff/uFawkesObs/commit/ba2bfc7741cb8943d6f5038c64ddbd1cdc6f6f39))
+
+
+### Chores
+
+* **deps:** bump alloy to v1.14.2 ([#474](https://github.com/paruff/uFawkesObs/issues/474)) ([#644](https://github.com/paruff/uFawkesObs/issues/644)) ([9bd83e9](https://github.com/paruff/uFawkesObs/commit/9bd83e9c1644ff068875d7c50bf077fe33148e57))
+* **deps:** bump loki to 3.6.17 ([#474](https://github.com/paruff/uFawkesObs/issues/474)) ([#646](https://github.com/paruff/uFawkesObs/issues/646)) ([4b6a930](https://github.com/paruff/uFawkesObs/commit/4b6a930acb9a75aceafb1bffc0d03ba3002c71e6))
+* **deps:** bump node-exporter to v1.12.1 ([#474](https://github.com/paruff/uFawkesObs/issues/474)) ([#643](https://github.com/paruff/uFawkesObs/issues/643)) ([b69d7a6](https://github.com/paruff/uFawkesObs/commit/b69d7a6b1f2d12c6d007267e7eb63b148ca19b8a))
+* **deps:** bump otel-collector to 0.162.0 ([#474](https://github.com/paruff/uFawkesObs/issues/474)) ([#647](https://github.com/paruff/uFawkesObs/issues/647)) ([6d971c0](https://github.com/paruff/uFawkesObs/commit/6d971c030b45c8be4a2b267282f89de1b212e6d2))
+* **deps:** replace alertmanager-discord with native discord_configs ([#474](https://github.com/paruff/uFawkesObs/issues/474)) ([#648](https://github.com/paruff/uFawkesObs/issues/648)) ([3cd14ec](https://github.com/paruff/uFawkesObs/commit/3cd14eca8999ae9307c4ab5637d6fa490bb0c80e))
+
 ## [1.0.0](https://github.com/paruff/uFawkesObs/compare/v1.2.0-rc.1...v1.0.0) (2026-10-14)
 
 
