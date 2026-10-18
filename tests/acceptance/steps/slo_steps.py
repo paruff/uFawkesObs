@@ -751,9 +751,15 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   (docs/KNOWN_LIMITATIONS.md "Duplicate Dashboard Provisioning Path") and
 #   queries an MQTT broker that has never existed anywhere in this stack —
 #   structurally undeliverable, not a regression.
+# - Host Metrics (OTLP agents): charts app_metrics_system_* series pushed by
+#   an external Mac/NAS OTLP agent (deploy/mac-agent/). The CI stack runs no
+#   such agent, so it is empty by construction. It turned Acceptance Full red
+#   on main from 08dd43f (#673), when it was added. Remove from this set if
+#   CI ever gets a host-metrics source.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
         "IoT Devices & MQTT",
+        "Host Metrics (OTLP agents)",
     }
 )
 
