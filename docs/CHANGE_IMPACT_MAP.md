@@ -69,7 +69,7 @@
 | OTEL Collector receiver port (4317/4318) | **uFawkesPipe**: Woodpecker pipeline telemetry and `notify-obs` deployment events are sent here; update its OTEL exporter config |
 | Loki port (3100)                         | Any external log shippers or apps pushing logs via OTLP/HTTP must be updated       |
 | Prometheus remote-write endpoint         | **fawkes**: Full IDP deployment may scrape this Prometheus                         |
-| Grafana admin credentials format         | **developerd**: Developer tooling that embeds Grafana panels                       |
+| Grafana admin credentials format         | **uFawkesDevX**: Developer tooling that embeds Grafana panels                       |
 | Network name in `compose.yaml`           | Other planes that join this network for cross-plane telemetry                      |
 
 ---

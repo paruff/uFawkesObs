@@ -1,4 +1,4 @@
-# uFawkesDevX (developerd) → uFawkesObs Integration Guide
+# uFawkesDevX → uFawkesObs Integration Guide
 
 ## Overview
 
@@ -20,7 +20,7 @@ events are visible in the centralized observability platform.
 
 ```
 ┌──────────────────────────────────────────────┐
-│           uFawkesDevX (developerd)           │
+│           uFawkesDevX           │
 │  ┌──────────┐  ┌──────────┐  ┌───────────┐ │
 │  │ Dev      │  │ Local    │  │ OTEL      │ │
 │  │ Tools    │  │ Services │  │ SDK       │ │
@@ -47,7 +47,7 @@ events are visible in the centralized observability platform.
 ## Prerequisites
 
 - uFawkesObs running with `docker compose --profile core up -d`
-- uFawkesDevX (developerd) running with local development services
+- uFawkesDevX running with local development services
 - Both stacks on the same Docker host (or connected via the `observability-lab` network)
 
 ---
@@ -100,7 +100,7 @@ services:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
       - OTEL_SERVICE_NAME=dev-api
-      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=developerd,service.version=dev
+      - OTEL_RESOURCE_ATTRIBUTES=service.namespace=ufawkesdevx,service.version=dev
       - OTEL_TRACES_EXPORTER=otlp
       - OTEL_METRICS_EXPORTER=otlp
       - OTEL_LOGS_EXPORTER=otlp
@@ -185,7 +185,7 @@ scrape_configs:
       - targets: ["dev-api:8080"]
         labels:
           component: "dev-api"
-          service: "developerd"
+          service: "ufawkesdevx"
     scrape_interval: 15s
     metrics_path: "/metrics"
     scheme: "http"
@@ -248,10 +248,10 @@ docker exec dev-api curl -v http://loki:3100/ready
 
 ```bash
 # Check OTel Collector is receiving dev telemetry
-curl http://localhost:8888/metrics | grep -i "dev-api\|developerd"
+curl http://localhost:8888/metrics | grep -i "dev-api\|ufawkesdevx"
 
 # Check Prometheus targets
-curl 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select(.labels.service=="developerd")'
+curl 'http://localhost:9090/api/v1/targets' | jq '.data.activeTargets[] | select(.labels.service=="ufawkesdevx")'
 
 # Check Loki for dev logs
 curl 'http://localhost:3100/loki/api/v1/query?query={service_name="dev-api"}' | jq
@@ -261,7 +261,7 @@ curl 'http://localhost:3100/loki/api/v1/query?query={service_name="dev-api"}' | 
 
 1. **Logs:** Explore → Loki → query `{container_name=~"dev-.*"}`
 2. **Traces:** Explore → Tempo → search by service name `dev-api`
-3. **Metrics:** Explore → Prometheus → query `up{service="developerd"}`
+3. **Metrics:** Explore → Prometheus → query `up{service="ufawkesdevx"}`
 
 ---
 
