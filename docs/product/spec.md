@@ -63,7 +63,7 @@ Rather than having each repository or plane provision its own isolated, custom t
 
 ### 4.2 Completed — Repository Hardening & Cross-Plane (M2 & M3)
 
-- **OBS-F10:** Document the precise network join patterns in `multi-stack-integration.md` to allow other planes (e.g., developerd, deliveryd) to join the `observability-lab` Docker bridge network.
+- **OBS-F10:** Document the precise network join patterns in `multi-stack-integration.md` to allow other planes (e.g., uFawkesDevX, deliveryd) to join the `observability-lab` Docker bridge network.
 - **OBS-F11:** Register uFawkesObs into fawkes Backstage catalog-info.yaml metadata.
 - **OBS-F12:** Provide clear guide explaining how uFawkesPipe CI pipelines can export OTLP tracing to uFawkesObs Tempo.
 
