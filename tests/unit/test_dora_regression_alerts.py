@@ -183,8 +183,18 @@ class TestDoraApiScrapeJob:
 
         for sc in config["scrape_configs"]:
             if sc["job_name"] == "dora-api":
-                targets = sc["static_configs"][0]["targets"]
-                assert "dora-api:8088" in targets
+                # dns_sd (#670): the target only exists while the dora
+                # profile's container resolves, so a default install has no
+                # permanently-down dora-api target. static_configs would
+                # bring that back.
+                assert "static_configs" not in sc
+                dns = sc["dns_sd_configs"][0]
+                assert dns["names"] == ["dora-api"]
+                assert dns["port"] == 8088
+                instance = [
+                    r for r in sc["relabel_configs"] if r["target_label"] == "instance"
+                ]
+                assert instance[0]["replacement"] == "dora-api:8088"
                 assert sc.get("metrics_path") == "/metrics"
                 return
         raise AssertionError("dora-api scrape job not found")
