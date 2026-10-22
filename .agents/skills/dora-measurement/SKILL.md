@@ -1,6 +1,6 @@
 ---
 name: dora-measurement
-description: "Compute the five DORA software delivery metrics from uFawkesObs (Prometheus and Loki), flag any proxy metric, and report the tier for each. Use for the monthly /measure snapshot."
+description: "Compute the five DORA software delivery metrics from uFawkesObs (Prometheus and Loki), flag any proxy metric, and report the tier for each. Use when producing the monthly /measure snapshot or checking delivery performance."
 license: MIT
 compatibility: Claude Code, GitHub Copilot, OpenCode, Cursor, Codex, Gemini CLI
 metadata:
