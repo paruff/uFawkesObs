@@ -14,6 +14,6 @@ jsonschema==4.26.0
 yamllint==1.38.0
 aiohttp==3.14.4
 aiosqlite==0.22.1
-fastapi==0.143.0
+fastapi==0.143.2
 pytest-bdd==9.0.0
 requests==2.34.2
