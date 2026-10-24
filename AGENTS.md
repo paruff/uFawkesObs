@@ -62,3 +62,25 @@ repo. Link to it; don't copy it here.
 - Text must meet 4.5:1 contrast. `#16a34a` on white is 3.30:1 and fails.
 - If this repo needs a value the reference does not have, propose it in
   uFawkes.dev rather than adding a local one.
+
+## 7. Workflow: board, gates, review
+
+- UI changes: read [DESIGN.md](https://github.com/paruff/uFawkes.dev/blob/main/DESIGN.md) first (tokens, components, do and don't)
+- Reviewing a PR: apply REVIEW.md (what is Important, verification, validation, security)
+
+Status lives only on [Project #7](https://github.com/users/paruff/projects/7):
+no status labels, no ✅ in plans. Routing labels say who does the work, not its
+state. Work traces to `docs/ai-sdlc/<feature>/` intent → spec → plan; plans link
+issues, never list tasks. Statuses, Gate, lifecycle and owner decisions:
+[the board rules](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/plan.md#the-board-statuses-gates-and-moves).
+
+```bash
+# 1. Next item for an agent (label: the routing label you run as, claude-code or opencode)
+gh project item-list 7 --owner paruff --limit 300 --query 'status:"Ready for agent" is:open label:opencode' \
+  --format json --jq '.items | sort_by(.priority // "P9", .content.number) | .[:1][] | "\(.content.repository)#\(.content.number) \(.title)"'
+# 2. Waiting on a human, and which gate each waits on
+gh project item-list 7 --owner paruff --limit 300 --query 'status:"Needs human" is:open' \
+  --format json --jq '.items[] | "\(.gate // "-")\t\(.content.repository)#\(.content.number) \(.title)"'
+# Move: "In Progress" before you start; "Needs human" plus Gate "PR review" when the PR is up
+gh project item-edit 7 --owner paruff --url <issue url> --field Status --value "In Progress"
+```
