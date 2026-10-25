@@ -2,7 +2,10 @@
 
 Policy for every PR review: agentic review (Claude Code `reviewer` agent,
 Code Review, `@claude`) and human review. It defines *what* gets checked
-and *who* must approve. The checklist itself lives in one place:
+and *who* must approve. The suite rules (severity, what to flag, output and
+the Project #7 board move) are in
+[uFawkesAI REVIEW.md](https://github.com/paruff/uFawkesAI/blob/main/REVIEW.md);
+this file adds what is specific to uFawkesObs. The checklist itself lives in one place:
 
 - **Checklist:** [`.agents/agents/review.md`](.agents/agents/review.md) —
   run it in order (size gate, architecture, tests, security surface,
@@ -19,8 +22,8 @@ something without running the stack, say so rather than approving it.
 
 | Severity | Meaning | Merge |
 |---|---|---|
-| **Blocker** | Breaks a hard rule (AGENTS.md §5 NEVER list, `.claude/rules/`), leaks a secret, or breaks deploy/rollback | No |
-| **Major** | Wrong behavior, missing test for changed behavior, or a §5 "MUST Ask Before" change without sign-off | No, until resolved or the maintainer explicitly accepts it |
+| **Critical** | Breaks a hard rule (AGENTS.md §5 NEVER list, `.claude/rules/`), leaks a secret, or breaks deploy/rollback | No |
+| **Important** | Wrong behavior, missing test for changed behavior, or a §5 "MUST Ask Before" change without sign-off | No, until resolved or the maintainer explicitly accepts it |
 | **Minor** | Clarity, naming, docs drift | Yes; author decides |
 
 ## Human approval required
