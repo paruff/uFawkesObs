@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1](https://github.com/paruff/uFawkesObs/compare/v1.0.1...v1.0.1) (2026-10-25)
+
+
+### Docs
+
+* **agents:** import the integration-testing skill from uFawkesAI ([#681](https://github.com/paruff/uFawkesObs/issues/681)) ([acbb4e3](https://github.com/paruff/uFawkesObs/commit/acbb4e3d3f31bdeb83d1f9ed69ef42c671913b2d))
+* **review:** suite review rules and the Project 7 workflow ([#688](https://github.com/paruff/uFawkesObs/issues/688)) ([57828de](https://github.com/paruff/uFawkesObs/commit/57828de957de3259b9e4efb4684671f00d79fbe9))
+
 ## [1.0.1](https://github.com/paruff/uFawkesObs/compare/v1.0.0...v1.0.1) (2026-10-18)
 
 
