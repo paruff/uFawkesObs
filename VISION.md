@@ -25,7 +25,7 @@ uFawkesObs composes the same OSS components those vendors build on (Prometheus, 
 
 5. **Reproducible Local Simulation.** All integration and unit tests run fully locally without external infrastructure or cluster dependencies. A contributor can validate a change with `make test` before pushing.
 
-6. **Discovery Before Build.** Every feature starts with a discovery brief that names the riskiest assumption and an acceptance criterion. No resources committed until the brief is approved. (This principle was violated for M2–M4; `docs/product/discovery-draft.md` is a retrospective audit, not a gating artifact.)
+6. **Discovery Before Build.** Every feature starts with a discovery brief that names the riskiest assumption and an acceptance criterion. No resources committed until the brief is approved. (This principle was violated for M2–M4; the retrospective audit, [`discovery-draft.md` at v1.0.0](https://github.com/paruff/uFawkesObs/blob/v1.0.0/docs/product/discovery-draft.md), was not a gating artifact.)
 
 ---
 
@@ -48,7 +48,7 @@ These are out of scope for the current maturity stage. They may become goals lat
 > (upgrades, disk growth, backup, on-call for the stack itself) in exchange for
 > not paying a SaaS bill.
 
-**Status:** Named, not yet tested. See `docs/product/discovery-draft.md` § "Honest Limitations" for what this assumption does *not* establish. The onboarding-speed sub-claim has been validated (93s, PASS); the operational-burden risk remains open.
+**Status:** Named, not yet tested. See [`discovery-draft.md` at v1.0.0](https://github.com/paruff/uFawkesObs/blob/v1.0.0/docs/product/discovery-draft.md) § "Honest Limitations" for what this assumption does *not* establish. The onboarding-speed sub-claim has been validated (93s, PASS); the operational-burden risk remains open.
 
 ---
 
@@ -59,9 +59,7 @@ These are out of scope for the current maturity stage. They may become goals lat
 | [`MILESTONES.md`](MILESTONES.md) | Months | What are we building next, and in what order? |
 | [`EXECUTION_QUEUE.md`](EXECUTION_QUEUE.md) | Weeks | What specific tasks are ready to be worked? |
 | [`plan-for-the-day.md`](plan-for-the-day.md) | Today | What am I doing right now? |
-| [`docs/product/discovery-draft.md`](docs/product/discovery-draft.md) | Discovery | Why does this product exist? What's the riskiest assumption? |
-| [`docs/product/spec.md`](docs/product/spec.md) | Spec | What are the functional requirements and interface contracts? |
-| [`docs/product/design.md`](docs/product/design.md) | Design | How is the architecture structured? What are the design principles? |
+| [`docs/ai-sdlc/`](docs/ai-sdlc/) | Intent, spec, plan | What does each release or feature require, and how is it built? |
 | [`docs/KNOWN_LIMITATIONS.md`](docs/KNOWN_LIMITATIONS.md) | Known gaps | Where could the riskiest assumption break first? |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Topology | How do services connect and depend on each other? |
 | [`docs/CHANGE_IMPACT_MAP.md`](docs/CHANGE_IMPACT_MAP.md) | Impact | What breaks when a service config changes? |

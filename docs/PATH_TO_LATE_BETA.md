@@ -8,7 +8,7 @@
 
 ## Where We Are
 
-Milestones M1–M4 are complete (`docs/product/spec.md`): core Compose stack,
+Milestones M1–M4 are complete: core Compose stack,
 repo hardening, cross-plane integration docs, and DORA/ecosystem wiring are
 all shipped and tagged `v0.1.0`. `main` CI is green.
 
@@ -24,7 +24,7 @@ met yet.
 
 ## What "Late Beta" Means Here
 
-Per `docs/product/discovery-draft.md`, the target user is a 3–15 person
+The target user is a 3–15 person
 engineering team running Docker Compose who wants production-grade metrics,
 logs, traces, and alerting without a SaaS bill. **Late beta means that team
 can clone the repo, run `make up`, and rely on it for real (non-production)
@@ -45,8 +45,7 @@ Concretely, late beta requires:
 
 ## Explicitly Out of Scope for Late Beta
 
-- **M5 — Kubernetes/Helm deployment** (`v2.0.0` per `docs/product/spec.md`,
-  issues #84–#87). The target persona ships on Docker Compose; Kubernetes
+- **M5 — Kubernetes/Helm deployment** (issues #84–#87). The target persona ships on Docker Compose; Kubernetes
   support is a separate, later milestone for a different audience.
 - **Multi-host progressive delivery** (canary/staging/load-balanced
   production, per `docs/DEPLOYMENT_STRATEGY.md`'s "Target Model"). That's

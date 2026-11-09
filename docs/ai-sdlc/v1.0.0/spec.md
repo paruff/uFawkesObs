@@ -17,13 +17,15 @@
 | REL-08 | The GitHub Release, the ufawkes.dev Obs page, the dev.to post, and the LinkedIn post all show the same version and link to the same release notes | Suite AC-OBS-04 |
 
 The existing functional and non-functional requirements (OBS-F##, OBS-N##)
-in [`docs/product/spec.md`](../../product/spec.md) still apply. 1.0 adds no
+in the product spec as of the `v1.0.0` tag
+([`docs/product/spec.md` at v1.0.0](https://github.com/paruff/uFawkesObs/blob/v1.0.0/docs/product/spec.md)) still apply, except
+OBS-F22 and OBS-F23, which ADR-007 superseded. The file was retired from main
+on 2026-11-09. 1.0 adds no
 new product features.
 
 ## Design
 
 1.0 changes no architecture. Topology, principles, and decisions stay as
-described in [`docs/product/design.md`](../../product/design.md),
 [`docs/ARCHITECTURE.md`](../../ARCHITECTURE.md), and
 [`docs/adr/`](../../adr/). What 1.0 adds is the contract below and the
 semver rules that apply to it.

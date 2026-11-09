@@ -7,10 +7,10 @@ preserved after the feature ships — distinct from the transient root-level
 pipeline overwrites while a feature is in progress (see `.gitignore`).
 
 Convention: `docs/features/<feature-slug>/{discovery-draft,spec,design}.md`
-and `tasks.json`, mirroring the file names used in `docs/product/`.
+and `tasks.json`.
 
-Product-level (whole-repo) discovery/spec/design/tasks live in
-[`docs/product/`](../product/) instead.
+Release-level intent, spec and plan live in
+[`docs/ai-sdlc/<release>/`](../ai-sdlc/) instead.
 
 ## Index
 
