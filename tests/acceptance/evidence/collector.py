@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -63,7 +63,7 @@ class EvidenceCollector:
         # Initialize index
         self._index = {
             "run_id": str(uuid.uuid4())[:8],
-            "started_at": datetime.now(timezone.utc).isoformat(),
+            "started_at": datetime.now(UTC).isoformat(),
             "artifacts": [],
         }
 
@@ -135,7 +135,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="otlp_payload",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "endpoint": endpoint,
@@ -175,7 +175,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="grafana_response",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "datasource": datasource,
@@ -210,7 +210,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="prometheus_targets",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "description": description,
@@ -247,7 +247,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="chaos_event",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "event_type": event_type,
@@ -293,7 +293,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="slo_measurement",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "sli_id": sli_id,
@@ -337,7 +337,7 @@ class EvidenceCollector:
         artifact = EvidenceArtifact(
             artifact_id=artifact_id,
             artifact_type="dashboard_validation",
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             test_name=test_name,
             metadata={
                 "dashboard_uid": dashboard_uid,
@@ -365,7 +365,7 @@ class EvidenceCollector:
         Returns:
             The complete index dictionary
         """
-        self._index["completed_at"] = datetime.now(timezone.utc).isoformat()
+        self._index["completed_at"] = datetime.now(UTC).isoformat()
         self._index["total_artifacts"] = len(self._index["artifacts"])
         self._save_index()
         return self._index

@@ -8,7 +8,7 @@ Outputs Mermaid sequence diagrams for incident response runbooks.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -34,7 +34,7 @@ class ChaosReportGenerator:
 
     def __init__(self):
         self.events: list[ChaosEvent] = []
-        self.generated_at = datetime.now(timezone.utc)
+        self.generated_at = datetime.now(UTC)
 
     def add_event(self, event: ChaosEvent | dict[str, Any]) -> None:
         """Add a chaos event to the report."""

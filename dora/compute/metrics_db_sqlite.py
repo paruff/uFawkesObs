@@ -171,18 +171,14 @@ class MetricsDB:
             deployed_at = meta.get("deployed_at")
             if not deployed_at:
                 continue
-            deployed = datetime.fromisoformat(deployed_at.replace("Z", "+00:00"))
+            deployed = datetime.fromisoformat(deployed_at)
             if meta.get("first_commit_at"):
-                started = datetime.fromisoformat(
-                    meta["first_commit_at"].replace("Z", "+00:00")
-                )
+                started = datetime.fromisoformat(meta["first_commit_at"])
                 exact.setdefault(source, []).append(
                     (deployed - started).total_seconds() / 3600
                 )
             elif meta.get("pr_merged_at"):
-                started = datetime.fromisoformat(
-                    meta["pr_merged_at"].replace("Z", "+00:00")
-                )
+                started = datetime.fromisoformat(meta["pr_merged_at"])
                 proxy.setdefault(source, []).append(
                     (deployed - started).total_seconds() / 3600
                 )

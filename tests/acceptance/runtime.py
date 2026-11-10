@@ -12,7 +12,7 @@ import os
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -97,9 +97,7 @@ class Evidence:
     """Captured evidence from a test execution."""
 
     test_id: str
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     artifacts: dict[str, Any] = field(default_factory=dict)
 
     def add(self, key: str, value: Any) -> None:
@@ -242,13 +240,12 @@ class LokiClient:
 
         if start is None:
             start_ns = int(
-                (dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=5)).timestamp()
-                * 1e9
+                (dt.datetime.now(dt.UTC) - dt.timedelta(minutes=5)).timestamp() * 1e9
             )
         else:
             start_ns = start
         if end is None:
-            end_ns = int(dt.datetime.now(dt.timezone.utc).timestamp() * 1e9)
+            end_ns = int(dt.datetime.now(dt.UTC).timestamp() * 1e9)
         else:
             end_ns = end
 
