@@ -6,7 +6,7 @@ Additional steps specific to dashboards beyond shared steps.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 from pytest_bdd import given, parsers, then
@@ -57,7 +57,7 @@ def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
             "service": "acceptance-test-service",
             "environment": "production",
             "commit_sha": "1" * 40,
-            "deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "deployed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "status": "failed",
             "pipeline_url": "https://example.com/ci/acceptance-test",
         },
@@ -74,7 +74,7 @@ def seed_dora_deployment_event(stack: ObservabilityStack) -> None:
             "service": "acceptance-test-service",
             "environment": "production",
             "commit_sha": "2" * 40,
-            "deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "deployed_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "status": "success",
             "pipeline_url": "https://example.com/ci/acceptance-test",
             "pr_merged_at": "2026-01-01T00:00:00Z",

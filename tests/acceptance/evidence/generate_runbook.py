@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -91,7 +91,7 @@ class RunbookGenerator:
         """Generate the runbook header."""
         return f"""# Debugging & Troubleshooting Runbook Snippets
 
-**Generated:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")}
+**Generated:** {datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")}
 **Source:** uFawkesObs Post-Merge Acceptance Tests
 **Evidence Directory:** `{self.evidence_dir}`
 
