@@ -271,7 +271,7 @@ curl -s "http://localhost:3100/loki/api/v1/label/service/values"
 | Document | Purpose |
 |---|---|
 | [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) | Full component topology and data flows |
-| [`docs/product/spec.md`](../docs/product/spec.md) | Functional requirements and interface contracts |
+| [`docs/CONTRACTS.md`](CONTRACTS.md) | Interface contracts other stacks rely on |
 | [`config/docker-compose.integration.yml`](../config/docker-compose.integration.yml) | Reference network configuration template |
 | [`compose.yaml`](../compose.yaml) | uFawkesObs core stack definition |
 
