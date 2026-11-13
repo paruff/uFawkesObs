@@ -42,3 +42,18 @@ not in this file. Every merge is human-gated (AGENTS.md §5).
 | AC-02 (REL-07) | The [`v1.0.0` milestone](https://github.com/paruff/uFawkesObs/milestone/1) filtered on `label:release-blocker` shows 0 open | 2, before step 6 |
 | AC-03 (REL-01, 03, 05, 06) | Contract table re-verified at the rc; `grep -qi sqlite README.md`; `gh release view v1.0.0 --json assets` lists the tarball and `.sha256`; upgrade notes linked | 3, 4, 6 |
 | AC-04 (REL-08) | Four live URLs (GitHub Release, ufawkes.dev, dev.to, LinkedIn) recorded on the Obs 1.0 Project item, all showing `v1.0.0` | 7 |
+
+### Make commands
+
+Per [the suite's rule for `make` commands](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#make-verification-commands). This repo has no `make validate` yet (paruff/uFawkesObs#712); `make ci-local` does that job
+and more.
+
+| Command | Proves | Needs |
+|---|---|---|
+| `make pre-commit-run` | Every pre-commit hook passes on every file | Nothing |
+| `make validate-configs` | Prometheus, OTel and Tempo configs pass each tool's own validator | Docker |
+| `make test-unit` | Unit tests pass | Nothing |
+| `make ci-local` | The fast pyramid in CI order: hooks, config validation, unit, integration, acceptance smoke | `make up` first |
+| `make test-acceptance-full` | Full acceptance, as CI runs it after merge | `make up-full` first |
+| `make test-conformance` | The InSpec profile passes against the running containers | `make up` first |
+| `make doctor` | This clone's hooks are installed and its tools are present | Nothing |
