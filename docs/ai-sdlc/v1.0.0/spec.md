@@ -69,6 +69,34 @@ authoritative.
 Makefile targets and compose profile names are **not** in the contract
 yet; see intent open question 2.
 
+## Interfaces
+
+The public contract above is what a user of the stack depends on. These are
+uFawkesObs's rows in the suite's [cross-repo interface contracts](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#cross-repo-interface-contracts):
+
+| Contract | Role | Defined in |
+|---|---|---|
+| DORA event ingestion: endpoints, event types, required fields | Provides, to uFawkesPipe (`notify-obs`) and uFawkesAI (`dora-events` emitter) | [`docs/CONTRACTS.md`](../../CONTRACTS.md) §1 |
+| OTLP receivers (`4317` gRPC, `4318` HTTP) and metric routing | Provides, to uFawkesPipe | [`docs/CONTRACTS.md`](../../CONTRACTS.md) §2 |
+| Compose surface: services, published ports, `.env.example` variables | Provides, to uFawkesDojo labs and suite mode | "Public contract" and "Semver rules" above |
+| Release tags | Provides, to uFawkesDojo (labs pin a tag, never `main`) | GitHub Releases |
+| Reusable workflows (`reusable-main-ci-guard`, `-preflight`, `-lint`, `-security-scanning`, `-dependency-review`, `-build`) | Consumes, from uFawkesPipe | uFawkesPipe `README.md` |
+| `ufawkes-ci` CI job image and `fawkes-space` devcontainer image | Consumes, from uFawkesPipe and uFawkesAI | Pinned by digest |
+
+The semver rules cover the Compose surface only. A change to a DORA endpoint,
+event type or required field breaks uFawkesPipe and uFawkesAI, so it is a
+**major** change too, and uFawkesPipe's mirror
+(`contracts/dora-events/*.schema.json`) changes in the same release window.
+
+## Pipeline invariants
+
+The [suite pipeline invariants](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#pipeline-invariants) apply here unchanged. This repo adds:
+
+- A push to `main` that touches `config/**`, `compose.yaml`, `.env.example` or `dashboards/**` deploys to a real host over SSH (`INTENT.md`). Those paths are production-facing.
+- Every service has a real healthcheck, and no image runs on `latest`.
+- `Security`, `Integration Tests` and `🛡️ Main CI Health` are required checks on `main`, beside the hook job and `🔗 Artifact Chain`.
+- A fix is verified against the running stack, not against parsed YAML (`docs/TESTING_PYRAMID.md`).
+
 ## Concerns
 
 | Risk | Handling |
