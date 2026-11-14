@@ -1,7 +1,7 @@
 # Spec: uFawkesObs v1.0.0
 
 **Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
-**Status:** Draft | **Revision:** 1
+**Status:** Released (`v1.0.0` on 2026-10-14, `v1.0.1` on 2026-10-18) | **Revision:** 2
 
 ## Requirements
 
@@ -37,6 +37,15 @@ This table was re-verified against `origin/main` at `155ef5a`
 services, their profiles, every published port and all 7 `.env.example`
 variables match. The tagged `compose.yaml` and `.env.example` remain
 authoritative.
+
+Read again at `d34fd58` on 2026-11-13, from the files and without running
+`docker compose config`: `compose.yaml` defines the 10 services in the table
+below and `.env.example` has the 6 variables listed, not 11 and 7.
+`compose.yaml` also reads two variables that `.env.example` doesn't list,
+each with a default: `DATABASE_URL` (`dora-api`) and
+`OTEL_METRIC_EXPORT_INTERVAL` (`telemetry-generator`). Whether they join the
+contract is open. The DORA ingestion contract's own gaps are in
+[`../dora-contract/spec.md`](../dora-contract/spec.md).
 
 **Compose services and published ports**
 

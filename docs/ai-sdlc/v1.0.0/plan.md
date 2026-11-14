@@ -1,7 +1,7 @@
 # Plan: uFawkesObs v1.0.0
 
 **Traces to:** [`spec.md`](spec.md) → [`intent.md`](intent.md)
-**Status:** Draft | **Revision:** 1
+**Status:** Released (`v1.0.1`); what is left is on paruff/uFawkesObs#600 | **Revision:** 2
 
 This plan is gate-driven, not date-driven. Status lives in the issues and
 in the [uFawkes Suite Release Project](https://github.com/users/paruff/projects/7),
