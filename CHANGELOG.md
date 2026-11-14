@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2](https://github.com/paruff/uFawkesObs/compare/v1.0.1...v1.0.2) (2026-11-14)
+
+
+### Docs
+
+* **agents:** import the integration-testing skill from uFawkesAI ([#681](https://github.com/paruff/uFawkesObs/issues/681)) ([acbb4e3](https://github.com/paruff/uFawkesObs/commit/acbb4e3d3f31bdeb83d1f9ed69ef42c671913b2d))
+* **docs:** DORA contract intent, spec and plan; v1.0.0 is released ([#719](https://github.com/paruff/uFawkesObs/issues/719)) ([#721](https://github.com/paruff/uFawkesObs/issues/721)) ([9549e36](https://github.com/paruff/uFawkesObs/commit/9549e3606444a5e77edf6f77fc4785eff70ebe7a))
+* **docs:** interfaces, pipeline invariants and make commands ([#713](https://github.com/paruff/uFawkesObs/issues/713)) ([4efb3aa](https://github.com/paruff/uFawkesObs/commit/4efb3aa926681e978685f9b771e3908765ab3e1a))
+* retire docs/product (spec, design, discovery, tasks) ([#707](https://github.com/paruff/uFawkesObs/issues/707)) ([b820835](https://github.com/paruff/uFawkesObs/commit/b8208355999bd723a49341ee791053f12df415ac))
+* **review:** suite review rules and the Project 7 workflow ([#688](https://github.com/paruff/uFawkesObs/issues/688)) ([57828de](https://github.com/paruff/uFawkesObs/commit/57828de957de3259b9e4efb4684671f00d79fbe9))
+
+
+### Chores
+
+* **release:** drop release-as 1.0.1 now that v1.0.1 has shipped ([#708](https://github.com/paruff/uFawkesObs/issues/708)) ([6788e9d](https://github.com/paruff/uFawkesObs/commit/6788e9d6d3a05e03d2287a4d8422830f5a2d48f2))
+
 ## [1.0.1](https://github.com/paruff/uFawkesObs/compare/v1.0.0...v1.0.1) (2026-10-18)
 
 
