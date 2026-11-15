@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -18,7 +18,7 @@ spec = importlib.util.spec_from_file_location(
 backfill = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(backfill)
 
-NOW = datetime(2026, 10, 17, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 17, tzinfo=UTC)
 
 
 def pr(number, title, merged, sha="a" * 40, first="2026-10-10T08:00:00Z"):
