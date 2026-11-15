@@ -8,6 +8,16 @@ dedupes instead of double-counting DORA metrics.
 import hashlib
 import json
 
+_DEPLOYMENT_KEY = (
+    "event_type",
+    "repo",
+    "service",
+    "environment",
+    "commit_sha",
+    "status",
+    "deployed_at",
+)
+
 
 def payload_hash(payload: dict) -> str:
     """Return a stable SHA-256 hex digest of a validated event payload.
@@ -15,5 +25,8 @@ def payload_hash(payload: dict) -> str:
     Uses a canonical JSON encoding (sorted keys, no whitespace) so the same
     logical payload always hashes the same way regardless of field order.
     """
+    if payload.get("event_type") == "deployment":
+        # Optional fields can differ between retries of one deployment (AF-02).
+        payload = {k: payload.get(k) for k in _DEPLOYMENT_KEY}
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
