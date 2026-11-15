@@ -171,17 +171,20 @@ class MetricsDB:
             deployed_at = meta.get("deployed_at")
             if not deployed_at:
                 continue
-            deployed = datetime.fromisoformat(deployed_at)
-            if meta.get("first_commit_at"):
-                started = datetime.fromisoformat(meta["first_commit_at"])
-                exact.setdefault(source, []).append(
-                    (deployed - started).total_seconds() / 3600
-                )
-            elif meta.get("pr_merged_at"):
-                started = datetime.fromisoformat(meta["pr_merged_at"])
-                proxy.setdefault(source, []).append(
-                    (deployed - started).total_seconds() / 3600
-                )
+            start_key = (
+                "first_commit_at" if meta.get("first_commit_at") else "pr_merged_at"
+            )
+            if not meta.get(start_key):
+                continue
+            try:
+                deployed = datetime.fromisoformat(deployed_at)
+                started = datetime.fromisoformat(meta[start_key])
+                hours = (deployed - started).total_seconds() / 3600
+            except (ValueError, TypeError):
+                # Rows stored before offsets were required: skip, never abort the cycle.
+                continue
+            target = exact if start_key == "first_commit_at" else proxy
+            target.setdefault(source, []).append(hours)
 
         result: dict[str, dict[str, Any]] = {}
         for source, values in exact.items():
