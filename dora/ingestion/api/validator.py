@@ -4,6 +4,7 @@ Validates incoming event payloads against the JSON Schema files in events/.
 Returns structured 422 errors with field-level detail — not just "invalid".
 """
 
+import datetime
 import json
 from pathlib import Path
 
@@ -15,8 +16,6 @@ from jsonschema import Draft7Validator, FormatChecker
 
 def _check_date_time(instance: str) -> bool:
     """Validate RFC 3339 date-time strings: a time and a UTC offset are required."""
-    import datetime
-
     if not isinstance(instance, str):
         return True
     try:
@@ -30,6 +29,51 @@ def _check_date_time(instance: str) -> bool:
 
 _format_checker = FormatChecker()
 _format_checker.checks("date-time")(_check_date_time)
+
+
+@_format_checker.checks("uri")
+def _check_uri(instance: str) -> bool:
+    """An absolute URI: a scheme, a host, no whitespace."""
+    from urllib.parse import urlparse
+
+    if not isinstance(instance, str):
+        return True
+    parsed = urlparse(instance)
+    return bool(parsed.scheme and parsed.netloc) and not any(
+        c.isspace() for c in instance
+    )
+
+
+# A clock this far ahead of the server is skew, not a future deployment.
+_MAX_CLOCK_SKEW = datetime.timedelta(minutes=5)
+
+
+def _parse(value: object) -> datetime.datetime | None:
+    try:
+        return datetime.datetime.fromisoformat(value)  # type: ignore[arg-type]
+    except (ValueError, TypeError):
+        return None
+
+
+def _check_deployment_times(payload: dict) -> list["ValidationDetail"]:
+    """Cross-field rules a JSON Schema cannot state (AF-06)."""
+    if payload.get("event_type") != "deployment":
+        return []
+    deployed = _parse(payload.get("deployed_at"))
+    first = _parse(payload.get("first_commit_at"))
+    if deployed is None or deployed.tzinfo is None:
+        return []
+    errors = []
+    now = datetime.datetime.now(datetime.UTC)
+    if deployed > now + _MAX_CLOCK_SKEW:
+        errors.append(ValidationDetail(["deployed_at"], "deployed_at is in the future"))
+    if first is not None and first.tzinfo is not None and first > deployed:
+        errors.append(
+            ValidationDetail(
+                ["first_commit_at"], "first_commit_at is after deployed_at"
+            )
+        )
+    return errors
 
 
 # ── Schema registry ────────────────────────────────────────────────────────────
@@ -141,13 +185,23 @@ def validate_payload(payload: dict) -> ValidationResult:
     validator = Draft7Validator(schema, format_checker=_format_checker)
 
     errors: list[ValidationDetail] = []
-    for error in sorted(validator.iter_errors(payload), key=lambda e: e.path):
+    for error in sorted(validator.iter_errors(payload), key=lambda e: list(e.path)):
+        if error.validator == "required":
+            # Name each missing field in `loc` (AF-09); `path` is only the parent.
+            missing = [f for f in error.validator_value if f not in error.instance]
+            errors.extend(
+                ValidationDetail(field=[*error.path, f], message=error.message)
+                for f in missing
+            )
+            continue
         errors.append(
             ValidationDetail(
                 field=list(error.path),
                 message=error.message,
             )
         )
+    if not errors:
+        errors = _check_deployment_times(payload)
 
     if errors:
         return ValidationResult(errors=errors)
