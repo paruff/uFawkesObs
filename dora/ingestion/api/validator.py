@@ -14,14 +14,17 @@ from jsonschema import Draft7Validator, FormatChecker
 
 
 def _check_date_time(instance: str) -> bool:
-    """Validate ISO 8601 date-time strings."""
+    """Validate RFC 3339 date-time strings: a time and a UTC offset are required."""
     import datetime
 
     if not isinstance(instance, str):
         return True
     try:
-        datetime.datetime.fromisoformat(instance)
-        return True
+        return (
+            datetime.datetime.fromisoformat(instance.replace("Z", "+00:00")).tzinfo
+            is not None
+            and "T" in instance
+        )
     except (ValueError, TypeError):
         return False
 
