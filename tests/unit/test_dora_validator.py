@@ -237,3 +237,10 @@ class TestAuditFindings:
         a = self._deployment()
         assert payload_hash(a) == payload_hash({**a, "deploy_duration_seconds": 42})
         assert payload_hash(a) != payload_hash({**a, "status": "failed"})
+
+    def test_retry_with_other_utc_spelling_hashes_the_same(self):
+        from dora.ingestion.api.idempotency import payload_hash
+
+        a = self._deployment(deployed_at="2024-01-15T10:30:00Z")
+        b = self._deployment(deployed_at="2024-01-15T10:30:00+00:00")
+        assert payload_hash(a) == payload_hash(b)
