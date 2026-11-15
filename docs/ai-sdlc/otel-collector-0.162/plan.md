@@ -23,3 +23,7 @@
 | Self-metrics still served          | `:8888/metrics` returns 200                                       | Same smoke test                                                                       |
 | Compose and pins consistent        | `docker compose config` valid; version-pin tests pass             | `docker compose config -q`; CI unit and acceptance jobs                               |
 | Not covered                        | Dashboards/alerts keyed on the old log label names                | Labels change to `service_name`/`severity_text`/`detected_level`; flagged in the PR   |
+
+### Audit follow-up, 2026-11-15
+
+This branch fixes High findings from the suite integration harness (uFawkes.dev `tests/suite-integration/AUDIT_FINDINGS.md`). Verified by running the harness against it: `make suite-integration-test` passes with the fix applied and the finding's reproduction test no longer reproduces.

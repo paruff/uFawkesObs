@@ -127,7 +127,9 @@ class MetricsDB:
         """
         sql = (
             "SELECT id, source, outcome, recorded_at, metadata FROM raw_events "
-            "WHERE event_type = 'deployment' AND recorded_at >= ?"
+            "WHERE event_type = 'deployment' AND recorded_at >= ? "
+            # ADR-006 defines every metric over production (AF-04).
+            "AND COALESCE(json_extract(metadata, '$.environment'), 'production') = 'production'"
         )
         params: list[Any] = [self._cutoff(window_days)]
         if outcomes:
@@ -230,17 +232,21 @@ class MetricsDB:
         gaps: dict[str, list[float]] = {}
         for source, events in by_source.items():
             events.sort(key=lambda e: (e[2], e[0]))
-            for i, (_row_id, outcome, recorded_at) in enumerate(events[:-1]):
-                if outcome not in ("failure", "rollback"):
-                    continue
-                _next_row_id, next_outcome, next_recorded_at = events[i + 1]
-                if next_outcome != "success":
-                    continue
-                gap_hours = (
-                    datetime.fromisoformat(next_recorded_at)
-                    - datetime.fromisoformat(recorded_at)
-                ).total_seconds() / 3600
-                gaps.setdefault(source, []).append(gap_hours)
+            # Recovery runs from the first failure of an outage to the next
+            # success, so a rollback after a failed canary does not restart it (AF-03).
+            failed_at: str | None = None
+            for _row_id, outcome, recorded_at in events:
+                if outcome in ("failure", "rollback"):
+                    failed_at = failed_at or recorded_at
+                elif outcome == "success" and failed_at is not None:
+                    gaps.setdefault(source, []).append(
+                        (
+                            datetime.fromisoformat(recorded_at)
+                            - datetime.fromisoformat(failed_at)
+                        ).total_seconds()
+                        / 3600
+                    )
+                    failed_at = None
 
         return [
             {"team_id": source, "p50_fdrt_hours": _percentile_cont(values, 0.50)}
@@ -252,12 +258,20 @@ class MetricsDB:
     ) -> list[dict[str, Any]]:
         """Change Failure Rate: % of deployments that fail or rollback."""
         rows = await self._deployment_rows(window_days, team)
-        totals: dict[str, int] = {}
-        failures: dict[str, int] = {}
-        for _id, source, outcome, _recorded_at, _metadata in rows:
-            totals[source] = totals.get(source, 0) + 1
-            if outcome in ("failure", "rollback"):
-                failures[source] = failures.get(source, 0) + 1
+        # A change is a commit: its failed deploy and its rollback are one
+        # failed change, not two (AF-03).
+        changes: dict[str, dict[str, bool]] = {}
+        for row_id, source, outcome, _recorded_at, metadata in rows:
+            try:
+                sha = json.loads(metadata or "{}").get("commit_sha")
+            except (TypeError, ValueError):
+                sha = None
+            failed = outcome in ("failure", "rollback")
+            by_change = changes.setdefault(source, {})
+            key = sha or f"row-{row_id}"
+            by_change[key] = by_change.get(key, False) or failed
+        totals = {source: len(c) for source, c in changes.items()}
+        failures = {source: sum(c.values()) for source, c in changes.items()}
         return [
             {"team_id": source, "cfr": failures.get(source, 0) / total}
             for source, total in sorted(totals.items())
