@@ -3,12 +3,15 @@
 The only backend for the ``dora`` profile — self-contained, zero external
 dependencies. Runs as a single shared connection since the worker loop
 executes in-process inside dora-api (see main.py's lifespan), so there is
-no multi-writer contention to guard against with row locking.
+no multi-writer contention to guard against with row locking. Coroutines
+still interleave on that connection, so ``_connect`` serializes them.
 """
 
+import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 import aiosqlite
 
@@ -46,6 +49,9 @@ CREATE TABLE IF NOT EXISTS raw_events (
 # ── Connection ───────────────────────────────────────────────────────────────
 
 _pool: aiosqlite.Connection | None = None
+# The API handlers and the worker share one connection; a commit from one
+# while the other holds an open statement raises OperationalError (AF-23).
+_lock = asyncio.Lock()
 
 
 def _sqlite_path(dsn: str) -> str:
@@ -83,6 +89,12 @@ async def get_pool(
         await _pool.executescript(_SCHEMA)
         await _pool.commit()
         await _ensure_payload_hash_column(_pool)
+        # The worker runs in-process, so a row left 'processing' belongs to a
+        # worker that died before mark_done (AF-11).
+        await _pool.execute(
+            "UPDATE event_queue SET status = 'pending' WHERE status = 'processing'"
+        )
+        await _pool.commit()
     return _pool
 
 
@@ -123,13 +135,14 @@ async def close_pool():
 @asynccontextmanager
 async def _connect():
     """Yield the shared connection, committing on a clean exit."""
-    conn = await get_pool()
-    try:
-        yield conn
-        await conn.commit()
-    except Exception:
-        await conn.rollback()
-        raise
+    async with _lock:
+        conn = await get_pool()
+        try:
+            yield conn
+            await conn.commit()
+        except Exception:
+            await conn.rollback()
+            raise
 
 
 # ── Queue operations ────────────────────────────────────────────────────────
@@ -277,6 +290,21 @@ async def mark_failed(event_id: int, max_attempts: int = 3):
         )
 
 
+def _event_time(payload: dict) -> str | None:
+    """The event's own timestamp as naive UTC, or None when it has none."""
+    for key in ("deployed_at", "occurred_at", "triggered_at"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value)
+            except ValueError:
+                continue
+            if parsed.tzinfo is not None:
+                parsed = parsed.astimezone(UTC).replace(tzinfo=None)
+            return parsed.isoformat(" ")
+    return None
+
+
 async def write_raw_event(
     event_queue_id: int,
     event_type: str,
@@ -285,14 +313,19 @@ async def write_raw_event(
     payload: dict,
     duration_seconds: int | None = None,
 ):
-    """Write a processed event to the raw_events table."""
+    """Write a processed event to the raw_events table.
+
+    ``recorded_at`` is when the event happened (AF-01), so metrics window and
+    order on it; arrival time stays in ``ingested_at``.
+    """
+    happened_at = _event_time(payload)
     async with _connect() as conn:
         await conn.execute(
             """
             INSERT INTO raw_events
                 (event_queue_id, event_type, source, outcome,
                  duration_seconds, metadata, recorded_at)
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
             """,
             (
                 event_queue_id,
@@ -301,5 +334,6 @@ async def write_raw_event(
                 outcome,
                 duration_seconds,
                 json.dumps(payload),
+                happened_at,
             ),
         )
