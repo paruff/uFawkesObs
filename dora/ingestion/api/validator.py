@@ -7,6 +7,7 @@ Returns structured 422 errors with field-level detail — not just "invalid".
 import datetime
 import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 from jsonschema import Draft7Validator, FormatChecker
 
@@ -34,8 +35,6 @@ _format_checker.checks("date-time")(_check_date_time)
 @_format_checker.checks("uri")
 def _check_uri(instance: str) -> bool:
     """An absolute URI: a scheme, a host, no whitespace."""
-    from urllib.parse import urlparse
-
     if not isinstance(instance, str):
         return True
     parsed = urlparse(instance)
@@ -48,7 +47,7 @@ def _check_uri(instance: str) -> bool:
 _MAX_CLOCK_SKEW = datetime.timedelta(minutes=5)
 
 
-def _parse(value: object) -> datetime.datetime | None:
+def _parse_iso(value: object) -> datetime.datetime | None:
     try:
         return datetime.datetime.fromisoformat(value)  # type: ignore[arg-type]
     except (ValueError, TypeError):
@@ -59,8 +58,8 @@ def _check_deployment_times(payload: dict) -> list["ValidationDetail"]:
     """Cross-field rules a JSON Schema cannot state (AF-06)."""
     if payload.get("event_type") != "deployment":
         return []
-    deployed = _parse(payload.get("deployed_at"))
-    first = _parse(payload.get("first_commit_at"))
+    deployed = _parse_iso(payload.get("deployed_at"))
+    first = _parse_iso(payload.get("first_commit_at"))
     if deployed is None or deployed.tzinfo is None:
         return []
     errors = []
@@ -143,6 +142,14 @@ class ValidationResult:
         }
 
 
+def _missing_field_details(error) -> list["ValidationDetail"]:
+    """One detail per missing field, so `loc` names it (AF-09); `path` is only the parent."""
+    missing = [f for f in error.validator_value if f not in error.instance]
+    return [
+        ValidationDetail(field=[*error.path, f], message=error.message) for f in missing
+    ]
+
+
 def validate_payload(payload: dict) -> ValidationResult:
     """Validate an event payload against its canonical schema.
 
@@ -187,12 +194,7 @@ def validate_payload(payload: dict) -> ValidationResult:
     errors: list[ValidationDetail] = []
     for error in sorted(validator.iter_errors(payload), key=lambda e: list(e.path)):
         if error.validator == "required":
-            # Name each missing field in `loc` (AF-09); `path` is only the parent.
-            missing = [f for f in error.validator_value if f not in error.instance]
-            errors.extend(
-                ValidationDetail(field=[*error.path, f], message=error.message)
-                for f in missing
-            )
+            errors.extend(_missing_field_details(error))
             continue
         errors.append(
             ValidationDetail(
