@@ -294,6 +294,8 @@ validate-alloy:
 scan-images:
 	$(call require,yq)
 	$(call require,trivy)
+	TRIVY_DB_REPOSITORY=ghcr.io/aquasecurity/trivy-db:2 \
+	TRIVY_JAVA_DB_REPOSITORY=ghcr.io/aquasecurity/trivy-java-db:1 \
 	yq -r '.services[].image | select(. != null)' compose.yaml | sort -u | \
 		while read -r img; do \
 			echo "── $$img"; \

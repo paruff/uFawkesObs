@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -35,9 +35,7 @@ class SloResult:
     slo_threshold_ms: float
     passed: bool
     extra: dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 class SloReportGenerator:
@@ -66,7 +64,7 @@ class SloReportGenerator:
                 elif isinstance(r, SloResult):
                     self.results.append(r)
 
-        self.generated_at = datetime.now(timezone.utc)
+        self.generated_at = datetime.now(UTC)
 
     def add_result(self, result: SloResult | dict[str, Any]) -> None:
         """Add a single SLO result to the report."""

@@ -20,13 +20,13 @@ import os
 import subprocess
 import sys
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 FIELDS = "number,title,url,mergedAt,mergeCommit,additions,deletions,commits"
 
 
 def _ts(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def events_for(repo: str, prs: list[dict], now: datetime, days: int) -> list[dict]:
@@ -138,7 +138,7 @@ def main() -> int:
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--post", metavar="URL", help="dora-api base URL; omit for dry-run")
     args = ap.parse_args()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for repo in args.repos:
         events = events_for(repo, fetch_prs(repo, now, args.days), now, args.days)
         if args.post:

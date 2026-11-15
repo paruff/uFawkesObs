@@ -167,6 +167,9 @@ jobs:
           sudo install -m 0755 trivy /usr/local/bin/trivy
 
       - name: Scan images (fail on fixable CRITICAL)
+        env:
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1
         run: |
           set -euo pipefail
           docker compose --env-file .env.example --profile '*' config --images | grep / | sort -u | \
