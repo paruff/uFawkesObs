@@ -177,8 +177,8 @@ class MetricsDB:
             if not meta.get(start_key):
                 continue
             try:
-                deployed = datetime.fromisoformat(deployed_at.replace("Z", "+00:00"))
-                started = datetime.fromisoformat(meta[start_key].replace("Z", "+00:00"))
+                deployed = datetime.fromisoformat(deployed_at)
+                started = datetime.fromisoformat(meta[start_key])
                 hours = (deployed - started).total_seconds() / 3600
             except (ValueError, TypeError):
                 # Rows stored before offsets were required: skip, never abort the cycle.

@@ -21,8 +21,7 @@ def _check_date_time(instance: str) -> bool:
         return True
     try:
         return (
-            datetime.datetime.fromisoformat(instance.replace("Z", "+00:00")).tzinfo
-            is not None
+            datetime.datetime.fromisoformat(instance).tzinfo is not None
             and "T" in instance
         )
     except (ValueError, TypeError):
