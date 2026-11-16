@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails doctor
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails doctor validate pre-commit-run
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -249,6 +249,8 @@ pre-commit-setup: ## Install pre-commit hooks
 
 pre-commit-run: ## Run all pre-commit hooks
 	@pre-commit run --all-files
+
+validate: pre-commit-run validate-configs ## The local gate: hooks and config checks; needs no running stack
 
 ## pr: stage, commit (with pre-commit), push, and create a PR
 ##   Usage: make pr MSG="fix(prometheus): correct scrape interval"
