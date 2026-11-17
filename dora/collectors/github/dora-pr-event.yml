@@ -405,7 +405,8 @@ jobs:
           if [ -n "${DORA_API_KEY:-}" ]; then
             AUTH=(-H "Authorization: Bearer ${DORA_API_KEY}")
           fi
-          HTTP_STATUS=$(curl -s -o /tmp/dora-response.txt -w "%{http_code}" \
+          RESPONSE=$(mktemp)
+          HTTP_STATUS=$(curl -s -o "$RESPONSE" -w "%{http_code}" \
             -X POST "${INGESTION_URL}/event" \
             -H "Content-Type: application/json" \
             "${AUTH[@]}" \
@@ -419,7 +420,7 @@ jobs:
               # A 4xx is a contract or auth mistake. Logged as a warning it
               # went unseen and lead time never arrived, so fail the step.
               echo "::error::PR event rejected by ingestion API (HTTP ${HTTP_STATUS})"
-              cat /tmp/dora-response.txt
+              cat "$RESPONSE"
               echo "Payload:"
               echo "$PAYLOAD" | jq .
               exit 1

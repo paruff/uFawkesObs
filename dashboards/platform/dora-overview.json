@@ -88,7 +88,7 @@
       },
       "transparent": true,
       "options": {
-        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA delivery metrics — five core signals</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from the Prometheus /metrics scrape</span>\n  </div>\n</div>",
+        "content": "<div style=\"display: flex; justify-content: space-between; align-items: center; padding: 8px 16px;\">\n  <div>\n    <h1 style=\"margin: 0;\">DORA Overview</h1>\n    <span style=\"color: #888; font-size: 0.9em;\">DORA delivery metrics \u2014 five core signals</span>\n  </div>\n  <div style=\"text-align: right;\">\n    <span style=\"color: #aaa; font-size: 0.85em;\">Data refreshes every 5m from the Prometheus /metrics scrape</span>\n  </div>\n</div>",
         "mode": "html"
       }
     },
@@ -276,7 +276,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Time from a failed deployment to the next successful deployment of the same service. Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard. This is NOT MTTR — MTTR measured incident resolution time, FDRT measures deployment recovery.",
+      "description": "Time from a failed deployment to the next successful deployment of the same service. Repository alert thresholds are used for operational guidance; the retired DORA tier bands are not used in this dashboard. This is NOT MTTR \u2014 MTTR measured incident resolution time, FDRT measures deployment recovery.",
       "gridPos": {
         "h": 6,
         "w": 5,
@@ -320,7 +320,7 @@
           "mappings": [],
           "decimals": 1,
           "displayName": "Hours (P50)",
-          "description": "📌 DORA 2025: FDRT is a Throughput metric. Fast recovery enables faster re-deployment."
+          "description": "\ud83d\udccc DORA 2025: FDRT is a Throughput metric. Fast recovery enables faster re-deployment."
         },
         "overrides": [
           {
@@ -451,7 +451,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Percentage of deployments that are unplanned fixes for user-visible issues from a recent deployment. Only counts user-visible unplanned deployments — internal hotfixes, dependency updates, and config corrections that do not affect users are excluded.",
+      "description": "Percentage of deployments that are unplanned fixes for user-visible issues from a recent deployment. Only counts user-visible unplanned deployments \u2014 internal hotfixes, dependency updates, and config corrections that do not affect users are excluded.",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -748,7 +748,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Failed Deployment Recovery Time trend. FDRT is a Throughput metric per DORA 2025 — fast recovery enables faster re-deployment. This is NOT MTTR.",
+      "description": "Failed Deployment Recovery Time trend. FDRT is a Throughput metric per DORA 2025 \u2014 fast recovery enables faster re-deployment. This is NOT MTTR.",
       "gridPos": {
         "h": 7,
         "w": 8,
@@ -954,7 +954,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Rework Rate trend — only counts user-visible unplanned deployments. This is the primary signal for AI-assisted development quality: AI-generated code with higher churn pushes Rework Rate up before CFR spikes.",
+      "description": "Rework Rate trend \u2014 only counts user-visible unplanned deployments. This is the primary signal for AI-assisted development quality: AI-generated code with higher churn pushes Rework Rate up before CFR spikes.",
       "gridPos": {
         "h": 7,
         "w": 8,

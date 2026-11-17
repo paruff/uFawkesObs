@@ -67,6 +67,14 @@ def _event_time(meta: dict[str, Any], key: str, recorded_at: str) -> datetime:
     return t.astimezone(UTC).replace(tzinfo=None) if t.tzinfo else t
 
 
+def _in_window(
+    metadata: str | None, key: str, recorded_at: str, cutoff: datetime
+) -> datetime | None:
+    """The event time when it falls inside the window, else None."""
+    at = _event_time(json.loads(metadata) if metadata else {}, key, recorded_at)
+    return at if at >= cutoff else None
+
+
 def _compute_environments() -> tuple[str, ...]:
     raw = os.environ.get("DORA_COMPUTE_ENVIRONMENTS", "production")
     return tuple(e.strip() for e in raw.split(",") if e.strip()) or ("production",)
@@ -158,9 +166,8 @@ class MetricsDB:
         cutoff = self._cutoff(window_days)
         rows = []
         for row_id, source, outcome, recorded_at, metadata in await cursor.fetchall():
-            meta = json.loads(metadata) if metadata else {}
-            at = _event_time(meta, "deployed_at", recorded_at)
-            if at >= cutoff:
+            at = _in_window(metadata, "deployed_at", recorded_at, cutoff)
+            if at:
                 rows.append((row_id, source, outcome, at.isoformat(" "), metadata))
         return rows
 
@@ -312,8 +319,7 @@ class MetricsDB:
         cutoff = self._cutoff(window_days)
         rework_rows = []
         for source, recorded_at, metadata in await cursor.fetchall():
-            meta = json.loads(metadata) if metadata else {}
-            if _event_time(meta, "triggered_at", recorded_at) >= cutoff:
+            if _in_window(metadata, "triggered_at", recorded_at, cutoff):
                 rework_rows.append((source, metadata))
 
         rework_by_source: dict[str, list[dict]] = {}

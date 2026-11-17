@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "DORA metrics dashboard — Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate. Data from the Prometheus recording rules in this repo; the retired Elite/High/Medium/Low tier bands are intentionally not used.",
+  "description": "DORA metrics dashboard \u2014 Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate. Data from the Prometheus recording rules in this repo; the retired Elite/High/Medium/Low tier bands are intentionally not used.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -56,7 +56,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "DORA 2026 — Five Key Metrics",
+      "title": "DORA 2026 \u2014 Five Key Metrics",
       "type": "row"
     },
     {
@@ -1603,7 +1603,7 @@
     ]
   },
   "timezone": "utc",
-  "title": "uFawkesObs — DORA Metrics",
+  "title": "uFawkesObs \u2014 DORA Metrics",
   "uid": "ufawkesobs-dora-metrics",
   "version": 1
 }

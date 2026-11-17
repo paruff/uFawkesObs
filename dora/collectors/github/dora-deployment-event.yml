@@ -309,14 +309,15 @@ jobs:
 
           # Lead-time inputs: the PR this commit shipped in. A direct push has
           # no PR, so both fields stay unset and the event carries no lead time.
+          # A failing gh call aborts the step (set -e): it must not look like "no PR".
           FIRST_COMMIT_AT=""
           PR_MERGED_AT=""
           PR_NUMBER=$(gh api "repos/${REPO}/commits/${COMMIT_SHA}/pulls" \
-            --jq '[.[] | select(.merged_at != null)] | sort_by(.merged_at) | .[0].number // empty') || PR_NUMBER=""
+            --jq '[.[] | select(.merged_at != null)] | sort_by(.merged_at) | .[0].number // empty')
           if [ -n "$PR_NUMBER" ]; then
             PR_MERGED_AT=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.merged_at // empty')
             FIRST_COMMIT_AT=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate \
-              --jq '.[].commit.committer.date' | sort | head -n 1)
+              --jq '.[].commit.author.date' | sort | head -n 1)
           else
             echo "::notice::No merged PR found for ${COMMIT_SHA}; sending no lead-time fields."
           fi
@@ -366,7 +367,8 @@ jobs:
           if [ -n "${DORA_API_KEY:-}" ]; then
             AUTH=(-H "Authorization: Bearer ${DORA_API_KEY}")
           fi
-          HTTP_STATUS=$(curl -s -o /tmp/dora-response.txt -w "%{http_code}" \
+          RESPONSE=$(mktemp)
+          HTTP_STATUS=$(curl -s -o "$RESPONSE" -w "%{http_code}" \
             -X POST "${INGESTION_URL}/event" \
             -H "Content-Type: application/json" \
             "${AUTH[@]}" \
@@ -380,7 +382,7 @@ jobs:
               # A 4xx is a contract or auth mistake. Logged as a warning it
               # went unseen and lead time never arrived, so fail the step.
               echo "::error::Deployment event rejected by ingestion API (HTTP ${HTTP_STATUS})"
-              cat /tmp/dora-response.txt
+              cat "$RESPONSE"
               echo "Payload:"
               echo "$PAYLOAD" | jq .
               exit 1
