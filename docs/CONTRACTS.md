@@ -28,7 +28,8 @@ profile).
 | ------ | -------------- | ----------------------------------------------------- |
 | `POST` | `/event`       | Accept one event, validate, enqueue. `201` on success. |
 | `POST` | `/event/batch` | Accept multiple events in one transaction — all-or-nothing: if any event fails validation, none are enqueued. `201` on success. |
-| `GET`  | `/health`      | `{"status": "ok", "queue_depth": N}`.                 |
+| `GET`  | `/health`      | `{"status": "ok", "queue_depth": N}`. Open.           |
+| `GET`  | `/metrics`     | Prometheus text of the computed DORA metrics. Open, like every other `/metrics` in the stack. |
 
 Validation failures return `422` with field-level detail
 (`dora/ingestion/api/validator.py`):
@@ -41,11 +42,11 @@ Validation failures return `422` with field-level detail
 }
 ```
 
-**Authentication: none is currently enforced.** `dora/collectors/generic/curl-examples.sh`
-documents an optional `DORA_API_KEY` bearer token ("if auth is enabled"),
-and collector scripts pass it through when set — but `main.py` has no
-`Authorization` header check anywhere. Treat this as a documented gap, not
-an implemented option, until it's added (see §4).
+**Authentication:** when `DORA_API_KEY` is set, `POST /event` and
+`POST /event/batch` require `Authorization: Bearer $DORA_API_KEY` and return
+`401` without it (`dora/ingestion/api/auth.py`, constant-time compare). When
+the key is unset (the local default) ingestion is open. `GET /metrics` and
+`GET /health` are never authenticated.
 
 ### Event types and required fields
 
@@ -58,6 +59,9 @@ ignored.
 #### `deployment` — `dora/events/deployment-event.schema.json`
 
 Drives Deployment Frequency, Lead Time, Change Failure Rate, and FDRT.
+Lead Time has no other input: a deployment without `first_commit_at` or
+`pr_merged_at` produces no Lead Time sample. `deployed_at` is when the deploy
+finished, and compute windows and orders on it, not on ingest time.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -72,10 +76,12 @@ Drives Deployment Frequency, Lead Time, Change Failure Rate, and FDRT.
 | `pipeline_url` | string (uri) | yes | Link to the CI run |
 | `deploy_duration_seconds` | integer ≥ 0 | no | |
 | `ai_assisted` | boolean | no | |
+| `first_commit_at` | string (date-time) | no | First commit of the change set. The exact start of Lead Time; preferred over `pr_merged_at` |
+| `pr_merged_at` | string (date-time) | no | PR merge time. Lead Time start when `first_commit_at` is absent, and then the metric is flagged as a proxy |
 
 #### `pr` — `dora/events/pr-event.schema.json`
 
-Drives Lead Time and PR throughput.
+Accepted and stored. No metric reads it today (see `docs/ai-sdlc/dora-contract/spec.md`, D3).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -92,7 +98,7 @@ Drives Lead Time and PR throughput.
 
 #### `incident` — `dora/events/incident-event.schema.json`
 
-Drives Time to Restore / FDRT.
+Accepted and stored. No metric reads it today: recovery time is the gap between a failed deployment and the next success (D3).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
@@ -129,7 +135,9 @@ prose summary:
 
 - `dora/collectors/github/dora-deployment-event.yml` — reusable GitHub
   Actions workflow (`workflow_call`) that builds and POSTs a `deployment`
-  event from `github.sha`, `github.event.head_commit.timestamp`, etc.
+  event from `github.sha`, the time the deploy finished, and the lead-time
+  inputs. It sends the bearer token when `DORA_API_KEY` is set and fails the
+  step on a 4xx.
 - `dora/collectors/github/dora-pr-event.yml` — same, for `pr` events.
 - `dora/collectors/generic/curl-examples.sh` — raw `curl` examples for all
   four event types, plus a field-mapping table for GitLab CI, CircleCI,
@@ -213,22 +221,12 @@ metrics pipeline:
   `dora\..*` / `cicd\..*` / `deployment\..*` / `incident\..*`
   (`filter/dora`), inserts `dora.environment=production` /
   `dora.platform=fawkes-idp` (`attributes/dora`), then exports to
-  **both** Prometheus and an `otlp/dora` exporter pointed at
-  `${OTEL_EXPORTER_OTLP_ENDPOINT}` (defaults to
-  `http://ufawkesdora-ingestion:4318` per `compose.yaml`).
+  Prometheus only. There is no `otlp/dora` exporter: it was removed because
+  nothing listened on it. Its other pipelines still use the `loki` exporter,
+  whereas the main collector logs through `otlphttp/loki`.
 
-**Discrepancy found while writing this doc:** the `otlp/dora` exporter
-forwards matched metrics via OTLP to `ufawkesdora-ingestion:4318` — but
-`dora/ingestion/api/main.py` (the `dora-api`/`ufawkesdora-ingestion`
-service) is a REST-only FastAPI app exposing `/event`, `/event/batch`, and
-`/health` on port 8088. Nothing in `dora/ingestion/` implements an OTLP
-receiver on port 4318 or anywhere else. This exporter target currently has
-nothing listening on it — DORA metrics reach the ingestion API exclusively
-via the REST `POST /event` contract described in §1, not via OTLP metric
-forwarding, despite the collector being wired as though the latter were
-live. This should either be removed (dead config) or implemented
-(an OTLP-to-event-schema bridge) — flagging it here rather than describing
-it as working.
+DORA metrics reach Prometheus through `dora-api` `GET /metrics`, fed by REST
+`POST /event`, not through this collector.
 
 ---
 
