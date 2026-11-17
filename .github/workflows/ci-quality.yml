@@ -113,6 +113,10 @@ jobs:
           chmod +x yq
           sudo install -m 0755 yq /usr/local/bin/yq
 
+      # The target `make validate` runs; the inline steps above check the same files.
+      - name: Run make validate-configs
+        run: make validate-configs
+
       - name: Validate Alertmanager config
         run: make validate-alertmanager
 
