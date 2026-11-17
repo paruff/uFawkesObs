@@ -260,9 +260,14 @@ on:
         description: "Override DORA_INGESTION_URL (for testing/dev)"
         required: false
         type: string
+    secrets:
+      DORA_API_KEY:
+        description: "Bearer token for the ingestion API; sent when set"
+        required: false
 
 permissions:
   contents: read
+  pull-requests: read # finds the PR a commit shipped in, for lead time
 
 jobs:
   emit-deployment:
@@ -278,11 +283,12 @@ jobs:
 
       - name: Build and send deployment event
         env:
+          GH_TOKEN: ${{ github.token }}
+          DORA_API_KEY: ${{ secrets.DORA_API_KEY }}
           INGESTION_URL: ${{ inputs.ingestion_url || vars.DORA_INGESTION_URL }}
           REPO: ${{ github.repository }}
           SERVICE: ${{ inputs.service || github.event.repository.name || github.repository }}
           COMMIT_SHA: ${{ github.sha }}
-          DEPLOYED_AT: ${{ github.event.head_commit.timestamp }}
           STATUS: ${{ inputs.status }}
           ENVIRONMENT: ${{ inputs.environment }}
           PIPELINE_URL: ${{ inputs.pipeline_url }}
@@ -297,9 +303,22 @@ jobs:
             exit 1
           fi
 
-          # Use current UTC timestamp if head_commit timestamp not available
-          if [ -z "$DEPLOYED_AT" ]; then
-            DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # deployed_at is when the deploy finished, i.e. now. The commit time
+          # (the head commit time) is not a deploy time and made lead time wrong.
+          DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          # Lead-time inputs: the PR this commit shipped in. A direct push has
+          # no PR, so both fields stay unset and the event carries no lead time.
+          FIRST_COMMIT_AT=""
+          PR_MERGED_AT=""
+          PR_NUMBER=$(gh api "repos/${REPO}/commits/${COMMIT_SHA}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | sort_by(.merged_at) | .[0].number // empty') || PR_NUMBER=""
+          if [ -n "$PR_NUMBER" ]; then
+            PR_MERGED_AT=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}" --jq '.merged_at // empty')
+            FIRST_COMMIT_AT=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/commits" --paginate \
+              --jq '.[].commit.committer.date' | sort | head -n 1)
+          else
+            echo "::notice::No merged PR found for ${COMMIT_SHA}; sending no lead-time fields."
           fi
 
           # Build the canonical deployment event payload via jq, not string
@@ -317,6 +336,8 @@ jobs:
             --arg status "$STATUS" \
             --arg pipeline_url "$PIPELINE_URL" \
             --argjson ai_assisted "$AI_ASSISTED" \
+            --arg first_commit_at "$FIRST_COMMIT_AT" \
+            --arg pr_merged_at "$PR_MERGED_AT" \
             '{
               schema_version: "1.0",
               event_type: "deployment",
@@ -328,7 +349,9 @@ jobs:
               status: $status,
               pipeline_url: $pipeline_url,
               ai_assisted: $ai_assisted
-            }')
+            }
+            + (if $first_commit_at != "" then {first_commit_at: $first_commit_at} else {} end)
+            + (if $pr_merged_at != "" then {pr_merged_at: $pr_merged_at} else {} end)')
 
           # Add optional deploy_duration_seconds if provided
           if [ -n "$DEPLOY_DURATION_SECONDS" ]; then
@@ -339,20 +362,33 @@ jobs:
 
           # POST to the ingestion API
           echo "Sending deployment event to ${INGESTION_URL}/event ..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          AUTH=()
+          if [ -n "${DORA_API_KEY:-}" ]; then
+            AUTH=(-H "Authorization: Bearer ${DORA_API_KEY}")
+          fi
+          HTTP_STATUS=$(curl -s -o /tmp/dora-response.txt -w "%{http_code}" \
             -X POST "${INGESTION_URL}/event" \
             -H "Content-Type: application/json" \
+            "${AUTH[@]}" \
             -d "$PAYLOAD")
 
-          if [ "$HTTP_STATUS" = "201" ]; then
-            echo "✅ Deployment event accepted (HTTP 201)"
-          elif [ "$HTTP_STATUS" = "422" ]; then
-            echo "::warning::Deployment event rejected by ingestion API (HTTP 422)"
-            echo "Payload:"
-            echo "$PAYLOAD" | jq .
-          else
-            echo "::warning::Deployment event returned HTTP ${HTTP_STATUS}"
-          fi
+          case "$HTTP_STATUS" in
+            201)
+              echo "✅ Deployment event accepted (HTTP 201)"
+              ;;
+            4??)
+              # A 4xx is a contract or auth mistake. Logged as a warning it
+              # went unseen and lead time never arrived, so fail the step.
+              echo "::error::Deployment event rejected by ingestion API (HTTP ${HTTP_STATUS})"
+              cat /tmp/dora-response.txt
+              echo "Payload:"
+              echo "$PAYLOAD" | jq .
+              exit 1
+              ;;
+            *)
+              echo "::warning::Deployment event returned HTTP ${HTTP_STATUS}"
+              ;;
+          esac
 
       - name: DORA job finish
         if: always()

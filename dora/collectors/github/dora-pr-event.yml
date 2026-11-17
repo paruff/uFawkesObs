@@ -263,6 +263,10 @@ on:
         description: "Repository identifier (defaults to github.repository)"
         required: false
         type: string
+    secrets:
+      DORA_API_KEY:
+        description: "Bearer token for the ingestion API; sent when set"
+        required: false
 
 permissions:
   contents: read
@@ -339,6 +343,7 @@ jobs:
 
       - name: Build and send PR event
         env:
+          DORA_API_KEY: ${{ secrets.DORA_API_KEY }}
           INGESTION_URL: ${{ inputs.ingestion_url || vars.DORA_INGESTION_URL }}
           REPO: ${{ inputs.repo || github.repository }}
           PR_NUMBER: ${{ inputs.pr_number }}
@@ -396,20 +401,33 @@ jobs:
 
           # POST to the ingestion API
           echo "Sending PR event to ${INGESTION_URL}/event ..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          AUTH=()
+          if [ -n "${DORA_API_KEY:-}" ]; then
+            AUTH=(-H "Authorization: Bearer ${DORA_API_KEY}")
+          fi
+          HTTP_STATUS=$(curl -s -o /tmp/dora-response.txt -w "%{http_code}" \
             -X POST "${INGESTION_URL}/event" \
             -H "Content-Type: application/json" \
+            "${AUTH[@]}" \
             -d "$PAYLOAD")
 
-          if [ "$HTTP_STATUS" = "201" ]; then
-            echo "✅ PR event accepted (HTTP 201)"
-          elif [ "$HTTP_STATUS" = "422" ]; then
-            echo "::warning::PR event rejected by ingestion API (HTTP 422)"
-            echo "Payload:"
-            echo "$PAYLOAD" | jq .
-          else
-            echo "::warning::PR event returned HTTP ${HTTP_STATUS}"
-          fi
+          case "$HTTP_STATUS" in
+            201)
+              echo "✅ PR event accepted (HTTP 201)"
+              ;;
+            4??)
+              # A 4xx is a contract or auth mistake. Logged as a warning it
+              # went unseen and lead time never arrived, so fail the step.
+              echo "::error::PR event rejected by ingestion API (HTTP ${HTTP_STATUS})"
+              cat /tmp/dora-response.txt
+              echo "Payload:"
+              echo "$PAYLOAD" | jq .
+              exit 1
+              ;;
+            *)
+              echo "::warning::PR event returned HTTP ${HTTP_STATUS}"
+              ;;
+          esac
 
       - name: DORA job finish
         if: always()

@@ -235,28 +235,24 @@ jobs:
   # ─── Deployment Event ────────────────────────────────────────────────────
   emit-deployment:
     if: github.event_name == 'release'
-    name: Emit Deployment Event
-    runs-on: ubuntu-latest
-    steps:
-      - name: Emit deployment to uFawkesDORA
-        uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
-        with:
-          status: success
-          environment: production
-          pipeline_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          # Optional:
-          # ai_assisted: true
-          # deploy_duration_seconds: 120
+    uses: paruff/uFawkesObs/dora/collectors/github/dora-deployment-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
+    with:
+      status: success
+      environment: production
+      pipeline_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Optional:
+      # ai_assisted: true
+      # deploy_duration_seconds: 120
+    secrets:
+      DORA_API_KEY: ${{ secrets.DORA_API_KEY }} # optional; sent when the stack sets DORA_API_KEY
 
   # ─── PR Event ────────────────────────────────────────────────────────────
   emit-pr:
     if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-    name: Emit PR Event
-    runs-on: ubuntu-latest
-    steps:
-      - name: Emit PR event to uFawkesDORA
-        uses: paruff/uFawkesObs/dora/collectors/github/dora-pr-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
-        with:
-          pr_number: ${{ github.event.pull_request.number }}
-          # Optional:
-          # ai_assisted: true
+    uses: paruff/uFawkesObs/dora/collectors/github/dora-pr-event.yml@0c0415f95dcd014bb9ed98ba5e050dc98bbb7ca6 # v1.0.6-rc.1
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      # Optional:
+      # ai_assisted: true
+    secrets:
+      DORA_API_KEY: ${{ secrets.DORA_API_KEY }}
