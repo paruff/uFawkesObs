@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "DORA metrics dashboard \u2014 Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate. Data from the Prometheus recording rules in this repo; the retired Elite/High/Medium/Low tier bands are intentionally not used.",
+  "description": "DORA metrics dashboard — Deployment Frequency, Lead Time for Changes, Change Failure Rate, Failed Deployment Recovery Time (FDRT), and Rework Rate. Data from the Prometheus recording rules in this repo; the retired Elite/High/Medium/Low tier bands are intentionally not used.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -56,7 +56,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "DORA 2026 \u2014 Five Key Metrics",
+      "title": "DORA 2026 — Five Key Metrics",
       "type": "row"
     },
     {
@@ -1547,82 +1547,6 @@
       ],
       "title": "Recording Rule Health",
       "type": "stat"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 37
-      },
-      "id": 500,
-      "panels": [],
-      "title": "uFawkesRes PostgreSQL \u2014 DORA Snapshot Data",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "postgres",
-        "uid": "prometheus"
-      },
-      "description": "Latest DORA metric snapshots from uFawkesRes PostgreSQL. This table shows point-in-time metric values computed by uFawkesDORA's compute engine and stored in the shared database.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 38
-      },
-      "id": 40,
-      "options": {
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "snapshot_date"
-          }
-        ]
-      },
-      "pluginVersion": "12.3.7",
-      "targets": [
-        {
-          "datasource": {
-            "type": "postgres",
-            "uid": "prometheus"
-          },
-          "format": "table",
-          "rawSql": "SELECT snapshot_date, deployment_frequency, lead_time_hours, change_failure_rate, mttr_hours, performance_level FROM dora_metrics ORDER BY snapshot_date DESC LIMIT 30;",
-          "refId": "A"
-        }
-      ],
-      "title": "DORA Metric Snapshots (PostgreSQL)",
-      "type": "table"
     }
   ],
   "refresh": "30s",
@@ -1679,7 +1603,7 @@
     ]
   },
   "timezone": "utc",
-  "title": "uFawkesObs \u2014 DORA Metrics",
+  "title": "uFawkesObs — DORA Metrics",
   "uid": "ufawkesobs-dora-metrics",
   "version": 1
 }

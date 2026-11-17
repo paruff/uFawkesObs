@@ -331,9 +331,9 @@ groups:
           severity: warning
           category: dora
         annotations:
-          summary: "Deployment frequency is below 1 per 30 days"
+          summary: "Deployment frequency is below 1 per week"
           description: |
-            Deployment frequency has dropped below 1 deployment per 30 days.
+            Deployments per week, summed across teams over the 30-day window, are below 1.
             This may indicate stalled development or deployment pipeline issues.
             Only fires while DORA data is present; pipeline gaps raise
             DORADeploymentFrequencyLowAbsent instead.
