@@ -20,6 +20,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Trivy filesystem scan
@@ -29,12 +36,23 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Supply Chain ─────────────────────────────────────────────────────────
   supply-chain:
     name: Supply Chain
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Fail if ':latest' is used
@@ -44,12 +62,23 @@ jobs:
             exit 1
           fi
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Config Validation ───────────────────────────────────────────────────
   validate-config:
     name: Validate Configs
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Resolve validator images from compose.yaml
@@ -119,6 +148,10 @@ jobs:
       - name: Validate Alloy config
         run: make validate-alloy
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Lint (actionlint, hadolint) ─────────────────────────────────────────
   # Versions and sha256s match .devcontainer/install-tools.sh (#467).
   lint:
@@ -126,6 +159,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install actionlint and hadolint
@@ -149,12 +189,23 @@ jobs:
       - name: Lint Dockerfiles
         run: make lint-dockerfiles
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Image scan (trivy) ──────────────────────────────────────────────────
   scan-images:
     name: Scan Compose Images
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install trivy
@@ -178,6 +229,10 @@ jobs:
               trivy image --quiet --severity CRITICAL --ignore-unfixed --exit-code 1 "$img"
             done
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── PR Size Gate ────────────────────────────────────────────────────────
   pr-size:
     name: PR Size
@@ -185,6 +240,13 @@ jobs:
     if: github.event_name == 'pull_request'
     timeout-minutes: 2
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - name: Check PR size
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
@@ -210,3 +272,7 @@ jobs:
             } else {
               console.log(`✅ PR size: ${total} lines — within limit`);
             }
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
