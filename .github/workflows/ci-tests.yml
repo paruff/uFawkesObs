@@ -26,6 +26,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python
@@ -49,6 +56,10 @@ jobs:
           path: tests/unit/reports/
           if-no-files-found: ignore
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Integration Tests ───────────────────────────────────────────────────
   integration-tests:
     name: Integration Tests
@@ -64,6 +75,13 @@ jobs:
       # this GRAFANA_ADMIN_PASSWORD directly; there is no shared stack.
       GRAFANA_ADMIN_PASSWORD: admin
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python
@@ -126,6 +144,10 @@ jobs:
             pytest-report.xml
           if-no-files-found: ignore
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Conformance Tests (InSpec) ──────────────────────────────────────────
   # AGENTS.md §4: checks the actually-running containers against declared
   # compose.yaml (healthcheck status, image digest, port bindings, no
@@ -139,6 +161,13 @@ jobs:
       GRAFANA_ADMIN_USER: admin
       GRAFANA_ADMIN_PASSWORD: admin
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Create data directories
@@ -171,12 +200,23 @@ jobs:
         if: always()
         run: docker compose --profile core down -v
 
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
   # ─── Golden Path App ─────────────────────────────────────────────────────
   apps-test:
     name: Golden Path App
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check for app services
@@ -215,3 +255,7 @@ jobs:
       - name: Skip
         if: steps.check_apps.outputs.has_apps == 'false'
         run: echo "No demo app services (port 8080) found. Skipping."
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
