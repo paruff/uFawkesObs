@@ -533,7 +533,7 @@ services:
       - ./dashboards/services:/etc/grafana/dashboards/services:ro
       - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     depends_on:
       prometheus:
         condition: service_healthy
@@ -579,7 +579,7 @@ services:
     container_name: telemetry-generator
     restart: unless-stopped
     ports:
-      - "5001:5000"
+      - "${TELEMETRY_GENERATOR_PORT:-5001}:5000"
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - OTEL_SERVICE_NAME=telemetry-generator
