@@ -30,9 +30,8 @@ consumer must do:
 | D2 | Do `dora_cfr_pct` and `dora_rework_rate_pct` keep their names? | Both hold a 0 to 1 ratio. A rename breaks the Dojo's Module 14 lab and fawkes's copied dashboards |
 | D3 | Do `pr` and `incident` events feed a metric, or leave the contract? | Both are accepted and stored, and compute reads neither. Recovery time is the gap between a failed deployment and the next success, not an incident's duration |
 
-**Decisions** (proposed in the PR that closes #716, #717 and #719; the owner
-confirms or overrides at review). Each has a follow-up issue because none is
-done here:
+**Decisions** (confirmed by the owner on 2026-11-18). Each has a follow-up
+issue because none is done in #731:
 
 | # | Answer | Why | Follow-up |
 |---|---|---|---|
