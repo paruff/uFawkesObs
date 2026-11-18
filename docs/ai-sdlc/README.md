@@ -60,6 +60,7 @@ then open its intent, spec or plan.
 | `artifact-chain` | Enforce the artifact chain in CI | [intent](artifact-chain/intent.md) | - | [plan](artifact-chain/plan.md) |
 | `shift-left-adoption` | Adopt uFawkesPipe's shared shift-left hooks | - | - | [plan](shift-left-adoption/plan.md) |
 | `ruff-0.17` | Adopt ruff v0.17 | - | - | [plan](ruff-0.17/plan.md) |
+| `configurable-host-ports` | Configurable host ports for Grafana and the telemetry generator, and the InSpec ports control that reads them | - | - | [plan](configurable-host-ports/plan.md) |
 | `audit-medium-low` | Medium and low audit findings (AF-02 06 09 10 14) | - | - | [plan](audit-medium-low/plan.md) |
 
 ## Decisions

@@ -3,6 +3,11 @@
 # catches a container started before a port-binding change (e.g. #335's
 # localhost restriction) that was never recreated with `--force-recreate`.
 
+# InSpec loads libraries/ but does not expose their constants to a control's evaluation
+# context (checked against chef/inspec 5.22.3: "uninitialized constant ComposePorts"), so
+# load the helper explicitly.
+require_relative '../libraries/compose_ports'
+
 compose = YAML.load_file('/compose.yaml')
 
 compose['services'].each do |name, svc|
