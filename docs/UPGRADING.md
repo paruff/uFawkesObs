@@ -54,3 +54,12 @@ make up
 ```
 
 The contract is identical, so a rollback needs no other change.
+
+## Upgrading to the release after 1.0.2: DORA windows and environments
+
+Compute now windows and orders deployment events by their own `deployed_at`
+(rework by `triggered_at`), not by when they were ingested. Numbers change on
+upgrade for any team that backfilled or posted late: those events move into
+the window they happened in. Staging and other non-production deployments
+were already excluded; `DORA_COMPUTE_ENVIRONMENTS` (default `production`) now
+lets you count more. Add it to your `.env` only if you want a change.

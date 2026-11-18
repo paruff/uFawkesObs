@@ -30,6 +30,16 @@ consumer must do:
 | D2 | Do `dora_cfr_pct` and `dora_rework_rate_pct` keep their names? | Both hold a 0 to 1 ratio. A rename breaks the Dojo's Module 14 lab and fawkes's copied dashboards |
 | D3 | Do `pr` and `incident` events feed a metric, or leave the contract? | Both are accepted and stored, and compute reads neither. Recovery time is the gap between a failed deployment and the next success, not an incident's duration |
 
+**Decisions** (proposed in the PR that closes #716, #717 and #719; the owner
+confirms or overrides at review). Each has a follow-up issue because none is
+done here:
+
+| # | Answer | Why | Follow-up |
+|---|---|---|---|
+| D1 | Accept `deployment_intent` (`planned`, `unplanned_rework`) as an **optional** field on the deployment event | Optional keeps old senders valid (minor bump) and stops uFawkesAI's events getting a 422. Compute ignores it until rework is derived from it | `https://github.com/paruff/uFawkesObs/issues/728` |
+| D2 | Keep `dora_cfr_pct` and `dora_rework_rate_pct` | A rename breaks the Dojo Module 14 lab and fawkes's dashboards. Add `_ratio` twins beside them in a minor release, drop `_pct` at the next major | `https://github.com/paruff/uFawkesObs/issues/729` |
+| D3 | `pr` and `incident` stay in the contract, accepted and stored, and feed no metric | Removing them would 422 senders that work today (major). Recovery time stays deployment-based, so an incident's duration is not recovery time. Document them as stored-only, as `docs/CONTRACTS.md` §1 now does | `https://github.com/paruff/uFawkesObs/issues/730` |
+
 ## Interfaces
 
 This changes uFawkesObs's "DORA event ingestion" row in the suite's

@@ -1,6 +1,6 @@
 # Intent: uFawkesObs v1.0.0
 
-**Owner:** @paruff | **Created:** 2026-09-27 | **Status:** Draft
+**Owner:** @paruff | **Created:** 2026-09-27 | **Status:** Released (`v1.0.1`)
 **Chain:** `intent.md` → [`spec.md`](spec.md) → [`plan.md`](plan.md)
 **Suite plan:** [uFawkes.dev `docs/ai-sdlc/suite-release/`](https://github.com/paruff/uFawkes.dev/tree/main/docs/ai-sdlc/suite-release)
 **Live status:** [uFawkes Suite Release Project](https://github.com/users/paruff/projects/7), Release = "Obs 1.0"

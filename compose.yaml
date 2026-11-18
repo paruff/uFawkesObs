@@ -686,6 +686,7 @@ services:
       - DORA_API_KEY=${DORA_API_KEY:-}
       - DORA_COMPUTE_WINDOW_DAYS=${DORA_COMPUTE_WINDOW_DAYS:-30}
       - DORA_COMPUTE_INTERVAL_SECONDS=${DORA_COMPUTE_INTERVAL_SECONDS:-3600}
+      - DORA_COMPUTE_ENVIRONMENTS=${DORA_COMPUTE_ENVIRONMENTS:-production}
     volumes:
       - ./dora/ingestion:/app/ingestion:ro
       - ./dora/events:/app/events:ro

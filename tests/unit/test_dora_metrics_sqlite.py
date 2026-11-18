@@ -101,8 +101,8 @@ class TestLeadTime:
             "a",
             "success",
             metadata={
-                "first_commit_at": "2026-01-01T00:00:00Z",
-                "deployed_at": "2026-01-01T12:00:00Z",
+                "first_commit_at": _iso(24, "Z"),
+                "deployed_at": _iso(12, "Z"),
             },
         )
 
@@ -120,8 +120,8 @@ class TestLeadTime:
             "a",
             "success",
             metadata={
-                "pr_merged_at": "2026-01-01T00:00:00Z",
-                "deployed_at": "2026-01-01T06:00:00Z",
+                "pr_merged_at": _iso(12, "Z"),
+                "deployed_at": _iso(6, "Z"),
             },
         )
 
@@ -255,3 +255,97 @@ async def test_querying_before_connect_says_so():
     ):
         with pytest.raises(RuntimeError, match="not connected"):
             await call
+
+
+def _iso(hours_ago: float, offset: str = "+00:00") -> str:
+    return (datetime.now(UTC) - timedelta(hours=hours_ago)).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    ) + offset
+
+
+class TestEventTimeWindow:
+    """DC-04: windows and ordering use the event's own time, not ingest time."""
+
+    async def test_backfilled_event_lands_in_window_of_its_deployed_at(self):
+        db = await _db()
+        # Ingested just now, but deployed 60 days ago: outside a 30-day window.
+        await _insert(db, "deployment", "a", "success", {"deployed_at": _iso(60 * 24)})
+        await _insert(db, "deployment", "a", "success", {"deployed_at": _iso(2)})
+
+        result = await db.deployment_frequency(window_days=30, team=None)
+
+        assert result[0]["deploys_per_week"] == pytest.approx(1 / (30 / 7))
+
+    async def test_fdrt_orders_by_deployed_at_not_ingest_order(self):
+        db = await _db()
+        # The success is ingested first but happened after the failure.
+        await _insert(db, "deployment", "a", "success", {"deployed_at": _iso(1)})
+        await _insert(db, "deployment", "a", "failure", {"deployed_at": _iso(5)})
+
+        result = await db.fdrt(window_days=30, team=None)
+
+        assert result == [{"team_id": "a", "p50_fdrt_hours": pytest.approx(4.0)}]
+
+    async def test_offsets_are_compared_as_instants(self):
+        db = await _db()
+        # A -05:00 wall clock is five hours behind UTC; it must be read as an instant.
+        await _insert(db, "deployment", "a", "failure", {"deployed_at": _iso(5, "Z")})
+        await _insert(
+            db,
+            "deployment",
+            "a",
+            "success",
+            {
+                "deployed_at": (
+                    datetime.now(UTC) - timedelta(hours=2) - timedelta(hours=5)
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+                + "-05:00"
+            },
+        )
+
+        result = await db.fdrt(window_days=30, team=None)
+
+        assert result == [{"team_id": "a", "p50_fdrt_hours": pytest.approx(3.0)}]
+
+    async def test_rework_windows_on_triggered_at(self):
+        db = await _db()
+        await _insert(db, "deployment", "a", "success", {"commit_sha": "x" * 40})
+        await _insert(
+            db,
+            "rework",
+            "a",
+            "success",
+            {
+                "deployment_sha": "x" * 40,
+                "user_visible": True,
+                "triggered_at": _iso(90 * 24),
+            },
+        )
+
+        result = await db.rework_rate(window_days=30, team=None)
+
+        assert result == [{"team_id": "a", "rework_pct": 0.0}]
+
+
+class TestEnvironmentFilter:
+    """DC-05: production only unless DORA_COMPUTE_ENVIRONMENTS says otherwise."""
+
+    async def test_staging_is_not_counted(self):
+        db = await _db()
+        await _insert(db, "deployment", "a", "success", {"environment": "production"})
+        await _insert(db, "deployment", "a", "success", {"environment": "staging"})
+
+        result = await db.deployment_frequency(window_days=7, team=None)
+
+        assert result == [{"team_id": "a", "deploys_per_week": 1.0}]
+
+    async def test_env_var_adds_environments(self, monkeypatch):
+        monkeypatch.setenv("DORA_COMPUTE_ENVIRONMENTS", "production, staging")
+        db = await _db()
+        await _insert(db, "deployment", "a", "success", {"environment": "production"})
+        await _insert(db, "deployment", "a", "success", {"environment": "staging"})
+        await _insert(db, "deployment", "a", "success", {"environment": "dev"})
+
+        result = await db.deployment_frequency(window_days=7, team=None)
+
+        assert result == [{"team_id": "a", "deploys_per_week": 2.0}]

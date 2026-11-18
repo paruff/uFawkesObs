@@ -1065,59 +1065,16 @@
         {
           "id": 15,
           "title": "DORA Alert Thresholds",
-          "type": "table",
+          "type": "text",
           "gridPos": {
             "h": 7,
             "w": 24,
             "x": 0,
             "y": 27
           },
-          "targets": [
-            {
-              "format": "table",
-              "group": [],
-              "metricColumn": "none",
-              "rawQuery": true,
-              "rawSql": "SELECT 'Deployment Frequency' AS metric, 'watch: < 1/week' AS watch, 'alert: < 1/day' AS alert, 'critical: < 1/day' AS critical, 'Repository threshold model' AS note\nUNION ALL\nSELECT 'Lead Time for Changes', 'watch: > 24h', 'alert: > 7d', 'critical: > 30d', 'Repository threshold model'\nUNION ALL\nSELECT 'FDRT', 'watch: > 4h', 'alert: > 24h', 'critical: > 168h', 'Repository threshold model'\nUNION ALL\nSELECT 'Change Failure Rate', 'watch: > 5%', 'alert: > 15%', 'critical: > 30%', 'Repository threshold model'\nUNION ALL\nSELECT 'Rework Rate', 'watch: > 10%', 'alert: > 20%', 'critical: > 30%', 'Repository threshold model'",
-              "refId": "A",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "id"
-                    ],
-                    "type": "column"
-                  }
-                ]
-              ],
-              "timeColumn": "recorded_at",
-              "where": [
-                {
-                  "name": "$__timeFilter",
-                  "params": [],
-                  "type": "macro"
-                }
-              ]
-            }
-          ],
-          "fieldConfig": {
-            "defaults": {
-              "custom": {
-                "align": "left",
-                "displayMode": "auto",
-                "filterable": false
-              }
-            },
-            "overrides": []
-          },
           "options": {
-            "cellHeight": "sm",
-            "footer": {
-              "show": false,
-              "countRows": false,
-              "fields": ""
-            },
-            "showHeader": true
+            "mode": "markdown",
+            "content": "| Alert | Fires when | For |\n|---|---|---|\n| DORADeploymentFrequencyLow | deployments per week (summed) < 1 | 7d |\n| DORALeadTimeHigh | p50 lead time > 24 hours | 7d |\n| DORAFDRTHigh | p50 recovery time > 4 hours | 7d |\n| DORAChangeFailureRateHigh | change failure rate > 0.15 | 7d |\n| DORAChangeFailureRateCritical | change failure rate > 0.30 | 7d |\n| DORAReworkRateHigh | rework rate > 0.10 | 7d |\n| DORAReworkRateCritical | rework rate > 0.20 | 7d |\n\nSource: `config/prometheus/rules/ufawkesobs-dora-metrics.yml`. Rates are 0 to 1 ratios."
           }
         }
       ]
