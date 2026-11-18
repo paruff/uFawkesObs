@@ -62,11 +62,11 @@ then open its intent, spec or plan.
 | `ruff-0.17` | Adopt ruff v0.17 | - | - | [plan](ruff-0.17/plan.md) |
 | `audit-medium-low` | Medium and low audit findings (AF-02 06 09 10 14) | - | - | [plan](audit-medium-low/plan.md) |
 
-## Open decisions
+## Decisions
 
 | Where | What |
 |---|---|
-| [`dora-contract/spec.md`](dora-contract/spec.md#design), under **Decisions** | D1 `deployment_intent`, D2 `_pct` metric names, D3 `pr` and `incident` events. Proposed, owner to confirm. Follow-ups: #728, #729, #730 |
+| [`dora-contract/spec.md`](dora-contract/spec.md#design), under **Decisions** | D1 `deployment_intent`, D2 `_pct` metric names, D3 `pr` and `incident` events. Confirmed by the owner on 2026-11-18. Follow-ups: #728, #729, #730 |
 
 ## Adding a feature
 
