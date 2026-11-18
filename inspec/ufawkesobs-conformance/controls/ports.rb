@@ -25,10 +25,7 @@ compose['services'].each do |name, svc|
     end
 
     declared_ports.each do |mapping|
-      parts = mapping.to_s.split(':')
-      container_port = parts.pop
-      host_port = parts.pop
-      host_ip = parts.empty? ? '0.0.0.0' : parts.pop
+      host_ip, host_port, container_port = ComposePorts.parse(mapping)
 
       bindings = actual["#{container_port}/tcp"] || []
       found = bindings.any? { |b| b['HostPort'] == host_port && b['HostIp'] == host_ip }
