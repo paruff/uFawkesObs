@@ -143,14 +143,8 @@ jobs:
           sudo install -m 0755 yq /usr/local/bin/yq
 
       # The target `make validate` runs; the inline steps above check the same files.
-      - name: Run make validate-configs
-        run: make validate-configs
-
-      - name: Validate Alertmanager config
-        run: make validate-alertmanager
-
-      - name: Validate Alloy config
-        run: make validate-alloy
+      - name: Run make lint-config
+        run: make lint-config
 
       - name: job-finish
         if: always()

@@ -98,9 +98,7 @@ validate-configs:
 	docker run --rm -v $(PWD)/config/otel/collector.yaml:/etc/otel/config.yaml \
 		$(call compose_image,otel-collector) \
 		validate --config=/etc/otel/config.yaml
-	docker run --rm -v $(PWD)/config/tempo/tempo.yaml:/etc/tempo.yaml \
-		$(call compose_image,tempo) \
-		-config.file=/etc/tempo.yaml -config.verify=true
+	./scripts/validate-tempo.sh
 	docker run --rm -v $(PWD)/config/loki/loki.yaml:/etc/loki/loki.yaml:ro \
 		$(call compose_image,loki) \
 		-config.file=/etc/loki/loki.yaml -verify-config
