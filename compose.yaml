@@ -411,6 +411,9 @@ services:
       - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - ./config/prometheus/rules:/etc/prometheus/rules:ro
       - ./data/prometheus:/prometheus
+    secrets:
+      # Bearer token for the woodpecker scrape job; see prometheus.yaml.
+      - woodpecker_metrics_token
     ports:
       - "127.0.0.1:9090:9090"
     environment:
@@ -733,6 +736,10 @@ secrets:
   # See config/alertmanager/alertmanager.yml and docs/alertmanager-operations.md.
   slack_webhook_url:
     environment: "SLACK_WEBHOOK_URL"
+  # Prometheus cannot expand ${VAR} in its config either; credentials_file
+  # reads this instead. Must equal uFawkesPipe's WOODPECKER_METRICS_TOKEN.
+  woodpecker_metrics_token:
+    environment: "WOODPECKER_METRICS_TOKEN"
 
 networks:
   observability:

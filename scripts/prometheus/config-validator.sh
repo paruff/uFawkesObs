@@ -41,6 +41,7 @@ if command -v promtool &> /dev/null; then
 else
   echo "Using docker to validate..."
   docker run --rm -v "$(pwd)/config/prometheus:/etc/prometheus" \
+    -v /dev/null:/run/secrets/woodpecker_metrics_token:ro \
     --entrypoint promtool \
     "prom/prometheus:${PROMETHEUS_VERSION}" \
     check config /etc/prometheus/prometheus.yaml

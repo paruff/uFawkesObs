@@ -385,3 +385,28 @@ scrape_configs:
     scrape_interval: 15s
     metrics_path: "/metrics"
     scheme: "http"
+
+  # Woodpecker CI server (uFawkesPipe). Suite mode only: dns_sd so a default
+  # install, where no woodpecker-server exists on the network, has no
+  # permanently-down target. The token comes from the woodpecker_metrics_token
+  # secret (env WOODPECKER_METRICS_TOKEN); an empty file sends no usable
+  # credential, which is right when the server sets no auth token.
+  - job_name: "woodpecker"
+    dns_sd_configs:
+      - names: ["woodpecker-server"]
+        type: "A"
+        port: 8000
+        refresh_interval: 30s
+    relabel_configs:
+      - target_label: instance
+        replacement: "woodpecker-server:8000"
+      - target_label: plane
+        replacement: "obstackd"
+      - target_label: component
+        replacement: "woodpecker"
+    authorization:
+      type: Bearer
+      credentials_file: /run/secrets/woodpecker_metrics_token
+    scrape_interval: 30s
+    metrics_path: "/metrics"
+    scheme: "http"

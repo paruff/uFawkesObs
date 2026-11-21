@@ -90,6 +90,7 @@ validate-configs:
 	@echo "🟡 Config Validation (Prometheus/OTel/Tempo)"
 	@echo "========================================"
 	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
+		-v /dev/null:/run/secrets/woodpecker_metrics_token:ro \
 		--entrypoint promtool $(call compose_image,prometheus) \
 		check config /etc/prometheus/prometheus.yaml
 	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
