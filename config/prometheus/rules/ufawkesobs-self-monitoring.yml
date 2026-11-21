@@ -279,17 +279,15 @@ groups:
 
       - alert: UFawkesObsOtelCollectorDropped
         expr: |
-          sum(increase(otelcol_processor_dropped_spans{job="otel-collector"}[5m])) > 0
-          or
-          sum(increase(otelcol_exporter_send_failed_spans{job="otel-collector"}[5m])) > 0
+          sum(increase({__name__=~"otelcol_(processor_dropped|processor_refused|receiver_refused|exporter_send_failed)_(spans|metric_points|log_records)",job="otel-collector"}[5m])) > 0
         for: 5m
         labels:
           severity: critical
           category: ingestion
           alert_domain: ufawkesobs-health
         annotations:
-          summary: "OpenTelemetry Collector is dropping or failing to send spans"
-          description: "OTel Collector reported dropped spans or failed span exports continuously for more than 5 minutes."
+          summary: "OpenTelemetry Collector is dropping, refusing or failing to send telemetry"
+          description: "OTel Collector reported dropped or refused items, or failed exports (spans, metrics or logs), continuously for more than 5 minutes."
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/ufawkesobs-health.md#ufawkesobsotelcollectordropped"
 
       - alert: UFawkesObsContainerRestarting

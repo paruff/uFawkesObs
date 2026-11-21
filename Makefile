@@ -1,4 +1,4 @@
-.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails doctor validate pre-commit-run
+.PHONY: help init check-env up up-apps up-dora up-full down logs status grafana-folder-descriptions validate-configs validate-compose lint-config smoke-telemetry test-unit test-integration test-conformance test-acceptance test-acceptance-smoke test-acceptance-full test-acceptance-chaos install-acceptance-deps install-integration-deps test ci-local pr lint-tools lint-workflows lint-dockerfiles validate-alertmanager validate-alloy scan-images release-preview eval-guardrails doctor validate pre-commit-run
 
 # Grafana runs as UID 472
 GRAFANA_UID := 472
@@ -92,13 +92,31 @@ validate-configs:
 	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
 		--entrypoint promtool $(call compose_image,prometheus) \
 		check config /etc/prometheus/prometheus.yaml
-	docker run --rm -v $(PWD)/config/otel/collector.yaml:/etc/otel/config.yaml \
-		$(call compose_image,otel-collector) \
-		validate --config=/etc/otel/config.yaml
+	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
+		--entrypoint sh $(call compose_image,prometheus) \
+		-c 'promtool check rules /etc/prometheus/alerts.yml /etc/prometheus/rules/*.yml'
+	for f in collector; do \
+		docker run --rm -v $(PWD)/config/otel/$$f.yaml:/etc/otel/config.yaml \
+			$(call compose_image,otel-collector) \
+			validate --config=/etc/otel/config.yaml || exit 1; \
+	done
 	docker run --rm -v $(PWD)/config/tempo/tempo.yaml:/etc/tempo.yaml \
 		$(call compose_image,tempo) \
 		-config.file=/etc/tempo.yaml -config.verify=true
+	docker run --rm -v $(PWD)/config/loki/loki.yaml:/etc/loki/loki.yaml:ro \
+		$(call compose_image,loki) \
+		-config.file=/etc/loki/loki.yaml -verify-config
 	@echo "✅ All configs valid"
+
+## validate-compose: compose.yaml resolves with every profile; an unset ${VAR} (no default) fails
+validate-compose:
+	@out=$$(docker compose --env-file .env.example --profile '*' config -q 2>&1) || { echo "$$out"; exit 1; }; \
+	if echo "$$out" | grep -qi 'variable is not set'; then echo "$$out"; echo "❌ unresolved VAR in compose.yaml"; exit 1; fi
+	@echo "✅ compose.yaml resolves"
+
+## lint-config: every config validator in one no-stack, Docker-only gate
+##   (compose, promtool config+rules, otelcol x2, tempo, loki, amtool, alloy)
+lint-config: validate-compose validate-configs validate-alertmanager validate-alloy
 
 ## install-acceptance-deps: install acceptance test Python dependencies
 install-acceptance-deps:
@@ -190,6 +208,11 @@ test-conformance:
 # Exported, not passed inline: the value has to reach the dora-api container.
 export DORA_COMPUTE_INTERVAL_SECONDS ?= 15
 
+## smoke-telemetry: OTLP round-trip (trace, log, metric) Collector -> Tempo/Loki/Prometheus
+##   Requires stack to be running (run 'make up' first)
+smoke-telemetry:
+	python3 tests/smoke/smoke_telemetry.py
+
 ## test-acceptance-smoke: run smoke acceptance tests via pytest-bdd (fast, pre-merge)
 ##   Requires stack to be running (run 'make up' first)
 ##   Use --stack-mode=existing to skip lifecycle management
@@ -235,7 +258,7 @@ test: test-unit test-acceptance
 ##   Acceptance Full or Chaos (slow, deliberately post-merge/nightly only in
 ##   CI) -- run those explicitly via test-acceptance-full/test-acceptance-chaos
 ##   when you actually want them.
-ci-local: pre-commit-run validate-configs test-unit test-integration test-acceptance-smoke
+ci-local: pre-commit-run lint-config test-unit test-integration test-acceptance-smoke
 	@echo ""
 	@echo "✅ Local pyramid passed -- matches Repo Hygiene, Quality & Security"
 	@echo "   Gates, Unit & Integration Tests, and Acceptance Smoke in CI."
@@ -250,7 +273,7 @@ pre-commit-setup: ## Install pre-commit hooks
 pre-commit-run: ## Run all pre-commit hooks
 	@pre-commit run --all-files
 
-validate: pre-commit-run validate-configs ## The local gate: hooks and config checks; needs no running stack
+validate: pre-commit-run lint-config ## The local gate: hooks and config checks; needs no running stack
 
 ## pr: stage, commit (with pre-commit), push, and create a PR
 ##   Usage: make pr MSG="fix(prometheus): correct scrape interval"
@@ -316,4 +339,4 @@ eval-guardrails:
 	python3 evals/run_guardrails.py $(EVAL_ARGS)
 
 doctor: ## Are this clone's checks actually running? (hooks installed, tools, stamps, CI parity)
-	@bash scripts/shift-left.sh doctor
+	@bash scripts/shift-left.sh doctor; rc=$$?; bash scripts/doctor-stack.sh || rc=1; exit $$rc
