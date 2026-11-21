@@ -390,6 +390,7 @@ scrape_configs:
   # install, where no woodpecker-server exists on the network, has no
   # permanently-down target. The bearer token is read from the file that
   # WOODPECKER_METRICS_TOKEN_FILE points at (compose mounts it; empty default).
+  # Woodpecker returns 404 on /metrics unless its token is set, so set both.
   # Affects: new woodpecker_* series and up{job="woodpecker"} only. The target
   # lives in uFawkesPipe's suite, not in this compose.yaml.
   - job_name: "woodpecker"
