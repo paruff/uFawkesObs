@@ -126,6 +126,10 @@ jobs:
       - name: Run OTel pipeline acceptance script
         run: ./tests/acceptance/observability-pipeline/test-otel-pipeline.sh
 
+      # Trace, log and metric each traverse Collector -> Tempo/Loki/Prometheus.
+      - name: Run telemetry round-trip smoke
+        run: make smoke-telemetry
+
       - name: Generate runbook snippets (if evidence exists)
         if: always()
         run: |

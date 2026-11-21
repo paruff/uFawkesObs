@@ -50,5 +50,27 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "grafana-skills": {
+      "source": {
+        "source": "github",
+        "repo": "grafana/skills",
+        "ref": "8fb72a527961f05e708f53d2a0500709e12d7970"
+      }
+    },
+    "opentelemetry-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "ollygarden/opentelemetry-agent-skills",
+        "ref": "c902846a75eef3b94384abee5e20107008698e92"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "grafana-core@grafana-skills": true,
+    "grafana-lgtm@grafana-skills": true,
+    "otel-collector@opentelemetry-agent-skills": true,
+    "otel-ottl@opentelemetry-agent-skills": true
   }
 }

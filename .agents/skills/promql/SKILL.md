@@ -7,6 +7,8 @@ compatibility: opencode
 
 # Skill: promql
 
+> Why this stays next to the marketplace `grafana-core` skill: that one covers generic PromQL; this one holds uFawkesObs rules (recording-rule names, DORA proxies, alert conventions).
+
 ## Purpose
 
 PromQL correctness rules for uFawkesObs. Covers the specific failure modes that agents without this skill consistently produce: missing absent() guards, rate() on gauges, missing or vector(0), and irate() in recording rules.
