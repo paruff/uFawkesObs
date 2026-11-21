@@ -8,6 +8,21 @@ This file is a short index. The detailed repo rules live in the path-scoped rule
 - Purpose: Compose-based uFawkes observability stack (OpenTelemetry, Prometheus, Tempo, Loki, Grafana, Alloy) with GitOps deployment over SSH.
 - See: `README.md`, `docs/ARCHITECTURE.md`, `docs/KNOWN_LIMITATIONS.md`, `docs/CHANGE_IMPACT_MAP.md`, `docs/MODEL_POLICY.md`.
 
+## Canonical commands
+
+Stack versions, ports and signal flow live in `.agents/skills/obs-stack/SKILL.md` and `compose.yaml`; don't copy them here.
+
+```bash
+make doctor            # are this clone's hooks and tools actually running?
+make up                # start the stack
+make lint-config       # every config validator; Docker only, no stack needed
+make smoke-telemetry   # OTLP trace/log/metric round-trip (needs make up)
+make test-unit
+make test-acceptance
+```
+
+Commit scopes: `prometheus`, `otel`, `loki`, `tempo`, `grafana`, `alloy`, `alertmanager`, `scripts`, `docs`, `ci` (see `CONTRIBUTING.md`).
+
 ## 2. Read before editing
 
 - `compose.yaml` and related config files

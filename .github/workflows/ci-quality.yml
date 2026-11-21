@@ -127,11 +127,7 @@ jobs:
 
       - name: Validate Tempo config
         if: hashFiles('config/tempo/tempo.yaml') != ''
-        run: |
-          docker run --rm \
-            -v $PWD/config/tempo/tempo.yaml:/etc/tempo.yaml \
-            "$TEMPO_IMAGE" \
-            -config.file=/etc/tempo.yaml -config.verify=true
+        run: ./scripts/validate-tempo.sh "$TEMPO_IMAGE"
 
       - name: Install yq
         run: |
@@ -143,14 +139,8 @@ jobs:
           sudo install -m 0755 yq /usr/local/bin/yq
 
       # The target `make validate` runs; the inline steps above check the same files.
-      - name: Run make validate-configs
-        run: make validate-configs
-
-      - name: Validate Alertmanager config
-        run: make validate-alertmanager
-
-      - name: Validate Alloy config
-        run: make validate-alloy
+      - name: Run make lint-config
+        run: make lint-config
 
       - name: job-finish
         if: always()

@@ -7,6 +7,8 @@ compatibility: opencode
 
 # Skill: otel-collector
 
+> Why this stays next to the marketplace `otel-collector`/`otel-ottl` skills: those cover generic component syntax; this one holds uFawkesObs-specific pipeline rules and constraints.
+
 ## Purpose
 
 OpenTelemetry Collector configuration rules for uFawkesObs. Covers pipeline anatomy, common wiring errors, and the specific constraints of the uFawkesObs Docker Compose deployment.

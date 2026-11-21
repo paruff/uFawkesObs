@@ -55,7 +55,7 @@ come up cleanly.
 
 First time here? [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md) walks through
 every command above — what it does, what you should see, and what to do
-if you don't.
+if you don't. Changing config? See [docs/DEVELOPING.md](docs/DEVELOPING.md).
 
 To run additional profiles (demo telemetry generator, Discord alerts, DORA
 metrics), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#profiles). The DORA

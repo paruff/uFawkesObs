@@ -3,7 +3,11 @@
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.86"
+      ],
       "enabled": true
     },
     "serena": {
@@ -32,7 +36,11 @@
     },
     "github": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github@2025.4.8"
+      ],
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
       },
@@ -44,6 +52,24 @@
       "headers": {
         "Authorization": "Bearer {env:SENTRY_API_KEY}"
       },
+      "enabled": true
+    },
+    "grafana": {
+      "type": "local",
+      "command": [
+        "uvx",
+        "mcp-grafana@2.2.0",
+        "--disable-write"
+      ],
+      "environment": {
+        "GRAFANA_URL": "{env:GRAFANA_URL}",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "{env:GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+      },
+      "enabled": true
+    },
+    "tempo": {
+      "type": "remote",
+      "url": "http://localhost:3200/api/mcp",
       "enabled": true
     }
   }
