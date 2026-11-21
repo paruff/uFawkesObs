@@ -388,9 +388,10 @@ scrape_configs:
 
   # Woodpecker CI server (uFawkesPipe). Suite mode only: dns_sd so a default
   # install, where no woodpecker-server exists on the network, has no
-  # permanently-down target. The token comes from the woodpecker_metrics_token
-  # secret (env WOODPECKER_METRICS_TOKEN); an empty file sends no usable
-  # credential, which is right when the server sets no auth token.
+  # permanently-down target. The bearer token is read from the file that
+  # WOODPECKER_METRICS_TOKEN_FILE points at (compose mounts it; empty default).
+  # Affects: new woodpecker_* series and up{job="woodpecker"} only. The target
+  # lives in uFawkesPipe's suite, not in this compose.yaml.
   - job_name: "woodpecker"
     dns_sd_configs:
       - names: ["woodpecker-server"]
