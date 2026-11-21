@@ -779,17 +779,17 @@
       },
       "targets": [
         {
-          "expr": "sum(rate({__name__=~\"otelcol_processor_dropped_(spans|metric_points|log_records)\",job=\"otel-collector\"}[5m])) or vector(0)",
-          "legendFormat": "dropped",
+          "expr": "sum(rate({__name__=~\"otelcol_processor_memory_limiter_accepted_(spans|metric_points|log_records)\",job=\"otel-collector\"}[5m])) or vector(0)",
+          "legendFormat": "accepted",
           "refId": "A"
         },
         {
-          "expr": "sum(rate({__name__=~\"otelcol_processor_refused_(spans|metric_points|log_records)\",job=\"otel-collector\"}[5m])) or vector(0)",
+          "expr": "sum(rate({__name__=~\"otelcol_processor_memory_limiter_refused_(spans|metric_points|log_records)\",job=\"otel-collector\"}[5m])) or vector(0)",
           "legendFormat": "refused",
           "refId": "B"
         }
       ],
-      "title": "Processor dropped / memory_limiter refused (items/s)",
+      "title": "memory_limiter accepted vs refused (items/s)",
       "type": "timeseries"
     }
   ],

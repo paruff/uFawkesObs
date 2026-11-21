@@ -175,6 +175,7 @@ def main():
             print(f"FAIL: could not send {signal} to {OTLP}: {exc} (is the stack up?)")
             return 1
     pending = dict(CHECKS)
+    errors = {}
     deadline = time.monotonic() + TIMEOUT
     while pending and time.monotonic() < deadline:
         for name, check in list(pending.items()):
@@ -182,14 +183,17 @@ def main():
                 if check(run_id, now_ns):
                     print(f"ok: {name} arrived (run {run_id})")
                     del pending[name]
-            except (OSError, urllib.error.URLError, KeyError, ValueError):
-                pass  # backend not ready yet; retry until the deadline
+            except (OSError, urllib.error.URLError, KeyError, ValueError) as exc:
+                errors[name] = repr(exc)  # retry until the deadline, but report it
         if pending:
             time.sleep(2)
     if pending:
         print(
             f"FAIL: signal(s) never arrived within {TIMEOUT}s: {', '.join(pending)} (run {run_id})"
         )
+        for name in pending:
+            if name in errors:
+                print(f"last {name} query error: {errors[name]}")
         print("--- collector log tail ---")
         print(collector_tail())
         return 1

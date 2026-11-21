@@ -95,11 +95,9 @@ validate-configs:
 	docker run --rm -v $(PWD)/config/prometheus:/etc/prometheus \
 		--entrypoint sh $(call compose_image,prometheus) \
 		-c 'promtool check rules /etc/prometheus/alerts.yml /etc/prometheus/rules/*.yml'
-	for f in collector; do \
-		docker run --rm -v $(PWD)/config/otel/$$f.yaml:/etc/otel/config.yaml \
-			$(call compose_image,otel-collector) \
-			validate --config=/etc/otel/config.yaml || exit 1; \
-	done
+	docker run --rm -v $(PWD)/config/otel/collector.yaml:/etc/otel/config.yaml \
+		$(call compose_image,otel-collector) \
+		validate --config=/etc/otel/config.yaml
 	docker run --rm -v $(PWD)/config/tempo/tempo.yaml:/etc/tempo.yaml \
 		$(call compose_image,tempo) \
 		-config.file=/etc/tempo.yaml -config.verify=true
@@ -115,7 +113,7 @@ validate-compose:
 	@echo "✅ compose.yaml resolves"
 
 ## lint-config: every config validator in one no-stack, Docker-only gate
-##   (compose, promtool config+rules, otelcol x2, tempo, loki, amtool, alloy)
+##   (compose, promtool config+rules, otelcol, tempo, loki, amtool, alloy)
 lint-config: validate-compose validate-configs validate-alertmanager validate-alloy
 
 ## install-acceptance-deps: install acceptance test Python dependencies

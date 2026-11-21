@@ -1,6 +1,6 @@
 # Developing
 
-Four commands cover the loop. Everything runs in Docker; nothing needs installing on the host.
+Four commands cover the loop. Config checks run in Docker; `make doctor` also needs `yq` and `nc` on the host.
 
 ```bash
 make doctor            # hooks, tools, Docker, .env and free ports, with a fix hint per failure

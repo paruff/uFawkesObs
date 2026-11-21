@@ -279,7 +279,7 @@ groups:
 
       - alert: UFawkesObsOtelCollectorDropped
         expr: |
-          sum(increase({__name__=~"otelcol_(processor_dropped|processor_refused|receiver_refused|exporter_send_failed)_(spans|metric_points|log_records)",job="otel-collector"}[5m])) > 0
+          sum(increase({__name__=~"otelcol_(processor_memory_limiter_refused|receiver_refused|exporter_send_failed)_(spans|metric_points|log_records)",job="otel-collector"}[5m])) > 0
         for: 5m
         labels:
           severity: critical

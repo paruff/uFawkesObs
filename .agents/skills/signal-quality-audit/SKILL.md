@@ -42,7 +42,7 @@ Checks for signal that is accepted and then lost. Component syntax belongs to
 | Receiver refused data? | `otelcol_receiver_refused_{spans,metric_points,log_records}` |
 | Exporter failed? | `otelcol_exporter_send_failed_*` |
 | Queue full? | `otelcol_exporter_queue_size` vs `otelcol_exporter_queue_capacity` |
-| Processor dropped? | `otelcol_processor_dropped_*`, `memory_limiter` refusals |
+| memory_limiter refusing? | `otelcol_processor_memory_limiter_refused_*` (compare `_accepted_*`); 0.162 has no `processor_dropped_*` |
 
 Existing alert: `UFawkesObsOtelCollectorDropped` covers dropped, refused and
 failed-export items for all three signals. Loki: `UFawkesObsLokiIngestionDropped`.
