@@ -32,7 +32,7 @@ ports=$(docker compose --env-file "$envfile" --profile core --profile apps confi
 
 for p in $ports; do
   nc -z 127.0.0.1 "$p" > /dev/null 2>&1 || continue
-  if [ -n "$(docker ps -q --filter "publish=$p" --filter "label=com.docker.compose.project=$(basename "$PWD" | tr 'A-Z' 'a-z')")" ]; then continue; fi
+  if [ -n "$(docker ps -q --filter "publish=$p" --filter "label=com.docker.compose.project=$(basename "$PWD" | tr '[:upper:]' '[:lower:]')")" ]; then continue; fi
   bad "port $p is already in use by another process" "stop it (lsof -nP -iTCP:$p -sTCP:LISTEN) or change the port in .env"
 done
 

@@ -4,7 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-image=$(yq -r '.services["tempo"].image' compose.yaml)
+# Image: $1 (CI passes its compose-derived $TEMPO_IMAGE), else read from compose.yaml.
+image=${1:-$(yq -r '.services["tempo"].image' compose.yaml)}
 rc=0
 out=$(docker run --rm -v "$PWD/config/tempo/tempo.yaml:/etc/tempo.yaml" "$image" \
   -config.file=/etc/tempo.yaml -config.verify=true 2>&1) || rc=$?

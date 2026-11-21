@@ -127,11 +127,7 @@ jobs:
 
       - name: Validate Tempo config
         if: hashFiles('config/tempo/tempo.yaml') != ''
-        run: |
-          docker run --rm \
-            -v $PWD/config/tempo/tempo.yaml:/etc/tempo.yaml \
-            "$TEMPO_IMAGE" \
-            -config.file=/etc/tempo.yaml -config.verify=true
+        run: ./scripts/validate-tempo.sh "$TEMPO_IMAGE"
 
       - name: Install yq
         run: |

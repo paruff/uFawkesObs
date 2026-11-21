@@ -34,6 +34,7 @@ then open its intent, spec or plan.
 | `cfr-rollback` | Change-failure-rate triggered rollback | - | - | [plan](cfr-rollback/plan.md) |
 | `dora-current-state` | Current-state DORA docs describe the running stack | - | - | [plan](dora-current-state/plan.md) |
 | `delete-emit-dora-event` | Delete the unused `emit-dora-event.sh` (#734) | - | - | [plan](delete-emit-dora-event/plan.md) |
+| `dev-environment-signal` | Dev environment where the signal actually arrives: lint-config, smoke-telemetry, doctor, MCP (#750) | - | - | [plan](dev-environment-signal/plan.md) |
 | `rework-rate-comment` | Correct the rework-rate comments in the rules file | - | - | [plan](rework-rate-comment/plan.md) |
 | `timestamp-offset` | Require a UTC offset on event timestamps | - | - | [plan](timestamp-offset/plan.md) |
 
