@@ -69,7 +69,10 @@ jobs:
     with:
       validate-prometheus: true
       validate-otel: true
-      validate-tempo: true
+      # Off: the shared check runs a bare `-config.verify`, which fails on Tempo's
+      # intentional MCP-enabled warning (#747). ci-quality's `make lint-config`
+      # validates Tempo via scripts/validate-tempo.sh, tolerating only that warning.
+      validate-tempo: false
       validate-grafana: true
       fail-on-latest: true
       enable-coverage-gate: false
