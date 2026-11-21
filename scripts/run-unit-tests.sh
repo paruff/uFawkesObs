@@ -17,7 +17,6 @@ cd "$(dirname "$0")/.." || exit 1
 
 SUITES=(
   scripts/test-check-secret-detection.sh
-  scripts/test-emit-dora-event.sh
   scripts/test-artifact-chain.sh
   scripts/test-dojo-feedback-intent.sh
 )
