@@ -389,7 +389,7 @@ scrape_configs:
   # Woodpecker CI server (uFawkesPipe). Suite mode only: dns_sd so a default
   # install, where no woodpecker-server exists on the network, has no
   # permanently-down target. The bearer token is read from the file that
-  # WOODPECKER_METRICS_TOKEN_FILE points at (compose mounts it; empty default).
+  # WOODPECKER_METRICS_TOKEN_FILE points at (compose mounts it; default is the empty committed file beside this config, so promtool in CI finds it).
   # Woodpecker returns 404 on /metrics unless its token is set, so set both.
   # Affects: new woodpecker_* series and up{job="woodpecker"} only. The target
   # lives in uFawkesPipe's suite, not in this compose.yaml.
@@ -408,7 +408,7 @@ scrape_configs:
         replacement: "woodpecker"
     authorization:
       type: Bearer
-      credentials_file: /run/secrets/woodpecker_metrics_token
+      credentials_file: /etc/prometheus/woodpecker_metrics_token
     scrape_interval: 30s
     metrics_path: "/metrics"
     scheme: "http"
