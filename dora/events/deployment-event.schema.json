@@ -68,6 +68,11 @@
       "description": "ISO 8601 timestamp the pull request was merged. Used as a proxy for Lead Time for Changes when first_commit_at is unavailable.",
       "type": "string",
       "format": "date-time"
+    },
+    "deployment_intent": {
+      "description": "Whether the deployment was planned work or unplanned rework. Optional; compute ignores it today.",
+      "type": "string",
+      "enum": ["planned", "unplanned_rework"]
     }
   },
   "required": [

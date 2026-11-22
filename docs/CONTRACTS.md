@@ -78,6 +78,7 @@ finished, and compute windows and orders on it, not on ingest time.
 | `ai_assisted` | boolean | no | |
 | `first_commit_at` | string (date-time) | no | First commit of the change set. The exact start of Lead Time; preferred over `pr_merged_at` |
 | `pr_merged_at` | string (date-time) | no | PR merge time. Lead Time start when `first_commit_at` is absent, and then the metric is flagged as a proxy |
+| `deployment_intent` | enum | no | `planned` \| `unplanned_rework`. Accepted and stored; no metric reads it yet. Added in schema `1.1` |
 
 #### `pr` — `dora/events/pr-event.schema.json`
 
