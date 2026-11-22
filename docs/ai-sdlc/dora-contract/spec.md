@@ -39,6 +39,22 @@ issue because none is done in #731:
 | D2 | Keep `dora_cfr_pct` and `dora_rework_rate_pct` | A rename breaks the Dojo Module 14 lab and fawkes's dashboards. Add `_ratio` twins beside them in a minor release, drop `_pct` at the next major | `https://github.com/paruff/uFawkesObs/issues/729` |
 | D3 | `pr` and `incident` stay in the contract, accepted and stored, and feed no metric | Removing them would 422 senders that work today (major). Recovery time stays deployment-based, so an incident's duration is not recovery time. Document them as stored-only, as `docs/CONTRACTS.md` §1 now does | `https://github.com/paruff/uFawkesObs/issues/730` |
 
+### D3 at the next major (#730)
+
+**Decision: `pr` and `incident` stay in the contract at the next major.**
+Evidence (checked 2026-11-22): this repo ships first-party senders for both.
+`dora/collectors/github/dora-pr-event.yml` and `scripts/backfill_dora_from_github.py`
+send `pr`; `dora/collectors/manual-incident/` sends `incident`. Removing the
+schemas would orphan those collectors and 422 every adopter who copied them,
+for no gain. Nothing reads the events, and that is a cheap cost to carry.
+
+- They stay stored-only until a metric is specified. That is a separate
+  feature, not a major-release task. An incident's duration is not recovery
+  time (D3), so any incident metric needs its own name; a `pr` metric must
+  beat the `first_commit_at` that the deployment event already carries.
+- The major does not drop them. Reopen only if the first-party collectors are
+  removed, in which case remove the schemas in the same change.
+
 ## Interfaces
 
 This changes uFawkesObs's "DORA event ingestion" row in the suite's
