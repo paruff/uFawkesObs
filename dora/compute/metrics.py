@@ -265,6 +265,9 @@ _GAUGES: tuple[tuple[str, str, str | None], ...] = (
     ("dora_fdrt_p50_hours", "fdrt_p50_hours", "dora_tier_fdrt"),
     ("dora_cfr_pct", "change_failure_rate", "dora_tier_cfr"),
     ("dora_rework_rate_pct", "rework_rate_pct", "dora_tier_rework_rate"),
+    # _ratio twins (#729): same 0-1 values under honest names; drop _pct at the next major.
+    ("dora_cfr_ratio", "change_failure_rate", "dora_tier_cfr"),
+    ("dora_rework_rate_ratio", "rework_rate_pct", "dora_tier_rework_rate"),
 )
 
 
@@ -364,6 +367,16 @@ async def _push_metrics(
         )
         gauge(
             "dora_rework_rate_pct",
+            record.get("rework_rate_pct"),
+            record.get("dora_tier_rework_rate"),
+        )
+        gauge(
+            "dora_cfr_ratio",
+            record.get("change_failure_rate"),
+            record.get("dora_tier_cfr"),
+        )
+        gauge(
+            "dora_rework_rate_ratio",
             record.get("rework_rate_pct"),
             record.get("dora_tier_rework_rate"),
         )
