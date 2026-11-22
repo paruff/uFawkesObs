@@ -228,13 +228,13 @@ groups:
               / (stddev_over_time(dora_fdrt_p50_hours[30d]) > 0),
             "metric", "dora_fdrt_p50_hours", "", "")
           or label_replace(
-            (dora_cfr_pct - avg_over_time(dora_cfr_pct[30d]))
-              / (stddev_over_time(dora_cfr_pct[30d]) > 0),
-            "metric", "dora_cfr_pct", "", "")
+            (dora_cfr_ratio - avg_over_time(dora_cfr_ratio[30d]))
+              / (stddev_over_time(dora_cfr_ratio[30d]) > 0),
+            "metric", "dora_cfr_ratio", "", "")
           or label_replace(
-            (dora_rework_rate_pct - avg_over_time(dora_rework_rate_pct[30d]))
-              / (stddev_over_time(dora_rework_rate_pct[30d]) > 0),
-            "metric", "dora_rework_rate_pct", "", "")
+            (dora_rework_rate_ratio - avg_over_time(dora_rework_rate_ratio[30d]))
+              / (stddev_over_time(dora_rework_rate_ratio[30d]) > 0),
+            "metric", "dora_rework_rate_ratio", "", "")
 
       - alert: DORASigmaBandBreach
         expr: dora:badness_zscore_30d > 3

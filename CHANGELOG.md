@@ -1236,6 +1236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - dora: publish `dora_cfr_ratio` and `dora_rework_rate_ratio` (0 to 1) beside `dora_cfr_pct` and `dora_rework_rate_pct`; the `_pct` names go at the next major (#729)
+- dora: alert rules (regression, sigma-band, recording rules), the DORA overview dashboard and the runbook now read the `_ratio` names (#729)
 
 ## [0.3.0-alpha.1] — 2026-08-31
 

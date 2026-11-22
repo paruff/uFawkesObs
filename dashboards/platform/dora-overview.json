@@ -372,7 +372,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_cfr_pct{team_id=~\"$team_id\"}[$window]) * 100",
+          "expr": "last_over_time(dora_cfr_ratio{team_id=~\"$team_id\"}[$window]) * 100",
           "legendFormat": "{{team_id}}",
           "refId": "A"
         }
@@ -414,7 +414,7 @@
           {
             "matcher": {
               "id": "byName",
-              "value": "dora_cfr_pct"
+              "value": "dora_cfr_ratio"
             },
             "properties": [
               {
@@ -460,7 +460,7 @@
       },
       "targets": [
         {
-          "expr": "last_over_time(dora_rework_rate_pct{team_id=~\"$team_id\"}[$window])",
+          "expr": "last_over_time(dora_rework_rate_ratio{team_id=~\"$team_id\"}[$window])",
           "legendFormat": "{{team_id}}",
           "refId": "A"
         }
@@ -502,7 +502,7 @@
           {
             "matcher": {
               "id": "byName",
-              "value": "dora_rework_rate_pct"
+              "value": "dora_rework_rate_ratio"
             },
             "properties": [
               {
@@ -859,7 +859,7 @@
       },
       "targets": [
         {
-          "expr": "dora_cfr_pct{team_id=~\"$team_id\"} * 100",
+          "expr": "dora_cfr_ratio{team_id=~\"$team_id\"} * 100",
           "legendFormat": "{{team_id}}",
           "refId": "A"
         }
@@ -963,7 +963,7 @@
       },
       "targets": [
         {
-          "expr": "dora_rework_rate_pct{team_id=~\"$team_id\"}",
+          "expr": "dora_rework_rate_ratio{team_id=~\"$team_id\"}",
           "legendFormat": "{{team_id}}",
           "refId": "A"
         }
