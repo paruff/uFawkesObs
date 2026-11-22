@@ -250,6 +250,13 @@ class TestDeploymentIntent:
             TestAuditFindings._deployment(deployment_intent=intent)
         ).valid
 
+    def test_intent_with_schema_version_1_1_accepted(self):
+        assert validate_payload(
+            TestAuditFindings._deployment(
+                schema_version="1.1", deployment_intent="planned"
+            )
+        ).valid
+
     def test_absent_intent_accepted(self):
         assert validate_payload(TestAuditFindings._deployment()).valid
 

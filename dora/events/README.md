@@ -71,6 +71,7 @@ event — collectors should emit both when a deployment is rework.
 | `pipeline_url`            | Yes      | `string` (URI)           | CI/CD pipeline run URL             |
 | `deploy_duration_seconds` | No       | `integer`                | Deployment duration                |
 | `ai_assisted`             | No       | `boolean`                | AI involvement flag                |
+| `deployment_intent`       | No       | `enum`                   | `planned`, `unplanned_rework`      |
 
 ### Incident Event (`incident-event.schema.json`)
 
