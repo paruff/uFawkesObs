@@ -4,7 +4,7 @@
 
 ## Changes
 
-1. Delete `config/otel/collector-dora.yaml`. The `otel-collector-dora` container
+1. Delete `config/otel/collector-dora.yaml`. The DORA Collector container
    was removed earlier and nothing mounts or loads this file.
 2. Delete its test, `tests/unit/test_otel_collector_dora_config.py`.
 3. Update `docs/CONTRACTS.md` so it no longer points at the deleted file.
