@@ -65,7 +65,7 @@ finished, and compute windows and orders on it, not on ingest time.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `schema_version` | string | yes | Pattern `^\d+\.\d+$`, e.g. `"1.0"` |
+| `schema_version` | string | yes | Pattern `^\d+\.\d+$`, e.g. `"1.1"` (current for deployment; `"1.0"` senders stay valid) |
 | `event_type` | const `"deployment"` | yes | |
 | `repo` | string | yes | e.g. `"org/repo-name"` |
 | `service` | string | yes | Component name within the repo |

@@ -8,7 +8,8 @@
     "schema_version": {
       "description": "Semantic version of the schema. Minor bumps for backward-compatible additions; major bumps for breaking changes.",
       "type": "string",
-      "pattern": "^\\d+\\.\\d+$"
+      "pattern": "^\\d+\\.\\d+$",
+      "examples": ["1.1"]
     },
     "event_type": {
       "description": "Discriminant for event routing. Must be 'deployment'.",
