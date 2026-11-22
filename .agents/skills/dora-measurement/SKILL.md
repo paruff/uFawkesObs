@@ -38,9 +38,9 @@ If either check fails, stop and report; do not estimate.
 | --- | --- | --- | --- | --- |
 | 1 | Deployment frequency | `dora_deployment_frequency_per_week{team_id=~"REPO"}` (per week, production only) | `rate(github_pr_merged_total{repo=~"REPO"}[Wd]) * 604800` | on demand / 1 per week to 1 per day / 1 per month to 1 per week / under 1 per month |
 | 2 | Change lead time | `dora_lead_time_p50_hours{team_id=~"REPO"}` (hours; the team has none until its deployments carry `first_commit_at` or `pr_merged_at`) | `histogram_quantile(0.5, rate(github_pr_time_to_merge_seconds_bucket[Wd])) / 3600` | under 1 h / 1 day to 1 week / 1 week to 1 month / over 1 month |
-| 3 | Change fail rate | `dora_cfr_pct{team_id=~"REPO"} * 100` (the metric holds a 0 to 1 ratio, despite its name) | same ratio over `github_pr_merged_total{label="hotfix"}` | 0-5% / 5-10% / 10-15% / over 15% |
+| 3 | Change fail rate | `dora_cfr_ratio{team_id=~"REPO"} * 100` (a 0 to 1 ratio; `dora_cfr_pct` is the same value under its old name, dropped at the next major) | same ratio over `github_pr_merged_total{label="hotfix"}` | 0-5% / 5-10% / 10-15% / over 15% |
 | 4 | Failed deployment recovery time | `dora_fdrt_p50_hours{team_id=~"REPO"}` (hours: failed deployment to the next success) | time from error-log spike to baseline: `{app=~"REPO"} \|= "ERROR"` rate, spike start and end read by hand | under 1 h / under 1 day / 1 day to 1 week / over 1 week |
-| 5 | Deployment rework rate | `dora_rework_rate_pct{team_id=~"REPO"} * 100` (a 0 to 1 ratio, as in 3) | hotfix PR ratio, as in 3 | 0-5% / 5-10% / 10-15% / over 15% |
+| 5 | Deployment rework rate | `dora_rework_rate_ratio{team_id=~"REPO"} * 100` (a 0 to 1 ratio, as in 3; old name `dora_rework_rate_pct`) | hotfix PR ratio, as in 3 | 0-5% / 5-10% / 10-15% / over 15% |
 
 For lead time without a histogram, join deployment timestamps from Loki
 (`{app="uFawkesPipe",event="deployment_complete"} | json`) with commit timestamps from `git log`;

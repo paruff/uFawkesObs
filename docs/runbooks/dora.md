@@ -554,6 +554,10 @@ When a DORA alert fires, first confirm whether the metric is genuinely low or ab
 
 ## CFR Rollback
 
+> `dora_cfr_ratio` and `dora_rework_rate_ratio` publish the same 0-1 values as `dora_cfr_pct` and
+> `dora_rework_rate_pct`. Write new queries against the `_ratio` names; the `_pct` names go at the next
+> major. The alert rules below still evaluate `_pct` until then.
+
 `DORACFRRegressionRollback` fires when `dora_cfr_pct` (a 0-1 ratio) is above 0.30 **and** more than 0.10
 above its 30-day average for 15m.
 
