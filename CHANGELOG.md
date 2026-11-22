@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/paruff/uFawkesObs/compare/v1.0.1...v1.1.0) (2026-11-22)
+
+
+### Added
+
+* **compose:** configurable host ports for Grafana and telemetry-generator ([#733](https://github.com/paruff/uFawkesObs/issues/733)) ([45a7d56](https://github.com/paruff/uFawkesObs/commit/45a7d56f32fe0cb61e417631c551a73f5fae13d6))
+* **dev:** lint-config, smoke-telemetry, stack doctor, collector panels ([#751](https://github.com/paruff/uFawkesObs/issues/751)) ([ee1337f](https://github.com/paruff/uFawkesObs/commit/ee1337f2a199cfcd53ff3d4411e6d40df97423cf))
+* **dora:** accept optional deployment_intent on the deployment event ([#756](https://github.com/paruff/uFawkesObs/issues/756)) ([d81d911](https://github.com/paruff/uFawkesObs/commit/d81d91156f10ac2bb6929624a7a3be6dbb9174db))
+* **dora:** add _ratio twins for dora_cfr_pct and dora_rework_rate_pct ([#757](https://github.com/paruff/uFawkesObs/issues/757)) ([9dd40ca](https://github.com/paruff/uFawkesObs/commit/9dd40ca062d9410c7ef0cfe2aab72dc5dcaa9a56))
+* **prometheus:** scrape Woodpecker /metrics and add community dashboard ([#753](https://github.com/paruff/uFawkesObs/issues/753)) ([dbca628](https://github.com/paruff/uFawkesObs/commit/dbca62805d908e1a02ec50f8f57cc08f245beb9b))
+
+
+### Fixed
+
+* **acceptance:** exclude Woodpecker CI dashboard from the data-freshness gate ([#755](https://github.com/paruff/uFawkesObs/issues/755)) ([4199aa0](https://github.com/paruff/uFawkesObs/commit/4199aa0aec7e5f89799883fc6e327e92613dd8b8))
+* **dora:** make the five DORA metrics measurable from real pipelines ([#719](https://github.com/paruff/uFawkesObs/issues/719)) ([#731](https://github.com/paruff/uFawkesObs/issues/731)) ([140e426](https://github.com/paruff/uFawkesObs/commit/140e4266ec8736fc414d57cbb372ce2df4928a74))
+* **ingestion:** dedupe retries, reject bad times, name fields (AF-02 06 09 10 14) ([#724](https://github.com/paruff/uFawkesObs/issues/724)) ([d2fc5a4](https://github.com/paruff/uFawkesObs/commit/d2fc5a46bfca2ce635c7119f5980ddffb6262221))
+* **ingestion:** metrics on event time, per-change CFR, safe queue (AF-01 03 04 11 23) ([#723](https://github.com/paruff/uFawkesObs/issues/723)) ([33023a1](https://github.com/paruff/uFawkesObs/commit/33023a188a41e59807ac9c8dd0f78b50039fb134))
+* **ingestion:** reject timestamps without a UTC offset (AF-05) ([#722](https://github.com/paruff/uFawkesObs/issues/722)) ([857b333](https://github.com/paruff/uFawkesObs/commit/857b333a584dac211cdca0d705337535f1d325e3))
+
+
+### Docs
+
+* **agents:** import the integration-testing skill from uFawkesAI ([#681](https://github.com/paruff/uFawkesObs/issues/681)) ([acbb4e3](https://github.com/paruff/uFawkesObs/commit/acbb4e3d3f31bdeb83d1f9ed69ef42c671913b2d))
+* **ai-sdlc:** add an index of intents, specs and plans ([#732](https://github.com/paruff/uFawkesObs/issues/732)) ([17f0b9a](https://github.com/paruff/uFawkesObs/commit/17f0b9a33335a47f7b69cbff8b823b445563c37e))
+* **docs:** DORA contract intent, spec and plan; v1.0.0 is released ([#719](https://github.com/paruff/uFawkesObs/issues/719)) ([#721](https://github.com/paruff/uFawkesObs/issues/721)) ([9549e36](https://github.com/paruff/uFawkesObs/commit/9549e3606444a5e77edf6f77fc4785eff70ebe7a))
+* **docs:** interfaces, pipeline invariants and make commands ([#713](https://github.com/paruff/uFawkesObs/issues/713)) ([4efb3aa](https://github.com/paruff/uFawkesObs/commit/4efb3aa926681e978685f9b771e3908765ab3e1a))
+* **dora:** decide pr and incident events stay at the next major ([#758](https://github.com/paruff/uFawkesObs/issues/758)) ([0fb5d2e](https://github.com/paruff/uFawkesObs/commit/0fb5d2e0dac6ddbdafe694bd2015ca48bb872336))
+* retire docs/product (spec, design, discovery, tasks) ([#707](https://github.com/paruff/uFawkesObs/issues/707)) ([b820835](https://github.com/paruff/uFawkesObs/commit/b8208355999bd723a49341ee791053f12df415ac))
+* **review:** suite review rules and the Project 7 workflow ([#688](https://github.com/paruff/uFawkesObs/issues/688)) ([57828de](https://github.com/paruff/uFawkesObs/commit/57828de957de3259b9e4efb4684671f00d79fbe9))
+
+
+### Chores
+
+* delete scripts/emit-dora-event.sh ([#734](https://github.com/paruff/uFawkesObs/issues/734)) ([#741](https://github.com/paruff/uFawkesObs/issues/741)) ([f115fd9](https://github.com/paruff/uFawkesObs/commit/f115fd993cb6a80b1c18f80126d36aeae943e146))
+* **infra:** add make validate as the local gate ([#712](https://github.com/paruff/uFawkesObs/issues/712)) ([#725](https://github.com/paruff/uFawkesObs/issues/725)) ([351e33c](https://github.com/paruff/uFawkesObs/commit/351e33c11fdeb9bc41fffefb532cc4db54a837e0))
+* **otel:** delete dead config/otel/collector-dora.yaml ([#750](https://github.com/paruff/uFawkesObs/issues/750)) ([#754](https://github.com/paruff/uFawkesObs/issues/754)) ([2db026d](https://github.com/paruff/uFawkesObs/commit/2db026dc17878b6e151313bd07a368111c0be38f))
+* **release:** drop release-as 1.0.1 now that v1.0.1 has shipped ([#708](https://github.com/paruff/uFawkesObs/issues/708)) ([6788e9d](https://github.com/paruff/uFawkesObs/commit/6788e9d6d3a05e03d2287a4d8422830f5a2d48f2))
+
 ## [1.0.1](https://github.com/paruff/uFawkesObs/compare/v1.0.0...v1.0.1) (2026-10-18)
 
 
