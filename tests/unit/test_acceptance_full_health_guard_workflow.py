@@ -39,7 +39,13 @@ def test_acceptance_full_health_guard_can_open_issue_alerts(
     workflow = _load_workflow(workflow_path)
 
     assert workflow["permissions"]["issues"] == "write"
-    step = workflow["jobs"]["acceptance-full-health"]["steps"][0]
+    # The script step, found by what it runs rather than its position: the job also
+    # carries job-start and job-finish stamp steps.
+    step = next(
+        st
+        for st in workflow["jobs"]["acceptance-full-health"]["steps"]
+        if "script" in (st.get("with") or {})
+    )
     script = step["with"]["script"]
     assert "Acceptance Full (Post-Merge) health guard" in script
     assert "consecutiveFailureThreshold = 2" in script

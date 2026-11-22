@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -69,9 +69,7 @@ class SloMeasurement:
     slo_threshold_ms: float
     passed: bool
     extra: dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
     def summary(self) -> str:
@@ -756,10 +754,16 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   such agent, so it is empty by construction. It turned Acceptance Full red
 #   on main from 08dd43f (#673), when it was added. Remove from this set if
 #   CI ever gets a host-metrics source.
+# - Woodpecker CI: charts the Woodpecker server's /metrics, scraped only in
+#   suite mode with a bearer token (docs/ai-sdlc/woodpecker-scrape/plan.md).
+#   The CI stack has no Woodpecker server, so it is empty by construction. It
+#   turned Acceptance Full red on main from dbca628 (#753). Remove from this
+#   set if CI ever gets a Woodpecker source.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
         "IoT Devices & MQTT",
         "Host Metrics (OTLP agents)",
+        "Woodpecker CI",
     }
 )
 

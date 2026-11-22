@@ -86,7 +86,7 @@ adopters to an unfinished repo.
 plane, for the small-team target audience.** Rationale: uFawkesObs's own
 code already treats Res as strictly optional (opt-in `resource-plane`
 profile, SQLite default) — the small-team persona this repo's
-`docs/product/discovery-draft.md`/`docs/PATH_TO_LATE_BETA.md` target
+`docs/PATH_TO_LATE_BETA.md` targets
 (3–15 person teams) may not need a shared Postgres/Valkey/Traefik/Authelia
 resource plane at all; that need may only really bite at Fawkes
 (Kubernetes, larger-team) scale. Under this option, the README's family

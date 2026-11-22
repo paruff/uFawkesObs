@@ -27,19 +27,19 @@ def test_breach_maps_to_intent_title_in_affected_repo(project_root, tmp_path):
     r = _run(
         project_root,
         tmp_path,
-        [{"metric": {"team_id": "paruff/uFawkesPipe", "metric": "dora_cfr_pct"}}],
+        [{"metric": {"team_id": "paruff/uFawkesPipe", "metric": "dora_cfr_ratio"}}],
     )
     assert r.returncode == 0
     repo, title = r.stdout.strip().split("\t")
     assert repo == "paruff/uFawkesPipe"
-    assert title.startswith("intent: dora_cfr_pct breached")
+    assert title.startswith("intent: dora_cfr_ratio breached")
 
 
 def test_bare_team_id_gets_default_owner(project_root, tmp_path):
     r = _run(
         project_root,
         tmp_path,
-        [{"metric": {"team_id": "demo", "metric": "dora_cfr_pct"}}],
+        [{"metric": {"team_id": "demo", "metric": "dora_cfr_ratio"}}],
         "--default-owner",
         "acme",
     )
@@ -50,7 +50,7 @@ def test_unsafe_team_id_is_skipped(project_root, tmp_path):
     r = _run(
         project_root,
         tmp_path,
-        [{"metric": {"team_id": "x/y; rm -rf /", "metric": "dora_cfr_pct"}}],
+        [{"metric": {"team_id": "x/y; rm -rf /", "metric": "dora_cfr_ratio"}}],
     )
     assert r.returncode == 0
     assert r.stdout.strip() == "no sigma-band breaches firing"
@@ -105,7 +105,12 @@ def test_live_path_creates_issue_once_per_breach(project_root, tmp_path):
                 "status": "success",
                 "data": {
                     "result": [
-                        {"metric": {"team_id": "paruff/demo", "metric": "dora_cfr_pct"}}
+                        {
+                            "metric": {
+                                "team_id": "paruff/demo",
+                                "metric": "dora_cfr_ratio",
+                            }
+                        }
                     ]
                 },
             }
@@ -121,4 +126,4 @@ def test_live_path_creates_issue_once_per_breach(project_root, tmp_path):
     out = log.read_text()
     assert out.count("issue create") == 1
     assert "--repo paruff/demo" in out and "--label intent" in out
-    assert "sigma-breach: paruff/demo dora_cfr_pct" in out
+    assert "sigma-breach: paruff/demo dora_cfr_ratio" in out

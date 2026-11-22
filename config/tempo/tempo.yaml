@@ -236,6 +236,9 @@ compactor:
     retention_concurrency: 10
 
 query_frontend:
+  # Serves /api/mcp (read-only MCP) for agents; trace data reaches an LLM provider (#747).
+  mcp_server:
+    enabled: true
   search:
     duration_slo: 5s
     throughput_bytes_slo: 100000000

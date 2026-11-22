@@ -282,6 +282,10 @@ class TestPushMetrics:
 
             # Verify PUT was called with correct URL and Prometheus text payload
             mock_session.put.assert_called()
+            # #729: the _ratio twins ride the push path too.
+            payload = mock_session.put.call_args.kwargs["data"]
+            assert 'dora_cfr_ratio{team_id="org/repo",tier="high"} 0.05' in payload
+            assert "dora_rework_rate_ratio{" in payload
 
     @pytest.mark.asyncio
     async def test_push_metrics_job_name_has_no_slash_in_url(self):

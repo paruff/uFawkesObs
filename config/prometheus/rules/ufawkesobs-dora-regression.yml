@@ -212,8 +212,8 @@
 #   - dora_deployment_frequency_per_week (gauge)
 #   - dora_lead_time_p50_hours / dora_lead_time_p95_hours (gauge)
 #   - dora_fdrt_p50_hours (gauge)
-#   - dora_cfr_pct (gauge)
-#   - dora_rework_rate_pct (gauge)
+#   - dora_cfr_ratio (gauge)
+#   - dora_rework_rate_ratio (gauge)
 #
 # Merged from uFawkesDORA's alerts/dora-regression.yaml (issue #204).
 #
@@ -322,14 +322,14 @@ groups:
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#fdrt-spike-absent"
 
       - alert: DORARegressionCFRSpike
-        # dora_cfr_pct is a 0-1 ratio despite the name (see
+        # dora_cfr_ratio is a 0-1 ratio (the old _pct name was misleading; see
         # ufawkesobs-dora-metrics.yml) -- the +5/+3 thresholds here
         # previously meant "5/3 percentage points" but were being added
         # directly to a 0-1 value, making both alerts structurally unable
         # to ever fire (#281). +0.05 = 5 percentage points on the real
         # ratio scale.
         expr: |
-          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 0.05)
+          dora_cfr_ratio > (avg_over_time(dora_cfr_ratio[30d]) + 0.05)
         for: 24h
         labels:
           severity: warning
@@ -343,7 +343,7 @@ groups:
 
       - alert: DORARegressionCFRSpikeAbsent
         expr: |
-          absent(dora_cfr_pct) and on() (up{job="dora-api"} == 1)
+          absent(dora_cfr_ratio) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -351,15 +351,15 @@ groups:
         annotations:
           summary: "CFR metric missing"
           description: |
-            dora_cfr_pct is absent — dora-api may not be computing or being
+            dora_cfr_ratio is absent — dora-api may not be computing or being
             scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-spike-absent"
 
       - alert: DORARegressionReworkRateClimb
-        # Same fix as DORARegressionCFRSpike above -- dora_rework_rate_pct
+        # Same fix as DORARegressionCFRSpike above -- dora_rework_rate_ratio
         # is also a 0-1 ratio (#281); +0.03 = 3 percentage points.
         expr: |
-          dora_rework_rate_pct > (avg_over_time(dora_rework_rate_pct[30d]) + 0.03)
+          dora_rework_rate_ratio > (avg_over_time(dora_rework_rate_ratio[30d]) + 0.03)
         for: 48h
         labels:
           severity: warning
@@ -373,7 +373,7 @@ groups:
 
       - alert: DORARegressionReworkRateClimbAbsent
         expr: |
-          absent(dora_rework_rate_pct) and on() (up{job="dora-api"} == 1)
+          absent(dora_rework_rate_ratio) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -381,19 +381,19 @@ groups:
         annotations:
           summary: "Rework Rate metric missing"
           description: |
-            dora_rework_rate_pct is absent — dora-api may not be computing or
+            dora_rework_rate_ratio is absent — dora-api may not be computing or
             being scraped. Check up{job="dora-api"} and the dora-api logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#rework-rate-climb-absent"
 
-      # Rollback trigger (#502). dora_cfr_pct is a 0-1 ratio. Fires only when
+      # Rollback trigger (#502). dora_cfr_ratio is a 0-1 ratio. Fires only when
       # CFR is above 30% AND 10 points over the 30-day baseline, so a
       # perpetually noisy team does not trigger rollbacks. The `action` label
       # marks it for .github/workflows/cfr-rollback.yml, which polls it.
       - alert: DORACFRRegressionRollback
         expr: |
-          dora_cfr_pct > 0.30
+          dora_cfr_ratio > 0.30
           and
-          dora_cfr_pct > (avg_over_time(dora_cfr_pct[30d]) + 0.10)
+          dora_cfr_ratio > (avg_over_time(dora_cfr_ratio[30d]) + 0.10)
         for: 15m
         labels:
           severity: critical
@@ -408,7 +408,7 @@ groups:
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-rollback"
 
       - alert: DORACFRRegressionRollbackAbsent
-        expr: absent(dora_cfr_pct) and on() (up{job="dora-api"} == 1)
+        expr: absent(dora_cfr_ratio) and on() (up{job="dora-api"} == 1)
         for: 1h
         labels:
           severity: warning
@@ -416,5 +416,5 @@ groups:
         annotations:
           summary: "CFR metric missing — rollback trigger cannot evaluate"
           description: |
-            dora_cfr_pct is absent; check up{job="dora-api"} and its logs.
+            dora_cfr_ratio is absent; check up{job="dora-api"} and its logs.
           runbook_url: "https://github.com/paruff/uFawkesObs/blob/main/docs/runbooks/dora.md#cfr-rollback-absent"

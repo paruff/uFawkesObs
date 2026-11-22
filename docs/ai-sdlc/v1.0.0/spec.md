@@ -1,7 +1,7 @@
 # Spec: uFawkesObs v1.0.0
 
 **Traces to:** [`intent.md`](intent.md) | **Plan:** [`plan.md`](plan.md)
-**Status:** Draft | **Revision:** 1
+**Status:** Released (`v1.0.0` on 2026-10-14, `v1.0.1` on 2026-10-18) | **Revision:** 2
 
 ## Requirements
 
@@ -17,13 +17,15 @@
 | REL-08 | The GitHub Release, the ufawkes.dev Obs page, the dev.to post, and the LinkedIn post all show the same version and link to the same release notes | Suite AC-OBS-04 |
 
 The existing functional and non-functional requirements (OBS-F##, OBS-N##)
-in [`docs/product/spec.md`](../../product/spec.md) still apply. 1.0 adds no
+in the product spec as of the `v1.0.0` tag
+([`docs/product/spec.md` at v1.0.0](https://github.com/paruff/uFawkesObs/blob/v1.0.0/docs/product/spec.md)) still apply, except
+OBS-F22 and OBS-F23, which ADR-007 superseded. The file was retired from main
+on 2026-11-09. 1.0 adds no
 new product features.
 
 ## Design
 
 1.0 changes no architecture. Topology, principles, and decisions stay as
-described in [`docs/product/design.md`](../../product/design.md),
 [`docs/ARCHITECTURE.md`](../../ARCHITECTURE.md), and
 [`docs/adr/`](../../adr/). What 1.0 adds is the contract below and the
 semver rules that apply to it.
@@ -35,6 +37,15 @@ This table was re-verified against `origin/main` at `155ef5a`
 services, their profiles, every published port and all 7 `.env.example`
 variables match. The tagged `compose.yaml` and `.env.example` remain
 authoritative.
+
+Read again at `d34fd58` on 2026-11-13, from the files and without running
+`docker compose config`: `compose.yaml` defines the 10 services in the table
+below and `.env.example` has the 6 variables listed, not 11 and 7.
+`compose.yaml` also reads two variables that `.env.example` doesn't list,
+each with a default: `DATABASE_URL` (`dora-api`) and
+`OTEL_METRIC_EXPORT_INTERVAL` (`telemetry-generator`). Whether they join the
+contract is open. The DORA ingestion contract's own gaps are in
+[`../dora-contract/spec.md`](../dora-contract/spec.md).
 
 **Compose services and published ports**
 
@@ -66,6 +77,34 @@ authoritative.
 
 Makefile targets and compose profile names are **not** in the contract
 yet; see intent open question 2.
+
+## Interfaces
+
+The public contract above is what a user of the stack depends on. These are
+uFawkesObs's rows in the suite's [cross-repo interface contracts](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#cross-repo-interface-contracts):
+
+| Contract | Role | Defined in |
+|---|---|---|
+| DORA event ingestion: endpoints, event types, required fields | Provides, to uFawkesPipe (`notify-obs`) and uFawkesAI (`dora-events` emitter) | [`docs/CONTRACTS.md`](../../CONTRACTS.md) §1 |
+| OTLP receivers (`4317` gRPC, `4318` HTTP) and metric routing | Provides, to uFawkesPipe | [`docs/CONTRACTS.md`](../../CONTRACTS.md) §2 |
+| Compose surface: services, published ports, `.env.example` variables | Provides, to uFawkesDojo labs and suite mode | "Public contract" and "Semver rules" above |
+| Release tags | Provides, to uFawkesDojo (labs pin a tag, never `main`) | GitHub Releases |
+| Reusable workflows (`reusable-main-ci-guard`, `-preflight`, `-lint`, `-security-scanning`, `-dependency-review`, `-build`) | Consumes, from uFawkesPipe | uFawkesPipe `README.md` |
+| `ufawkes-ci` CI job image and `fawkes-space` devcontainer image | Consumes, from uFawkesPipe and uFawkesAI | Pinned by digest |
+
+The semver rules cover the Compose surface only. A change to a DORA endpoint,
+event type or required field breaks uFawkesPipe and uFawkesAI, so it is a
+**major** change too, and uFawkesPipe's mirror
+(`contracts/dora-events/*.schema.json`) changes in the same release window.
+
+## Pipeline invariants
+
+The [suite pipeline invariants](https://github.com/paruff/uFawkes.dev/blob/main/docs/ai-sdlc/suite-release/spec.md#pipeline-invariants) apply here unchanged. This repo adds:
+
+- A push to `main` that touches `config/**`, `compose.yaml`, `.env.example` or `dashboards/**` deploys to a real host over SSH (`INTENT.md`). Those paths are production-facing.
+- Every service has a real healthcheck, and no image runs on `latest`.
+- `Security`, `Integration Tests` and `🛡️ Main CI Health` are required checks on `main`, beside the hook job and `🔗 Artifact Chain`.
+- A fix is verified against the running stack, not against parsed YAML (`docs/TESTING_PYRAMID.md`).
 
 ## Concerns
 

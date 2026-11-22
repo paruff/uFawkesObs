@@ -62,7 +62,7 @@ This runbook covers self-monitoring alerts for the uFawkesObs platform.
 
 ### What to check
 
-- `otelcol_processor_dropped_spans` and `otelcol_exporter_send_failed_spans`
+- `otelcol_receiver_refused_*`, `otelcol_processor_memory_limiter_refused_*` and `otelcol_exporter_send_failed_*` (spans, metric points, log records)
 - OTel Collector logs for queue overflow or exporter failures
 - Downstream endpoint health (`tempo`, `loki`, `prometheus`)
 

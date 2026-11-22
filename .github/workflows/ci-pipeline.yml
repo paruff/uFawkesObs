@@ -27,7 +27,7 @@ jobs:
     uses: paruff/ufawkespipe/.github/workflows/reusable-preflight.yml@271154e53badbd96f3ef173f92ecb06545fc1cfb # v1.16.0-beta.1
     with:
       # CI's hook stages run in the suite's CI image (ci-pipeline spec R4).
-      ci-image: ghcr.io/paruff/ufawkes-ci@sha256:e85db8b3554da7c3362303d0e1e9681997d78093269b641e3535989f9c66f4da
+      ci-image: ghcr.io/paruff/ufawkes-ci@sha256:575c812d55ca8f9c4faa5afb77dbb721969f8e866448fe7641e835be79057ee0
       commit-format: ${{ startsWith(github.head_ref, 'copilot/') && 'none' || 'conventional' }}
 
   # ─── Stage 1: Static Analysis (Lint) ────────────────────────────────────
@@ -69,7 +69,10 @@ jobs:
     with:
       validate-prometheus: true
       validate-otel: true
-      validate-tempo: true
+      # Off: the shared check runs a bare `-config.verify`, which fails on Tempo's
+      # intentional MCP-enabled warning (#747). ci-quality's `make lint-config`
+      # validates Tempo via scripts/validate-tempo.sh, tolerating only that warning.
+      validate-tempo: false
       validate-grafana: true
       fail-on-latest: true
       enable-coverage-gate: false
@@ -81,6 +84,13 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - name: Check results
         run: |
           echo "=== Pipeline Results ==="
@@ -103,7 +113,7 @@ jobs:
           echo ""
           echo "✅ Pipeline PASSED"
 
-      - name: DORA pipeline finish
+      - name: job-finish
         if: always()
         run: |
           echo "pipeline-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"

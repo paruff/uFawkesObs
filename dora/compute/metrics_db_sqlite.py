@@ -57,6 +57,29 @@ def _percentile_cont(values: list[float], p: float) -> float | None:
     return s[lo] + (rank - lo) * (s[hi] - s[lo])
 
 
+def _event_time(meta: dict[str, Any], key: str, recorded_at: str) -> datetime:
+    """The event's own time as naive UTC; ``recorded_at`` (ingest time) only
+    when the event carries none or an unparseable one (DC-04)."""
+    try:
+        t = datetime.fromisoformat(meta[key])
+    except (KeyError, TypeError, ValueError):
+        return datetime.fromisoformat(recorded_at)
+    return t.astimezone(UTC).replace(tzinfo=None) if t.tzinfo else t
+
+
+def _in_window(
+    metadata: str | None, key: str, recorded_at: str, cutoff: datetime
+) -> datetime | None:
+    """The event time when it falls inside the window, else None."""
+    at = _event_time(json.loads(metadata) if metadata else {}, key, recorded_at)
+    return at if at >= cutoff else None
+
+
+def _compute_environments() -> tuple[str, ...]:
+    raw = os.environ.get("DORA_COMPUTE_ENVIRONMENTS", "production")
+    return tuple(e.strip() for e in raw.split(",") if e.strip()) or ("production",)
+
+
 def _sqlite_path(dsn: str) -> str:
     """Translate a sqlite:// DSN into a path aiosqlite understands."""
     if dsn in ("sqlite://:memory:", ":memory:"):
@@ -107,9 +130,8 @@ class MetricsDB:
 
     # ── Row fetch helpers ───────────────────────────────────────────────────
 
-    def _cutoff(self, window_days: int) -> str:
-        cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=window_days)
-        return cutoff.isoformat(" ")
+    def _cutoff(self, window_days: int) -> datetime:
+        return datetime.now(UTC).replace(tzinfo=None) - timedelta(days=window_days)
 
     async def _deployment_rows(
         self,
@@ -117,27 +139,37 @@ class MetricsDB:
         team: str | None,
         outcomes: tuple[str, ...] | None = None,
     ) -> list[tuple]:
-        """Fetch (id, source, outcome, recorded_at, metadata) for deployment events.
+        """Fetch (id, source, outcome, deployed_at, metadata) for deployment events.
 
-        ``id`` is included as an ordering tiebreaker (#286) — SQLite's
-        ``CURRENT_TIMESTAMP`` has 1-second resolution, so two deployments
-        of the same source landing in the same second is realistic under
-        burst load, and ``id`` (autoincrement, insertion order) is the
-        only unambiguous way to know which one is actually "next".
+        The fourth item is the event's ``deployed_at`` as a naive-UTC ISO
+        string (ingest time if absent), and rows are windowed and ordered on
+        it, so a backfill lands in the window it happened in (DC-04). ``id``
+        is the ordering tiebreaker (#286): two deployments of one source in
+        the same second are realistic, and ``id`` is insertion order.
         """
+        envs = _compute_environments()
         sql = (
             "SELECT id, source, outcome, recorded_at, metadata FROM raw_events "
-            "WHERE event_type = 'deployment' AND recorded_at >= ?"
+            "WHERE event_type = 'deployment' "
+            f"AND COALESCE(json_extract(metadata, '$.environment'), 'production') IN ({','.join('?' * len(envs))})"
         )
-        params: list[Any] = [self._cutoff(window_days)]
+        params: list[Any] = list(envs)
         if outcomes:
             sql += f" AND outcome IN ({','.join('?' * len(outcomes))})"
             params.extend(outcomes)
         if team and team != "all":
             sql += " AND source = ?"
             params.append(team)
+        # shortcut: the window is applied in Python because deployed_at carries
+        # offsets SQLite can't compare; upgrade to an indexed column if the table gets large.
         cursor = await self._live.execute(sql, params)
-        return await cursor.fetchall()
+        cutoff = self._cutoff(window_days)
+        rows = []
+        for row_id, source, outcome, recorded_at, metadata in await cursor.fetchall():
+            at = _in_window(metadata, "deployed_at", recorded_at, cutoff)
+            if at:
+                rows.append((row_id, source, outcome, at.isoformat(" "), metadata))
+        return rows
 
     # ── Metric queries ──────────────────────────────────────────────────────
 
@@ -171,21 +203,20 @@ class MetricsDB:
             deployed_at = meta.get("deployed_at")
             if not deployed_at:
                 continue
-            deployed = datetime.fromisoformat(deployed_at.replace("Z", "+00:00"))
-            if meta.get("first_commit_at"):
-                started = datetime.fromisoformat(
-                    meta["first_commit_at"].replace("Z", "+00:00")
-                )
-                exact.setdefault(source, []).append(
-                    (deployed - started).total_seconds() / 3600
-                )
-            elif meta.get("pr_merged_at"):
-                started = datetime.fromisoformat(
-                    meta["pr_merged_at"].replace("Z", "+00:00")
-                )
-                proxy.setdefault(source, []).append(
-                    (deployed - started).total_seconds() / 3600
-                )
+            start_key = (
+                "first_commit_at" if meta.get("first_commit_at") else "pr_merged_at"
+            )
+            if not meta.get(start_key):
+                continue
+            try:
+                deployed = datetime.fromisoformat(deployed_at)
+                started = datetime.fromisoformat(meta[start_key])
+                hours = (deployed - started).total_seconds() / 3600
+            except (ValueError, TypeError):
+                # Rows stored before offsets were required: skip, never abort the cycle.
+                continue
+            target = exact if start_key == "first_commit_at" else proxy
+            target.setdefault(source, []).append(hours)
 
         result: dict[str, dict[str, Any]] = {}
         for source, values in exact.items():
@@ -217,11 +248,7 @@ class MetricsDB:
         """Failure Deployment Recovery Time: gap from a failed deploy to the
         next deploy of the same source, when that next deploy succeeded.
 
-        #286: ordered by (recorded_at, id) rather than recorded_at alone —
-        SQLite's CURRENT_TIMESTAMP has 1-second resolution, so two
-        deployments of the same source landing in the same second is
-        realistic under burst load, and id (insertion order) is the only
-        unambiguous tiebreaker for which one is actually "next".
+        Ordered by (deployed_at, id): ``id`` breaks ties (#286).
         """
         rows = await self._deployment_rows(window_days, team)
         by_source: dict[str, list[tuple[int, str, str]]] = {}
@@ -231,17 +258,21 @@ class MetricsDB:
         gaps: dict[str, list[float]] = {}
         for source, events in by_source.items():
             events.sort(key=lambda e: (e[2], e[0]))
-            for i, (_row_id, outcome, recorded_at) in enumerate(events[:-1]):
-                if outcome not in ("failure", "rollback"):
-                    continue
-                _next_row_id, next_outcome, next_recorded_at = events[i + 1]
-                if next_outcome != "success":
-                    continue
-                gap_hours = (
-                    datetime.fromisoformat(next_recorded_at)
-                    - datetime.fromisoformat(recorded_at)
-                ).total_seconds() / 3600
-                gaps.setdefault(source, []).append(gap_hours)
+            # Recovery runs from the first failure of an outage to the next
+            # success, so a rollback after a failed canary does not restart it (AF-03).
+            failed_at: str | None = None
+            for _row_id, outcome, recorded_at in events:
+                if outcome in ("failure", "rollback"):
+                    failed_at = failed_at or recorded_at
+                elif outcome == "success" and failed_at is not None:
+                    gaps.setdefault(source, []).append(
+                        (
+                            datetime.fromisoformat(recorded_at)
+                            - datetime.fromisoformat(failed_at)
+                        ).total_seconds()
+                        / 3600
+                    )
+                    failed_at = None
 
         return [
             {"team_id": source, "p50_fdrt_hours": _percentile_cont(values, 0.50)}
@@ -253,12 +284,20 @@ class MetricsDB:
     ) -> list[dict[str, Any]]:
         """Change Failure Rate: % of deployments that fail or rollback."""
         rows = await self._deployment_rows(window_days, team)
-        totals: dict[str, int] = {}
-        failures: dict[str, int] = {}
-        for _id, source, outcome, _recorded_at, _metadata in rows:
-            totals[source] = totals.get(source, 0) + 1
-            if outcome in ("failure", "rollback"):
-                failures[source] = failures.get(source, 0) + 1
+        # A change is a commit: its failed deploy and its rollback are one
+        # failed change, not two (AF-03).
+        changes: dict[str, dict[str, bool]] = {}
+        for row_id, source, outcome, _recorded_at, metadata in rows:
+            try:
+                sha = json.loads(metadata or "{}").get("commit_sha")
+            except (TypeError, ValueError):
+                sha = None
+            failed = outcome in ("failure", "rollback")
+            by_change = changes.setdefault(source, {})
+            key = sha or f"row-{row_id}"
+            by_change[key] = by_change.get(key, False) or failed
+        totals = {source: len(c) for source, c in changes.items()}
+        failures = {source: sum(c.values()) for source, c in changes.items()}
         return [
             {"team_id": source, "cfr": failures.get(source, 0) / total}
             for source, total in sorted(totals.items())
@@ -274,11 +313,14 @@ class MetricsDB:
         """
         deploy_rows = await self._deployment_rows(window_days, team)
         cursor = await self._live.execute(
-            "SELECT source, metadata FROM raw_events "
-            "WHERE event_type = 'rework' AND recorded_at >= ?",
-            [self._cutoff(window_days)],
+            "SELECT source, recorded_at, metadata FROM raw_events "
+            "WHERE event_type = 'rework'"
         )
-        rework_rows = await cursor.fetchall()
+        cutoff = self._cutoff(window_days)
+        rework_rows = []
+        for source, recorded_at, metadata in await cursor.fetchall():
+            if _in_window(metadata, "triggered_at", recorded_at, cutoff):
+                rework_rows.append((source, metadata))
 
         rework_by_source: dict[str, list[dict]] = {}
         for source, metadata in rework_rows:

@@ -223,9 +223,9 @@
 # served as Prometheus gauges labeled by team_id/tier:
 #   - dora_deployment_frequency_per_week
 #   - dora_lead_time_p50_hours
-#   - dora_cfr_pct       (0-1 ratio despite the name — see metrics.py:420)
+#   - dora_cfr_ratio (0-1 ratio)
 #   - dora_fdrt_p50_hours
-#   - dora_rework_rate_pct (0-1 ratio despite the name — see metrics.py:425)
+#   - dora_rework_rate_ratio (0-1 ratio)
 #
 # DORA 2025/2026 Five Key Metrics:
 # 1. Deployment Frequency
@@ -274,16 +274,16 @@ groups:
           avg(dora_lead_time_p50_hours)
 
       # Change Failure Rate: org-wide average CFR across teams (already a
-      # 0-1 ratio in dora_cfr_pct, matching this rule's own "ratio30d" name
+      # 0-1 ratio in dora_cfr_ratio, matching this rule's own "ratio30d" name
       # — do not multiply by 100 here, that's a display-time concern).
       - record: dora:change_failure_rate:ratio30d
         expr: |
-          avg(dora_cfr_pct)
+          avg(dora_cfr_ratio)
           or vector(0)
 
       - record: dora:change_failure_rate:raw_ratio30d
         expr: |
-          avg(dora_cfr_pct)
+          avg(dora_cfr_ratio)
 
       # Failed Deployment Recovery Time (FDRT): org-wide average of each
       # team's p50 recovery time.
@@ -305,12 +305,12 @@ groups:
       # >10% and >20% respectively.
       - record: dora:rework_rate:ratio
         expr: |
-          avg(dora_rework_rate_pct)
+          avg(dora_rework_rate_ratio)
           or vector(0)
 
       - record: dora:rework_rate:raw_ratio
         expr: |
-          avg(dora_rework_rate_pct)
+          avg(dora_rework_rate_ratio)
 
   # DORA alerting rules
   # All alerts have category: dora label
@@ -331,9 +331,9 @@ groups:
           severity: warning
           category: dora
         annotations:
-          summary: "Deployment frequency is below 1 per 30 days"
+          summary: "Deployment frequency is below 1 per week"
           description: |
-            Deployment frequency has dropped below 1 deployment per 30 days.
+            Deployments per week, summed across teams over the 30-day window, are below 1.
             This may indicate stalled development or deployment pipeline issues.
             Only fires while DORA data is present; pipeline gaps raise
             DORADeploymentFrequencyLowAbsent instead.

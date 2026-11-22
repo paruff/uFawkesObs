@@ -487,7 +487,7 @@ When a DORA alert fires, first confirm whether the metric is genuinely low or ab
 
 ### What to check
 
-- `absent(dora_cfr_pct)`
+- `absent(dora_cfr_ratio)`
 - DORA profile and deployment outcome stream
 - `dora-api` scrape health
 
@@ -536,7 +536,7 @@ When a DORA alert fires, first confirm whether the metric is genuinely low or ab
 
 ### What to check
 
-- `absent(dora_rework_rate_pct)`
+- `absent(dora_rework_rate_ratio)`
 - the DORA profile and compute pipeline
 - `dora-api` scrape health
 
@@ -554,7 +554,11 @@ When a DORA alert fires, first confirm whether the metric is genuinely low or ab
 
 ## CFR Rollback
 
-`DORACFRRegressionRollback` fires when `dora_cfr_pct` (a 0-1 ratio) is above 0.30 **and** more than 0.10
+> `dora_cfr_ratio` and `dora_rework_rate_ratio` publish the same 0-1 values as `dora_cfr_pct` and
+> `dora_rework_rate_pct`. Write new queries against the `_ratio` names; the `_pct` names go at the next
+> major. The alert rules and dashboards already use `_ratio`.
+
+`DORACFRRegressionRollback` fires when `dora_cfr_ratio` (a 0-1 ratio) is above 0.30 **and** more than 0.10
 above its 30-day average for 15m.
 
 `.github/workflows/cfr-rollback.yml` polls the alert every 10 minutes from the
@@ -574,7 +578,7 @@ git's perspective (no push, no revert), like the rollback job in `deploy.yml`.
 
 ## CFR Rollback Absent
 
-`dora_cfr_pct` is missing, so the rollback trigger cannot evaluate. Check `up{job="dora-api"}` and the dora-api logs.
+`dora_cfr_ratio` is missing, so the rollback trigger cannot evaluate. Check `up{job="dora-api"}` and the dora-api logs.
 
 <a id="sigma-band-breach"></a>
 

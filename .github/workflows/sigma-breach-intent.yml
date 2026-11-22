@@ -23,6 +23,13 @@ jobs:
     if: vars.SIGMA_INTENT_ENABLED == 'true'
     runs-on: [self-hosted, synology]
     steps:
+      - name: job-start
+        run: |
+          echo "job-start:$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha:${{ github.sha }}"
+          echo "workflow:${{ github.workflow }}"
+          echo "job:${{ github.job }}"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Open intent issues
@@ -30,3 +37,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SUITE_ISSUES_TOKEN }}
           PROMETHEUS_URL: ${{ vars.PROMETHEUS_URL || 'http://localhost:9090' }}
         run: ./scripts/sigma-breach-intent.sh --prometheus-url "${PROMETHEUS_URL}"
+
+      - name: job-finish
+        if: always()
+        run: echo "job-finish:$(date -u +%Y-%m-%dT%H:%M:%SZ)"

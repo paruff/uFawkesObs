@@ -10,6 +10,8 @@ Covers edge cases missed by the schema validation tests:
   POST /event handler calls had zero direct coverage before this.
 """
 
+import pytest
+
 from dora.ingestion.api.validator import (
     ValidationDetail,
     _check_date_time,
@@ -191,3 +193,74 @@ class TestValidatePayloads:
 
     def test_empty_list_returns_empty_list(self):
         assert validate_payloads([]) == []
+
+
+class TestAuditFindings:
+    """AF-06 09 10 and AF-02: rules the schema cannot state."""
+
+    @staticmethod
+    def _deployment(**over):
+        base = {
+            "schema_version": "1.0",
+            "event_type": "deployment",
+            "repo": "acme/shop",
+            "service": "web",
+            "environment": "production",
+            "commit_sha": "a" * 40,
+            "deployed_at": "2024-01-15T10:30:00Z",
+            "status": "success",
+            "pipeline_url": "https://ci.example.com/run/1",
+        }
+        return {**base, **over}
+
+    def test_missing_field_is_named_in_loc(self):
+        payload = self._deployment()
+        del payload["commit_sha"]
+        detail = validate_payload(payload).to_error_response()["detail"]
+        assert ["body", "commit_sha"] in [d["loc"] for d in detail]
+
+    def test_pipeline_url_must_be_a_uri(self):
+        assert not validate_payload(self._deployment(pipeline_url="not a uri")).valid
+        assert validate_payload(self._deployment()).valid
+
+    def test_future_deployment_rejected(self):
+        assert not validate_payload(
+            self._deployment(deployed_at="2999-01-01T00:00:00Z")
+        ).valid
+
+    def test_first_commit_after_deploy_rejected(self):
+        assert not validate_payload(
+            self._deployment(first_commit_at="2024-01-15T11:00:00Z")
+        ).valid
+
+    def test_retry_with_extra_optional_field_hashes_the_same(self):
+        from dora.ingestion.api.idempotency import payload_hash
+
+        a = self._deployment()
+        assert payload_hash(a) == payload_hash({**a, "deploy_duration_seconds": 42})
+        assert payload_hash(a) != payload_hash({**a, "status": "failed"})
+
+
+class TestDeploymentIntent:
+    """deployment_intent is optional; only planned | unplanned_rework (#728)."""
+
+    @pytest.mark.parametrize("intent", ["planned", "unplanned_rework"])
+    def test_known_intent_accepted(self, intent):
+        assert validate_payload(
+            TestAuditFindings._deployment(deployment_intent=intent)
+        ).valid
+
+    def test_intent_with_schema_version_1_1_accepted(self):
+        assert validate_payload(
+            TestAuditFindings._deployment(
+                schema_version="1.1", deployment_intent="planned"
+            )
+        ).valid
+
+    def test_absent_intent_accepted(self):
+        assert validate_payload(TestAuditFindings._deployment()).valid
+
+    def test_unknown_intent_rejected(self):
+        assert not validate_payload(
+            TestAuditFindings._deployment(deployment_intent="hotfix")
+        ).valid
