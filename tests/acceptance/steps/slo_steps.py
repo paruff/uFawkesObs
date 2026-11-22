@@ -754,10 +754,16 @@ def query_dashboard_panels(stack: ObservabilityStack) -> None:
 #   such agent, so it is empty by construction. It turned Acceptance Full red
 #   on main from 08dd43f (#673), when it was added. Remove from this set if
 #   CI ever gets a host-metrics source.
+# - Woodpecker CI: charts the Woodpecker server's /metrics, scraped only in
+#   suite mode with a bearer token (docs/ai-sdlc/woodpecker-scrape/plan.md).
+#   The CI stack has no Woodpecker server, so it is empty by construction. It
+#   turned Acceptance Full red on main from dbca628 (#753). Remove from this
+#   set if CI ever gets a Woodpecker source.
 KNOWN_INCOMPLETE_DASHBOARDS = frozenset(
     {
         "IoT Devices & MQTT",
         "Host Metrics (OTLP agents)",
+        "Woodpecker CI",
     }
 )
 
