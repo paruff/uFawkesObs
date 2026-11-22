@@ -109,6 +109,8 @@ class TestDoraRegressionRulesFile:
             "dora_fdrt_p50_hours",
             "dora_cfr_pct",
             "dora_rework_rate_pct",
+            "dora_cfr_ratio",
+            "dora_rework_rate_ratio",
         }
         for group in rules["groups"]:
             for rule in group["rules"]:
