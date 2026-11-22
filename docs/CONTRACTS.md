@@ -65,7 +65,7 @@ finished, and compute windows and orders on it, not on ingest time.
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `schema_version` | string | yes | Pattern `^\d+\.\d+$`, e.g. `"1.0"` |
+| `schema_version` | string | yes | Pattern `^\d+\.\d+$`, e.g. `"1.1"` (current for deployment; `"1.0"` senders stay valid) |
 | `event_type` | const `"deployment"` | yes | |
 | `repo` | string | yes | e.g. `"org/repo-name"` |
 | `service` | string | yes | Component name within the repo |
@@ -78,6 +78,7 @@ finished, and compute windows and orders on it, not on ingest time.
 | `ai_assisted` | boolean | no | |
 | `first_commit_at` | string (date-time) | no | First commit of the change set. The exact start of Lead Time; preferred over `pr_merged_at` |
 | `pr_merged_at` | string (date-time) | no | PR merge time. Lead Time start when `first_commit_at` is absent, and then the metric is flagged as a proxy |
+| `deployment_intent` | enum | no | `planned` \| `unplanned_rework`. Accepted and stored; no metric reads it yet. Added in schema `1.1` |
 
 #### `pr` — `dora/events/pr-event.schema.json`
 

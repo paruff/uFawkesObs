@@ -24,6 +24,6 @@ This plan lists no tasks. They are the sub-issues of #719 on
 | AC-01 | The contract test fails when a schema property is missing from `docs/CONTRACTS.md` §1 | `make test-unit` |
 | AC-02 | A 201 from a stack with `DORA_API_KEY` set, and a `dora_lead_time_p50_hours` sample | A real run of `example-consumer.yml`; `make up-dora` first. Server side done locally in #731: 401 without the key, 201 with it, `dora_lead_time_p50_hours 30.0`. The runner side waits for a merge and a new pinned ref |
 | AC-03 | A backfilled event lands in the window of its `deployed_at`; a staging event isn't counted | `make test-unit` |
-| AC-04 | Three answers in `spec.md`, each with an issue | Review. Confirmed by the owner on 2026-11-18; follow-ups #728, #729 and #730 |
+| AC-04 | Three answers in `spec.md`, each with an issue | Review. Confirmed by the owner on 2026-11-18; follow-ups #728, #729 and #730. #728: `TestDeploymentIntent` in `tests/unit/test_dora_validator.py` (`make test-unit`) |
 | AC-05 | Alert text and the threshold table match the rules; no panel on a missing datasource | `make test-unit`; `promtool check rules` through `make validate-configs` |
 | Not covered | Whether uFawkesPipe and uFawkesAI send the fields | paruff/uFawkesPipe#223, paruff/uFawkesAI#291, and the suite's AC-SUITE-04 |

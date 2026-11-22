@@ -10,6 +10,8 @@ Covers edge cases missed by the schema validation tests:
   POST /event handler calls had zero direct coverage before this.
 """
 
+import pytest
+
 from dora.ingestion.api.validator import (
     ValidationDetail,
     _check_date_time,
@@ -237,3 +239,28 @@ class TestAuditFindings:
         a = self._deployment()
         assert payload_hash(a) == payload_hash({**a, "deploy_duration_seconds": 42})
         assert payload_hash(a) != payload_hash({**a, "status": "failed"})
+
+
+class TestDeploymentIntent:
+    """deployment_intent is optional; only planned | unplanned_rework (#728)."""
+
+    @pytest.mark.parametrize("intent", ["planned", "unplanned_rework"])
+    def test_known_intent_accepted(self, intent):
+        assert validate_payload(
+            TestAuditFindings._deployment(deployment_intent=intent)
+        ).valid
+
+    def test_intent_with_schema_version_1_1_accepted(self):
+        assert validate_payload(
+            TestAuditFindings._deployment(
+                schema_version="1.1", deployment_intent="planned"
+            )
+        ).valid
+
+    def test_absent_intent_accepted(self):
+        assert validate_payload(TestAuditFindings._deployment()).valid
+
+    def test_unknown_intent_rejected(self):
+        assert not validate_payload(
+            TestAuditFindings._deployment(deployment_intent="hotfix")
+        ).valid
