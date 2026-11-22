@@ -39,6 +39,28 @@ issue because none is done in #731:
 | D2 | Keep `dora_cfr_pct` and `dora_rework_rate_pct` | A rename breaks the Dojo Module 14 lab and fawkes's dashboards. Add `_ratio` twins beside them in a minor release, drop `_pct` at the next major | `https://github.com/paruff/uFawkesObs/issues/729` |
 | D3 | `pr` and `incident` stay in the contract, accepted and stored, and feed no metric | Removing them would 422 senders that work today (major). Recovery time stays deployment-based, so an incident's duration is not recovery time. Document them as stored-only, as `docs/CONTRACTS.md` §1 now does | `https://github.com/paruff/uFawkesObs/issues/730` |
 
+### D3 at the next major (#730)
+
+D3 keeps `pr` and `incident` as stored-only for the rest of 1.x. Removing
+them 422s senders that work today, so it can only ship in a major. Decide
+when the next major is planned, not before, using this test:
+
+1. Count stored `pr` and `incident` events from real senders over the last
+   90 days (not smoke tests or the generic collector examples).
+2. **No real sender, or no one wants a metric from them: remove.** Delete
+   both schemas, their validator and worker branches, the collector examples
+   and the `docs/CONTRACTS.md` §1 sections. Senders get a 422, so list it
+   under breaking changes in the major's release notes.
+3. **A sender and a named metric: derive it, keep the event.** Write the
+   metric's spec first. An incident's duration is not recovery time (D3), so
+   an incident metric needs its own name rather than reusing `dora_mttr_*`.
+   A `pr` metric must beat what `first_commit_at` on the deployment event
+   already gives for lead time.
+
+Default if nobody answers by the major's release candidate: remove, because
+dead schema is a contract we maintain for nothing. The owner confirms the
+choice on the board before the major's plan is written.
+
 ## Interfaces
 
 This changes uFawkesObs's "DORA event ingestion" row in the suite's
