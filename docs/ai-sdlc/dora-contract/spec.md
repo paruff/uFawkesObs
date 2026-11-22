@@ -41,25 +41,19 @@ issue because none is done in #731:
 
 ### D3 at the next major (#730)
 
-D3 keeps `pr` and `incident` as stored-only for the rest of 1.x. Removing
-them 422s senders that work today, so it can only ship in a major. Decide
-when the next major is planned, not before, using this test:
+**Decision: `pr` and `incident` stay in the contract at the next major.**
+Evidence (checked 2026-11-22): this repo ships first-party senders for both.
+`dora/collectors/github/dora-pr-event.yml` and `scripts/backfill_dora_from_github.py`
+send `pr`; `dora/collectors/manual-incident/` sends `incident`. Removing the
+schemas would orphan those collectors and 422 every adopter who copied them,
+for no gain. Nothing reads the events, and that is a cheap cost to carry.
 
-1. Count stored `pr` and `incident` events from real senders over the last
-   90 days (not smoke tests or the generic collector examples).
-2. **No real sender, or no one wants a metric from them: remove.** Delete
-   both schemas, their validator and worker branches, the collector examples
-   and the `docs/CONTRACTS.md` §1 sections. Senders get a 422, so list it
-   under breaking changes in the major's release notes.
-3. **A sender and a named metric: derive it, keep the event.** Write the
-   metric's spec first. An incident's duration is not recovery time (D3), so
-   an incident metric needs its own name rather than reusing `dora_mttr_*`.
-   A `pr` metric must beat what `first_commit_at` on the deployment event
-   already gives for lead time.
-
-Default if nobody answers by the major's release candidate: remove, because
-dead schema is a contract we maintain for nothing. The owner confirms the
-choice on the board before the major's plan is written.
+- They stay stored-only until a metric is specified. That is a separate
+  feature, not a major-release task. An incident's duration is not recovery
+  time (D3), so any incident metric needs its own name; a `pr` metric must
+  beat the `first_commit_at` that the deployment event already carries.
+- The major does not drop them. Reopen only if the first-party collectors are
+  removed, in which case remove the schemas in the same change.
 
 ## Interfaces
 
