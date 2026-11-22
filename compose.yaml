@@ -411,6 +411,10 @@ services:
       - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - ./config/prometheus/rules:/etc/prometheus/rules:ro
       - ./data/prometheus:/prometheus
+      # Bearer token file for the woodpecker scrape job (prometheus.yaml).
+      # A file, not a compose secret: an unset env-backed secret makes
+      # `compose up` fail, while this defaults to the empty committed placeholder.
+      - ${WOODPECKER_METRICS_TOKEN_FILE:-./config/prometheus/woodpecker_metrics_token}:/etc/prometheus/woodpecker_metrics_token:ro
     ports:
       - "127.0.0.1:9090:9090"
     environment:
